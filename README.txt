@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 This file describes the ActivityRecommender, created by Jeff Gaston
 
 The ActivityRecommender suggests an activity for the user to be doing at the current moment, based on data provided by the user.
-=======
-This file describes the ActivityRecommendor, created by Jeff Gaston
-
-The ActivityRecommendor suggests an activity for the user to be doing at the current moment, based on data provided by the user.
->>>>>>> a6a3e1d24fed6fe5f33635b3062408e3e163d4cf
 
 
 One form of user-input is for the user to enter into the system the name of an activity to be considered in the future.

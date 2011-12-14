@@ -92,6 +92,7 @@
     <Compile Include="ParticipationEntryView.cs" />
     <Compile Include="ParticipationProgression.cs" />
     <Compile Include="IProgression.cs" />
+    <Compile Include="PlotControl.cs" />
     <Compile Include="Prediction.cs" />
     <Compile Include="PredictionLink.cs" />
     <Compile Include="ProgressionValue.cs" />

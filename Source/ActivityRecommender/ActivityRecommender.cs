@@ -33,7 +33,7 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2011-12-13T17:38:00";
+            titleString += " Build Date: 2011-12-14T18:25:00";
             this.mainDisplay = new TitledControl(titleString);
             this.mainDisplayGrid = new DisplayGrid(1, 4);
             this.mainDisplay.SetContent(this.mainDisplayGrid);
@@ -308,7 +308,10 @@ namespace ActivityRecommendation
 
         void mainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            this.ShowMainview();
+            if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                this.ShowMainview();
+            }
         }
 
         public void ShowMainview(object sender, EventArgs e)

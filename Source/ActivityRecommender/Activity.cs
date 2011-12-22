@@ -39,6 +39,7 @@ namespace ActivityRecommendation
             this.latestParticipationDate = new DateTime(0);
             this.latestInteractionDate = new DateTime(0);
             this.uniqueIdentifier = nextID;
+            this.defaultDiscoveryDate = DateTime.Now;
             nextID++;
         }
 
@@ -175,30 +176,47 @@ namespace ActivityRecommendation
             }
         }
         // declares that we think the activity was discovered on the given date
-        public void SuspectDiscoveryDate(DateTime when)
+        public void SetDefaultDiscoveryDate(DateTime when)
         {
-            this.ApplyKnownInteractionDate(when);
+            this.defaultDiscoveryDate = when;
         }
         // declares that we know that the user interacted with this Activity on this date
         public void ApplyKnownInteractionDate(DateTime when)
         {
-            if (this.latestInteractionDate.CompareTo(when) < 0)
+            if ((this.latestInteractionDate == null) || (((DateTime)this.latestInteractionDate).CompareTo(when) < 0))
             {
                 this.latestInteractionDate = when;
+            }
+            if ((this.earliestInteractionDate == null) || (((DateTime)this.earliestInteractionDate).CompareTo(when) > 0))
+            {
+                this.earliestInteractionDate = when;
             }
         }
         public DateTime LatestInteractionDate
         {
             get
             {
-                return this.latestInteractionDate;
+                if (this.latestInteractionDate != null)
+                    return (DateTime)this.latestInteractionDate;
+                return this.defaultDiscoveryDate;
             }
         }
         public DateTime LatestParticipationDate
         {
             get
             {
-                return this.latestParticipationDate;
+                if (this.latestParticipationDate != null)
+                    return (DateTime)this.latestParticipationDate;
+                return this.defaultDiscoveryDate;
+            }
+        }
+        public DateTime DiscoveryDate
+        {
+            get
+            {
+                if (this.earliestInteractionDate != null)
+                    return (DateTime)this.earliestInteractionDate;
+                return this.defaultDiscoveryDate;
             }
         }
         public void AddRating(AbsoluteRating newRating)
@@ -212,10 +230,10 @@ namespace ActivityRecommendation
         {
             // keep track of the participation
             this.participationProgression.AddParticipation(newParticipation);
-            // keep track of the latest date at which anything happened
+            // keep track of the earliest and latest date at which anything happened
+            this.ApplyKnownInteractionDate(newParticipation.StartDate);
             this.ApplyKnownInteractionDate(newParticipation.EndDate);
             DateTime when = newParticipation.EndDate;
-            this.ApplyKnownInteractionDate(when);
             // keep track of the latest date at which the user interacted with the activity
             if (when.CompareTo(this.latestParticipationDate) > 0)
             {
@@ -239,8 +257,10 @@ namespace ActivityRecommendation
         private PredictionLink predictorFromOwnRatings;
         private PredictionLink predictorFromOwnParticipations;
         private int uniqueIdentifier;
-        DateTime latestInteractionDate;
-        DateTime latestParticipationDate;
+        DateTime? latestInteractionDate;
+        DateTime? earliestInteractionDate;
+        DateTime? latestParticipationDate;
+        DateTime defaultDiscoveryDate;
         #endregion
 
     }

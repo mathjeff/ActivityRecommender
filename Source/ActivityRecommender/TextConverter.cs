@@ -54,7 +54,8 @@ namespace ActivityRecommendation
 
             properties[this.InheritanceChildTag] = this.ConvertToStringBody(inheritance.ChildDescriptor);
             properties[this.InheritanceParentTag] = this.ConvertToStringBody(inheritance.ParentDescriptor);
-            properties[this.DiscoveryDateTag] = this.ConvertToStringBody(inheritance.DiscoveryDate);
+            if (inheritance.DiscoveryDate != null)
+                properties[this.DiscoveryDateTag] = this.ConvertToStringBody((DateTime)inheritance.DiscoveryDate);
 
             return this.ConvertToString(properties, objectName);
 

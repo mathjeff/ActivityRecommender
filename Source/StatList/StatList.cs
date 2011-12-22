@@ -360,6 +360,14 @@ namespace StatLists
                 return results;
             }
         }
+        // Eventually this should be optimized. For now it's only slow by a factor of log(n) so it's not a big deal
+        public List<ListItemStats<KeyType, ValueType>> AllItems
+        {
+            get
+            {
+                return this.DebugList;
+            }
+        }
         #endregion
 
         #region Private Member Functions

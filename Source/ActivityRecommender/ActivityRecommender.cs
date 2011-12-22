@@ -33,7 +33,7 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2011-12-14T18:25:00";
+            titleString += " Build Date: 2011-12-22T12:09:00";
             this.mainDisplay = new TitledControl(titleString);
             this.mainDisplayGrid = new DisplayGrid(1, 4);
             this.mainDisplay.SetContent(this.mainDisplayGrid);
@@ -129,7 +129,7 @@ namespace ActivityRecommendation
             string justificationText;
             if (bestActivity == null)
             {
-                recommendationText = "There are activities that can be chosen!";
+                recommendationText = "There are no activities that can be chosen!";
                 justificationText = recommendationText;
             }
             else

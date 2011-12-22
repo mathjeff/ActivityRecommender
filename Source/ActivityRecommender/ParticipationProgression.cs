@@ -36,6 +36,19 @@ namespace ActivityRecommendation
         {
             return true;
         }
+        public List<Participation> Participations
+        {
+            get
+            {
+                List<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+                List<Participation> results = new List<Participation>();
+                foreach (ListItemStats<DateTime, Participation> stats in items)
+                {
+                    results.Add(stats.Value);
+                }
+                return results;
+            }
+        }
 
         #endregion
 

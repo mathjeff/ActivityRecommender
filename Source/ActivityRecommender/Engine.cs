@@ -55,7 +55,8 @@ namespace ActivityRecommendation
             {
                 Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
                 Activity parent = this.activityDatabase.ResolveDescriptor(inheritance.ParentDescriptor);
-                child.ApplyKnownInteractionDate(inheritance.DiscoveryDate);
+                if (inheritance.DiscoveryDate != null)
+                    child.ApplyKnownInteractionDate((DateTime)inheritance.DiscoveryDate);
                 child.AddParent(parent);
             }
             this.inheritances.Clear();
@@ -91,7 +92,7 @@ namespace ActivityRecommendation
         // assume initially that each activity was discovered when the engine was first started
         public void CreatingActivity(Activity activity)
         {
-            activity.SuspectDiscoveryDate(this.firstInteractionDate);
+            activity.SetDefaultDiscoveryDate(this.firstInteractionDate);
             //activity.ApplyKnownInteractionDate(firstInteractionDate);
             //activity.DiscoveryDate = this.firstInteractionDate;
         }
@@ -477,7 +478,8 @@ namespace ActivityRecommendation
                 child = this.activityDatabase.AddOrCreateActivity(childDescriptor);
                 // calculate an appropriate DiscoveryDate
                 this.CreatingActivity(child);
-                child.ApplyKnownInteractionDate(newInheritance.DiscoveryDate);
+                if (newInheritance.DiscoveryDate != null)
+                    child.ApplyKnownInteractionDate((DateTime)newInheritance.DiscoveryDate);
             }
             else
             {

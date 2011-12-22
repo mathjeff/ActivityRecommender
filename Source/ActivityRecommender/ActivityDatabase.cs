@@ -65,7 +65,8 @@ namespace ActivityRecommendation
             int i;
             for (i = firstValidName.Length - 1; i >= 0; i--)
             {
-                if (firstValidName[i] != Char.MaxValue)
+                //if (firstValidName[i] != Char.MaxValue)
+                if (firstValidName[i] != 'z' && firstValidName[i] != 'Z')
                 {
                     break;
                 }
@@ -136,8 +137,13 @@ namespace ActivityRecommendation
                     matchScore += 1;
                 }
             }
-            // prefer an activity where the name prefix perfectly matches the 
-            if (descriptor.NamePrefix == activity.Name)
+            // prefer an activity where the name prefix is the entire name
+            if (string.Compare(descriptor.NamePrefix, activity.Name, true) == 0)
+            {
+                matchScore += 2;
+            }
+            // prefer an activity where the case matches exactly
+            if (activity.Name.StartsWith(descriptor.NamePrefix, StringComparison.Ordinal))
             {
                 matchScore += 1;
             }
@@ -193,7 +199,8 @@ namespace ActivityRecommendation
         #region Functions for IComparer<string>
         public int Compare(string string1, string string2)
         {
-            return string.CompareOrdinal(string1, string2);
+            //return string.CompareOrdinal(string1, string2);
+            return string.Compare(string1, string2, true);
         }
         #endregion
 

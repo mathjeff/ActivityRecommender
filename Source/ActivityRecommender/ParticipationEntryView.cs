@@ -19,7 +19,7 @@ namespace ActivityRecommendation
             this.nameBox = new ActivityNameEntryBox("Name");
             contents.AddItem(this.nameBox);
 
-            this.ratingBox = new TitledTextbox("Rating (optional)");
+            this.ratingBox = new TitledTextbox("Rating (0-1) (optional)");
             contents.AddItem(this.ratingBox);
 
             this.startDateBox = new DateEntryView("StartDate");

@@ -3,8 +3,3 @@ C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Interesting\StatList\Stat
 C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Interesting\StatList\StatList\StatList\obj\Debug\ResolveAssemblyReference.cache
 C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Interesting\StatList\StatList\StatList\obj\Debug\StatList.dll
 C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Interesting\StatList\StatList\StatList\obj\Debug\StatList.pdb
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\RecommendationEngine\WPF\GitRepository\Source\StatList\bin\Debug\StatList.dll
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\RecommendationEngine\WPF\GitRepository\Source\StatList\bin\Debug\StatList.pdb
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\RecommendationEngine\WPF\GitRepository\Source\StatList\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\RecommendationEngine\WPF\GitRepository\Source\StatList\obj\Debug\StatList.dll
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\RecommendationEngine\WPF\GitRepository\Source\StatList\obj\Debug\StatList.pdb

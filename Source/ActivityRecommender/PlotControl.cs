@@ -33,6 +33,8 @@ namespace ActivityRecommendation
         {
             this.pointsToPlot = points;
         }
+        public double? MinX { get; set; }
+        public double? MaxX { get; set; }
 
         private void UpdatePoints()
         {
@@ -67,6 +69,16 @@ namespace ActivityRecommendation
                 {
                     maxY = y;
                 }
+            }
+
+            // fill in any required values
+            if (this.MinX != null)
+            {
+                minX = (double)this.MinX;
+            }
+            if (this.MaxX != null)
+            {
+                maxX = (double)this.MaxX;
             }
 
             // remove the previous canvas

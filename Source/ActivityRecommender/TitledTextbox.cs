@@ -15,6 +15,7 @@ namespace ActivityRecommendation
             this.titleBlock = new TextBlock();
             this.titleBlock.Text = startingTitle;
             this.titleBlock.Height = 20;
+            this.titleBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
             this.RowDefinitions[0].Height = new System.Windows.GridLength(30);
             this.AddItem(this.titleBlock);
             

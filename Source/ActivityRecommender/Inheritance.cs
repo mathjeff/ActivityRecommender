@@ -38,7 +38,7 @@ namespace ActivityRecommendation
                 this.childDescriptor = value;
             }
         }
-        public DateTime DiscoveryDate { get; set; }
+        public DateTime? DiscoveryDate { get; set; }
         public double Weight { get; set; }
         private ActivityDescriptor parentDescriptor;
         private ActivityDescriptor childDescriptor;

@@ -66,7 +66,7 @@ namespace ActivityRecommendation
 
         public Participation Sum(Participation participation1, Participation participation2)
         {
-            // if one participation is empty, don't adjust the start/end dates
+            // if one participation is empty, return the other one
             if (participation1.Duration.TotalSeconds == 0)
             {
                 return participation2;
@@ -75,18 +75,16 @@ namespace ActivityRecommendation
             {
                 return participation1;
             }
+            // make sure participation1 is the one that starts first
+            if (participation1.StartDate.CompareTo(participation2.StartDate) > 0)
+            {
+                // swap the participations so participation1 is the one that starts before participation2
+                Participation temp = participation1;
+                participation1 = participation2;
+                participation2 = temp;
+            }
             // set the start date to the earliest of the two start dates
-            DateTime start1 = participation1.StartDate;
-            DateTime start2 = participation2.StartDate;
-            DateTime startDate;
-            if (start1.CompareTo(start2) < 0)
-            {
-                startDate = start1;
-            }
-            else
-            {
-                startDate = start2;
-            }
+            DateTime startDate = participation1.StartDate;
 
             // set the end date to the latest of the two end dates
             DateTime end1 = participation1.EndDate;
@@ -106,10 +104,28 @@ namespace ActivityRecommendation
             Distribution intensity2 = participation2.TotalIntensity;
             Distribution combinedIntensity = intensity1.Plus(intensity2);
 
+            // calculate the amount of time between the two participations
+            double numIdleSeconds = 0;
+            if (participation1.EndDate.CompareTo(participation2.StartDate) < 0)
+            {
+                TimeSpan idleTime = participation2.StartDate.Subtract(participation1.EndDate);
+                numIdleSeconds = idleTime.TotalSeconds;
+            }
+            Distribution logIdleTime = new Distribution(0, 0, 0);
+            if (numIdleSeconds > 0)
+            {
+                logIdleTime = Distribution.MakeDistribution(Math.Log(numIdleSeconds), 0, 1);
+            }
+            logIdleTime = participation1.LogIdleTime.Plus(logIdleTime);
+            logIdleTime = logIdleTime.Plus(participation2.LogIdleTime);
+
+            // create the Participation and fill the data in
             Participation result = new Participation();
             result.StartDate = startDate;
             result.EndDate = endDate;
             result.TotalIntensity = combinedIntensity;
+            result.LogIdleTime = logIdleTime;
+            result.LogActiveTime = participation1.LogActiveTime.Plus(participation2.LogActiveTime);
 
             return result;
         }
@@ -127,6 +143,86 @@ namespace ActivityRecommendation
         // returns basically the fraction of the user's time that was spent performing that activity recently at that date
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
+            // get a summary of all of the data, to estimate the duration of the "recent" past
+            Participation cumulativeParticipation = this.searchHelper.SumBeforeKey(when, true);
+            // make sure that we have enough data
+            if (cumulativeParticipation.Duration.TotalSeconds == 0)
+            {
+                ProgressionValue defaultValue = new ProgressionValue(new Distribution(), -1);
+                return defaultValue;
+            }
+            Distribution logIdleTime = cumulativeParticipation.LogIdleTime;
+            Distribution logActiveTime = cumulativeParticipation.LogActiveTime;
+            // make sure that we have enough data
+            if (logIdleTime.Mean == 0 || logActiveTime.Mean == 0)
+            {
+                ProgressionValue defaultValue = new ProgressionValue(Distribution.MakeDistribution(0.5, 0.25, 0), -1);
+                return defaultValue;
+            }
+            // now we estimate the value of the exponentially moving average
+            // the half-life is typicalIdleSeconds when decaying toward 0
+            // the half-life is typicalActiveSeconds when decaying toward 1
+            double typicalIdleSeconds = Math.Exp(logIdleTime.Mean);
+            double typicalActiveSeconds = Math.Exp(logActiveTime.Mean);
+
+            // figure out which participations could be most relevant
+            int endingIndexExclusive = this.searchHelper.CountBeforeKey(when, !strictlyEarlier);
+            int startingIndex = Math.Max(0, endingIndexExclusive - 10);
+            double currentValue = 0;
+            int i;
+            DateTime latestDate = new DateTime();
+            TimeSpan idleDuration;
+            double numIdleSeconds;
+            double power;
+            // iterate through the last few participations to calculate the recent participation intensity
+            for (i = startingIndex; i < endingIndexExclusive; i++)
+            {
+                ListItemStats<DateTime, Participation> stats = this.searchHelper.GetValueAtIndex(i);
+                Participation participation = stats.Value;
+                // calculate the statistics for the idle duration
+                idleDuration = participation.StartDate.Subtract(latestDate);
+                numIdleSeconds = idleDuration.TotalSeconds;
+                power = -numIdleSeconds / typicalIdleSeconds;
+                // clamp to a reasonable range
+                if (power < 0)
+                {
+                    // move towards 0 for the idle duration
+                    currentValue = currentValue * Math.Pow(Math.E, power);
+                }
+
+
+                // calculate the statistics for the active duration
+                double numActiveSeconds = participation.Duration.TotalSeconds;
+                power = -numActiveSeconds / typicalActiveSeconds;
+                // clamp to a reasonable range
+                if (power < 0)
+                {
+                    // move towards 1 for the active duration
+                    currentValue = 1 - (1 - currentValue) * Math.Pow(Math.E, power); ;
+                }
+
+                // advance the current date
+                if (participation.EndDate.CompareTo(latestDate) > 0)
+                    latestDate = participation.EndDate;
+            }
+            // add the final idle time
+            idleDuration = when.Subtract(latestDate);
+            numIdleSeconds = idleDuration.TotalSeconds;
+            power = -numIdleSeconds / typicalIdleSeconds;
+            // clamp to a reasonable range
+            if (power < 0)
+            {
+                // move towards 0 for the idle duration
+                currentValue = currentValue * Math.Pow(Math.E, power);
+            }
+
+            Distribution recentIntensity = Distribution.MakeDistribution(currentValue, 0, 1);
+            ProgressionValue result = new ProgressionValue(recentIntensity, endingIndexExclusive);
+            return result;
+
+
+            /*
+            
             // find the most recent participation before the given date
             ListItemStats<DateTime, Participation> latestItem = this.searchHelper.FindPreviousItem(when, true);
             if (latestItem == null)
@@ -204,6 +300,7 @@ namespace ActivityRecommendation
             int previousCount = this.searchHelper.CountBeforeKey(when, true);
             ProgressionValue result = new ProgressionValue(totalParticipation, previousCount);
             return result;
+            */
         }
 
         #endregion

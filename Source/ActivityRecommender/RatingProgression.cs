@@ -25,15 +25,18 @@ namespace ActivityRecommendation
         {
             if (this.ShouldIncludeRating(newRating))
             {
-                // get the timestamp
-                DateTime when = newRating.Date;
-                // get the score
-                double score = newRating.Score;
-                // make a Distribution
-                Distribution newDistribution = new Distribution(score, score * score, 1);
-                // record it
-                this.searchHelper.Add(when, newDistribution);
-                this.ratingsInDiscoveryOrder.Add(newRating);
+                if (newRating.Date != null)
+                {
+                    // get the timestamp
+                    DateTime when = (DateTime)newRating.Date;
+                    // get the score
+                    double score = newRating.Score;
+                    // make a Distribution
+                    Distribution newDistribution = new Distribution(score, score * score, 1);
+                    // record it
+                    this.searchHelper.Add(when, newDistribution);
+                    this.ratingsInDiscoveryOrder.Add(newRating);
+                }
             }
         }
 
@@ -135,8 +138,12 @@ namespace ActivityRecommendation
 
         public int Compare(AbsoluteRating rating1, AbsoluteRating rating2)
         {
-            DateTime date1 = rating1.Date;
-            DateTime date2 = rating2.Date;
+            if (rating1.Date == null || rating2.Date == null)
+            {
+                throw new ArgumentException("Cannot compare ratings whose dates are null");
+            }
+            DateTime date1 = (DateTime)rating1.Date;
+            DateTime date2 = (DateTime)rating2.Date;
             return date1.CompareTo(date2);
         }
         

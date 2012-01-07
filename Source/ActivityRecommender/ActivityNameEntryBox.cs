@@ -9,21 +9,22 @@ using System.Windows.Input;
 
 namespace ActivityRecommendation
 {
-    class ActivityNameEntryBox : TitledControl
+    class ActivityNameEntryBox : TitledControl, IResizable
     {
         public ActivityNameEntryBox(string startingTitle) : base(startingTitle)
         {
             DisplayGrid content = new DisplayGrid(2, 1);
 
-            this.nameBox = new TextBox();
-            this.nameBox.TextWrapping = TextWrapping.Wrap;
-            this.nameBox.TextChanged += new TextChangedEventHandler(nameBox_TextChanged);
+            this.nameBox = new ResizableTextBox();
+            //this.nameBox.Height = 20;
+            //this.nameBox.TextWrapping = TextWrapping.Wrap;
+            this.nameBox.AddTextChangedHandler(new TextChangedEventHandler(nameBox_TextChanged));
             this.nameBox.PreviewKeyDown += new System.Windows.Input.KeyEventHandler(nameBox_PreviewKeyDown);
             //this.nameBox.PreviewTextInput += new System.Windows.Input.TextCompositionEventHandler(this.nameBox_PreviewTextInput);
             content.AddItem(this.nameBox);
 
-            this.suggestionBlock = new TextBlock();
-            this.suggestionBlock.TextWrapping = TextWrapping.Wrap;
+            this.suggestionBlock = new ResizableTextBlock();
+            this.suggestionBlock.SetResizability(new Resizability(1, 1));
             content.AddItem(this.suggestionBlock);
 
             this.UpdateSuggestions();
@@ -126,8 +127,8 @@ namespace ActivityRecommendation
             }
         }
         
-        TextBox nameBox;
-        TextBlock suggestionBlock;
+        ResizableTextBox nameBox;
+        ResizableTextBlock suggestionBlock;
         ActivityDatabase database;
     }
 }

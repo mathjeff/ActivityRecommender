@@ -3,25 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Controls;
+using System.Windows;
 
 namespace ActivityRecommendation
 {
-    class TitledTextblock : DisplayGrid
+    class TitledTextblock : TitledControl
     {
         public TitledTextblock(string startingTitle)
-            : base(2, 1)
+            : base(startingTitle)
         {
-            // create a title
-            this.titleBlock = new TextBlock();
-            this.titleBlock.Text = startingTitle;
-            this.titleBlock.Height = 20;
-            this.RowDefinitions[0].Height = new System.Windows.GridLength(30);
-            this.AddItem(this.titleBlock);
+            this.TitleBlock.HorizontalAlignment = HorizontalAlignment.Left;
 
             // create a text field
-            this.textField = new TextBlock();
+            this.textField = new ResizableTextBlock();
             this.textField.TextAlignment = System.Windows.TextAlignment.Center;
-            this.SetItem(this.textField, 1, 0);
+            //this.textField.TextWrapping = System.Windows.TextWrapping.Wrap;
+            this.SetContent(this.textField);
+            this.PutItem(this.textField, 1, 0);
         }
         public string Text
         {
@@ -34,17 +32,7 @@ namespace ActivityRecommendation
                 this.textField.Text = value;
             }
         }
-        /*
-        public void SetText(string newText)
-        {
-            this.textField.Text = newText;
-        }
-        public string GetText()
-        {
-            return this.textField.Text;
-        }*/
 
-        TextBlock titleBlock;
-        TextBlock textField;
+        ResizableTextBlock textField;
     }
 }

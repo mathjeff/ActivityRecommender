@@ -40,11 +40,14 @@ namespace ActivityRecommendation
             for (i = currentNumDatapoints; i < ratings.Count; i++)
             {
                 AbsoluteRating currentRating = ratings[i];
-                ProgressionValue currentInput = this.predictorProgression.GetValueAt(currentRating.Date, true);
-                if (currentInput.Index >= 0)
+                if (currentRating.Date != null)
                 {
-                    // add the appropriate Datapoint to the ScatterPlot
-                    this.predictionPlot.AddDatapoint(new Datapoint(currentInput.Value.Mean, currentRating.Score, currentRating.Weight));
+                    ProgressionValue currentInput = this.predictorProgression.GetValueAt((DateTime)currentRating.Date, true);
+                    if (currentInput.Index >= 0)
+                    {
+                        // add the appropriate Datapoint to the ScatterPlot
+                        this.predictionPlot.AddDatapoint(new Datapoint(currentInput.Value.Mean, currentRating.Score, currentRating.Weight));
+                    }
                 }
             }
             this.numDatapoints = ratings.Count;

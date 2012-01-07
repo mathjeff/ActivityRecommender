@@ -14,40 +14,60 @@ namespace ActivityRecommendation
         public ParticipationEntryView()
         {
             this.SetTitle("Type What You've Been Doing");
-            DisplayGrid contents = new DisplayGrid(3, 2);
+            DisplayGrid contents = new DisplayGrid(4, 2);
 
             this.nameBox = new ActivityNameEntryBox("Name");
             contents.AddItem(this.nameBox);
 
-            this.ratingBox = new TitledTextbox("Rating (0-1) (optional)");
+            this.ratingBox = new RatingEntryView("Rating (optional)");
+            //this.ratingBox.Background = System.Windows.Media.Brushes.Yellow;
             contents.AddItem(this.ratingBox);
 
+
+
             this.startDateBox = new DateEntryView("StartDate");
-            this.startDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            //this.startDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.startDateBox);
 
             this.endDateBox = new DateEntryView("EndDate");
-            this.endDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            //this.endDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.endDateBox);
+
+            this.commentBox = new TitledTextbox("Comment (optional)");
+            contents.AddItem(this.commentBox);
 
             this.autofillButton = new Button();
             this.autofillButton.Content = "Autofill";
-            this.autofillButton.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            this.autofillButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.autofillButton);
 
             this.okButton = new Button();
             this.okButton.Content = "OK";
-            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.okButton);
 
             this.SetContent(contents);
             //this.Background = System.Windows.Media.Brushes.Blue;
+        }
+        public void Clear()
+        {
+            this.ratingBox.Clear();
+            this.ActivityName = "";
+            this.CommentText = "";
         }
         public ActivityDatabase ActivityDatabase
         {
             set
             {
                 this.nameBox.Database = value;
+                //this.ratingBox.ActivityDatabase = value;
+            }
+        }
+        public Participation LatestParticipation
+        {
+            set
+            {
+                this.ratingBox.LatestParticipation = value;
             }
         }
         public DateTime StartDate
@@ -85,13 +105,20 @@ namespace ActivityRecommendation
         }
         public string RatingText
         {
+            set
+            {
+                //this.ratingBox.Text = value;
+            }
+        }
+        public string CommentText
+        {
             get
             {
-                return this.ratingBox.Text;
+                return this.commentBox.Text;
             }
             set
             {
-                this.ratingBox.Text = value;
+                this.commentBox.Text = value;
             }
         }
         public void AddOkClickHandler(RoutedEventHandler e)
@@ -102,39 +129,34 @@ namespace ActivityRecommendation
         {
             this.autofillButton.Click += e;
         }
-        public Participation Participation
+        public Participation GetParticipation(ActivityDatabase activities, Engine engine)
         {
-            get
-            {
-                ActivityDescriptor descriptor = new ActivityDescriptor();
-                descriptor.ActivityName = this.ActivityName;
+            ActivityDescriptor descriptor = new ActivityDescriptor();
+            descriptor.ActivityName = this.ActivityName;
 
-                Participation result = new Participation(this.StartDate, this.EndDate, descriptor);
-                return result;
-            }
-        }
-        public AbsoluteRating Rating
-        {
-            get
+            Participation participation = new Participation(this.StartDate, this.EndDate, descriptor);
+            if (this.CommentText != "" && this.CommentText != null)
+                participation.Comment = this.CommentText;
+
+
+            try
             {
-                string text = this.ratingBox.Text;
-                try
-                {
-                    double score = double.Parse(text);
-                    Participation participation = this.Participation;
-                    AbsoluteRating result = new AbsoluteRating(score, participation.StartDate,participation.ActivityDescriptor, null);
-                    return result;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                Rating rating = this.ratingBox.GetRating(activities, engine, participation);
+                //AbsoluteRating rating = new AbsoluteRating();
+                //rating.Score = double.Parse(this.ratingBox.Text);
+                participation.RawRating = rating;
             }
+            catch (Exception)
+            {
+            }
+            return participation;
         }
+        
 
         // private member variables
         ActivityNameEntryBox nameBox;
-        TitledTextbox ratingBox;
+        RatingEntryView ratingBox;
+        TitledTextbox commentBox;
         DateEntryView startDateBox;
         DateEntryView endDateBox;
         Button okButton;

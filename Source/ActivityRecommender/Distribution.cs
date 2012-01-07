@@ -13,6 +13,9 @@ namespace ActivityRecommendation
             Distribution result = new Distribution(mean * weight, (mean * mean + stdDev * stdDev) * weight, weight);
             return result;
         }
+        public Distribution()
+        {
+        }
         public Distribution(double totalValue, double totalSquaredValue, double totalWeight)
         {
             this.sumValue = totalValue;

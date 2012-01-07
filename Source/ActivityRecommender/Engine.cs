@@ -39,27 +39,9 @@ namespace ActivityRecommendation
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
         public void FullUpdate()
         {
-            // first, create the necessary Activities
-            foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
-            {
-                Activity newActivity = this.activityDatabase.AddOrCreateActivity(descriptor);
-                if (newActivity != null)
-                {
-                    this.CreatingActivity(newActivity);
-                }
-            }
-            this.allActivityDescriptors.Clear();
+            this.CreateActivities();
 
-            // next, add the necessary parent pointers
-            foreach (Inheritance inheritance in this.inheritances)
-            {
-                Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
-                Activity parent = this.activityDatabase.ResolveDescriptor(inheritance.ParentDescriptor);
-                if (inheritance.DiscoveryDate != null)
-                    child.ApplyKnownInteractionDate((DateTime)inheritance.DiscoveryDate);
-                child.AddParent(parent);
-            }
-            this.inheritances.Clear();
+            this.ApplyInheritances();
 
             // check for any activities that don't have parents
             foreach (Activity activity in this.activityDatabase.AllActivities)
@@ -72,7 +54,37 @@ namespace ActivityRecommendation
             this.ApplyParticipationsAndRatings();
             this.requiresFullUpdate = false;
         }
+        // creates an Activity object for each ActivityDescriptor that needs one
+        public void CreateActivities()
+        {
+            // first, create the necessary Activities
+            foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
+            {
+                Activity newActivity = this.activityDatabase.AddOrCreateActivity(descriptor);
+                if (newActivity != null)
+                {
+                    this.CreatingActivity(newActivity);
+                }
+            }
+            this.allActivityDescriptors.Clear();
+        }
+        // connects up all of the parent and child pointers
+        public void ApplyInheritances()
+        {
+            // next, add the necessary parent pointers
+            foreach (Inheritance inheritance in this.inheritances)
+            {
+                Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
+                Activity parent = this.activityDatabase.ResolveDescriptor(inheritance.ParentDescriptor);
+                if (inheritance.DiscoveryDate != null)
+                    child.ApplyKnownInteractionDate((DateTime)inheritance.DiscoveryDate);
+                child.AddParent(parent);
+            }
+            this.inheritances.Clear();
+        }
         // moves the ratings and participations from the pending queues into the Activities
+        // Note that there is a bug at the moment: when an inheritance is added to an activity, all of its ratings need to cascade appropriately
+        // currently they don't
         public void ApplyParticipationsAndRatings()
         {
             // Optimization opportunity for the future: cache the lists of superCategories
@@ -89,6 +101,7 @@ namespace ActivityRecommendation
             }
             this.unappliedParticipations.Clear();
         }
+
         // assume initially that each activity was discovered when the engine was first started
         public void CreatingActivity(Activity activity)
         {
@@ -291,12 +304,15 @@ namespace ActivityRecommendation
             DateTime latestActivityInteractionDate = activity.LatestInteractionDate;
             TimeSpan idleDuration = when.Subtract(latestActivityInteractionDate);
             double numIdleHours = idleDuration.TotalHours;
-            weightFraction = Math.Pow(numIdleHours, 0.7);
-            double stdDev = 1;
-            //guess = new Distribution(
-            Distribution scores = Distribution.MakeDistribution(1, stdDev, weightFraction);
-            Prediction guess = new Prediction(scores, "how long it's been since you thought about this activity");
-            predictions.Add(guess);
+            if (numIdleHours > 0)
+            {
+                weightFraction = Math.Pow(numIdleHours, 0.7);
+                double stdDev = 1;
+                //guess = new Distribution(
+                Distribution scores = Distribution.MakeDistribution(1, stdDev, weightFraction);
+                Prediction guess = new Prediction(scores, "how long it's been since you thought about this activity");
+                predictions.Add(guess);
+            }
             return predictions;
         }
         // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time
@@ -425,6 +441,29 @@ namespace ActivityRecommendation
             // give it to any relevant Activities
             this.CascadeRating(newRating);
         }*/
+        // checks the type of the rating and proceeds accordinly
+        public void PutRatingInMemory(Rating newRating)
+        {
+            AbsoluteRating absolute = newRating as AbsoluteRating;
+            if (absolute != null)
+            {
+                this.PutRatingInMemory(absolute);
+                return;
+            }
+            RelativeRating relative = newRating as RelativeRating;
+            if (relative != null)
+            {
+                this.PutRatingInMemory(relative);
+                return;
+            }
+            // if we get here, don't know the type of the rating, so there's nothing we can do
+        }
+        // tells the Engine about a rating that wasn't already in memory (but may have been stored on disk)
+        public void PutRatingInMemory(RelativeRating newRating)
+        {
+            this.PutRatingInMemory(newRating.BetterRating);
+            this.PutRatingInMemory(newRating.WorseRating);
+        }
         // tells the Engine about a rating that wasn't already in memory (but may have been stored on disk)
         public void PutRatingInMemory(AbsoluteRating newRating)
         {
@@ -437,14 +476,17 @@ namespace ActivityRecommendation
         // gets called whenever any outside source provides a rating
         public void DiscoveredRating(AbsoluteRating newRating)
         {
-            DateTime when = newRating.Date;
-            if (when.CompareTo(this.firstInteractionDate) < 0)
+            if (newRating.Date != null)
             {
-                this.firstInteractionDate = when;
-            }
-            if (when.CompareTo(this.latestInteractionDate) > 0)
-            {
-                this.latestInteractionDate = when;
+                DateTime when = (DateTime)newRating.Date;
+                if (when.CompareTo(this.firstInteractionDate) < 0)
+                {
+                    this.firstInteractionDate = when;
+                }
+                if (when.CompareTo(this.latestInteractionDate) > 0)
+                {
+                    this.latestInteractionDate = when;
+                }
             }
         }
         // provides a previously unknown participation to the Engine
@@ -464,6 +506,11 @@ namespace ActivityRecommendation
             this.DiscoveredParticipation(newParticipation);
             this.unappliedParticipations.Add(newParticipation);
             this.PutActivityDescriptorInMemory(newParticipation.ActivityDescriptor);
+
+            
+            Rating rating = newParticipation.GetCompleteRating();
+            if (rating != null)
+                this.PutRatingInMemory(rating);
         }
         // provides a previously unknown Inheritance to the Engine
         public void ApplyInheritance(Inheritance newInheritance)
@@ -538,6 +585,20 @@ namespace ActivityRecommendation
             this.inheritances.Add(newInheritance);
             this.PutActivityDescriptorInMemory(newInheritance.ParentDescriptor);
             this.PutActivityDescriptorInMemory(newInheritance.ChildDescriptor);
+        }
+        public void PutSkipInMemory(ActivitySkip newSkip)
+        {
+            Rating newRating = newSkip.GetCompleteRating();
+            AbsoluteRating convertedRating = newRating as AbsoluteRating;
+            if (convertedRating != null)
+                this.PutRatingInMemory(convertedRating);
+        }
+        public void PutActivityRequestInMemory(ActivityRequest newRequest)
+        {
+            Rating newRating = newRequest.GetCompleteRating();
+            AbsoluteRating convertedRating = newRating as AbsoluteRating;
+            if (convertedRating != null)
+                this.PutRatingInMemory(convertedRating);
         }
         // tells the Engine about an Activity that it may choose from
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)

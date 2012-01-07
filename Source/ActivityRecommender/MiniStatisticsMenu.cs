@@ -21,7 +21,7 @@ namespace ActivityRecommendation
 
             this.okButton = new Button();
             this.okButton.Content = "Visualize";
-            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             this.displayGrid.AddItem(this.okButton);
 
             this.SetContent(this.displayGrid);

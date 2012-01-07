@@ -29,6 +29,13 @@ namespace ActivityRecommendation
             this.ActivityDescriptor = activityDescriptor;
             double totalIntensity = this.Duration.TotalSeconds * averageIntensity;
             this.totalIntensity = new Distribution(totalIntensity, totalIntensity * averageIntensity, totalIntensity);
+            this.RawRating = null;
+            this.LogIdleTime = new Distribution(0, 0, 0);
+            double numSeconds = this.Duration.TotalSeconds;
+            if (numSeconds > 0)
+                this.LogActiveTime = Distribution.MakeDistribution(Math.Log(numSeconds), 0, 1);
+            else
+                this.LogActiveTime = new Distribution();
         }
 
         public DateTime StartDate { get; set; }
@@ -53,31 +60,34 @@ namespace ActivityRecommendation
                 return this.EndDate.Subtract(this.StartDate);
             }
         }
-        private Distribution totalIntensity;
-        /*public TimeSpan TotalIntensity { get; set; }  // number of seconds
-        public double AverageIntensity 
+        public Distribution LogIdleTime { get; set; }   // the log of the time (in seconds) between sub-participations
+        public Distribution LogActiveTime { get; set; } // the log of the duration (in seconds) of each sub-participation
+        public string Comment { get; set; }
+
+        // returns the exact rating that was given to this Participation
+        public Rating RawRating 
         {
             get
             {
-                double numerator = this.TotalIntensity.TotalSeconds;
-                double denominator = this.Duration.TotalSeconds;
-                if (denominator != 0)
-                {
-                    return numerator / denominator;
-                }
-                else
-                {
-                    return numerator;
-                }
+                return this.rawRating;
+            }
+            set
+            {
+                this.rawRating = value;
             }
         }
-        public TimeSpan Duration
+        // returns a Rating with as much information filled in as possible based on the data in this participation
+        public Rating GetCompleteRating()
         {
-            get
-            {
-                return this.EndDate.Subtract(this.StartDate);
-            }
-        }*/
+            if (this.RawRating == null)
+                return null;
+            Rating completeRating = this.rawRating.MakeCopy();
+            completeRating.FillInFromParticipation(this);
+            return completeRating;
+        }
+
+        private Distribution totalIntensity;
+        private Rating rawRating;
 
         #endregion
 

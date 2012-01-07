@@ -224,7 +224,8 @@ namespace ActivityRecommendation
             // keep track of the ratings
             this.ratingProgression.AddRating(newRating);
             // keep track of the latest date at which anything happened
-            this.ApplyKnownInteractionDate(newRating.Date);
+            if (newRating.Date != null)
+                this.ApplyKnownInteractionDate((DateTime)newRating.Date);
         }
         public void AddParticipation(Participation newParticipation)
         {

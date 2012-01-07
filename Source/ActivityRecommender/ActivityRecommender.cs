@@ -14,6 +14,7 @@ namespace ActivityRecommendation
         public ActivityRecommender(Window newMainWindow)
         {
             this.mainWindow = newMainWindow;
+            this.displayManager = new DisplayManager(this.mainWindow);
 
             this.InitializeSettings();
 
@@ -33,9 +34,10 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2011-12-22T12:09:00";
+            titleString += " Build Date: 2012-01-07T11:23";
             this.mainDisplay = new TitledControl(titleString);
             this.mainDisplayGrid = new DisplayGrid(1, 4);
+            //this.mainDisplayGrid.OverrideArrangement = true;
             this.mainDisplay.SetContent(this.mainDisplayGrid);
 
             this.inheritanceEditingView = new InheritanceEditingView();
@@ -49,6 +51,7 @@ namespace ActivityRecommendation
             this.participationEntryView.AddOkClickHandler(new RoutedEventHandler(this.SubmitParticipation));
             this.participationEntryView.AddAutofillClickHandler(new RoutedEventHandler(this.AutoFillParticipation));
             this.participationEntryView.Background = new SolidColorBrush(Color.FromRgb(220, 220, 220));
+            this.participationEntryView.LatestParticipation = this.latestParticipation;
             this.mainDisplayGrid.AddItem(this.participationEntryView);
             this.UpdateDefaultParticipationData();
 
@@ -63,9 +66,13 @@ namespace ActivityRecommendation
             this.statisticsMenu.Background = new SolidColorBrush(Color.FromRgb(200, 200, 200));
             this.statisticsMenu.AddOkClickHandler(new RoutedEventHandler(this.VisualizeData));
             this.mainDisplayGrid.AddItem(this.statisticsMenu);
-            this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);         
+            this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);
 
-            this.mainWindow.Content = this.mainDisplay;
+
+
+            //this.mainWindow.Content = this.mainDisplay;
+            this.displayManager.SetContent(this.mainDisplay);
+            //this.mainWindow.Content = this.participationEntryView;
 
         }
 
@@ -90,14 +97,23 @@ namespace ActivityRecommendation
             if ((this.latestRecommendedActivity != null) && !this.suppressDownoteOnRecommendation)
             {
                 // if they've asked for two recommendations in succession, it means they didn't like the previous one
+                
+                // Calculate the score to generate for this Activity as a result of that statement
                 Distribution previousDistribution = this.latestRecommendedActivity.LatestEstimatedRating;
                 double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
                 if (estimatedScore < 0)
-                {
                     estimatedScore = 0;
-                }
-                AbsoluteRating downvote = new AbsoluteRating(estimatedScore, now, this.latestRecommendedActivity.MakeDescriptor(), null);
-                this.AddRating(downvote);
+                // make a Skip object holding the needed data
+                ActivitySkip skip = new ActivitySkip(now, this.latestRecommendedActivity.MakeDescriptor());
+                skip.SuggestionDate = this.latestRecommendedActivity.LatestRatingEstimationDate;
+                AbsoluteRating rating = new AbsoluteRating();
+                rating.Score = estimatedScore;
+                skip.RawRating = rating;
+                this.AddSkip(skip);
+
+                //RatingSource source = RatingSource.Skip;
+                //AbsoluteRating downvote = new AbsoluteRating(estimatedScore, now, this.latestRecommendedActivity.MakeDescriptor(), source);
+                //this.AddRating(downvote);
             }
             this.suppressDownoteOnRecommendation = false;
 
@@ -113,9 +129,13 @@ namespace ActivityRecommendation
                 if (category != null)
                 {
                     // if the user is requesting an idea from this category, we should upvote the category
-                    double goodScore = 1;
-                    AbsoluteRating upvote = new AbsoluteRating(goodScore, now, category.MakeDescriptor(), null);
-                    this.AddRating(upvote);
+                    //double goodScore = 1;
+                    //RatingSource source = RatingSource.Request;
+                    //AbsoluteRating upvote = new AbsoluteRating(goodScore, now, category.MakeDescriptor(), source);
+
+                    ActivityRequest request = new ActivityRequest(category.MakeDescriptor(), now);
+                    this.AddActivityRequest(request);
+                    //this.AddRating(upvote);
                     // now we get a recommendation, from among all activities within this category
                     bestActivity = this.engine.MakeRecommendation(category, now);
                 }
@@ -157,18 +177,22 @@ namespace ActivityRecommendation
         private void SubmitParticipation()
         {
             // give the participation to the engine
-            Participation participation = this.participationEntryView.Participation;
+            Participation participation = this.participationEntryView.GetParticipation(this.engine.ActivityDatabase, this.engine);
             this.AddParticipation(participation);
-            // if there is a rating, give it to the engine too
+            /* // if there is a rating, give it to the engine too
             AbsoluteRating rating = this.participationEntryView.Rating;
             if (rating != null)
             {
                 this.AddRating(rating);
             }
+            */
             // fill in some default data for the ParticipationEntryView
             this.latestActionDate = new DateTime(0);
             this.UpdateDefaultParticipationData();
             this.SuppressDownvoteOnRecommendation();
+
+            // give the information to the appropriate activities
+            this.engine.ApplyParticipationsAndRatings();
         }
         private void AutoFillParticipation(object sender, EventArgs e)
         {
@@ -188,12 +212,43 @@ namespace ActivityRecommendation
         }
         private void AddParticipation(Participation newParticipation)
         {
-            this.engine.PutParticipationInMemory(newParticipation);
+            this.PutParticipationInMemory(newParticipation);
             this.WriteParticipation(newParticipation);
+            /*if (newParticipation.Rating != null)
+            {
+                this.AddRating(newParticipation.Rating);
+            }*/
         }
         private void WriteParticipation(Participation newParticipation)
         {
             string text = this.textConverter.ConvertToString(newParticipation) + Environment.NewLine;
+            StreamWriter writer = new StreamWriter(this.ratingsFileName, true);
+            writer.Write(text);
+            writer.Close();
+        }
+        // declares that the user didn't want to do something that was suggested
+        private void AddSkip(ActivitySkip newSkip)
+        {
+            this.engine.PutSkipInMemory(newSkip);
+            this.WriteSkip(newSkip);
+        }
+        // writes this Skip to a data file
+        private void WriteSkip(ActivitySkip newSkip)
+        {
+            string text = this.textConverter.ConvertToString(newSkip) + Environment.NewLine;
+            StreamWriter writer = new StreamWriter(this.ratingsFileName, true);
+            writer.Write(text);
+            writer.Close();
+        }
+        // writes this ActivityRequest to a data file
+        private void AddActivityRequest(ActivityRequest newRequest)
+        {
+            this.engine.PutActivityRequestInMemory(newRequest);
+            this.WriteActivityRequest(newRequest);
+        }
+        private void WriteActivityRequest(ActivityRequest newRequest)
+        {
+            string text = this.textConverter.ConvertToString(newRequest) + Environment.NewLine;
             StreamWriter writer = new StreamWriter(this.ratingsFileName, true);
             writer.Write(text);
             writer.Close();
@@ -236,10 +291,14 @@ namespace ActivityRecommendation
             writer.Write(text);
             writer.Close();
         }
-        private void AddRating(AbsoluteRating newRating)
+        private void AddRating(Rating newRating)
         {
-            this.engine.PutRatingInMemory(newRating);
-            this.WriteRating(newRating);
+            AbsoluteRating absoluteRating = (AbsoluteRating)newRating;
+            if (absoluteRating != null)
+            {
+                this.engine.PutRatingInMemory(absoluteRating);
+                this.WriteRating(absoluteRating);
+            }
         }
         private void WriteRating(AbsoluteRating newRating)
         {
@@ -265,11 +324,33 @@ namespace ActivityRecommendation
 
         public void PutParticipationInMemory(Participation newParticipation)
         {
+            if (this.latestParticipation == null || newParticipation.EndDate.CompareTo(this.latestParticipation.EndDate) > 0)
+            {
+                this.latestParticipation = newParticipation;
+                if (this.participationEntryView != null)
+                    this.participationEntryView.LatestParticipation = this.latestParticipation;
+            }
             this.engine.PutParticipationInMemory(newParticipation);
+        }
+        public void PutRatingInMemory(Rating newRating)
+        {
+            this.engine.PutRatingInMemory(newRating);
+        }
+        public void PutRatingInMemory(RelativeRating newRating)
+        {
+            this.engine.PutRatingInMemory(newRating);
         }
         public void PutRatingInMemory(AbsoluteRating newRating)
         {
             this.engine.PutRatingInMemory(newRating);
+        }
+        public void PutSkipInMemory(ActivitySkip newSkip)
+        {
+            this.engine.PutSkipInMemory(newSkip);
+        }
+        public void PutActivityRequestInMemory(ActivityRequest newRequest)
+        {
+            this.engine.PutActivityRequestInMemory(newRequest);
         }
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
         {
@@ -337,10 +418,13 @@ namespace ActivityRecommendation
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
         {
+            this.participationEntryView.Clear();
+
             this.participationEntryView.EndDate = DateTime.Now;
             this.participationEntryView.StartDate = this.LatestInteractionDate;
-            this.participationEntryView.ActivityName = "";
-            this.participationEntryView.RatingText = "";
+            //this.participationEntryView.ActivityName = "";
+            //this.participationEntryView.RatingText = "";
+            //this.participationEntryView.CommentText = "";
         }
         private DateTime LatestInteractionDate
         {
@@ -361,6 +445,7 @@ namespace ActivityRecommendation
         
 
         private Window mainWindow;
+        private DisplayManager displayManager;
         private DisplayGrid mainDisplayGrid;
         private TitledControl mainDisplay;
 
@@ -377,6 +462,7 @@ namespace ActivityRecommendation
         string inheritancesFileName;    // the name of the file that stores inheritances
         string tempFileName;
         DateTime latestActionDate;
+        Participation latestParticipation;
 
     }
 }

@@ -23,11 +23,12 @@ namespace ActivityRecommendation
         }
         private void Initialize()
         {
-            this.titleBlock = new TextBlock();
+            this.titleBlock = new ResizableTextBlock();
             this.titleBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            this.titleBlock.Height = 20;
+            //this.titleBlock.TextWrapping = TextWrapping.Wrap;
+            //this.titleBlock.VerticalAlignment = VerticalAlignment.Bottom;
+            //this.titleBlock.HorizontalAlignment = HorizontalAlignment.Center;
             this.AddItem(this.titleBlock);
-            this.RowDefinitions[0].Height = new System.Windows.GridLength(30);
         }
         public void SetTitle(string newTitle)
         {
@@ -35,8 +36,15 @@ namespace ActivityRecommendation
         }
         public void SetContent(UIElement newContent)
         {
-            this.SetItem(newContent, 1, 0);
+            this.PutItem(newContent, 1, 0);
         }
-        TextBlock titleBlock;
+        protected ResizableTextBlock TitleBlock
+        {
+            get
+            {
+                return this.titleBlock;
+            }
+        }
+        ResizableTextBlock titleBlock;
     }
 }

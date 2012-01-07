@@ -6,22 +6,27 @@ using System.Windows.Controls;
 
 namespace ActivityRecommendation
 {
-    class TitledTextbox : DisplayGrid
+    class TitledTextbox : TitledControl
     {
         public TitledTextbox(string startingTitle)
-            : base(2, 1)
+            : base(startingTitle)
         {
-            // create a title
-            this.titleBlock = new TextBlock();
-            this.titleBlock.Text = startingTitle;
-            this.titleBlock.Height = 20;
-            this.titleBlock.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
-            this.RowDefinitions[0].Height = new System.Windows.GridLength(30);
-            this.AddItem(this.titleBlock);
             
             // create a text field
-            this.textField = new TextBox();
-            this.SetItem(this.textField, 1, 0);
+            this.textField = new ResizableTextBox();
+            //this.textField.TextWrapping = System.Windows.TextWrapping.Wrap;
+            //this.textField.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            this.PutItem(this.textField, 1, 0);
+        }
+        protected override System.Windows.Size MeasureOverride(System.Windows.Size constraint)
+        {
+            System.Windows.Size result = base.MeasureOverride(constraint);
+            return result;
+        }
+        protected override System.Windows.Size ArrangeOverride(System.Windows.Size arrangeSize)
+        {
+            System.Windows.Size result = base.ArrangeOverride(arrangeSize);
+            return result;
         }
         public string Text
         {
@@ -44,7 +49,6 @@ namespace ActivityRecommendation
             return this.textField.Text;
         }*/
 
-        TextBlock titleBlock;
-        TextBox textField;
+        ResizableTextBox textField;
     }
 }

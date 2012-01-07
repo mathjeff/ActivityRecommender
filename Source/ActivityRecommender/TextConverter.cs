@@ -23,16 +23,13 @@ namespace ActivityRecommendation
         #region Public Member Functions
 
         // converts the rating into a string that is ready to write to disk
-        public string ConvertToString(AbsoluteRating rating)
+        public string ConvertToString(Rating rating)
         {
             Dictionary<string, string> properties = new Dictionary<string, string>();
             string objectName = this.RatingTag;
+            string objectValue = this.ConvertToStringBody(rating);
 
-            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(rating.ActivityDescriptor);
-            properties[this.RatingDateTag] = this.ConvertToStringBody(rating.Date);
-            properties[this.RatingScoreTag] = this.ConvertToStringBody(rating.Score);
-
-            return this.ConvertToString(properties, objectName);
+            return this.ConvertToString(objectValue, objectName);
         }
         // converts the participation into a string that is ready to write to disk
         public string ConvertToString(Participation participation)
@@ -40,9 +37,19 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
             string objectName = this.ParticipationTag;
 
+            // the activity being described
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(participation.ActivityDescriptor);
+            // start/end dates
             properties[this.ParticipationStartDateTag] = this.ConvertToStringBody(participation.StartDate);
             properties[this.ParticipationEndDateTag] = this.ConvertToStringBody(participation.EndDate);
+            // rating
+            Rating rating = participation.RawRating;
+            if (rating != null)
+                properties[this.RatingTag] = this.ConvertToStringBody(rating);
+            string comment = participation.Comment;
+            if (comment != null)
+                properties[this.CommentTag] = comment;
+
 
             return this.ConvertToString(properties, objectName);
         }
@@ -60,6 +67,19 @@ namespace ActivityRecommendation
             return this.ConvertToString(properties, objectName);
 
         }
+        // converts the ActivityRequest into a string that is ready to write to disk
+        public string ConvertToString(ActivityRequest request)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            string objectName = this.ActivityRequestTag;
+
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.ActivityDescriptor);
+            properties[this.DateTag] = this.ConvertToStringBody(request.Date);
+
+            return this.ConvertToString(properties, objectName);
+        }
+
+
         // converts the DateTime into a string that is ready to write to disk
         public string ConvertToString(DateTime when)
         {
@@ -69,6 +89,19 @@ namespace ActivityRecommendation
             string contents = this.ConvertToStringBody(when);
 
             return this.ConvertToString(contents, objectName);
+        }
+        // converts the Skip into a string that is ready to write to disk
+        public string ConvertToString(ActivitySkip skip)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            string objectName = this.SkipTag;
+
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(skip.ActivityDescriptor);
+            properties[this.DateTag] = this.ConvertToStringBody(skip.Date);
+            properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionDate);
+            properties[this.RatingTag] = this.ConvertToStringBody(skip.RawRating);
+
+            return this.ConvertToString(properties, objectName);
         }
 
         // converts the dictionary into a string that is ready to be written to disk
@@ -87,7 +120,17 @@ namespace ActivityRecommendation
         // This function isn't done yet
         public void ReadFile(string fileName)
         {
-            string text = System.IO.File.ReadAllText(fileName);
+            // If the file exists, then we want to read all of its data
+            string text;
+            try
+            {
+                text = System.IO.File.ReadAllText(fileName);
+            }
+            catch
+            {
+                // if the file doesn't exist, then there simply isn't anything to do
+                return;
+            }
             text = "<root>" + text + "</root>";
             XmlDocument document = new XmlDocument();
             document.LoadXml(text);
@@ -109,14 +152,27 @@ namespace ActivityRecommendation
                     if (currentItem.Name == this.ActivityDescriptorTag)
                     {
                         this.ProcessActivityDescriptor(currentItem);
+                        continue;
                     }
                     if (currentItem.Name == this.InheritanceTag)
                     {
                         this.ProcessInheritanceDescriptor(currentItem);
+                        continue;
                     }
                     if (currentItem.Name == this.DateTag)
                     {
                         this.ProcessLatestDate(currentItem);
+                        continue;
+                    }
+                    if (currentItem.Name == this.SkipTag)
+                    {
+                        this.ProcessSkip(currentItem);
+                        continue;
+                    }
+                    if (currentItem.Name == this.ActivityRequestTag)
+                    {
+                        this.ProcessActivityRequest(currentItem);
+                        continue;
                     }
                 }
             }
@@ -138,7 +194,7 @@ namespace ActivityRecommendation
         }
         private void ProcessRating(XmlNode nodeRepresentation)
         {
-            AbsoluteRating currentRating = this.ReadRating(nodeRepresentation);
+            Rating currentRating = this.ReadRating(nodeRepresentation);
             this.recommenderToInform.PutRatingInMemory(currentRating);
         }
         private void ProcessActivityDescriptor(XmlNode nodeRepresentation)
@@ -150,6 +206,16 @@ namespace ActivityRecommendation
         {
             Inheritance inheritance = this.ReadInheritance(nodeRepresentation);
             this.recommenderToInform.PutInheritanceInMemory(inheritance);
+        }
+        private void ProcessSkip(XmlNode nodeRepresentation)
+        {
+            ActivitySkip skip = this.ReadSkip(nodeRepresentation);
+            this.recommenderToInform.PutSkipInMemory(skip);
+        }
+        private void ProcessActivityRequest(XmlNode nodeRepresentation)
+        {
+            ActivityRequest request = this.ReadActivityRequest(nodeRepresentation);
+            this.recommenderToInform.PutActivityRequestInMemory(request);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -180,9 +246,8 @@ namespace ActivityRecommendation
         private Participation ReadParticipation(XmlNode nodeRepresentation)
         {
             // the participation being read
-            //Participation currentParticipation = new Participation();
             // The participation may have an embedded rating
-            AbsoluteRating absoluteRating1 = null;
+            Rating rating = null;
             ActivityDescriptor activityDescriptor = new ActivityDescriptor();
             DateTime startDate = DateTime.Now;
             DateTime endDate = DateTime.Now;
@@ -205,30 +270,73 @@ namespace ActivityRecommendation
                 }
                 if (currentChild.Name == this.RatingTag)
                 {
-                    absoluteRating1 = this.ReadRating(currentChild);
+                    rating = this.ReadRating(currentChild);
+                    continue;
                 }
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
+            currentParticipation.RawRating = rating;
 
-            // Chek whether the participation had an embedded rating
-            if (absoluteRating1 != null)
+            /* // Check whether the participation had an embedded rating
+            if (rating != null)
             {
                 // fill in necessary details
-                absoluteRating1.ActivityDescriptor = currentParticipation.ActivityDescriptor;
-                AbsoluteRating absoluteRating2 = new AbsoluteRating(absoluteRating1);
-
-                // create a rating for the start of the participation
-                absoluteRating1.Date = currentParticipation.StartDate;
-                absoluteRating1.Weight = 1;
-                this.recommenderToInform.PutRatingInMemory(absoluteRating1);
-
-                // create a rating for the end of the participation
-                //absoluteRating2.Date = currentParticipation.EndDate;
-                //absoluteRating2.Weight = 0.5;
-                //this.recommenderToInform.PutRatingInMemory(absoluteRating2);
-            }
+                //rating.FillInFromParticipation(currentParticipation);
+                // send the rating to the engine
+                //this.recommenderToInform.PutRatingInMemory(rating);
+            }*/
             return currentParticipation;
         }
+
+        // returns an object of type "Skip" that this XmlNode represents
+        private ActivitySkip ReadSkip(XmlNode nodeRepresentation)
+        {
+            ActivitySkip skip = new ActivitySkip();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.ActivityDescriptorTag)
+                {
+                    skip.ActivityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.DateTag)
+                {
+                    skip.Date = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SuggestionDateTag)
+                {
+                    skip.SuggestionDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.RatingTag)
+                {
+                    skip.RawRating = this.ReadAbsoluteRating(currentChild);
+                    continue;
+                }
+            }
+            return skip;
+        }
+
+        private ActivityRequest ReadActivityRequest(XmlNode nodeRepresentation)
+        {
+            ActivityRequest request = new ActivityRequest();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.ActivityDescriptorTag)
+                {
+                    request.ActivityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.DateTag)
+                {
+                    request.Date = this.ReadDate(currentChild);
+                    continue;
+                }
+            }
+            return request;
+        }
+
         private DateTime ReadDate(XmlNode nodeRepresentation)
         {
             string text = this.ReadText(nodeRepresentation);
@@ -251,7 +359,19 @@ namespace ActivityRecommendation
             }
             return "";
         }
-        private AbsoluteRating ReadRating(XmlNode nodeRepresentation)
+        private Rating ReadRating(XmlNode nodeRepresentation)
+        {
+            // figure out what type whether it is a relative rating
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.BetterRatingTag || currentChild.Name == this.WorseRatingTag)
+                {
+                    return this.ReadRelativeRating(nodeRepresentation);
+                }
+            }
+            return this.ReadAbsoluteRating(nodeRepresentation);
+        }
+        private AbsoluteRating ReadAbsoluteRating(XmlNode nodeRepresentation)
         {
             AbsoluteRating rating = new AbsoluteRating();
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
@@ -269,6 +389,29 @@ namespace ActivityRecommendation
                 if (currentChild.Name == this.RatingScoreTag)
                 {
                     rating.Score = this.ReadDouble(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.RatingSourceTag)
+                {
+                    rating.Source = this.ReadRatingSource(currentChild);
+                    continue;
+                }
+            }
+            return rating;
+        }
+        private RelativeRating ReadRelativeRating(XmlNode nodeRepresentation)
+        {
+            RelativeRating rating = new RelativeRating();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.BetterRatingTag)
+                {
+                    rating.BetterRating = this.ReadAbsoluteRating(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.WorseRatingTag)
+                {
+                    rating.WorseRating = this.ReadAbsoluteRating(currentChild);
                     continue;
                 }
             }
@@ -291,6 +434,12 @@ namespace ActivityRecommendation
                 }
             }
             return descriptor;
+        }
+        private RatingSource ReadRatingSource(XmlNode nodeRepresentation)
+        {
+            string text = this.ReadText(nodeRepresentation);
+            RatingSource source = RatingSource.GetSourceWithDescription(text);
+            return source;
         }
         private double ReadDouble(XmlNode nodeRepresentation)
         {
@@ -321,39 +470,57 @@ namespace ActivityRecommendation
             return this.ConvertToStringBody(properties);
         }
         // converts the DateTime into a string, and doesn't add the initial <Tag> or ending </Tag>
+        private string ConvertToStringBody(DateTime? when)
+        {
+            if (when == null)
+                return null;
+            string result = this.ConvertToStringBody((DateTime)when);
+            return result;
+        }
+        // converts the DateTime into a string, and doesn't add the initial <Tag> or ending </Tag>
         private string ConvertToStringBody(DateTime when)
         {
             string result = when.ToString("yyyy-MM-ddTHH:mm:ss");
             return result;
         }
-        // converts the double into a string, and doesn't add the initial <Tag> or  ending </Tag>
+        // converts the double into a string, and doesn't add the initial <Tag> or ending </Tag>
         private string ConvertToStringBody(double value)
         {
             return value.ToString();
         }
-        
+        // converts the rating to a string based on its type, and doesn't add the initial <Tag> or ending </Tag>
+        private string ConvertToStringBody(Rating rating)
+        {
+            // figure out what type it is and convert it accordingly
+            if (rating is AbsoluteRating)
+                return this.ConvertToStringBody((AbsoluteRating)rating);
+            if (rating is RelativeRating)
+                return this.ConvertToStringBody((RelativeRating)rating);
+            return null;
+        }
+        // converts the RelativeRating to a string, and doesn't add the initial <Tag> or ending </Tag>
+        private string ConvertToStringBody(RelativeRating rating)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
 
-        public string RatingTag
-        {
-            get
-            {
-                return "Rating";
-            }
+            properties[this.BetterRatingTag] = this.ConvertToStringBody(rating.BetterRating);
+            properties[this.WorseRatingTag] = this.ConvertToStringBody(rating.WorseRating);
+
+            return this.ConvertToStringBody(properties);
         }
-        public string RatingDateTag
+        // converts the AbsoluteRating into a string, and doesn't add the inital <Tag> or ending </Tag>
+        private string ConvertToStringBody(AbsoluteRating rating)
         {
-            get
-            {
-                return "Date";
-            }
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            if (rating.ActivityDescriptor != null)
+                properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(rating.ActivityDescriptor);
+            if (rating.Date != null)
+                properties[this.RatingDateTag] = this.ConvertToStringBody(rating.Date);
+            properties[this.RatingScoreTag] = this.ConvertToStringBody(rating.Score);
+
+            return this.ConvertToStringBody(properties);
         }
-        public string RatingScoreTag
-        {
-            get
-            {
-                return "Score";
-            }
-        }
+
         public string ActivityDescriptorTag
         {
             get
@@ -380,6 +547,57 @@ namespace ActivityRecommendation
             get
             {
                 return "DiscoveryDate";
+            }
+        }
+        private string DateTag
+        {
+            get
+            {
+                return "Date";
+            }
+        }
+
+        public string RatingTag
+        {
+            get
+            {
+                return "Rating";
+            }
+        }
+        public string RatingDateTag
+        {
+            get
+            {
+                return "Date";
+            }
+        }
+        public string RatingScoreTag
+        {
+            get
+            {
+                return "Score";
+            }
+        }
+        public string RatingSourceTag
+        {
+            get
+            {
+                return "Source";
+            }
+        }
+
+        public string BetterRatingTag
+        {
+            get
+            {
+                return "BetterRating";
+            }
+        }
+        public string WorseRatingTag
+        {
+            get
+            {
+                return "WorseRating";
             }
         }
 
@@ -427,11 +645,34 @@ namespace ActivityRecommendation
             }
         }
 
-        private string DateTag
+        private string SkipTag
         {
             get
             {
-                return "Date";
+                return "Skip";
+            }
+        }
+        private string SuggestionDateTag
+        {
+            get
+            {
+                return "SuggestionDate";
+            }
+        }
+
+        private string ActivityRequestTag
+        {
+            get
+            {
+                return "Request";
+            }
+        }
+
+        private string CommentTag
+        {
+            get
+            {
+                return "Comment";
             }
         }
         #endregion

@@ -21,9 +21,9 @@ namespace ActivityRecommendation
             this.SetContent(this.displayGrid);
 
             this.ratingsView = new TitledControl("This is a graph of the ratings of " + this.activityToDisplay.Name + " over time.");
-            this.displayGrid.SetItem(this.ratingsView, 0, 0);
+            this.displayGrid.PutItem(this.ratingsView, 0, 0);
             this.participationsView = new TitledControl("This is a graph of the participations in " + this.activityToDisplay.Name + " over time.");
-            this.displayGrid.SetItem(this.participationsView, 1, 0);
+            this.displayGrid.PutItem(this.participationsView, 1, 0);
 
             this.UpdateDrawing();
         }
@@ -44,12 +44,15 @@ namespace ActivityRecommendation
             // create the datapoints
             foreach (AbsoluteRating rating in ratings)
             {
-                TimeSpan duration = rating.Date.Subtract(firstDate);
-                // put the x-coordinate in the list
-                double x = duration.TotalDays;
-                // put the y-coordinate in the list
-                double y = rating.Score;
-                points.Add(new Point(x, y));
+                if (rating.Date != null)
+                {
+                    TimeSpan duration = ((DateTime)rating.Date).Subtract(firstDate);
+                    // put the x-coordinate in the list
+                    double x = duration.TotalDays;
+                    // put the y-coordinate in the list
+                    double y = rating.Score;
+                    points.Add(new Point(x, y));
+                }
             }
             // make a plot
             PlotControl newPlot = new PlotControl();
@@ -99,8 +102,8 @@ namespace ActivityRecommendation
         Button exitButton;
         RoutedEventHandler exitHandler;
         Activity activityToDisplay;
-        PlotControl ratingsPlot;
-        PlotControl participationsPlot;
+        //PlotControl ratingsPlot;
+        //PlotControl participationsPlot;
         TitledControl ratingsView;
         TitledControl participationsView;
         DisplayGrid displayGrid;

@@ -16,11 +16,13 @@ namespace ActivityRecommendation
             this.SetTitle(startingTitle);
 
             // create the box to store the date
-            this.dateBox = new System.Windows.Controls.TextBox();
-            this.dateBox.Width = 150;
-            this.dateBox.Height = 30;
-            this.dateBox.TextChanged += new TextChangedEventHandler(dateBox_TextChanged);
+            this.dateBox = new ResizableTextBox();
+            //this.dateBox.Width = 150;
+            //this.dateBox.Height = 30;
+            this.dateBox.AddTextChangedHandler(new TextChangedEventHandler(dateBox_TextChanged));
             this.SetContent(this.dateBox);
+
+            this.VerticalAlignment = System.Windows.VerticalAlignment.Center;
 
             // initialize date
             this.SetDate(DateTime.Now);
@@ -75,6 +77,6 @@ namespace ActivityRecommendation
         }
 
         //TextBlock titleBox;
-        System.Windows.Controls.TextBox dateBox;
+        ResizableTextBox dateBox;
     }
 }

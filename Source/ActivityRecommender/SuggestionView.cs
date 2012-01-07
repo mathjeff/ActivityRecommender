@@ -16,6 +16,8 @@ namespace ActivityRecommendation
 
             this.suggestionButton = new Button();
             this.suggestionButton.Content = "Suggest";
+            this.suggestionButton.VerticalAlignment = VerticalAlignment.Center;
+            //this.suggestionButton.HorizontalAlignment = HorizontalAlignment.Center;
             this.suggestionButton.Width = 100;
             this.suggestionButton.Height = 30;
             content.AddItem(this.suggestionButton);

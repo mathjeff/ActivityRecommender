@@ -187,7 +187,7 @@ namespace StatLists
             return result;
         }
 
-        // finds the TreeNode with the smallest key less than nextKey
+        // finds the TreeNode with the smallest key more than nextKey
         public ListItemStats<KeyType, ValueType> FindNextItem(KeyType nextKey, bool strictlyGreater)
         {
             TreeNode<KeyType, ValueType> bestNode = null;
@@ -198,10 +198,10 @@ namespace StatLists
                 // choose the child to move to
                 if (this.ChooseLeftChild(nextKey, currentNode, !strictlyGreater))
                 {
-                    // move to the correct child
-                    currentNode = currentNode.LeftChild;
                     // keep track of the rightmost node found so far that is to the left of this one
                     bestNode = currentNode;
+                    // move to the correct child
+                    currentNode = currentNode.LeftChild;
                 }
                 else
                 {
@@ -316,7 +316,7 @@ namespace StatLists
             if (leftNode != null)
             {
                 ValueType leftSum = this.SumAfterKey(leftKey, leftInclusive, leftNode);
-                sum = this.valueAdder.Sum(sum, leftSum);
+                sum = this.valueAdder.Sum(leftSum, sum);
             }
             if (rightNode != null)
             {
@@ -402,8 +402,8 @@ namespace StatLists
             {
                 if (this.ChooseLeftChild(key, currentNode, inclusive))
                 {
-                    ValueType extraValue = this.valueAdder.Sum(this.GetRightSum(currentNode), currentNode.Value);
-                    sum = this.valueAdder.Sum(sum, extraValue);
+                    ValueType extraValue = this.valueAdder.Sum(currentNode.Value, this.GetRightSum(currentNode));
+                    sum = this.valueAdder.Sum(extraValue, sum);
                     currentNode = currentNode.LeftChild;
                 }
                 else

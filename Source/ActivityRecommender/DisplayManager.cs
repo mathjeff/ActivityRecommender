@@ -29,6 +29,7 @@ namespace ActivityRecommendation
         }
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
+            //Size newBounds = this.DesiredSize;
             this.content.Arrange(new Rect(new Point(0, 0), arrangeBounds));
             return arrangeBounds;
         }

@@ -12,11 +12,14 @@ namespace ActivityRecommendation
     {
         public DateEntryView(string startingTitle)
         {
+            this.textchangedHandlers = new List<TextChangedEventHandler>();
+
             // create the title
             this.SetTitle(startingTitle);
 
             // create the box to store the date
             this.dateBox = new ResizableTextBox();
+            this.dateBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
             //this.dateBox.Width = 150;
             //this.dateBox.Height = 30;
             this.dateBox.AddTextChangedHandler(new TextChangedEventHandler(dateBox_TextChanged));
@@ -58,7 +61,12 @@ namespace ActivityRecommendation
             string text = when.ToString("yyyy-MM-ddTHH:mm:ss");
             this.dateBox.Text = text;
         }
-        
+
+        public void AddTextchangedHandler(TextChangedEventHandler h)
+        {
+            this.textchangedHandlers.Add(h);
+        }
+
         void updateDateColor()
         {
             if (this.IsDateValid())
@@ -74,9 +82,15 @@ namespace ActivityRecommendation
         void dateBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             this.updateDateColor();
+            foreach (TextChangedEventHandler handler in this.textchangedHandlers)
+            {
+                handler.Invoke(sender, e);
+            }
         }
 
         //TextBlock titleBox;
         ResizableTextBox dateBox;
+        List<TextChangedEventHandler> textchangedHandlers;
+
     }
 }

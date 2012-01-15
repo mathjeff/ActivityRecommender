@@ -206,7 +206,7 @@ namespace ActivityRecommendation
                 if (candidate.Choosable)
                 {
                     this.EstimateRating(candidate, when);
-                    Distribution currentRating = candidate.SuggestionValue;
+                    Distribution currentRating = candidate.SuggestionValue.Distribution;
                     if (bestRating == null || bestRating.Mean < currentRating.Mean)
                     {
                         bestActivity = candidate;
@@ -233,18 +233,23 @@ namespace ActivityRecommendation
         {
             // Now that the parents' ratings are up-to-date, the work begins
             // Make a list of predictions based on all the different factors
+            List<Prediction> predictions = activity.GetRatingEstimates(when);
+            return predictions;
+
+#if false
             List<Prediction> predictions = new List<Prediction>();
             // make a prediction based on the recent ratings of this Activity
-            Prediction guess;
-            guess = new Prediction();
-            guess.Distribution = activity.PredictorFromOwnRatings.Guess(when);
-            guess.Justification = "how you've rated this activity recently";
+            /*Prediction guess;
+            guess = activity.PredictorFromOwnRatings.Guess(when);
             predictions.Add(guess);
             // make a prediction based on the recent participations of this Activity
-            guess = new Prediction();
-            guess.Distribution = activity.PredictorFromOwnParticipations.Guess(when);
-            guess.Justification = "how much you've done this activity recently";
+            guess = activity.PredictorFromOwnParticipations.Guess(when);
             predictions.Add(guess);
+            guess = activity.PredictorFromOwnIdleness.Guess(when);
+            predictions.Add(guess);
+            guess = activity.PredictorFromTimeOfDay.Guess(when);
+            predictions.Add(guess);
+            */
             int numChildRatings = activity.RatingProgression.NumRatings;
             double weightFraction;
             // We train the parental Predictions to predict the rating of this Activity based on the known ratings of the parent
@@ -261,10 +266,11 @@ namespace ActivityRecommendation
                 // Like most things here, this isn't perfect but it's sufficient for now
 
                 // set the weight of the parent's prediction to 1 - numChildRatings / numParentRatings
+                /*
                 Activity parent = link.Predictor.Owner;
-                Distribution input = parent.LatestEstimatedRating;
+                Distribution input = parent.PredictedScore.Distribution;
                 guess = new Prediction();
-                Distribution output = link.Guess(input);
+                Prediction output = link.Guess(input);
                 guess.Justification = "predicted based on the rating of " + parent.Name;
                 int numParentRatings = parent.NumRatings;
                 weightFraction = 1;
@@ -274,6 +280,8 @@ namespace ActivityRecommendation
                 }
                 guess.Distribution = output.CopyAndReweightTo(weightFraction);
                 predictions.Add(guess);
+                */
+                /*
                 // Furthermore, in addition to using a PredictionLink to estimate the child's rating, we can make an additional guess
                 // based on the fact that the parent is a supercategory of the child
                 guess = new Prediction();
@@ -282,8 +290,10 @@ namespace ActivityRecommendation
                 weightFraction = Math.Sqrt(numChildRatings + 1);
                 guess.Distribution = output.CopyAndReweightTo(weightFraction);
                 predictions.Add(guess);
+                */
             }
             return predictions;
+#endif
         }
         // returns a list of Predictions that were only used to predict the value of suggesting the given activity at the given time
         private List<Prediction> GetSuggestionEstimates(Activity activity, DateTime when)
@@ -297,7 +307,9 @@ namespace ActivityRecommendation
             double weightFraction = (double)1 - numUnplayedHours / (double)24;
             if (weightFraction > 0)
             {
-                Prediction spacer = new Prediction(new Distribution(0, 0.5, weightFraction * 8), "you did this recently");
+                Prediction spacer = new Prediction();
+                spacer.Distribution = new Distribution(0, 0.5, weightFraction * 8);
+                spacer.Justification = "you did this recently";
                 predictions.Add(spacer);
             }
             // Finally, take into account the fact that we gain more information by suggesting activities that haven't been remembered in a while
@@ -310,7 +322,9 @@ namespace ActivityRecommendation
                 double stdDev = 1;
                 //guess = new Distribution(
                 Distribution scores = Distribution.MakeDistribution(1, stdDev, weightFraction);
-                Prediction guess = new Prediction(scores, "how long it's been since you thought about this activity");
+                Prediction guess = new Prediction();
+                guess.Distribution = scores;
+                guess.Justification ="how long it's been since you thought about this activity";
                 predictions.Add(guess);
             }
             return predictions;
@@ -343,7 +357,7 @@ namespace ActivityRecommendation
         public void EstimateRating(Activity activity, DateTime when)
         {
             // If we've already estimated the rating at this date, then just return what we calculated
-            DateTime latestUpdateDate = activity.LatestRatingEstimationDate;
+            DateTime latestUpdateDate = activity.PredictedScore.Date;
             if (when.CompareTo(latestUpdateDate) == 0)
             {
                 return;
@@ -356,22 +370,22 @@ namespace ActivityRecommendation
             }
             List<Prediction> predictions = this.GetRatingEstimates(activity, when);
             // now that we've made a list of guesses, combine them to make one final guess of what we expect the user's rating to be
-            Distribution actualGuess = this.CombineDistributions(predictions);
-            activity.LatestEstimatedRating = actualGuess;
+            Prediction actualGuess = this.CombinePredictions(predictions);
+            activity.PredictedScore = actualGuess;
 
             // Now we estimate how useful it would be to suggest this activity to the user
-            List<Prediction> extraDistributions = this.GetSuggestionEstimates(activity, when);
-            IEnumerable<Prediction> allDistributions = predictions.Concat(extraDistributions);
-            activity.SuggestionValue = this.CombineDistributions(allDistributions);
+            List<Prediction> extraPredictions = this.GetSuggestionEstimates(activity, when);
+            IEnumerable<Prediction> allPredictions = predictions.Concat(extraPredictions);
+            activity.SuggestionValue = this.CombinePredictions(allPredictions);
 
             // record that we performed a calculation at this date, so we know that we don't need to redo it
-            activity.LatestRatingEstimationDate = when;
+            //activity.LatestRatingEstimationDate = when;
             //Console.WriteLine("Activity Name = " + activity.Name + " rating = " + activity.LatestEstimatedRating.Mean.ToString() + " suggestion value = " + activity.SuggestionValue.Mean.ToString());
         }
         // returns a string telling the most important reason that 'activity' was last rated as it was
         public string JustifyRating(Activity activity)
         {
-            DateTime when = activity.LatestRatingEstimationDate;
+            DateTime when = activity.SuggestionValue.Date;
             IEnumerable<Prediction> predictions = this.GetAllSuggestionEstimates(activity, when);
             double lowestScore = 1;
             string bestReason = null;
@@ -380,23 +394,31 @@ namespace ActivityRecommendation
                 // make a list of all predictions except this one
                 List<Prediction> predictionsMinusOne = new List<Prediction>(predictions);
                 predictionsMinusOne.Remove(candidate);
-                Distribution guess = this.CombineDistributions(predictionsMinusOne);
-                if ((guess.Mean < lowestScore) || (bestReason == null))
+                Prediction prediction = this.CombinePredictions(predictionsMinusOne);
+                Distribution scoreDistribution = prediction.Distribution;
+                if ((scoreDistribution.Mean < lowestScore) || (bestReason == null))
                 {
-                    lowestScore = guess.Mean;
+                    lowestScore = scoreDistribution.Mean;
                     bestReason = candidate.Justification;
                 }
             }
             return bestReason;
         }
-        public Distribution CombineDistributions(IEnumerable<Prediction> predictions)
+        public Prediction CombinePredictions(IEnumerable<Prediction> predictions)
         {
             List<Distribution> distributions = new List<Distribution>();
+            DateTime date = new DateTime(0);
             foreach (Prediction prediction in predictions)
             {
                 distributions.Add(prediction.Distribution);
+                if (prediction.Date.CompareTo(date) > 0)
+                    date = prediction.Date;
             }
-            return this.CombineDistributions(distributions);
+            Distribution distribution = this.CombineDistributions(distributions);
+            Prediction result = new Prediction();
+            result.Distribution = distribution;
+            result.Date = date;
+            return result;
         }
         public Distribution CombineDistributions(IEnumerable<Distribution> distributions)
         {
@@ -585,6 +607,7 @@ namespace ActivityRecommendation
             this.inheritances.Add(newInheritance);
             this.PutActivityDescriptorInMemory(newInheritance.ParentDescriptor);
             this.PutActivityDescriptorInMemory(newInheritance.ChildDescriptor);
+            this.requiresFullUpdate = true;
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
         {

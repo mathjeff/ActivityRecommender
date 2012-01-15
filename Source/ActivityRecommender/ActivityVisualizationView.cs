@@ -12,20 +12,50 @@ namespace ActivityRecommendation
     {
         public ActivityVisualizationView(Activity activityToShow)
         {
+            // setup the title
             this.SetTitle("Here is a visualization of " + activityToShow.Name + " over time. Press [ESCAPE] to return to the main screen.");
-            this.exitButton = new Button();
-            this.exitButton.Content = "Escape";
-            this.KeyDown += new System.Windows.Input.KeyEventHandler(ActivityVisualizationView_KeyDown);
+            //this.KeyDown += new System.Windows.Input.KeyEventHandler(ActivityVisualizationView_KeyDown);
             this.activityToDisplay = activityToShow;
-            this.displayGrid = new DisplayGrid(2, 1);
+            this.displayGrid = new DisplayGrid(2, 2);
             this.SetContent(this.displayGrid);
 
+            // setup a graph of the ratings
             this.ratingsView = new TitledControl("This is a graph of the ratings of " + this.activityToDisplay.Name + " over time.");
-            this.displayGrid.PutItem(this.ratingsView, 0, 0);
+            this.displayGrid.AddItem(this.ratingsView);
+
+            // setup an exit button
+            this.exitButton = new Button();
+            this.exitButton.Content = "Escape";
+            this.exitButton.VerticalAlignment = VerticalAlignment.Center;
+            this.exitButton.Width = 100;
+            this.exitButton.HorizontalAlignment = HorizontalAlignment.Center;
+            this.exitButton.Height = 30;
+            this.displayGrid.AddItem(this.exitButton);
+
+            // setup a graph of the participations
             this.participationsView = new TitledControl("This is a graph of the participations in " + this.activityToDisplay.Name + " over time.");
-            this.displayGrid.PutItem(this.participationsView, 1, 0);
+            this.displayGrid.AddItem(this.participationsView);
+
+            // show some statistics of the participations
+            this.participationDataDisplay = new TitledControl("Stats:");
+            DisplayGrid statsDisplayGrid = new DisplayGrid(4, 1);
+            this.queryStartDateDisplay = new DateEntryView("Between");
+            this.queryStartDateDisplay.SetDate(activityToShow.GetEarliestInteractionDate());
+            this.queryStartDateDisplay.AddTextchangedHandler(new TextChangedEventHandler(this.DateTextChanged));
+            statsDisplayGrid.AddItem(this.queryStartDateDisplay);
+            this.queryEndDateDisplay = new DateEntryView("and");
+            this.queryEndDateDisplay.SetDate(DateTime.Now);
+            this.queryEndDateDisplay.AddTextchangedHandler(new TextChangedEventHandler(this.DateTextChanged));
+            statsDisplayGrid.AddItem(this.queryEndDateDisplay);
+
+            this.totalTimeDisplay = new ResizableTextBlock();
+            statsDisplayGrid.AddItem(this.totalTimeDisplay);
+            this.timeFractionDisplay = new ResizableTextBlock();
+            statsDisplayGrid.AddItem(this.timeFractionDisplay);
+            this.displayGrid.PutItem(statsDisplayGrid, 1, 1);
 
             this.UpdateDrawing();
+            this.UpdateParticipationStatsView();
         }
         public void UpdateDrawing()
         {
@@ -59,6 +89,8 @@ namespace ActivityRecommendation
             newPlot.SetData(points);
             newPlot.MinX = 0;
             newPlot.MaxX = when.Subtract(firstDate).TotalDays;
+            newPlot.MinY = 0;
+            newPlot.MaxY = 1;
 
             this.ratingsView.SetContent(newPlot);
         }
@@ -74,21 +106,46 @@ namespace ActivityRecommendation
             {
                 TimeSpan duration1 = participation.StartDate.Subtract(firstDate);
                 // calculate x1
-                double x1 = duration1.TotalDays;
+                double x1 = duration1.TotalSeconds;
                 // calculate y1
                 points.Add(new Point(x1, sumY));
                 TimeSpan duration2 = participation.EndDate.Subtract(firstDate);
                 // put x2 in the list
-                double x2 = duration2.TotalDays;
+                double x2 = duration2.TotalSeconds;
                 sumY += participation.TotalIntensity.Mean * participation.TotalIntensity.Weight;
                 points.Add(new Point(x2, sumY));                    
             }
             PlotControl newPlot = new PlotControl();
             newPlot.SetData(points);
             newPlot.MinX = 0;
-            newPlot.MaxX = when.Subtract(firstDate).TotalDays;
+            newPlot.MaxX = when.Subtract(firstDate).TotalSeconds;
 
             this.participationsView.SetContent(newPlot);
+
+        }
+        private void DateTextChanged(object sender, RoutedEventArgs e)
+        {
+            this.UpdateParticipationStatsView();
+        }
+        public void UpdateParticipationStatsView()
+        {
+            // make sure that the dates can be parsed before we update the display
+            if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
+                return;
+            // figure out how much time you spent on it between these dates
+            DateTime startDate = this.queryStartDateDisplay.GetDate();
+            DateTime endDate = this.queryEndDateDisplay.GetDate();
+            Participation summary = this.activityToDisplay.SummarizeParticipationsBetween(startDate, endDate);
+            double numDaysSpent = summary.TotalIntensity.Weight / 3600 / 24;
+            // figure out how much time there was between these dates
+            TimeSpan availableDuration = endDate.Subtract(startDate);
+            double totalNumDays = availableDuration.TotalDays;
+            double participationFraction = numDaysSpent / totalNumDays;
+
+            // now update the text blocks
+            //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
+            this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numDaysSpent + " days on this activity";
+            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time";
         }
         public void AddExitClickHandler(RoutedEventHandler e)
         {
@@ -99,6 +156,7 @@ namespace ActivityRecommendation
         {
             this.exitHandler.Invoke(sender, e);
         }
+
         Button exitButton;
         RoutedEventHandler exitHandler;
         Activity activityToDisplay;
@@ -107,5 +165,11 @@ namespace ActivityRecommendation
         TitledControl ratingsView;
         TitledControl participationsView;
         DisplayGrid displayGrid;
+
+        TitledControl participationDataDisplay;
+        DateEntryView queryStartDateDisplay;
+        DateEntryView queryEndDateDisplay;
+        ResizableTextBlock totalTimeDisplay;
+        ResizableTextBlock timeFractionDisplay;
     }
 }

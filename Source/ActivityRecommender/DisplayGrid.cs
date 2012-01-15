@@ -79,6 +79,10 @@ namespace ActivityRecommendation
             // keep track of which items implement the interface IResizable, telling how to resize them
             if (newControl is IResizable)
                 this.itemsAsIResizables[row, column] = (IResizable)newControl;
+            else
+                this.itemsAsIResizables[row, column] = null;
+            // recalculate how to display everything
+            this.InvalidateVisual();
         }
 
         #endregion
@@ -118,8 +122,10 @@ namespace ActivityRecommendation
         // call this if it is the final Measure
         public Size FinalMeasure(System.Windows.Size finalSize)
         {
-            //this.PreliminaryMeasure(finalSize);
+            // we must invalidate the measurement to make sure that this measurement actually takes place
+            this.InvalidateMeasure();
             this.Measure(finalSize);
+            this.finalMeasuredWidths = this.actualColumnWidths;
             return finalSize;
         }
         
@@ -148,15 +154,14 @@ namespace ActivityRecommendation
                 }
             }
             this.doneMeasuring = true;
+            this.desiredSize = constraint;
             return constraint;
         }
 
         protected override Size ArrangeOverride(Size arrangeSize)
         {
-
-            Size desiredSize = this.DesiredSize;
+            this.desiredSize = this.DesiredSize;
             this.CalculateActualSizes(arrangeSize);
-
 
             // now actually arrange everything
             double y = 0;
@@ -403,8 +408,12 @@ namespace ActivityRecommendation
         double[] actualRowHeights;
         double[] actualColumnWidths;
 
+        double[] finalMeasuredWidths;
+
+
         UIElement[,] items;
         IResizable[,] itemsAsIResizables;
         bool doneMeasuring;
+        Size desiredSize;
     }
 }

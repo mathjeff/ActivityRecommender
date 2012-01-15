@@ -69,8 +69,8 @@ namespace ActivityRecommendation
             otherRating.ActivityDescriptor = this.latestParticipation.ActivityDescriptor;
             otherRating.Date = this.latestParticipation.StartDate;
             Activity otherActivity = activities.ResolveDescriptor(otherRating.ActivityDescriptor);
-            engine.MakeRecommendation(otherActivity, (DateTime)otherRating.Date);
-            Distribution otherEstimate = otherActivity.LatestEstimatedRating;
+            engine.EstimateRating(otherActivity, (DateTime)otherRating.Date);
+            Distribution otherEstimate = otherActivity.PredictedScore.Distribution;
 
             // make an AbsoluteRating for this Activity
             AbsoluteRating thisRating = new AbsoluteRating();
@@ -78,7 +78,7 @@ namespace ActivityRecommendation
             Activity thisActivity = activities.ResolveDescriptor(participation.ActivityDescriptor);
             // calculate the predicted rating for this activity
             engine.MakeRecommendation(thisActivity, participation.StartDate);
-            Distribution thisEstimate = thisActivity.LatestEstimatedRating;
+            Distribution thisEstimate = thisActivity.PredictedScore.Distribution;
 
             Distribution betterDistribution;
             Distribution worseDistribution;

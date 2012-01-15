@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using StatLists;
 
+// A ParticipationProgression how much of an Activity the user has done recently
+// It is intended to model brain activity and it uses exponential curves to do so
 namespace ActivityRecommendation
 {
     public class ParticipationProgression : IComparer<DateTime>, IAdder<Participation>, IProgression
@@ -49,7 +51,24 @@ namespace ActivityRecommendation
                 return results;
             }
         }
-
+        public Participation SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
+        {
+            Participation result = this.searchHelper.SumBetweenKeys(startDate, true, endDate, false);
+            return result;
+        }
+        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        {
+            List<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+            List<ProgressionValue> results = new List<ProgressionValue>();
+            int i;
+            for (i = indexInclusive; i < items.Count; i++)
+            {
+                DateTime when = items[i].Key;
+                ProgressionValue value = this.GetValueAt(when, false);
+                results.Add(value);
+            }
+            return results;
+        }
         #endregion
 
         #region Functions for IComparer<Participation>
@@ -140,15 +159,23 @@ namespace ActivityRecommendation
         #region Functions for IProgression
 
         public Activity Owner { get; set; }
-        // returns basically the fraction of the user's time that was spent performing that activity recently at that date
+
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
+        {
+            // This linear calculation has shown during testing to be useful to have
+            return this.GetValueLinearly(when, strictlyEarlier);
+            // The exponential calculation has shown during testing to make the predictions worse
+            //return this.GetValueExponentially(when, strictlyEarlier);
+        }
+        // returns basically the fraction of the user's time that was spent performing that activity recently at that date
+        public ProgressionValue GetValueExponentially(DateTime when, bool strictlyEarlier)
         {
             // get a summary of all of the data, to estimate the duration of the "recent" past
             Participation cumulativeParticipation = this.searchHelper.SumBeforeKey(when, true);
             // make sure that we have enough data
             if (cumulativeParticipation.Duration.TotalSeconds == 0)
             {
-                ProgressionValue defaultValue = new ProgressionValue(new Distribution(), -1);
+                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
                 return defaultValue;
             }
             Distribution logIdleTime = cumulativeParticipation.LogIdleTime;
@@ -156,7 +183,7 @@ namespace ActivityRecommendation
             // make sure that we have enough data
             if (logIdleTime.Mean == 0 || logActiveTime.Mean == 0)
             {
-                ProgressionValue defaultValue = new ProgressionValue(Distribution.MakeDistribution(0.5, 0.25, 0), -1);
+                ProgressionValue defaultValue = new ProgressionValue(when, Distribution.MakeDistribution(0.5, 0.25, 0), -1);
                 return defaultValue;
             }
             // now we estimate the value of the exponentially moving average
@@ -217,17 +244,18 @@ namespace ActivityRecommendation
             }
 
             Distribution recentIntensity = Distribution.MakeDistribution(currentValue, 0, 1);
-            ProgressionValue result = new ProgressionValue(recentIntensity, endingIndexExclusive);
+            ProgressionValue result = new ProgressionValue(when, recentIntensity, endingIndexExclusive);
             return result;
 
 
-            /*
-            
+        }
+        public ProgressionValue GetValueLinearly(DateTime when, bool strictlyEarlier)
+        {
             // find the most recent participation before the given date
             ListItemStats<DateTime, Participation> latestItem = this.searchHelper.FindPreviousItem(when, true);
             if (latestItem == null)
             {
-                ProgressionValue defaultValue = new ProgressionValue(new Distribution(0, 0, 0), -1);
+                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0), -1);
                 return defaultValue;
             }
             Participation latestParticipation = latestItem.Value;
@@ -298,9 +326,30 @@ namespace ActivityRecommendation
 
             // now totalParticipation is a distribution of the intensities of the participations of the activity over the recent past
             int previousCount = this.searchHelper.CountBeforeKey(when, true);
-            ProgressionValue result = new ProgressionValue(totalParticipation, previousCount);
+            ProgressionValue result = new ProgressionValue(when, totalParticipation, previousCount);
             return result;
-            */
+        }
+
+        public ProgressionValue GetCurrentValue(DateTime when)
+        {
+            return this.GetValueAt(when, false);
+        }
+
+        public string Description
+        {
+            get
+            {
+                return "How much you've done this activity recently";
+            }
+        }
+
+
+        public int NumItems
+        {
+            get
+            {
+                return this.searchHelper.NumItems;
+            }
         }
 
         #endregion

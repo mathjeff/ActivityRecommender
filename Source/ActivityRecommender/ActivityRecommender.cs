@@ -21,6 +21,11 @@ namespace ActivityRecommendation
             this.SetupEngine();
 
             this.SetupDrawing();
+            if (this.engineTester != null)
+            {
+                this.engineTester.PrintResults();
+                this.engineTester = this.engineTester;
+            }
         }
 
         private void InitializeSettings()
@@ -29,12 +34,13 @@ namespace ActivityRecommendation
             this.inheritancesFileName = "ActivityInheritances.txt";
             this.tempFileName = "TemporaryData.txt";
             this.textConverter = new TextConverter(this);
+            //this.engineTester = new EngineTester();
         }
 
         private void SetupDrawing()
         {
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2012-01-07T11:23";
+            titleString += " Build Date: 2012-01-15T18:44";
             this.mainDisplay = new TitledControl(titleString);
             this.mainDisplayGrid = new DisplayGrid(1, 4);
             //this.mainDisplayGrid.OverrideArrangement = true;
@@ -99,13 +105,13 @@ namespace ActivityRecommendation
                 // if they've asked for two recommendations in succession, it means they didn't like the previous one
                 
                 // Calculate the score to generate for this Activity as a result of that statement
-                Distribution previousDistribution = this.latestRecommendedActivity.LatestEstimatedRating;
+                Distribution previousDistribution = this.latestRecommendedActivity.PredictedScore.Distribution;
                 double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
                 if (estimatedScore < 0)
                     estimatedScore = 0;
                 // make a Skip object holding the needed data
                 ActivitySkip skip = new ActivitySkip(now, this.latestRecommendedActivity.MakeDescriptor());
-                skip.SuggestionDate = this.latestRecommendedActivity.LatestRatingEstimationDate;
+                skip.SuggestionDate = this.latestRecommendedActivity.PredictedScore.Date;
                 AbsoluteRating rating = new AbsoluteRating();
                 rating.Score = estimatedScore;
                 skip.RawRating = rating;
@@ -156,8 +162,8 @@ namespace ActivityRecommendation
             {
                 recommendationText = bestActivity.Name;
                 justificationText = this.engine.JustifyRating(bestActivity);
-                this.suggestionView.ExpectedScoreText = bestActivity.LatestEstimatedRating.Mean.ToString();
-                this.suggestionView.ScoreStdDevText = bestActivity.LatestEstimatedRating.StdDev.ToString();
+                this.suggestionView.ExpectedScoreText = bestActivity.PredictedScore.Distribution.Mean.ToString();
+                this.suggestionView.ScoreStdDevText = bestActivity.PredictedScore.Distribution.StdDev.ToString();
             }
             this.suggestionView.SuggestionText = recommendationText;
             this.suggestionView.JustificationText = justificationText;
@@ -331,26 +337,26 @@ namespace ActivityRecommendation
                     this.participationEntryView.LatestParticipation = this.latestParticipation;
             }
             this.engine.PutParticipationInMemory(newParticipation);
+            if (this.engineTester != null)
+                this.engineTester.AddParticipation(newParticipation);
         }
         public void PutRatingInMemory(Rating newRating)
         {
             this.engine.PutRatingInMemory(newRating);
-        }
-        public void PutRatingInMemory(RelativeRating newRating)
-        {
-            this.engine.PutRatingInMemory(newRating);
-        }
-        public void PutRatingInMemory(AbsoluteRating newRating)
-        {
-            this.engine.PutRatingInMemory(newRating);
+            if (this.engineTester != null)
+                this.engineTester.AddRating(newRating);
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
             this.engine.PutSkipInMemory(newSkip);
+            if (this.engineTester != null)
+                this.engineTester.AddSkip(newSkip);
         }
         public void PutActivityRequestInMemory(ActivityRequest newRequest)
         {
             this.engine.PutActivityRequestInMemory(newRequest);
+            if (this.engineTester != null)
+                this.engineTester.AddRequest(newRequest);
         }
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
         {
@@ -359,6 +365,8 @@ namespace ActivityRecommendation
         public void PutInheritanceInMemory(Inheritance newInheritance)
         {
             this.engine.PutInheritanceInMemory(newInheritance);
+            if (this.engineTester != null)
+                this.engineTester.AddInheritance(newInheritance);
         }
         public void SuspectLatestActionDate(DateTime when)
         {
@@ -402,6 +410,7 @@ namespace ActivityRecommendation
         public void ShowMainview()
         {
             this.mainDisplay.SetContent(this.mainDisplayGrid);
+            //this.displayManager.InvalidateMeasure();
         }
 
         #endregion
@@ -463,6 +472,7 @@ namespace ActivityRecommendation
         string tempFileName;
         DateTime latestActionDate;
         Participation latestParticipation;
+        EngineTester engineTester;
 
     }
 }

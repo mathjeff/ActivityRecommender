@@ -80,6 +80,11 @@ namespace ActivityRecommendation
         {
             return new Distribution(this.sumValue - other.sumValue, this.sumSquaredValue - other.sumSquaredValue, this.sumWeight - other.sumWeight);
         }
+        public override string ToString()
+        {
+            string result = "Mean:" + this.Mean.ToString() + " stdDev:" + this.StdDev.ToString() + " weight:" + this.Weight.ToString();
+            return result;
+        }
 
         // returns a new Distribution whose values are all multiplied by outputScale
         public Distribution CopyAndStretchBy(double outputScale)

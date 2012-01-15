@@ -88,8 +88,12 @@
     <Compile Include="Distribution.cs" />
     <Compile Include="DistributionAdder.cs" />
     <Compile Include="Engine.cs" />
+    <Compile Include="EngineTester.cs" />
+    <Compile Include="ExpectedRatingProgression.cs" />
+    <Compile Include="IdlenessProgression.cs" />
     <Compile Include="Inheritance.cs" />
     <Compile Include="InheritanceEditingView.cs" />
+    <Compile Include="IPredictionLink.cs" />
     <Compile Include="RatingEntryView.cs" />
     <Compile Include="RelativeRatingEntryView.cs" />
     <Compile Include="Resizability.cs" />
@@ -125,8 +129,10 @@
     <Compile Include="ScatterPlot.cs" />
     <Compile Include="ActivitySkip.cs" />
     <Compile Include="SelectorView.cs" />
+    <Compile Include="SimplePredictionLink.cs" />
     <Compile Include="SuggestionView.cs" />
     <Compile Include="TextConverter.cs" />
+    <Compile Include="TimeProgression.cs" />
     <Compile Include="TitledControl.cs" />
     <Compile Include="TitledTextBlock.cs" />
     <Compile Include="TitledTextbox.cs" />

@@ -29,12 +29,33 @@ namespace ActivityRecommendation
             this.parents = new List<Activity>();
             this.children = new List<Activity>();
             this.parentDescriptors = new List<ActivityDescriptor>();
+
+            this.ratingPredictors = new List<IPredictionLink>();
+            this.expectedRatingProgression = new ExpectedRatingProgression(this);
+
             this.ratingProgression = new RatingProgression(this);
-            this.participationProgression = new ParticipationProgression(this);
             this.predictorFromOwnRatings = new PredictionLink(this.ratingProgression, this.ratingProgression);
             this.predictorFromOwnRatings.InitializeIncreasing();
+            this.ratingPredictors.Add(this.predictorFromOwnRatings);
+
+            this.participationProgression = new ParticipationProgression(this);
             this.predictorFromOwnParticipations = new PredictionLink(this.participationProgression, this.ratingProgression);
-            this.parentPredictionLinks = new List<PredictionLink>();
+            // It actually turns out that the Root(Mean(Squared(Error))) goes down if we don't use this
+            this.ratingPredictors.Add(this.predictorFromOwnParticipations);
+            
+            this.idlenessProgression = new IdlenessProgression(this);
+            this.predictorFromOwnIdleness = new PredictionLink(this.idlenessProgression, this.ratingProgression);
+            this.ratingPredictors.Add(predictorFromOwnIdleness);
+
+            this.timeOfDayProgression = new TimeProgression(new DateTime(), new TimeSpan(24, 0, 0));
+            this.predictorFromTimeOfDay = new PredictionLink(this.timeOfDayProgression, this.ratingProgression);
+            this.predictorFromTimeOfDay.InputWrapsAround = true;
+            this.ratingPredictors.Add(this.predictorFromTimeOfDay);
+            
+            this.PredictedScore = new Prediction();
+            this.PredictedParticipationProbability = new Prediction();
+            //this.LatestPrediction = new Prediction();
+            //this.LatestPrediction.Date = new DateTime(0);
             this.latestRatingEstimationDate = new DateTime(0);
             this.latestParticipationDate = new DateTime(0);
             this.latestInteractionDate = new DateTime(0);
@@ -85,8 +106,14 @@ namespace ActivityRecommendation
                 newParent.children.Add(this);
                 // for the moment, we only allow leaf nodes to be chosen for recommendations
                 newParent.Choosable = false;
-                PredictionLink newLink = new PredictionLink(newParent.RatingProgression, this.RatingProgression);
-                this.AddPredictionLink(newLink);
+
+                PredictionLink newLink = new PredictionLink(newParent.RatingProgression, newParent.ExpectedRatingProgression, this.RatingProgression);
+                newLink.Justification = "predicted based on the rating of " + newParent.Description;
+                this.ratingPredictors.Add(newLink);
+
+                SimplePredictionLink link2 = new SimplePredictionLink(newParent.ExpectedRatingProgression, this.RatingProgression, "Probably close to the rating of " + newParent.Description);
+                this.ratingPredictors.Add(link2);
+
             }
         }
         public List<Activity> Parents
@@ -118,6 +145,14 @@ namespace ActivityRecommendation
                 return this.ratingProgression;
             }
         }
+        public ExpectedRatingProgression ExpectedRatingProgression
+        {
+            get
+            {
+                return this.expectedRatingProgression;
+            }
+        }
+
         public ParticipationProgression ParticipationProgression
         {
             get
@@ -125,10 +160,20 @@ namespace ActivityRecommendation
                 return this.participationProgression;
             }
         }
-        public void AddPredictionLink(PredictionLink newLink)
+        public Participation SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
         {
-            this.parentPredictionLinks.Add(newLink);
+            Participation result = this.participationProgression.SummarizeParticipationsBetween(startDate, endDate);
+            return result;
         }
+
+
+        // the most recent estimate about the rating of the activity
+        public Prediction PredictedScore { get; set; }
+        // the most recent estimate about the importants of suggesting the activity
+        public Prediction SuggestionValue { get; set; }
+        // the most recent estimate about how likely the user is to do the activity if we suggest it
+        public Prediction PredictedParticipationProbability { get; set; }
+        /*
         // the latest date at which the rating of this Activity was estimated
         public DateTime LatestRatingEstimationDate
         {
@@ -141,11 +186,14 @@ namespace ActivityRecommendation
                 this.latestRatingEstimationDate = value;
             }
         }
+
         public Distribution LatestEstimatedRating { get; set; } // what the engine thinks the user would give as a rating to this Activity
         // how useful it would be to the user if we suggested this Activity now. This is close to LatestEstimatedRating, but modified slightly
         // based on how long it has been since the user interacted with this Activity and also based on the initial assumption that the user
         // doesn't want to repeat an activity that they recently stopped
-        public Distribution SuggestionValue { get; set; }
+        public Distribution ParticipationProbability { get; set; }
+        */
+
         public PredictionLink PredictorFromOwnRatings
         {
             get
@@ -160,19 +208,26 @@ namespace ActivityRecommendation
                 return this.predictorFromOwnParticipations;
             }
         }
-
-        public List<PredictionLink> ParentPredictionLinks
+        public PredictionLink PredictorFromOwnIdleness
         {
             get
             {
-                return this.parentPredictionLinks;
+                return this.predictorFromOwnIdleness;
             }
         }
+        public PredictionLink PredictorFromTimeOfDay
+        {
+            get
+            {
+                return this.predictorFromTimeOfDay;
+            }
+        }
+
         public int NumRatings
         {
             get
             {
-                return this.ratingProgression.NumRatings;
+                return this.ratingProgression.NumItems;
             }
         }
         // declares that we think the activity was discovered on the given date
@@ -219,6 +274,10 @@ namespace ActivityRecommendation
                 return this.defaultDiscoveryDate;
             }
         }
+        public DateTime GetEarliestInteractionDate()
+        {
+            return this.earliestInteractionDate.GetValueOrDefault(DateTime.Now);
+        }
         public void AddRating(AbsoluteRating newRating)
         {
             // keep track of the ratings
@@ -231,6 +290,7 @@ namespace ActivityRecommendation
         {
             // keep track of the participation
             this.participationProgression.AddParticipation(newParticipation);
+            this.idlenessProgression.AddParticipation(newParticipation);
             // keep track of the earliest and latest date at which anything happened
             this.ApplyKnownInteractionDate(newParticipation.StartDate);
             this.ApplyKnownInteractionDate(newParticipation.EndDate);
@@ -241,6 +301,27 @@ namespace ActivityRecommendation
                 this.latestParticipationDate = when;
             }
         }
+        // returns a bunch of estimates about how it will be rated at this date
+        public List<Prediction> GetRatingEstimates(DateTime when)
+        {
+            List<Prediction> predictions = new List<Prediction>();
+            foreach (IPredictionLink link in this.ratingPredictors)
+            {
+                predictions.Add(link.Guess(when));
+            }
+            return predictions;
+        }
+        // returns a bunch of estimates about the probability that the user would do this activity if it were suggested now
+        public List<Prediction> GetParticipationProbabilityEstimates(DateTime when)
+        {
+            List<Prediction> predictions = new List<Prediction>();
+            foreach (PredictionLink link in this.participationProbabilityPredictors)
+            {
+                predictions.Add(link.Guess(when));
+            }
+            return predictions;
+        }
+
         #endregion
 
         #region Private Member Variables
@@ -252,16 +333,29 @@ namespace ActivityRecommendation
         private List<Activity> parents;
         private List<Activity> children;
         private List<ActivityDescriptor> parentDescriptors;
+
+        private List<IPredictionLink> ratingPredictors;
+        private List<IPredictionLink> participationProbabilityPredictors;
+
         private RatingProgression ratingProgression;
-        private ParticipationProgression participationProgression;
-        private List<PredictionLink> parentPredictionLinks;    // a list of all PredictionLinks that are used to predict the value of this Activity's RatingProgression from parent ratings
+        private ExpectedRatingProgression expectedRatingProgression;
         private PredictionLink predictorFromOwnRatings;
+        private ParticipationProgression participationProgression;
         private PredictionLink predictorFromOwnParticipations;
+        private IdlenessProgression idlenessProgression;
+        private PredictionLink predictorFromOwnIdleness;
+        private TimeProgression timeOfDayProgression;
+        private PredictionLink predictorFromTimeOfDay;
+
+        //private List<IPredictionLink> parentPredictionLinks;    // a list of all PredictionLinks that are used to predict the value of this Activity's RatingProgression from parent ratings
+
+        
         private int uniqueIdentifier;
-        DateTime? latestInteractionDate;
-        DateTime? earliestInteractionDate;
-        DateTime? latestParticipationDate;
-        DateTime defaultDiscoveryDate;
+        private DateTime? latestInteractionDate;
+        private DateTime? earliestInteractionDate;
+        private DateTime? latestParticipationDate;
+        private DateTime defaultDiscoveryDate;
+
         #endregion
 
     }

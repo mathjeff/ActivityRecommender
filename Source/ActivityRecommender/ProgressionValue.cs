@@ -9,10 +9,18 @@ namespace ActivityRecommendation
 {
     public class ProgressionValue
     {
-        public ProgressionValue(Distribution outputValue, int pointIndex)
+        public ProgressionValue(DateTime when, Distribution outputValue, int uniqueId)
         {
+            this.date = when;
             this.value = outputValue;
-            this.index = pointIndex;
+            this.index = uniqueId;
+        }
+        public DateTime Date
+        {
+            get
+            {
+                return this.date;
+            }
         }
         // returns the value of the Progression
         public Distribution Value
@@ -44,5 +52,6 @@ namespace ActivityRecommendation
 
         private Distribution value;
         private int index;
+        private DateTime date;
     }
 }

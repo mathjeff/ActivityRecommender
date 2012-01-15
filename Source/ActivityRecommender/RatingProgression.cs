@@ -40,7 +40,6 @@ namespace ActivityRecommendation
             }
         }
 
-
         // tells whether this RatingProgression cares about the provided rating
         public bool ShouldIncludeRating(AbsoluteRating newRating)
         {
@@ -57,80 +56,20 @@ namespace ActivityRecommendation
             }*/
         }
 
-        public void Test()
-        {
-            DateTime date1;
-            AbsoluteRating newRating;
-
-            date1 = new DateTime(100000000);
-            newRating = new AbsoluteRating(0, date1, null, null);
-            this.AddRating(newRating);
-            //this.AddRating(newRating);
-
-            date1 = new DateTime(120000000);
-            newRating = new AbsoluteRating(.25, date1, null, null);
-            this.AddRating(newRating);
-            //this.AddRating(newRating);
-
-            date1 = new DateTime(150000000);
-            newRating = new AbsoluteRating(.5, date1, null, null);
-            this.AddRating(newRating);
-            //this.AddRating(newRating);
-
-            date1 = new DateTime(170000000);
-            newRating = new AbsoluteRating(.75, date1, null, null);
-            this.AddRating(newRating);
-            //this.AddRating(newRating);
-
-            //date1 = new DateTime(120000000);
-            //this.GetValueAt(date1, true);
-
-            ListItemStats<DateTime, Distribution> stats;
-            stats = this.searchHelper.FindPreviousItem(new DateTime(90000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(90000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(100000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(100000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(110000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(110000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(120000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(120000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(130000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(130000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(150000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(150000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(160000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(160000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(170000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(170000000), false);
-
-            stats = this.searchHelper.FindPreviousItem(new DateTime(180000000), true);
-            stats = this.searchHelper.FindPreviousItem(new DateTime(180000000), false);
-
-            this.GetValueAt(new DateTime(190000000), true);
-            return;
-
-        }
-
         // returns a list of ratings, sorted by the date that they were added to this RatingProgression
         public List<AbsoluteRating> GetRatingsInDiscoveryOrder()
         {
             return this.ratingsInDiscoveryOrder;
         }
 
-        public int NumRatings
+        public int NumItems
         {
             get
             {
                 return this.searchHelper.NumItems;
             }
         }
+
         #endregion
 
         // for binary searches
@@ -160,7 +99,7 @@ namespace ActivityRecommendation
             ListItemStats<DateTime, Distribution> latestItem = this.searchHelper.FindPreviousItem(when, true);
             if (latestItem == null)
             {
-                ProgressionValue defaultValue = new ProgressionValue(new Distribution(0, 0, 0), -1);
+                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0), -1);
                 return defaultValue;
             }
             // get some statistics
@@ -173,8 +112,37 @@ namespace ActivityRecommendation
             // add up everything that occurred between the earlier day and now
             Distribution sum = this.searchHelper.SumBetweenKeys(earlierDate, true, when, !strictlyEarlier);
             int previousCount = this.searchHelper.CountBeforeKey(when, strictlyEarlier);
-            ProgressionValue result = new ProgressionValue(sum, previousCount);
+            ProgressionValue result = new ProgressionValue(when, sum, previousCount);
             return result;
+        }
+        public ProgressionValue GetCurrentValue(DateTime when)
+        {
+            Distribution distribution = this.Owner.PredictedScore.Distribution;
+            ProgressionValue result = new ProgressionValue(when, distribution, this.NumItems);
+            return result;
+        }
+        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        {
+            int i;
+            List<ProgressionValue> results = new List<ProgressionValue>();
+            for (i = indexInclusive; i < this.ratingsInDiscoveryOrder.Count; i++)
+            {
+                AbsoluteRating rating = this.ratingsInDiscoveryOrder[i];
+                Distribution distribution = Distribution.MakeDistribution(rating.Score, 0, 1);
+                ProgressionValue value = new ProgressionValue((DateTime)rating.Date, distribution, i);
+                results.Add(value);
+                //ProgressionValue value = new ProgressionValue(
+                //results.Add((DateTime)this.ratingsInDiscoveryOrder[i].Date);
+            }
+            return results;
+        }
+
+        public string Description
+        {
+            get
+            {
+                return "How you've rated this recently";
+            }
         }
 
         #endregion

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Media;
 
 namespace ActivityRecommendation
 {
@@ -14,6 +15,8 @@ namespace ActivityRecommendation
             this.textBox = new TextBox();
             this.textBox.TextWrapping = TextWrapping.Wrap;
             this.textBox.HorizontalAlignment = HorizontalAlignment.Stretch;
+            this.textBox.Background = null;
+            this.Background = Brushes.White;
             this.SetContent(this.textBox, new Resizability(1, 1));
         }
         public void AddTextChangedHandler(TextChangedEventHandler h)
@@ -78,6 +81,6 @@ namespace ActivityRecommendation
             return arrangeBounds;
         }
 
-        public TextBox textBox;
+        private TextBox textBox;
     }
 }

@@ -6,15 +6,27 @@ using System.Text;
 // The PredictionLink class is used to predict the value of a RatingProgression from the value of an IProgression
 namespace ActivityRecommendation
 {
-    public class PredictionLink
+    public class PredictionLink : IPredictionLink
     {
         // Constructor
-        public PredictionLink(IProgression predictor, RatingProgression predictee)
+        public PredictionLink(IProgression trainingInput, RatingProgression output)
         {
-            this.predictorProgression = predictor;
-            this.predicteeProgression = predictee;
+            this.trainingInputProgression = this.testingInputProgression = trainingInput;
+            this.outputProgression = output;
+            this.Initialize();            
+        }
+        public PredictionLink(IProgression trainingInput, IProgression testingInput, RatingProgression output)
+        {
+            this.trainingInputProgression = trainingInput;
+            this.testingInputProgression = testingInput;
+            this.outputProgression = output;
+            this.Initialize();
+        }
+        private void Initialize()
+        {
             this.predictionPlot = new ScatterPlot();
             this.numDatapoints = 0;
+            this.Justification = this.trainingInputProgression.Description;
         }
         public void InitializeIncreasing()
         {
@@ -29,38 +41,46 @@ namespace ActivityRecommendation
             this.predictionPlot.AddDatapoint(new Datapoint(1, 1, 1));
         }
 
+
         // updates the internal data based on the data from the predictor and predictee progressions
         public void Update()
         {
             // get a list of the ratings in the order that they were provided to the computer program, so we can find the new ones
-            List<AbsoluteRating> ratings = this.predicteeProgression.GetRatingsInDiscoveryOrder();
-            int i;
             int currentNumDatapoints = this.numDatapoints;
+            List<ProgressionValue> values = this.outputProgression.GetValuesAfter(currentNumDatapoints);
             // iterate over all of the new ratings
-            for (i = currentNumDatapoints; i < ratings.Count; i++)
+            foreach (ProgressionValue outputValue in values)
             {
-                AbsoluteRating currentRating = ratings[i];
-                if (currentRating.Date != null)
+                DateTime when = outputValue.Date;
+                ProgressionValue currentInput = this.trainingInputProgression.GetValueAt(when, true);
+                if (currentInput.Index >= 0)
                 {
-                    ProgressionValue currentInput = this.predictorProgression.GetValueAt((DateTime)currentRating.Date, true);
-                    if (currentInput.Index >= 0)
-                    {
-                        // add the appropriate Datapoint to the ScatterPlot
-                        this.predictionPlot.AddDatapoint(new Datapoint(currentInput.Value.Mean, currentRating.Score, currentRating.Weight));
-                    }
+                    //ProgressionValue currentOutput = this.predicteeProgression.GetValueAt(when, false);
+                    Distribution outputDistribution = outputValue.Value;
+                    // add the appropriate Datapoint to the ScatterPlot
+                    this.predictionPlot.AddDatapoint(new Datapoint(currentInput.Value.Mean, outputDistribution.Mean, outputDistribution.Weight));
                 }
             }
-            this.numDatapoints = ratings.Count;
+            this.numDatapoints += values.Count;
         }
+        
+        #region Functions for IPredictionLink
+        
         // returns a distribution indicating the most likely values of the predictor, based on the current value of the predictee
-        public Distribution Guess(DateTime when)
+        public Prediction Guess(DateTime when)
         {
             // now make the prediction
-            ProgressionValue currentValue = this.predictorProgression.GetValueAt(when, true);
-            return this.Guess(currentValue.Value);
+            ProgressionValue currentValue = this.testingInputProgression.GetValueAt(when, false);
+            Distribution currentInput = currentValue.Value;
+            Prediction result = this.Guess(currentInput);
+            // set the date correctly
+            result.Date = when;
+            return result;
         }
-        // returns a distribution indicating the most likely values of the predictor, based on the current value of the predictee
-        public Distribution Guess(Distribution input)
+
+        #endregion
+
+        Prediction Guess(Distribution input)
         {
             // make sure the ScatterPlot is up-to-date
             this.Update();
@@ -69,28 +89,43 @@ namespace ActivityRecommendation
             // eventually, this will may improved by making use of the StdDev of the input
             Distribution rawEstimate = this.predictionPlot.Predict(input.Mean);
             rawEstimate = rawEstimate.CopyAndReweightTo(this.numDatapoints);
-            // add two more points with outputs of 0 and 1, to increase the uncertainty a little
+            // some more points with outputs of 0 and 1, to increase the uncertainty a little
             // The StdDev is increased more when there are fewer datapoints
-            Distribution extraError = new Distribution(1, 1, 2);
-            Distribution result = rawEstimate.Plus(extraError);
+            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 3);
+            Distribution predictionValue = rawEstimate.Plus(extraError);
+
+            Prediction result = new Prediction();
+            result.Distribution = predictionValue;
+            result.Justification = this.Justification;
+
             return result;
         }
-        public RatingProgression Predictee
+        /*public RatingProgression Predictee
         {
             get
             {
                 return this.predicteeProgression;
             }
-        }
-        public IProgression Predictor
+        }*/
+        /*public IProgression Predictor
         {
             get
             {
                 return this.predictorProgression;
             }
+        }*/
+        public bool InputWrapsAround // tells whether really large values should be considered to be close to really small values
+        {
+            set
+            {
+                this.predictionPlot.InputWrapsAround = value;
+            }
         }
-        private IProgression predictorProgression;
-        private RatingProgression predicteeProgression;
+        public string Justification { get; set; }   // text that explains why the Prediction is as it is
+
+        private IProgression trainingInputProgression;  // the Progression that supplies the input coordinate for the training data
+        private IProgression testingInputProgression;   // the Progression that supplies the current input coordinate to predict from
+        private RatingProgression outputProgression;   // the Progression that supplies the output coordinate for the training data
         private ScatterPlot predictionPlot;
         private int numDatapoints;
     }

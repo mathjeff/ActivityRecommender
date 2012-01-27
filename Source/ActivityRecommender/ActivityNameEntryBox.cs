@@ -121,7 +121,7 @@ namespace ActivityRecommendation
                 }
                 ActivityDescriptor descriptor = new ActivityDescriptor();
                 descriptor.NamePrefix = prefix;
-                descriptor.PreferBetterRatings = true;
+                descriptor.PreferHigherProbability = true;
                 descriptor.RequiresPerfectMatch = false;
                 return descriptor;
             }

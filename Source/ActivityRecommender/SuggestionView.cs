@@ -12,7 +12,7 @@ namespace ActivityRecommendation
         public SuggestionView()
         {
             this.SetTitle("Get Suggestions");
-            DisplayGrid content = new DisplayGrid(6, 1);
+            DisplayGrid content = new DisplayGrid(7, 1);
 
             this.suggestionButton = new Button();
             this.suggestionButton.Content = "Suggest";
@@ -37,10 +37,16 @@ namespace ActivityRecommendation
             content.AddItem(this.justificationBlock);
 
             this.scoreBlock = new TitledTextblock("Expected Score:");
+            this.scoreBlock.Text = "<This will be an estimate of the rating you will give to the activity if you do it>";
             content.AddItem(this.scoreBlock);
 
             this.stdDevBlock = new TitledTextblock("Standard Deviation:");
+            this.stdDevBlock.Text = "<This will be an estimate of the uncertainty in the expected score>";
             content.AddItem(this.stdDevBlock);
+
+            this.participationProbabilityBlock = new TitledTextblock("Participation Probability:");
+            this.participationProbabilityBlock.Text = "<This will be an estimate of the probability that you will take the suggestion>";
+            content.AddItem(this.participationProbabilityBlock);
 
             this.SetContent(content);
         }
@@ -95,6 +101,13 @@ namespace ActivityRecommendation
                 this.categoryBox.NameText = value;
             }
         }
+        public string ParticipationProbabilityText
+        {
+            set
+            {
+                this.participationProbabilityBlock.Text = value;
+            }
+        }
         public ActivityDatabase ActivityDatabase
         {
             set
@@ -108,5 +121,6 @@ namespace ActivityRecommendation
         private TitledTextblock justificationBlock;
         private TitledTextblock scoreBlock;
         private TitledTextblock stdDevBlock;
+        private TitledTextblock participationProbabilityBlock;
     }
 }

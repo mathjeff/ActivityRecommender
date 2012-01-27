@@ -142,7 +142,7 @@ namespace StatLists
                     this.UpdateFromChildren(parent.LeftChild);
                     this.UpdateFromChildren(parent.RightChild);
                     this.UpdateFromChildren(parent);
-                    this.DebugCheck();
+                    //this.DebugCheck();
                 }
                 // move to the next level of the tree and continue
                 currentNode = parent;

@@ -21,11 +21,18 @@ namespace ActivityRecommendation
             this.SetupEngine();
 
             this.SetupDrawing();
+
             if (this.engineTester != null)
             {
                 this.engineTester.PrintResults();
-                this.engineTester = this.engineTester;
+                Console.WriteLine("");
             }
+        }
+
+        // call this to do cleanup immediately before this object gets destroyed
+        public void ShutDown()
+        {
+            //this.SuspectLatestActionDate(DateTime.Now);
         }
 
         private void InitializeSettings()
@@ -35,12 +42,15 @@ namespace ActivityRecommendation
             this.tempFileName = "TemporaryData.txt";
             this.textConverter = new TextConverter(this);
             //this.engineTester = new EngineTester();
+
+            // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
+            this.participationEntryView = new ParticipationEntryView();
         }
 
         private void SetupDrawing()
         {
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2012-01-15T18:44";
+            titleString += " Build Date: 2012-01-27T15:55";
             this.mainDisplay = new TitledControl(titleString);
             this.mainDisplayGrid = new DisplayGrid(1, 4);
             //this.mainDisplayGrid.OverrideArrangement = true;
@@ -52,10 +62,12 @@ namespace ActivityRecommendation
             this.inheritanceEditingView.Background = new SolidColorBrush(Color.FromRgb(230, 230, 230));
             this.mainDisplayGrid.AddItem(this.inheritanceEditingView);
 
-            this.participationEntryView = new ParticipationEntryView();
+            // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
+            //this.participationEntryView = new ParticipationEntryView();
             this.participationEntryView.ActivityDatabase = this.engine.ActivityDatabase;
             this.participationEntryView.AddOkClickHandler(new RoutedEventHandler(this.SubmitParticipation));
             this.participationEntryView.AddAutofillClickHandler(new RoutedEventHandler(this.AutoFillParticipation));
+            this.participationEntryView.AddSetstartdateHandler(new RoutedEventHandler(this.MakeStartNow));
             this.participationEntryView.Background = new SolidColorBrush(Color.FromRgb(220, 220, 220));
             this.participationEntryView.LatestParticipation = this.latestParticipation;
             this.mainDisplayGrid.AddItem(this.participationEntryView);
@@ -96,6 +108,8 @@ namespace ActivityRecommendation
             this.textConverter.ReadFile(this.inheritancesFileName);
             this.textConverter.ReadFile(this.ratingsFileName);
             this.textConverter.ReadFile(this.tempFileName);
+
+            //this.textConverter.ReformatFile(this.ratingsFileName, "reformatted.txt");
         }
         private void MakeRecommendation()
         {
@@ -130,7 +144,7 @@ namespace ActivityRecommendation
             {
                 ActivityDescriptor categoryDescriptor = new ActivityDescriptor();
                 categoryDescriptor.NamePrefix = categoryText;
-                categoryDescriptor.PreferBetterRatings = true;
+                categoryDescriptor.PreferHigherProbability = true;
                 Activity category = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
                 if (category != null)
                 {
@@ -164,6 +178,7 @@ namespace ActivityRecommendation
                 justificationText = this.engine.JustifyRating(bestActivity);
                 this.suggestionView.ExpectedScoreText = bestActivity.PredictedScore.Distribution.Mean.ToString();
                 this.suggestionView.ScoreStdDevText = bestActivity.PredictedScore.Distribution.StdDev.ToString();
+                this.suggestionView.ParticipationProbabilityText = bestActivity.PredictedParticipationProbability.Distribution.Mean.ToString();
             }
             this.suggestionView.SuggestionText = recommendationText;
             this.suggestionView.JustificationText = justificationText;
@@ -235,7 +250,7 @@ namespace ActivityRecommendation
         // declares that the user didn't want to do something that was suggested
         private void AddSkip(ActivitySkip newSkip)
         {
-            this.engine.PutSkipInMemory(newSkip);
+            this.PutSkipInMemory(newSkip);
             this.WriteSkip(newSkip);
         }
         // writes this Skip to a data file
@@ -368,10 +383,18 @@ namespace ActivityRecommendation
             if (this.engineTester != null)
                 this.engineTester.AddInheritance(newInheritance);
         }
+        // updates the ParticipationEntryView so that the start date is DateTime.Now
+        public void MakeStartNow(object sender, EventArgs e)
+        {
+            DateTime now = DateTime.Now;
+            this.SuspectLatestActionDate(now);
+        }
+        // updates the ParticipationEntryView so that the start date is 'when'
         public void SuspectLatestActionDate(DateTime when)
         {
             this.latestActionDate = when;
             this.WriteInteractionDate(when);
+            this.UpdateDefaultParticipationData(when);
         }
         public void VisualizeData(object sender, EventArgs e)
         {
@@ -427,9 +450,14 @@ namespace ActivityRecommendation
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
         {
+            DateTime now = DateTime.Now;
+            this.UpdateDefaultParticipationData(now);
+        }
+        private void UpdateDefaultParticipationData(DateTime when)
+        {
             this.participationEntryView.Clear();
 
-            this.participationEntryView.EndDate = DateTime.Now;
+            this.participationEntryView.EndDate = when;
             this.participationEntryView.StartDate = this.LatestInteractionDate;
             //this.participationEntryView.ActivityName = "";
             //this.participationEntryView.RatingText = "";

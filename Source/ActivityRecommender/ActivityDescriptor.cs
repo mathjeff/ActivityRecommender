@@ -81,7 +81,7 @@ namespace ActivityRecommendation
             }
         }
         public bool? Choosable { get; set; }
-        public bool PreferBetterRatings { get; set; }   // tells whether this descriptor wants to match the Activity with the best rating
+        public bool PreferHigherProbability { get; set; }   // tells whether this descriptor wants to match the Activity with the best rating
         public bool RequiresPerfectMatch { get; set; }
         #endregion
 

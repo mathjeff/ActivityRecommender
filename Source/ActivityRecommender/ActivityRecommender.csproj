@@ -79,6 +79,7 @@
     <Compile Include="ActivityRecommender.cs" />
     <Compile Include="ActivityRequest.cs" />
     <Compile Include="ActivityVisualizationView.cs" />
+    <Compile Include="ConsiderationProgression.cs" />
     <Compile Include="Datapoint.cs" />
     <Compile Include="DateComparer.cs" />
     <Compile Include="DateEntryView.cs">
@@ -89,6 +90,7 @@
     <Compile Include="DistributionAdder.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="EngineTester.cs" />
+    <Compile Include="ExpectedParticipationProbabilityProgression.cs" />
     <Compile Include="ExpectedRatingProgression.cs" />
     <Compile Include="IdlenessProgression.cs" />
     <Compile Include="Inheritance.cs" />
@@ -130,6 +132,7 @@
     <Compile Include="ActivitySkip.cs" />
     <Compile Include="SelectorView.cs" />
     <Compile Include="SimplePredictionLink.cs" />
+    <Compile Include="SkipProgression.cs" />
     <Compile Include="SuggestionView.cs" />
     <Compile Include="TextConverter.cs" />
     <Compile Include="TimeProgression.cs" />

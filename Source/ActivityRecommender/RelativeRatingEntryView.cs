@@ -69,7 +69,7 @@ namespace ActivityRecommendation
             otherRating.ActivityDescriptor = this.latestParticipation.ActivityDescriptor;
             otherRating.Date = this.latestParticipation.StartDate;
             Activity otherActivity = activities.ResolveDescriptor(otherRating.ActivityDescriptor);
-            engine.EstimateRating(otherActivity, (DateTime)otherRating.Date);
+            engine.EstimateValue(otherActivity, (DateTime)otherRating.Date);
             Distribution otherEstimate = otherActivity.PredictedScore.Distribution;
 
             // make an AbsoluteRating for this Activity

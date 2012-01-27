@@ -23,6 +23,12 @@ namespace ActivityRecommendation
         {
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(Window1_Loaded);
+            this.Closed += new EventHandler(Window1_Closed);
+        }
+
+        void Window1_Closed(object sender, EventArgs e)
+        {
+            this.recommender.ShutDown();
         }
 
         void Window1_Loaded(object sender, RoutedEventArgs e)

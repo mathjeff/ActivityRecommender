@@ -18,7 +18,7 @@ namespace ActivityRecommendation
         }
         public ActivityDescriptor ActivityDescriptor { get; set; }
         public DateTime Date { get; set; }  // the date that the user skipped the suggestion
-        public DateTime SuggestionDate { get; set; }    // the date that the suggestion was given
+        public DateTime? SuggestionDate { get; set; }    // the date that the suggestion was given
         // returns the exact rating that was given to this Skip
         public AbsoluteRating RawRating { get; set; }
         // returns a Rating with as much information filled in as possible, based on the data in this Skip

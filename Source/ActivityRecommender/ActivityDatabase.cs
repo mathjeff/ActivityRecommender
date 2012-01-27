@@ -147,11 +147,12 @@ namespace ActivityRecommendation
             {
                 matchScore += 1;
             }
-            if (descriptor.PreferBetterRatings)
+            if (descriptor.PreferHigherProbability)
             {
                 // give better scores to activities that the user will probably rate higher
                 //Console.WriteLine("Considering activity named" + activity.Name.ToString());
-                matchScore += activity.SuggestionValue.Distribution.Mean;
+                //matchScore += activity.SuggestionValue.Distribution.Mean;
+                matchScore += activity.PredictedParticipationProbability.Distribution.Mean;
                 //Console.WriteLine("score = " + matchScore.ToString());
             }
             return matchScore;

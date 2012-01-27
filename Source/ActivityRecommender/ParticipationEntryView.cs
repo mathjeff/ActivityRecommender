@@ -36,6 +36,11 @@ namespace ActivityRecommendation
             this.commentBox = new TitledTextbox("Comment (optional)");
             contents.AddItem(this.commentBox);
 
+            this.setStartdateButton = new Button();
+            this.setStartdateButton.Content = "Set start = now";
+            this.setStartdateButton.VerticalAlignment = VerticalAlignment.Center;
+            contents.AddItem(this.setStartdateButton);
+
             this.autofillButton = new Button();
             this.autofillButton.Content = "Autofill";
             this.autofillButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
@@ -121,13 +126,17 @@ namespace ActivityRecommendation
                 this.commentBox.Text = value;
             }
         }
-        public void AddOkClickHandler(RoutedEventHandler e)
+        public void AddOkClickHandler(RoutedEventHandler h)
         {
-            this.okButton.Click += e;
+            this.okButton.Click += h;
         }
-        public void AddAutofillClickHandler(RoutedEventHandler e)
+        public void AddAutofillClickHandler(RoutedEventHandler h)
         {
-            this.autofillButton.Click += e;
+            this.autofillButton.Click += h;
+        }
+        public void AddSetstartdateHandler(RoutedEventHandler h)
+        {
+            this.setStartdateButton.Click += h;
         }
         public Participation GetParticipation(ActivityDatabase activities, Engine engine)
         {
@@ -159,7 +168,8 @@ namespace ActivityRecommendation
         TitledTextbox commentBox;
         DateEntryView startDateBox;
         DateEntryView endDateBox;
-        Button okButton;
+        Button setStartdateButton;
         Button autofillButton;
+        Button okButton;
     }
 }

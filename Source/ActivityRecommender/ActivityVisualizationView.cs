@@ -54,22 +54,31 @@ namespace ActivityRecommendation
             statsDisplayGrid.AddItem(this.timeFractionDisplay);
             this.displayGrid.PutItem(statsDisplayGrid, 1, 1);
 
-            this.UpdateDrawing();
             this.UpdateParticipationStatsView();
+            this.UpdateDrawing();
         }
         public void UpdateDrawing()
         {
-            DateTime now = DateTime.Now;
-            this.UpdateRatingsPlot(now);
-            this.UpdateParticipationsPlot(now);
+            this.UpdateRatingsPlot();
+            this.UpdateParticipationsPlot();
         }
-        public void UpdateRatingsPlot(DateTime when)
+        public void UpdateRatingsPlot()
         {
+            if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
+                return;
             // draw the RatingProgression
             RatingProgression ratingProgression = this.activityToDisplay.RatingProgression;
             List<AbsoluteRating> ratings = ratingProgression.GetRatingsInDiscoveryOrder();
-            DateTime firstDate = this.activityToDisplay.DiscoveryDate;
+            DateTime firstDate = this.queryStartDateDisplay.GetDate();
             List<Point> points = new List<Point>();
+
+            // make a plot
+            PlotControl newPlot = new PlotControl();
+            newPlot.ShowRegressionLine = true;
+            newPlot.MinX = 0;
+            newPlot.MaxX = this.queryEndDateDisplay.GetDate().Subtract(firstDate).TotalDays;
+            newPlot.MinY = 0;
+            newPlot.MaxY = 1;
 
             // create the datapoints
             foreach (AbsoluteRating rating in ratings)
@@ -77,48 +86,50 @@ namespace ActivityRecommendation
                 if (rating.Date != null)
                 {
                     TimeSpan duration = ((DateTime)rating.Date).Subtract(firstDate);
-                    // put the x-coordinate in the list
+                    // calculate x
                     double x = duration.TotalDays;
-                    // put the y-coordinate in the list
+                    // calculate y
                     double y = rating.Score;
-                    points.Add(new Point(x, y));
+                    // make sure we want to include it in the plot (and therefore the regression line)
+                    if (x >= newPlot.MinX && x <= newPlot.MaxX)
+                        points.Add(new Point(x, y));
                 }
             }
-            // make a plot
-            PlotControl newPlot = new PlotControl();
             newPlot.SetData(points);
-            newPlot.MinX = 0;
-            newPlot.MaxX = when.Subtract(firstDate).TotalDays;
-            newPlot.MinY = 0;
-            newPlot.MaxY = 1;
-
+            
             this.ratingsView.SetContent(newPlot);
         }
-        public void UpdateParticipationsPlot(DateTime when)
+        public void UpdateParticipationsPlot()
         {
+            if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
+                return;
             // draw the ParticipationProgression
             ParticipationProgression participationProgression = this.activityToDisplay.ParticipationProgression;
             List<Participation> participations = participationProgression.Participations;
-            DateTime firstDate = this.activityToDisplay.DiscoveryDate;
+            DateTime firstDate = this.queryStartDateDisplay.GetDate();
             List<Point> points = new List<Point>();
             double sumY = 0;
+            PlotControl newPlot = new PlotControl();
+            newPlot.ShowRegressionLine = true;
+            newPlot.MinX = 0;
+            newPlot.MaxX = this.queryEndDateDisplay.GetDate().Subtract(firstDate).TotalSeconds;
             foreach (Participation participation in participations)
             {
                 TimeSpan duration1 = participation.StartDate.Subtract(firstDate);
-                // calculate x1
+                // calculate x1 and x2
                 double x1 = duration1.TotalSeconds;
-                // calculate y1
-                points.Add(new Point(x1, sumY));
                 TimeSpan duration2 = participation.EndDate.Subtract(firstDate);
-                // put x2 in the list
                 double x2 = duration2.TotalSeconds;
-                sumY += participation.TotalIntensity.Mean * participation.TotalIntensity.Weight;
-                points.Add(new Point(x2, sumY));                    
+                // make sure that we care about this point
+                if (x1 <= newPlot.MaxX && x2 >= newPlot.MinX)
+                {
+                    // calculate y1
+                    points.Add(new Point(x1, sumY));
+                    sumY += participation.TotalIntensity.Mean * participation.TotalIntensity.Weight;
+                    points.Add(new Point(x2, sumY));
+                }
             }
-            PlotControl newPlot = new PlotControl();
             newPlot.SetData(points);
-            newPlot.MinX = 0;
-            newPlot.MaxX = when.Subtract(firstDate).TotalSeconds;
 
             this.participationsView.SetContent(newPlot);
 
@@ -126,6 +137,7 @@ namespace ActivityRecommendation
         private void DateTextChanged(object sender, RoutedEventArgs e)
         {
             this.UpdateParticipationStatsView();
+            this.UpdateDrawing();
         }
         public void UpdateParticipationStatsView()
         {
@@ -145,7 +157,7 @@ namespace ActivityRecommendation
             // now update the text blocks
             //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
             this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numDaysSpent + " days on this activity";
-            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time";
+            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
         }
         public void AddExitClickHandler(RoutedEventHandler e)
         {

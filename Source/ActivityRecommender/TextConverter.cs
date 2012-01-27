@@ -98,7 +98,8 @@ namespace ActivityRecommendation
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(skip.ActivityDescriptor);
             properties[this.DateTag] = this.ConvertToStringBody(skip.Date);
-            properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionDate);
+            if (skip.SuggestionDate != null)
+                properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionDate);
             properties[this.RatingTag] = this.ConvertToStringBody(skip.RawRating);
 
             return this.ConvertToString(properties, objectName);
@@ -178,6 +179,120 @@ namespace ActivityRecommendation
             }
         }
 
+        // opens the file, converts it into a sequence of objects, updates them to the latest format, and writes it out to the new file
+        public void ReformatFile(string currentFileName, string newFileName)
+        {
+            // If the file exists, then we want to read all of its data
+            string inputText;
+            try
+            {
+                inputText = System.IO.File.ReadAllText(currentFileName);
+            }
+            catch
+            {
+                // if the file doesn't exist, then there simply isn't anything to do
+                return;
+            }
+            inputText = "<root>" + inputText + "</root>";
+            XmlDocument document = new XmlDocument();
+            document.LoadXml(inputText);
+            XmlNode root = document.FirstChild;
+            string outputText = "";
+            Participation latestParticipation = null;
+            if (root != null)
+            {
+                foreach (XmlNode currentItem in root.ChildNodes)
+                {
+                    if (currentItem.Name == this.ParticipationTag)
+                    {
+                        // write the previous participation
+                        if (latestParticipation != null)
+                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
+                        // read the new participation
+                        latestParticipation = this.ReadParticipation(currentItem);
+                        continue;
+                    }
+                    if (currentItem.Name == this.RatingTag)
+                    {
+                        Rating rating = this.ReadRating(currentItem);
+                        AbsoluteRating absolute = rating as AbsoluteRating;
+                        // check that the rating applies to the previous participation
+                        if (absolute != null && latestParticipation != null && absolute.Date.Equals(latestParticipation.StartDate))
+                        {
+                            // clear some redundant data
+                            absolute.Date = null;
+                            absolute.ActivityDescriptor = null;
+                            // assign it to the latest participation
+                            latestParticipation.RawRating = rating;
+                            // write the previous participation
+                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
+                            latestParticipation = null;
+                            continue;
+                        }
+                        if (latestParticipation != null)
+                        {
+                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
+                            latestParticipation = null;
+                        }
+                        // Maybe it's a skip
+                        if (absolute != null && absolute.Score.ToString().Length > 6 || absolute.Score == 0)
+                        {
+                            // if it is an absolute rating with lots of digits, then it's a Skip
+                            ActivitySkip skip = new ActivitySkip((DateTime)absolute.Date, absolute.ActivityDescriptor);
+                            skip.RawRating = absolute;
+                            // remove some redundant data
+                            skip.RawRating.ActivityDescriptor = null;
+                            skip.RawRating.Date = null;
+                            outputText += this.ConvertToString(skip) + Environment.NewLine;
+                            continue;
+                        }
+                        // maybe it's an ActivityRequest
+                        if (absolute != null && absolute.Score == 1)
+                        {
+                            ActivityRequest request = new ActivityRequest(absolute.ActivityDescriptor, (DateTime)absolute.Date);
+                            outputText += this.ConvertToString(request) + Environment.NewLine;
+                            continue;
+                        }
+                    }
+                    if (latestParticipation != null)
+                    {
+                        outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
+                        latestParticipation = null;
+                    }
+                    if (currentItem.Name == this.ActivityDescriptorTag)
+                    {
+                        continue;
+                    }
+                    if (currentItem.Name == this.InheritanceTag)
+                    {
+                        continue;
+                    }
+                    if (currentItem.Name == this.DateTag)
+                    {
+                        continue;
+                    }
+                    if (currentItem.Name == this.SkipTag)
+                    {
+                        ActivitySkip skip = this.ReadSkip(currentItem);
+                        outputText += this.ConvertToString(skip) + Environment.NewLine;
+                        continue;
+                    }
+                    if (currentItem.Name == this.ActivityRequestTag)
+                    {
+                        ActivityRequest request = this.ReadActivityRequest(currentItem);
+                        outputText += this.ConvertToString(request) + Environment.NewLine;
+                        continue;
+                    }
+                    Console.WriteLine("Warning: unrecognized symbol in TextConverter.ReformatFile");
+                }
+            }
+            if (latestParticipation != null)
+                outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
+
+            StreamWriter writer = new StreamWriter(newFileName, false);
+            writer.Write(outputText);
+            writer.Close();
+        }
         #endregion
 
         #region Private Member Functions
@@ -251,6 +366,7 @@ namespace ActivityRecommendation
             ActivityDescriptor activityDescriptor = new ActivityDescriptor();
             DateTime startDate = DateTime.Now;
             DateTime endDate = DateTime.Now;
+            string comment = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -273,9 +389,15 @@ namespace ActivityRecommendation
                     rating = this.ReadRating(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.CommentTag)
+                {
+                    comment = this.ReadText(currentChild);
+                    continue;
+                }
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             currentParticipation.RawRating = rating;
+            currentParticipation.Comment = comment;
 
             /* // Check whether the participation had an embedded rating
             if (rating != null)

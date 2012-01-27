@@ -17,18 +17,8 @@ namespace ActivityRecommendation
             //this.childCanvas = new Canvas();
             //this.AddVisualChild(childCanvas);
         }
-        protected override Size ArrangeOverride(Size arrangeSize)
-        {
-            // figure out how much room it will have
-            Size size = base.ArrangeOverride(arrangeSize);
-            if (!size.Equals(this.drawingDimensions))
-            {
-                this.drawingDimensions = size;
-                this.UpdatePoints();
-            }
-            return size;
-        }
 
+        // assigns some datapoints to the plot
         public void SetData(List<Point> points)
         {
             this.pointsToPlot = points;
@@ -40,8 +30,10 @@ namespace ActivityRecommendation
             this.minXPresent = this.maxXPresent = this.pointsToPlot[0].X;
             this.minYPresent = this.maxYPresent = this.pointsToPlot[0].Y;
             double x, y;
+            this.sumX = this.sumX2 = this.sumXY = this.sumY = this.sumY2 = 0;
             foreach (Point point in this.pointsToPlot)
             {
+                // update the statistics for determining the proper zoom
                 x = point.X;
                 if (x < this.minXPresent)
                 {
@@ -60,12 +52,27 @@ namespace ActivityRecommendation
                 {
                     this.maxYPresent = y;
                 }
+                // update the statistics for drawing the Least-Squares-RegressionLine
+                this.sumX += x;
+                this.sumX2 += x * x;
+                this.sumXY += x * y;
+                this.sumY += y;
+                this.sumY2 += y * y;
             }
         }
         public double? MinX { get; set; }
         public double? MaxX { get; set; }
         public double? MinY { get; set; }
         public double? MaxY { get; set; }
+        public bool ShowRegressionLine { get; set; }
+
+        protected override Size ArrangeOverride(Size arrangeSize)
+        {
+            // figure out how much room it will have
+            Size size = base.ArrangeOverride(arrangeSize);
+            return size;
+        }
+
 
         public Size PreliminaryMeasure(Size constraint)
         {
@@ -73,7 +80,9 @@ namespace ActivityRecommendation
         }
         public Size FinalMeasure(Size arrangeSize)
         {
+            this.UpdatePoints(arrangeSize);
             this.Measure(arrangeSize);
+            //this.drawingDimensions = arrangeSize;
             return arrangeSize;
         }
         public Resizability GetHorizontalResizability()
@@ -85,9 +94,12 @@ namespace ActivityRecommendation
             return new Resizability(2, 1);
         }
 
-        private void UpdatePoints()
+        // updates the locations at which to draw the provided points
+        private void UpdatePoints(Size displaySize)
         {
             this.Children.Clear();
+            if (this.pointsToPlot.Count == 0)
+                return;
 
             // determine what domain and range we want to display
             double minimumX = this.MinX.GetValueOrDefault(this.minXPresent);
@@ -100,12 +112,14 @@ namespace ActivityRecommendation
             double scaleY = 0;
             if (maximumX > minimumX)
             {
-                scaleX = this.drawingDimensions.Width / (maximumX - minimumX);
+                scaleX = displaySize.Width / (maximumX - minimumX);
             }
             if (maximumY > minimumY)
             {
-                scaleY = this.drawingDimensions.Height / (maximumY - minimumY);
+                scaleY = displaySize.Height / (maximumY - minimumY);
             }
+
+            // plot all of the provided points
             double x1, y1, x2, y2;
             x1 = (this.pointsToPlot[0].X - minimumX) * scaleX;
             y1 = (maximumY - this.pointsToPlot[0].Y) * scaleY;
@@ -125,14 +139,69 @@ namespace ActivityRecommendation
                 x1 = x2;
                 y1 = y2;
             }
+            if (this.ShowRegressionLine)
+            {
+                // compute the equation of the least-squares regression line
+                Distribution xs = new Distribution(sumX, sumX2, this.NumPointsToPlot);
+                Distribution ys = new Distribution(sumY, sumY2, this.NumPointsToPlot);
+                double stdDevX = xs.StdDev;
+                double stdDevY = ys.StdDev;
+                double correlation;
+                if (stdDevX != 0 && stdDevY != 0)
+                {
+                    double n = this.NumPointsToPlot;
+                    // calculate the correlation as follows:
+                    // sum((x - mean(x)) * (y - mean(y))) / stdDev(x) / stdDev(y) / n
+                    // = (sum(xy - mean(x) * y - x * mean(y) + mean(x) * mean(y))) / stdDev(x) / stdDev(y) / n
+                    // = (sum(xy) - 2 * mean(x) * mean(y) * n + mean(x) * mean(y) * n) / stdDev(x) / stdDev(y) / n
+                    // = (sum(xy) / n - 2 * sum(x) * sum(y) + mean(x) * mean(y)) / stdDev(x) / stdDev(y)
+                    correlation = (this.sumXY / n - 2 * xs.Mean * ys.Mean + xs.Mean * ys.Mean) / stdDevX / stdDevY;
+                }
+                else
+                {
+                    // the datapoints form a vertical or a horizontal line, so the correlation is 1
+                    correlation = 1;
+                }
+                // if stdDevX == 0, we'll skip it
+                if (stdDevX != 0)
+                {
+                    // plot the least-squares regression line
+                    double slope = correlation * stdDevY / stdDevX;
+                    x1 = minimumX;
+                    y1 = (x1 - xs.Mean) * slope + ys.Mean;
+                    x2 = maximumX;
+                    y2 = (x2 - xs.Mean) * slope + ys.Mean;
+
+                    Line newLine = new Line();
+                    newLine.X1 = (x1 - minimumX) * scaleX;
+                    newLine.Y1 = (maximumY - y1) * scaleY;
+                    newLine.X2 = (x2 - minimumX) * scaleX;
+                    newLine.Y2 = (maximumY - y2) * scaleY;
+                    newLine.Stroke = Brushes.Red;
+                    this.Children.Add(newLine);
+                }
+            }
+        }
+        public int NumPointsToPlot
+        {
+            get
+            {
+                return this.pointsToPlot.Count;
+            }
         }
 
         private List<Point> pointsToPlot;
-        private Size drawingDimensions;
+        //private Size drawingDimensions;
         // bounds on the data
         private double minXPresent;
         private double maxXPresent;
         private double minYPresent;
         private double maxYPresent;
+
+        private double sumX;
+        private double sumY;
+        private double sumX2;
+        private double sumY2;
+        private double sumXY;
     }
 }

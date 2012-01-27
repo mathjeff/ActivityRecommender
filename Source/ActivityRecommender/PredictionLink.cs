@@ -9,13 +9,13 @@ namespace ActivityRecommendation
     public class PredictionLink : IPredictionLink
     {
         // Constructor
-        public PredictionLink(IProgression trainingInput, RatingProgression output)
+        public PredictionLink(IProgression trainingInput, IProgression output)
         {
             this.trainingInputProgression = this.testingInputProgression = trainingInput;
             this.outputProgression = output;
             this.Initialize();            
         }
-        public PredictionLink(IProgression trainingInput, IProgression testingInput, RatingProgression output)
+        public PredictionLink(IProgression trainingInput, IProgression testingInput, IProgression output)
         {
             this.trainingInputProgression = trainingInput;
             this.testingInputProgression = testingInput;
@@ -25,7 +25,6 @@ namespace ActivityRecommendation
         private void Initialize()
         {
             this.predictionPlot = new ScatterPlot();
-            this.numDatapoints = 0;
             this.Justification = this.trainingInputProgression.Description;
         }
         public void InitializeIncreasing()
@@ -46,8 +45,8 @@ namespace ActivityRecommendation
         public void Update()
         {
             // get a list of the ratings in the order that they were provided to the computer program, so we can find the new ones
-            int currentNumDatapoints = this.numDatapoints;
-            List<ProgressionValue> values = this.outputProgression.GetValuesAfter(currentNumDatapoints);
+            
+            List<ProgressionValue> values = this.outputProgression.GetValuesAfter(this.nextDatapointIndex);
             // iterate over all of the new ratings
             foreach (ProgressionValue outputValue in values)
             {
@@ -59,9 +58,10 @@ namespace ActivityRecommendation
                     Distribution outputDistribution = outputValue.Value;
                     // add the appropriate Datapoint to the ScatterPlot
                     this.predictionPlot.AddDatapoint(new Datapoint(currentInput.Value.Mean, outputDistribution.Mean, outputDistribution.Weight));
+                    this.numDatapoints++;
                 }
             }
-            this.numDatapoints += values.Count;
+            this.nextDatapointIndex += values.Count;
         }
         
         #region Functions for IPredictionLink
@@ -91,7 +91,7 @@ namespace ActivityRecommendation
             rawEstimate = rawEstimate.CopyAndReweightTo(this.numDatapoints);
             // some more points with outputs of 0 and 1, to increase the uncertainty a little
             // The StdDev is increased more when there are fewer datapoints
-            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 3);
+            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Distribution predictionValue = rawEstimate.Plus(extraError);
 
             Prediction result = new Prediction();
@@ -125,8 +125,9 @@ namespace ActivityRecommendation
 
         private IProgression trainingInputProgression;  // the Progression that supplies the input coordinate for the training data
         private IProgression testingInputProgression;   // the Progression that supplies the current input coordinate to predict from
-        private RatingProgression outputProgression;   // the Progression that supplies the output coordinate for the training data
+        private IProgression outputProgression;   // the Progression that supplies the output coordinate for the training data
         private ScatterPlot predictionPlot;
         private int numDatapoints;
+        private int nextDatapointIndex;
     }
 }

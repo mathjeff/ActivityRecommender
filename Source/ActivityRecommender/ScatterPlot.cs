@@ -36,9 +36,9 @@ namespace ActivityRecommendation
                 if (key > this.maxXObserved)
                     this.maxXObserved = key;
                 if (output < this.minYObserved)
-                    this.minYObserved = key;
+                    this.minYObserved = output;
                 if (output > this.maxYObserved)
-                    this.maxYObserved = key;
+                    this.maxYObserved = output;
             }
             double weight = newDatapoint.Weight;
             Distribution value = new Distribution(output * weight, output * output * weight, weight);
@@ -153,6 +153,11 @@ namespace ActivityRecommendation
                 double width = maxWindowX - minWindowX;
                 newX1 = input - width / 4;
                 newX2 = input + width / 4;
+                if (minWindowX == newX1 && maxWindowX == newX2)
+                {
+                    // if there would be an infinite loop, then quit
+                    break;
+                }
                 //newX1 = (minWindowX * 3 + maxWindowX) / 4;
                 //newX2 = (minWindowX + maxWindowX * 3) / 4;
                 // find the standard deviation of all points within this domain

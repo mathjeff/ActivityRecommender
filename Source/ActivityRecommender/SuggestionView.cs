@@ -27,26 +27,28 @@ namespace ActivityRecommendation
 
 
             this.suggestionNameBlock = new TitledTextblock("Suggestion:");
-            this.suggestionNameBlock.Text = "<Push the button to see a suggestion here>";
+            //this.suggestionNameBlock.Text = "<Push the button to see a suggestion here>";
             //this.suggestionNameBlock.TextAlignment = System.Windows.TextAlignment.Center;
             content.AddItem(this.suggestionNameBlock);
 
             this.justificationBlock = new TitledTextblock("Primary Justification:");
-            this.justificationBlock.Text = "<When there is a suggestion, a very short explanation will be here>";
+            //this.justificationBlock.Text = "<When there is a suggestion, a very short explanation will be here>";
             //this.justificationBlock.TextAlignment = System.Windows.TextAlignment.Center;
             content.AddItem(this.justificationBlock);
 
             this.scoreBlock = new TitledTextblock("Expected Score:");
-            this.scoreBlock.Text = "<This will be an estimate of the rating you will give to the activity if you do it>";
+            //this.scoreBlock.Text = "<This will be an estimate of the rating you will give to the activity if you do it>";
             content.AddItem(this.scoreBlock);
 
             this.stdDevBlock = new TitledTextblock("Standard Deviation:");
-            this.stdDevBlock.Text = "<This will be an estimate of the uncertainty in the expected score>";
+            //this.stdDevBlock.Text = "<This will be an estimate of the uncertainty in the expected score>";
             content.AddItem(this.stdDevBlock);
 
             this.participationProbabilityBlock = new TitledTextblock("Participation Probability:");
-            this.participationProbabilityBlock.Text = "<This will be an estimate of the probability that you will take the suggestion>";
+            //this.participationProbabilityBlock.Text = "<This will be an estimate of the probability that you will take the suggestion>";
             content.AddItem(this.participationProbabilityBlock);
+
+            this.ResetText();
 
             this.SetContent(content);
         }
@@ -114,6 +116,14 @@ namespace ActivityRecommendation
             {
                 this.categoryBox.Database = value;
             }
+        }
+        public void ResetText()
+        {
+            this.SuggestionText = "<Click \"Suggest\" for a suggestion>";
+            this.JustificationText = "<Here will be a short justification>";
+            this.ExpectedScoreText = "<Here will be the expected score>";
+            this.ScoreStdDevText = "<Here will be a measure of the uncertainty of the score>";
+            this.ParticipationProbabilityText = "<This will be an estimate of the probability that you will take the suggestion>";
         }
         private Button suggestionButton;
         private ActivityNameEntryBox categoryBox;

@@ -29,7 +29,7 @@ namespace ActivityRecommendation
             Distribution output = currentValue;
             double startingWeight = output.Weight;
             // correct the weight
-            double newWeight = Math.Sqrt(this.outputProgression.NumItems + 1);
+            double newWeight = Math.Sqrt(this.outputProgression.NumItems + 40);
             prediction.Distribution = output.CopyAndReweightTo(newWeight);
 
             return prediction;

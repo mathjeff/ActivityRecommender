@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using System.IO;
 using System.Windows.Media;
+using System.Windows.Controls;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -18,7 +19,7 @@ namespace ActivityRecommendation
 
             this.InitializeSettings();
 
-            this.SetupEngine();
+            this.MakeEngine();
 
             this.SetupDrawing();
 
@@ -49,12 +50,21 @@ namespace ActivityRecommendation
 
         private void SetupDrawing()
         {
+            this.mainDisplay = new DisplayGrid(2, 1);
+
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2012-01-27T15:55";
-            this.mainDisplay = new TitledControl(titleString);
+            titleString += " Build Date: 2012-02-13T21:40";
+            ResizableTextBlock titleBlock = new ResizableTextBlock();
+            titleBlock.Text = titleString;
+            titleBlock.TextAlignment = TextAlignment.Center;
+            //titleBlock.Background = new SolidColorBrush(Color.FromRgb(200, 200, 255));
+            titleBlock.Background = Brushes.Cyan;
+
+            this.mainDisplay.AddItem(titleBlock);
+
             this.mainDisplayGrid = new DisplayGrid(1, 4);
             //this.mainDisplayGrid.OverrideArrangement = true;
-            this.mainDisplay.SetContent(this.mainDisplayGrid);
+            this.mainDisplay.AddItem(this.mainDisplayGrid);
 
             this.inheritanceEditingView = new InheritanceEditingView();
             this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
@@ -66,7 +76,7 @@ namespace ActivityRecommendation
             //this.participationEntryView = new ParticipationEntryView();
             this.participationEntryView.ActivityDatabase = this.engine.ActivityDatabase;
             this.participationEntryView.AddOkClickHandler(new RoutedEventHandler(this.SubmitParticipation));
-            this.participationEntryView.AddAutofillClickHandler(new RoutedEventHandler(this.AutoFillParticipation));
+            this.participationEntryView.AddSetenddateHandler(new RoutedEventHandler(this.MakeEndNow));
             this.participationEntryView.AddSetstartdateHandler(new RoutedEventHandler(this.MakeStartNow));
             this.participationEntryView.Background = new SolidColorBrush(Color.FromRgb(220, 220, 220));
             this.participationEntryView.LatestParticipation = this.latestParticipation;
@@ -95,12 +105,15 @@ namespace ActivityRecommendation
         }
 
 
-        private void SetupEngine()
+        private void MakeEngine()
         {
             this.latestActionDate = new DateTime(0);
             this.engine = new Engine();
             this.ReadFiles();
             this.engine.FullUpdate();
+        }
+        public void PrepareEngine()
+        {
             this.engine.MakeRecommendation();
         }
         private void ReadFiles()
@@ -143,7 +156,7 @@ namespace ActivityRecommendation
             if (categoryText != null && categoryText != "")
             {
                 ActivityDescriptor categoryDescriptor = new ActivityDescriptor();
-                categoryDescriptor.NamePrefix = categoryText;
+                categoryDescriptor.ActivityName = categoryText;
                 categoryDescriptor.PreferHigherProbability = true;
                 Activity category = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
                 if (category != null)
@@ -215,12 +228,16 @@ namespace ActivityRecommendation
             // give the information to the appropriate activities
             this.engine.ApplyParticipationsAndRatings();
         }
-        private void AutoFillParticipation(object sender, EventArgs e)
+        private void MakeEndNow(object sender, EventArgs e)
         {
-            this.AutoFillParticipation();
+            this.MakeEndNow();
         }
-        private void AutoFillParticipation()
+        private void MakeEndNow()
         {
+            DateTime now = DateTime.Now;
+            this.latestActionDate = now;
+            this.participationEntryView.EndDate = now;
+            /*
             // first update the dates
             this.UpdateDefaultParticipationData();
             // now fill-in the latest activity name
@@ -230,6 +247,7 @@ namespace ActivityRecommendation
                 latestName = this.latestRecommendedActivity.Name;
             }
             this.participationEntryView.ActivityName = latestName;
+            */
         }
         private void AddParticipation(Participation newParticipation)
         {
@@ -413,7 +431,7 @@ namespace ActivityRecommendation
                 {
                     ActivityVisualizationView visualizationView = new ActivityVisualizationView(activity);
                     visualizationView.AddExitClickHandler(new RoutedEventHandler(this.ShowMainview));
-                    this.mainDisplay.SetContent(visualizationView);
+                    this.mainDisplay.PutItem(visualizationView, 1, 0);
                 }
             }
         }
@@ -432,7 +450,7 @@ namespace ActivityRecommendation
         }
         public void ShowMainview()
         {
-            this.mainDisplay.SetContent(this.mainDisplayGrid);
+            this.mainDisplay.PutItem(this.mainDisplayGrid, 1, 0);
             //this.displayManager.InvalidateMeasure();
         }
 
@@ -442,10 +460,7 @@ namespace ActivityRecommendation
         {
             //this.latestRecommendationDate = new DateTime(0);
             this.suppressDownoteOnRecommendation = true;
-            this.suggestionView.SuggestionText = "<Click \"Suggest\" for a suggestion>";
-            this.suggestionView.JustificationText = "<Here will be a short justification>";
-            this.suggestionView.ExpectedScoreText = "<Here will be the expected score>";
-            this.suggestionView.ScoreStdDevText = "<Here will be a measure of the uncertainty of the score>";
+            this.suggestionView.ResetText();
         }
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
@@ -484,7 +499,7 @@ namespace ActivityRecommendation
         private Window mainWindow;
         private DisplayManager displayManager;
         private DisplayGrid mainDisplayGrid;
-        private TitledControl mainDisplay;
+        private DisplayGrid mainDisplay;
 
         ParticipationEntryView participationEntryView;
         InheritanceEditingView inheritanceEditingView;

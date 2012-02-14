@@ -46,13 +46,13 @@ namespace ActivityRecommendation
         {
             // get a list of the ratings in the order that they were provided to the computer program, so we can find the new ones
             
-            List<ProgressionValue> values = this.outputProgression.GetValuesAfter(this.nextDatapointIndex);
+            IEnumerable<ProgressionValue> values = this.outputProgression.GetValuesAfter(this.nextDatapointIndex);
             // iterate over all of the new ratings
             foreach (ProgressionValue outputValue in values)
             {
                 DateTime when = outputValue.Date;
                 ProgressionValue currentInput = this.trainingInputProgression.GetValueAt(when, true);
-                if (currentInput.Index >= 0)
+                if (currentInput != null)
                 {
                     //ProgressionValue currentOutput = this.predicteeProgression.GetValueAt(when, false);
                     Distribution outputDistribution = outputValue.Value;
@@ -60,8 +60,8 @@ namespace ActivityRecommendation
                     this.predictionPlot.AddDatapoint(new Datapoint(currentInput.Value.Mean, outputDistribution.Mean, outputDistribution.Weight));
                     this.numDatapoints++;
                 }
+                this.nextDatapointIndex++;
             }
-            this.nextDatapointIndex += values.Count;
         }
         
         #region Functions for IPredictionLink
@@ -71,7 +71,11 @@ namespace ActivityRecommendation
         {
             // now make the prediction
             ProgressionValue currentValue = this.testingInputProgression.GetValueAt(when, false);
-            Distribution currentInput = currentValue.Value;
+            Distribution currentInput;
+            if (currentValue == null)
+                currentInput = new Distribution();
+            else
+                currentInput = currentValue.Value;
             Prediction result = this.Guess(currentInput);
             // set the date correctly
             result.Date = when;

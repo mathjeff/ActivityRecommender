@@ -8,7 +8,7 @@ using StatLists;
 // It is intended to model brain activity and it uses exponential curves to do so
 namespace ActivityRecommendation
 {
-    public class ParticipationProgression : IComparer<DateTime>, IAdder<Participation>, IProgression
+    public class ParticipationProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
     {
         #region Constructor
 
@@ -38,32 +38,31 @@ namespace ActivityRecommendation
         {
             return true;
         }
-        public List<Participation> Participations
+        public IEnumerable<Participation> Participations
         {
             get
             {
-                List<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
-                List<Participation> results = new List<Participation>();
+                IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+                LinkedList<Participation> results = new LinkedList<Participation>();
                 foreach (ListItemStats<DateTime, Participation> stats in items)
                 {
-                    results.Add(stats.Value);
+                    results.AddLast(stats.Value);
                 }
                 return results;
             }
         }
         public Participation SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
         {
-            Participation result = this.searchHelper.SumBetweenKeys(startDate, true, endDate, false);
+            Participation result = this.searchHelper.CombineBetweenKeys(startDate, true, endDate, false);
             return result;
         }
-        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
-            List<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+            IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.ItemsFromIndex(indexInclusive);
             List<ProgressionValue> results = new List<ProgressionValue>();
-            int i;
-            for (i = indexInclusive; i < items.Count; i++)
+            foreach (ListItemStats<DateTime, Participation> item in items)
             {
-                DateTime when = items[i].Key;
+                DateTime when = item.Key;
                 ProgressionValue value = this.GetValueAt(when, false);
                 results.Add(value);
             }
@@ -81,9 +80,9 @@ namespace ActivityRecommendation
 
         #endregion
 
-        #region Functions for IAdder<Participation>
+        #region Functions for ICombiner<Participation>
 
-        public Participation Sum(Participation participation1, Participation participation2)
+        public Participation Combine(Participation participation1, Participation participation2)
         {
             // if one participation is empty, return the other one
             if (participation1.Duration.TotalSeconds == 0)
@@ -123,6 +122,7 @@ namespace ActivityRecommendation
             Distribution intensity2 = participation2.TotalIntensity;
             Distribution combinedIntensity = intensity1.Plus(intensity2);
 
+#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
             // calculate the amount of time between the two participations
             double numIdleSeconds = 0;
             if (participation1.EndDate.CompareTo(participation2.StartDate) < 0)
@@ -137,19 +137,22 @@ namespace ActivityRecommendation
             }
             logIdleTime = participation1.LogIdleTime.Plus(logIdleTime);
             logIdleTime = logIdleTime.Plus(participation2.LogIdleTime);
+#endif
 
             // create the Participation and fill the data in
             Participation result = new Participation();
             result.StartDate = startDate;
             result.EndDate = endDate;
             result.TotalIntensity = combinedIntensity;
+#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
             result.LogIdleTime = logIdleTime;
             result.LogActiveTime = participation1.LogActiveTime.Plus(participation2.LogActiveTime);
+#endif
 
             return result;
         }
 
-        public Participation Zero()
+        public Participation Default()
         {
             return new Participation();
         }
@@ -167,6 +170,8 @@ namespace ActivityRecommendation
             // The exponential calculation has shown during testing to make the predictions worse
             //return this.GetValueExponentially(when, strictlyEarlier);
         }
+
+#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
         // returns basically the fraction of the user's time that was spent performing that activity recently at that date
         public ProgressionValue GetValueExponentially(DateTime when, bool strictlyEarlier)
         {
@@ -249,14 +254,16 @@ namespace ActivityRecommendation
 
 
         }
+#endif
         public ProgressionValue GetValueLinearly(DateTime when, bool strictlyEarlier)
         {
             // find the most recent participation before the given date
             ListItemStats<DateTime, Participation> latestItem = this.searchHelper.FindPreviousItem(when, true);
             if (latestItem == null)
             {
-                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0), -1);
-                return defaultValue;
+                return null;
+                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0));
+                //return defaultValue;
             }
             Participation latestParticipation = latestItem.Value;
             DateTime latestStartDate = latestParticipation.StartDate;
@@ -283,7 +290,7 @@ namespace ActivityRecommendation
             
             
             // Ask the searchHelper for the sum of all the participations from earlierDate to latestStartDate
-            Participation sumParticipations = this.searchHelper.SumBetweenKeys(previousStartDate, true, latestStartDate, false);
+            Participation sumParticipations = this.searchHelper.CombineBetweenKeys(previousStartDate, true, latestStartDate, false);
             Distribution totalIntensity = sumParticipations.TotalIntensity;
             // determine how much time is encompassed by these participations
             TimeSpan totalDuration = latestStartDate.Subtract(previousStartDate);
@@ -325,8 +332,8 @@ namespace ActivityRecommendation
             }
 
             // now totalParticipation is a distribution of the intensities of the participations of the activity over the recent past
-            int previousCount = this.searchHelper.CountBeforeKey(when, true);
-            ProgressionValue result = new ProgressionValue(when, totalParticipation, previousCount);
+            //int previousCount = this.searchHelper.CountBeforeKey(when, true);
+            ProgressionValue result = new ProgressionValue(when, totalParticipation);
             return result;
         }
 

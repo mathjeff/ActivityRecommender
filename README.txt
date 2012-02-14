@@ -13,6 +13,7 @@ Note: This information (telling which activities are subtypes of others) is stor
 
 Column 2: Type What You’ve Been Doing
 The other primary method of user input is to type in the name of an activity that the user performed, along with the starting and ending date and time, and optionally a numerical rating from 0 to 1, indicating the value of having performed that activity between those times. The data entered in this column in stored in ActivityRatings.txt.
+Or, instead of typing in an exact rating, you can click the button labeled “Relative” and simply compare what you just did to your previous activity. If you don’t want to enter a rating, leave it on “Absolute” and don’t type anything.
 
 If you recently pushed the “Suggest” button in column 3, you may want to push the “Autofill” button here to automatically fill in a good guess for the correct dates and activity name. The information about the default StartDate is stored in TemporaryData.txt.
 

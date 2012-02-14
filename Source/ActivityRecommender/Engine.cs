@@ -163,21 +163,7 @@ namespace ActivityRecommendation
         }
         public List<Activity> FindAllSubCategoriesOf(Activity parent)
         {
-            List<Activity> superCategories = new List<Activity>();
-            superCategories.Add(parent);
-            int i = 0;
-            for (i = 0; i < superCategories.Count; i++)
-            {
-                Activity activity = superCategories[i];
-                foreach (Activity child in activity.Children)
-                {
-                    if (!superCategories.Contains(child))
-                    {
-                        superCategories.Add(child);
-                    }
-                }
-            }
-            return superCategories;
+            return parent.GetAllSubactivities();
         }
         public Activity MakeRecommendation()
         {
@@ -481,8 +467,9 @@ namespace ActivityRecommendation
         // tells the Engine about a rating that wasn't already in memory (but may have been stored on disk)
         public void PutRatingInMemory(RelativeRating newRating)
         {
-            this.PutRatingInMemory(newRating.BetterRating);
-            this.PutRatingInMemory(newRating.WorseRating);
+            // add the ratings in chronological order
+            this.PutRatingInMemory(newRating.FirstRating);
+            this.PutRatingInMemory(newRating.SecondRating);
         }
         // tells the Engine about a rating that wasn't already in memory (but may have been stored on disk)
         public void PutRatingInMemory(AbsoluteRating newRating)

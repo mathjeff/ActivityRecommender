@@ -7,17 +7,13 @@ using StatLists;
 // The DistributionAdder class adds and subtracts distributions, to allow for use in Generics
 namespace ActivityRecommendation
 {
-    class DistributionAdder : IAdder<Distribution>
+    class DistributionAdder : ICombiner<Distribution>
     {
-        public Distribution Sum(Distribution d1, Distribution d2)
+        public Distribution Combine(Distribution d1, Distribution d2)
         {
             return d1.Plus(d2);
         }
-        public Distribution Difference(Distribution d1, Distribution d2)
-        {
-            return d1.Minus(d2);
-        }
-        public Distribution Zero()
+        public Distribution Default()
         {
             return new Distribution(0, 0, 0);
         }

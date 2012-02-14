@@ -20,7 +20,7 @@ namespace ActivityRecommendation
 
         #region Public Member Functions
         
-        public string NamePrefix
+        /*public string NamePrefix
         {
             get
             {
@@ -37,7 +37,7 @@ namespace ActivityRecommendation
             {
                 this.namePrefix = value;
             }
-        }
+        }*/
         public string ActivityName
         {
             get
@@ -46,6 +46,7 @@ namespace ActivityRecommendation
             }
             set
             {
+                /*
                 if (this.activity != null)
                 {
                     // if the activity name disagrees with the new activity...
@@ -55,10 +56,12 @@ namespace ActivityRecommendation
                         this.activity = null;
                     }
                 }
+                */
                 // now update the desired data
                 this.activityName = value;
             }
         }
+        /*
         public Activity Activity
         {
             get
@@ -80,6 +83,7 @@ namespace ActivityRecommendation
                 this.activity = value;
             }
         }
+        */
         public bool? Choosable { get; set; }
         public bool PreferHigherProbability { get; set; }   // tells whether this descriptor wants to match the Activity with the best rating
         public bool RequiresPerfectMatch { get; set; }
@@ -88,8 +92,8 @@ namespace ActivityRecommendation
         #region Private Member Variables
 
         private string activityName;
-        private Activity activity;
-        private string namePrefix;
+        //private Activity activity;
+        //private string namePrefix;
 
         #endregion
 

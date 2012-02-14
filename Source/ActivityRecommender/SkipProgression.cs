@@ -7,7 +7,7 @@ using StatLists;
 // A SkipProgression keeps track of how long it has been since the user said that they did not want to do a particular activity
 namespace ActivityRecommendation
 {
-    class SkipProgression : IProgression, IAdder<ActivitySkip>
+    class SkipProgression : IProgression, ICombiner<ActivitySkip>
     {
         public SkipProgression(Activity newOwner)
         {
@@ -27,13 +27,15 @@ namespace ActivityRecommendation
         {
             ListItemStats<DateTime, ActivitySkip> stats = this.searchHelper.FindPreviousItem(when, strictlyEarlier);
             if (stats == null)
-                return new ProgressionValue(when, new Distribution(), -1);
+                return null;
+            //return new ProgressionValue(when, new Distribution(), -1);
             ActivitySkip skip = stats.Value;
             Distribution distribution = Distribution.MakeDistribution(when.Subtract(skip.Date).TotalSeconds, 0, 1);
-            ProgressionValue progressionValue = new ProgressionValue(when, distribution, this.searchHelper.CountBeforeKey(when, !strictlyEarlier));
+            //ProgressionValue progressionValue = new ProgressionValue(when, distribution, this.searchHelper.CountBeforeKey(when, !strictlyEarlier));
+            ProgressionValue progressionValue = new ProgressionValue(when, distribution);
             return progressionValue;
         }
-        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
             throw new NotImplementedException();
         }
@@ -61,13 +63,13 @@ namespace ActivityRecommendation
 
         #endregion
 
-        #region Functions for IAdder<Distribution>
+        #region Functions for ICombiner<Distribution>
 
-        public ActivitySkip Sum(ActivitySkip a, ActivitySkip b)
+        public ActivitySkip Combine(ActivitySkip a, ActivitySkip b)
         {
             return null;
         }
-        public ActivitySkip Zero()
+        public ActivitySkip Default()
         {
             return new ActivitySkip();
         }

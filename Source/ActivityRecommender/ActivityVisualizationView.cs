@@ -16,12 +16,23 @@ namespace ActivityRecommendation
             this.SetTitle("Here is a visualization of " + activityToShow.Name + " over time. Press [ESCAPE] to return to the main screen.");
             //this.KeyDown += new System.Windows.Input.KeyEventHandler(ActivityVisualizationView_KeyDown);
             this.activityToDisplay = activityToShow;
-            this.displayGrid = new DisplayGrid(2, 2);
+            this.displayGrid = new DisplayGrid(1, 2);
             this.SetContent(this.displayGrid);
 
+            DisplayGrid graphGrid = new DisplayGrid(2, 1);
             // setup a graph of the ratings
             this.ratingsView = new TitledControl("This is a graph of the ratings of " + this.activityToDisplay.Name + " over time.");
-            this.displayGrid.AddItem(this.ratingsView);
+            graphGrid.AddItem(this.ratingsView);
+
+            // setup a graph of the participations
+            this.participationsView = new TitledControl("This is a graph of the participations in " + this.activityToDisplay.Name + " over time.");
+            graphGrid.AddItem(this.participationsView);
+
+            this.displayGrid.AddItem(graphGrid);
+
+
+            // setup a display for some statistics
+            DisplayGrid statsDisplayGrid = new DisplayGrid(7, 1);
 
             // setup an exit button
             this.exitButton = new Button();
@@ -30,15 +41,10 @@ namespace ActivityRecommendation
             this.exitButton.Width = 100;
             this.exitButton.HorizontalAlignment = HorizontalAlignment.Center;
             this.exitButton.Height = 30;
-            this.displayGrid.AddItem(this.exitButton);
-
-            // setup a graph of the participations
-            this.participationsView = new TitledControl("This is a graph of the participations in " + this.activityToDisplay.Name + " over time.");
-            this.displayGrid.AddItem(this.participationsView);
+            statsDisplayGrid.AddItem(this.exitButton);
 
             // show some statistics of the participations
             this.participationDataDisplay = new TitledControl("Stats:");
-            DisplayGrid statsDisplayGrid = new DisplayGrid(4, 1);
             this.queryStartDateDisplay = new DateEntryView("Between");
             this.queryStartDateDisplay.SetDate(activityToShow.GetEarliestInteractionDate());
             this.queryStartDateDisplay.AddTextchangedHandler(new TextChangedEventHandler(this.DateTextChanged));
@@ -48,12 +54,24 @@ namespace ActivityRecommendation
             this.queryEndDateDisplay.AddTextchangedHandler(new TextChangedEventHandler(this.DateTextChanged));
             statsDisplayGrid.AddItem(this.queryEndDateDisplay);
 
+            // display the total time spanned by the current window
             this.totalTimeDisplay = new ResizableTextBlock();
             statsDisplayGrid.AddItem(this.totalTimeDisplay);
             this.timeFractionDisplay = new ResizableTextBlock();
             statsDisplayGrid.AddItem(this.timeFractionDisplay);
-            this.displayGrid.PutItem(statsDisplayGrid, 1, 1);
 
+            this.mostPopularChild_View = new TitledTextblock("Your most common immediate subactivity:");
+            this.mostPopularChild_View.Text = "[There are none]";
+            statsDisplayGrid.AddItem(this.mostPopularChild_View);
+
+            this.mostPopularDescendent_View = new TitledTextblock("Your most common subactivity,\n among those having no subactivities:");
+            this.mostPopularDescendent_View.Text = "[There are none]";
+            statsDisplayGrid.AddItem(this.mostPopularDescendent_View);
+
+            // put the stats view into the main view
+            this.displayGrid.AddItem(statsDisplayGrid);
+
+            
             this.UpdateParticipationStatsView();
             this.UpdateDrawing();
         }
@@ -70,7 +88,7 @@ namespace ActivityRecommendation
             RatingProgression ratingProgression = this.activityToDisplay.RatingProgression;
             List<AbsoluteRating> ratings = ratingProgression.GetRatingsInDiscoveryOrder();
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
-            List<Point> points = new List<Point>();
+            List<Datapoint> points = new List<Datapoint>();
 
             // make a plot
             PlotControl newPlot = new PlotControl();
@@ -92,7 +110,7 @@ namespace ActivityRecommendation
                     double y = rating.Score;
                     // make sure we want to include it in the plot (and therefore the regression line)
                     if (x >= newPlot.MinX && x <= newPlot.MaxX)
-                        points.Add(new Point(x, y));
+                        points.Add(new Datapoint(x, y, 1));
                 }
             }
             newPlot.SetData(points);
@@ -105,30 +123,34 @@ namespace ActivityRecommendation
                 return;
             // draw the ParticipationProgression
             ParticipationProgression participationProgression = this.activityToDisplay.ParticipationProgression;
-            List<Participation> participations = participationProgression.Participations;
+            IEnumerable<Participation> participations = participationProgression.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
-            List<Point> points = new List<Point>();
+            List<Datapoint> points = new List<Datapoint>();
             double sumY = 0;
             PlotControl newPlot = new PlotControl();
             newPlot.ShowRegressionLine = true;
             newPlot.MinX = 0;
-            newPlot.MaxX = this.queryEndDateDisplay.GetDate().Subtract(firstDate).TotalSeconds;
+            double maxX = this.queryEndDateDisplay.GetDate().Subtract(firstDate).TotalSeconds;
+            newPlot.MaxX = maxX;
+            double x1 = 0;
+            double x2 = 0;
             foreach (Participation participation in participations)
             {
                 TimeSpan duration1 = participation.StartDate.Subtract(firstDate);
                 // calculate x1 and x2
-                double x1 = duration1.TotalSeconds;
+                x1 = duration1.TotalSeconds;
                 TimeSpan duration2 = participation.EndDate.Subtract(firstDate);
-                double x2 = duration2.TotalSeconds;
+                x2 = duration2.TotalSeconds;
                 // make sure that we care about this point
                 if (x1 <= newPlot.MaxX && x2 >= newPlot.MinX)
                 {
                     // calculate y1
-                    points.Add(new Point(x1, sumY));
+                    points.Add(new Datapoint(x1, sumY, x2 - x1));
                     sumY += participation.TotalIntensity.Mean * participation.TotalIntensity.Weight;
-                    points.Add(new Point(x2, sumY));
+                    points.Add(new Datapoint(x2, sumY, x2 - x1));
                 }
             }
+            points.Add(new Datapoint(maxX, sumY, maxX - x2));
             newPlot.SetData(points);
 
             this.participationsView.SetContent(newPlot);
@@ -158,6 +180,38 @@ namespace ActivityRecommendation
             //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
             this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numDaysSpent + " days on this activity";
             this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
+            Activity bestChild = null;
+            Distribution bestTotal = new Distribution();
+            foreach (Activity child in this.activityToDisplay.Children)
+            {
+                Participation participation = child.SummarizeParticipationsBetween(startDate, endDate);
+                Distribution currentTotal = participation.TotalIntensity;
+                if (currentTotal.Weight > bestTotal.Weight)
+                {
+                    bestChild = child;
+                    bestTotal = currentTotal;
+                }
+            }
+            if (bestChild != null)
+                this.mostPopularChild_View.Text = bestChild.Name;
+
+            bestChild = null;
+            bestTotal = new Distribution();
+            foreach (Activity child in this.activityToDisplay.GetAllSubactivities())
+            {
+                if (child.Children.Count == 0)
+                {
+                    Participation participation = child.SummarizeParticipationsBetween(startDate, endDate);
+                    Distribution currentTotal = participation.TotalIntensity;
+                    if (currentTotal.Weight > bestTotal.Weight)
+                    {
+                        bestChild = child;
+                        bestTotal = currentTotal;
+                    }
+                }
+            }
+            if (bestChild != null)
+                this.mostPopularDescendent_View.Text = bestChild.Name;
         }
         public void AddExitClickHandler(RoutedEventHandler e)
         {
@@ -176,6 +230,8 @@ namespace ActivityRecommendation
         //PlotControl participationsPlot;
         TitledControl ratingsView;
         TitledControl participationsView;
+        TitledTextblock mostPopularChild_View;
+        TitledTextblock mostPopularDescendent_View;
         DisplayGrid displayGrid;
 
         TitledControl participationDataDisplay;

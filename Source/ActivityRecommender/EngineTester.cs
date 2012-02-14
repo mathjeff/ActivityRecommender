@@ -7,9 +7,9 @@ using System.Text;
 // The first time (on 2012-1-15) that I calculated the Root(Mean(Squared(Error))), it was about 0.327
 
 /*
-The latest data (on 2012-1-25) is:
-typicalScoreError = 0.209970298665407
-typicalProbabilityError = 0.471008001759027
+The latest data (on 2012-1-31) is:
+typicalScoreError = 0.151660802353906
+typicalProbabilityError = 0.472799715968249
 */
 
 namespace ActivityRecommendation
@@ -74,10 +74,22 @@ namespace ActivityRecommendation
         public void AddRating(RelativeRating newRating)
         {
             AbsoluteRating betterRating = newRating.BetterRating;
-            this.UpdateScoreError(betterRating.ActivityDescriptor, (DateTime)betterRating.Date, betterRating.Score);
+            this.engine.MakeRecommendation((DateTime)betterRating.Date);
+            Activity betterActivity = this.activityDatabase.ResolveDescriptor(betterRating.ActivityDescriptor);
+            Distribution predictedBetterScore = betterActivity.PredictedScore.Distribution;
+
 
             AbsoluteRating worseRating = newRating.WorseRating;
-            this.UpdateScoreError(worseRating.ActivityDescriptor, (DateTime)worseRating.Date, worseRating.Score);
+            this.engine.MakeRecommendation((DateTime)worseRating.Date);
+            Activity worseActivity = this.activityDatabase.ResolveDescriptor(betterRating.ActivityDescriptor);
+            Distribution predictedWorseScore = worseActivity.PredictedScore.Distribution;
+
+            double error;
+            if (predictedBetterScore.Mean > predictedWorseScore.Mean)
+                error = 0;
+            else
+                error = predictedWorseScore.Mean - predictedBetterScore.Mean;
+            this.UpdateScoreError(error);
 
             this.engine.PutRatingInMemory(newRating);
         }
@@ -101,7 +113,10 @@ namespace ActivityRecommendation
             }
             */
             // compute error
-            double error = activity.PredictedScore.Distribution.Mean - correctScore;
+            this.UpdateScoreError(activity.PredictedScore.Distribution.Mean - correctScore);
+        }
+        public void UpdateScoreError(double error)
+        {
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
             this.squaredScoreError = this.squaredScoreError.Plus(errorDistribution);
         }

@@ -65,22 +65,22 @@ namespace ActivityRecommendation
         }
 
         // puts the given item at the given spot
-        public void PutItem(UIElement newControl, int row, int column)
+        public void PutItem(UIElement newControl, int rowIndex, int columnIndex)
         {
-            UIElement previousChild = this.items[row, column];
+            UIElement previousChild = this.items[rowIndex, columnIndex];
             if (previousChild != null)
             {
                 this.Children.Remove(previousChild);
             }
-            Grid.SetRow(newControl, row);
-            Grid.SetColumn(newControl, column);
+            Grid.SetRow(newControl, rowIndex);
+            Grid.SetColumn(newControl, columnIndex);
             this.Children.Add(newControl);
-            this.items[row, column] = newControl;
+            this.items[rowIndex, columnIndex] = newControl;
             // keep track of which items implement the interface IResizable, telling how to resize them
             if (newControl is IResizable)
-                this.itemsAsIResizables[row, column] = (IResizable)newControl;
+                this.itemsAsIResizables[rowIndex, columnIndex] = (IResizable)newControl;
             else
-                this.itemsAsIResizables[row, column] = null;
+                this.itemsAsIResizables[rowIndex, columnIndex] = null;
             // recalculate how to display everything
             this.InvalidateVisual();
         }

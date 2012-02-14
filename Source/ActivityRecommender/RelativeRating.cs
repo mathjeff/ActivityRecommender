@@ -33,6 +33,33 @@ namespace ActivityRecommendation
         public AbsoluteRating BetterRating { get; set; }
         public AbsoluteRating WorseRating { get; set; }
 
+        public bool BetterRatingIsFirst
+        {
+            get
+            {
+                return (this.BetterRating.Date.Value.CompareTo(this.WorseRating.Date.Value) < 0);
+            }
+        }
+        public AbsoluteRating FirstRating
+        {
+            get
+            {
+                if (this.BetterRatingIsFirst)
+                    return this.BetterRating;
+                else
+                    return this.WorseRating;
+            }
+        }
+        public AbsoluteRating SecondRating
+        {
+            get
+            {
+                if (this.BetterRatingIsFirst)
+                    return this.WorseRating;
+                else
+                    return this.BetterRating;
+            }
+        }
         // The participation itself has one Rating, and another Activity has the other rating
         // Now we figure out which Rating gets assigned to this Participation and give it as much data as possible
         public override void FillInFromParticipation(Participation participation)

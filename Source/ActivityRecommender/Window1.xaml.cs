@@ -23,6 +23,7 @@ namespace ActivityRecommendation
         {
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(Window1_Loaded);
+            this.Loaded += new RoutedEventHandler(Window1_Loaded2);
             this.Closed += new EventHandler(Window1_Closed);
         }
 
@@ -31,10 +32,16 @@ namespace ActivityRecommendation
             this.recommender.ShutDown();
         }
 
+        // gets called when the window loads
         void Window1_Loaded(object sender, RoutedEventArgs e)
         {
-            this.WindowState = WindowState.Maximized;
             this.recommender = new ActivityRecommender(this);
+            this.WindowState = WindowState.Maximized;
+        }
+        // gets called when the window loads but after Window1_Loaded
+        void Window1_Loaded2(object sender, EventArgs e)
+        {
+            this.recommender.PrepareEngine();
         }
 
         private ActivityRecommender recommender;

@@ -33,18 +33,19 @@ namespace ActivityRecommendation
             //this.endDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.endDateBox);
 
-            this.commentBox = new TitledTextbox("Comment (optional)");
-            contents.AddItem(this.commentBox);
 
             this.setStartdateButton = new Button();
             this.setStartdateButton.Content = "Set start = now";
             this.setStartdateButton.VerticalAlignment = VerticalAlignment.Center;
             contents.AddItem(this.setStartdateButton);
 
-            this.autofillButton = new Button();
-            this.autofillButton.Content = "Autofill";
-            this.autofillButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            contents.AddItem(this.autofillButton);
+            this.setEnddateButton = new Button();
+            this.setEnddateButton.Content = "Set end = now";
+            this.setEnddateButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+            contents.AddItem(this.setEnddateButton);
+
+            this.commentBox = new TitledTextbox("Comment (optional)");
+            contents.AddItem(this.commentBox);
 
             this.okButton = new Button();
             this.okButton.Content = "OK";
@@ -130,9 +131,9 @@ namespace ActivityRecommendation
         {
             this.okButton.Click += h;
         }
-        public void AddAutofillClickHandler(RoutedEventHandler h)
+        public void AddSetenddateHandler(RoutedEventHandler h)
         {
-            this.autofillButton.Click += h;
+            this.setEnddateButton.Click += h;
         }
         public void AddSetstartdateHandler(RoutedEventHandler h)
         {
@@ -169,7 +170,7 @@ namespace ActivityRecommendation
         DateEntryView startDateBox;
         DateEntryView endDateBox;
         Button setStartdateButton;
-        Button autofillButton;
+        Button setEnddateButton;
         Button okButton;
     }
 }

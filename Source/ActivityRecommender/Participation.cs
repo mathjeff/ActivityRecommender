@@ -30,12 +30,14 @@ namespace ActivityRecommendation
             double totalIntensity = this.Duration.TotalSeconds * averageIntensity;
             this.totalIntensity = new Distribution(totalIntensity, totalIntensity * averageIntensity, totalIntensity);
             this.RawRating = null;
+#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
             this.LogIdleTime = new Distribution(0, 0, 0);
             double numSeconds = this.Duration.TotalSeconds;
             if (numSeconds > 0)
                 this.LogActiveTime = Distribution.MakeDistribution(Math.Log(numSeconds), 0, 1);
             else
                 this.LogActiveTime = new Distribution();
+#endif
         }
 
         public DateTime StartDate { get; set; }
@@ -60,8 +62,10 @@ namespace ActivityRecommendation
                 return this.EndDate.Subtract(this.StartDate);
             }
         }
+#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
         public Distribution LogIdleTime { get; set; }   // the log of the time (in seconds) between sub-participations
         public Distribution LogActiveTime { get; set; } // the log of the duration (in seconds) of each sub-participation
+#endif
         public string Comment { get; set; }
 
         // returns the exact rating that was given to this Participation

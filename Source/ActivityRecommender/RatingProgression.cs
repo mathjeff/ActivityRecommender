@@ -99,8 +99,9 @@ namespace ActivityRecommendation
             ListItemStats<DateTime, Distribution> latestItem = this.searchHelper.FindPreviousItem(when, true);
             if (latestItem == null)
             {
-                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0), -1);
-                return defaultValue;
+                return null;
+                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0));
+                //return defaultValue;
             }
             // get some statistics
             Distribution latestDistribution = latestItem.Value;
@@ -110,27 +111,27 @@ namespace ActivityRecommendation
             // create another date that is twice as far in the past
             DateTime earlierDate = latestDate.Subtract(duration);
             // add up everything that occurred between the earlier day and now
-            Distribution sum = this.searchHelper.SumBetweenKeys(earlierDate, true, when, !strictlyEarlier);
-            int previousCount = this.searchHelper.CountBeforeKey(when, strictlyEarlier);
-            ProgressionValue result = new ProgressionValue(when, sum, previousCount);
+            Distribution sum = this.searchHelper.CombineBetweenKeys(earlierDate, true, when, !strictlyEarlier);
+            //int previousCount = this.searchHelper.CountBeforeKey(when, strictlyEarlier);
+            ProgressionValue result = new ProgressionValue(when, sum);
             return result;
         }
         public ProgressionValue GetCurrentValue(DateTime when)
         {
             Distribution distribution = this.Owner.PredictedScore.Distribution;
-            ProgressionValue result = new ProgressionValue(when, distribution, this.NumItems);
+            ProgressionValue result = new ProgressionValue(when, distribution);
             return result;
         }
-        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
-            int i;
+            //int i = indexInclusive;
             List<ProgressionValue> results = new List<ProgressionValue>();
-            for (i = indexInclusive; i < this.ratingsInDiscoveryOrder.Count; i++)
+            foreach (AbsoluteRating rating in this.ratingsInDiscoveryOrder.GetRange(indexInclusive, this.ratingsInDiscoveryOrder.Count - indexInclusive))
             {
-                AbsoluteRating rating = this.ratingsInDiscoveryOrder[i];
                 Distribution distribution = Distribution.MakeDistribution(rating.Score, 0, 1);
-                ProgressionValue value = new ProgressionValue((DateTime)rating.Date, distribution, i);
+                ProgressionValue value = new ProgressionValue((DateTime)rating.Date, distribution);
                 results.Add(value);
+                //i++;
                 //ProgressionValue value = new ProgressionValue(
                 //results.Add((DateTime)this.ratingsInDiscoveryOrder[i].Date);
             }

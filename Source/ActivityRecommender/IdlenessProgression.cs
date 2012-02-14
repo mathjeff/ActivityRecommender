@@ -10,7 +10,7 @@ using StatLists;
 // Perhaps a television program only comes out once a week and trying to watch it more often wouldn't work
 namespace ActivityRecommendation
 {
-    class IdlenessProgression : IComparer<DateTime>, IAdder<Participation>, IProgression
+    class IdlenessProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
     {
         #region Constructor
 
@@ -52,15 +52,15 @@ namespace ActivityRecommendation
 
         #endregion
 
-        #region Functions for IAdder<Participation>
+        #region Functions for ICombiner<Participation>
 
-        public Participation Sum(Participation participation1, Participation participation2)
+        public Participation Combine(Participation participation1, Participation participation2)
         {
             // we don't actually care about conglomerations of Participations so this function can return anything
-            return this.Zero();
+            return this.Default();
         }
 
-        public Participation Zero()
+        public Participation Default()
         {
             return new Participation();
         }
@@ -78,22 +78,23 @@ namespace ActivityRecommendation
             // make sure that we have enough data
             if (previousStats == null)
             {
-                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
-                return defaultValue;
+                return null;
+                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
+                //return defaultValue;
             }
             // figure out whether we're in the middle of a participation or not
             Participation previousParticipation = previousStats.Value;
-            int index = 2 * this.searchHelper.CountBeforeKey(when, !strictlyEarlier);
+            //int index = 2 * this.searchHelper.CountBeforeKey(when, !strictlyEarlier);
             if (previousParticipation.EndDate.CompareTo(when) > 0)
             {
                 // we're in the middle of a participation, so the value is zero
-                index++;
-                return new ProgressionValue(when, new Distribution(0, 0, 1), index);
+                //index++;
+                return new ProgressionValue(when, new Distribution(0, 0, 1));
             }
             // we're not in the middle of a participation, so the value is the amount of time since the last one ended
             TimeSpan duration = when.Subtract(previousParticipation.EndDate);
             Distribution currentValue = Distribution.MakeDistribution(duration.TotalSeconds, 0, 1);
-            ProgressionValue result = new ProgressionValue(when, currentValue, index);
+            ProgressionValue result = new ProgressionValue(when, currentValue);
             return result;
         }
 
@@ -102,14 +103,15 @@ namespace ActivityRecommendation
             return this.GetValueAt(when, false);
         }
 
-        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
-            List<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
-            int i;
+            IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.ItemsFromIndex(indexInclusive);
+            //IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
             List<ProgressionValue> results = new List<ProgressionValue>();
-            for (i = indexInclusive; i < items.Count;  i++)
+            //for (i = indexInclusive; i < items.Count;  i++)
+            foreach (ListItemStats<DateTime, Participation> item in items)
             {
-                DateTime when = items[i].Key;
+                DateTime when = item.Key;
                 ProgressionValue value = this.GetValueAt(when, false);
                 results.Add(value);
             }

@@ -13,10 +13,10 @@ namespace ActivityRecommendation
         }
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
-            ProgressionValue value = new ProgressionValue(when, Owner.PredictedParticipationProbability.Distribution, Owner.NumConsiderations);
+            ProgressionValue value = new ProgressionValue(when, Owner.PredictedParticipationProbability.Distribution);
             return value;
         }
-        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
             return null;
         }

@@ -64,10 +64,12 @@ namespace ActivityRecommendation
         {
             this.ratingPredictors = new List<IPredictionLink>();
 
+            /*
             PredictionLink predictorFromOwnRatings = new PredictionLink(this.ratingProgression, this.ratingProgression);
             predictorFromOwnRatings.InitializeIncreasing();
             // It actually turns out that the Root(Mean(Squared(Error))) goes down if we don't use this
-            //this.ratingPredictors.Add(predictorFromOwnRatings);
+            this.ratingPredictors.Add(predictorFromOwnRatings);
+            */
 
             PredictionLink predictorFromOwnParticipations = new PredictionLink(this.participationProgression, this.ratingProgression);
             this.ratingPredictors.Add(predictorFromOwnParticipations);
@@ -162,6 +164,24 @@ namespace ActivityRecommendation
             {
                 return this.children;
             }
+        }
+        public List<Activity> GetAllSubactivities()
+        {
+            List<Activity> subCategories = new List<Activity>();
+            subCategories.Add(this);
+            int i = 0;
+            for (i = 0; i < subCategories.Count; i++)
+            {
+                Activity activity = subCategories[i];
+                foreach (Activity child in activity.Children)
+                {
+                    if (!subCategories.Contains(child))
+                    {
+                        subCategories.Add(child);
+                    }
+                }
+            }
+            return subCategories;
         }
         // makes an ActivityDescriptor that describes this Activity
         public ActivityDescriptor MakeDescriptor()

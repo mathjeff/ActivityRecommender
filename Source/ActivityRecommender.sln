@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ActivityRecommender", "ActivityRecommender\ActivityRecommender.csproj", "{74A38D4F-49A0-4023-A400-ED88CE0BD376}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatList", "StatList\StatList.csproj", "{D070EA92-52C2-4029-9BA0-15572B47A6FD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatList", "StatList\StatList\StatList\StatList.csproj", "{D070EA92-52C2-4029-9BA0-15572B47A6FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

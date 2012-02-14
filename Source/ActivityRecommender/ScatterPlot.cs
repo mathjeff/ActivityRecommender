@@ -85,14 +85,14 @@ namespace ActivityRecommendation
 
                     lowerStats = this.searchHelper.GetValueAtIndex(lowerIndex);
                     lowerKey = lowerStats.Key;
-                    Distribution lowerSum = this.searchHelper.SumAfterKey(lowerKey, true);
+                    Distribution lowerSum = this.searchHelper.CombineAfterKey(lowerKey, true);
 
                     Distribution result = lowerSum;
                     if (upperIndex >= 0)
                     {
                         upperStats = this.searchHelper.GetValueAtIndex(upperIndex);
                         upperKey = upperStats.Key;
-                        Distribution upperSum = this.searchHelper.SumBeforeKey(upperKey, true);
+                        Distribution upperSum = this.searchHelper.CombineBeforeKey(upperKey, true);
                         result = result.Plus(upperSum);
                     }
                     return result;
@@ -118,7 +118,7 @@ namespace ActivityRecommendation
             upperStats = this.searchHelper.GetValueAtIndex(upperIndex);
             upperKey = upperStats.Key;
             // add up all the points in the neighborhood
-            Distribution conglomerate = this.searchHelper.SumBetweenKeys(lowerKey, true, upperKey, true);
+            Distribution conglomerate = this.searchHelper.CombineBetweenKeys(lowerKey, true, upperKey, true);
             // We return that the output is probably similar to one of the points nearby
             // This should probably be eventually replaced with a linear regression within the neighborhood
             return conglomerate;
@@ -133,7 +133,7 @@ namespace ActivityRecommendation
             double maxWindowX = this.maxXObserved;
             double newX1 = minWindowX;
             double newX2 = maxWindowX;
-            Distribution contents = this.searchHelper.SumBetweenKeys(minWindowX, true, maxWindowX, true);
+            Distribution contents = this.searchHelper.CombineBetweenKeys(minWindowX, true, maxWindowX, true);
             //while ((this.maxXObserved - this.minXObserved) / (maxWindowX - minWindowX) < (this.maxYObserved - this.minYObserved) / (contents.StdDev / contents.Weight))
             while ((this.maxXObserved - this.minXObserved) * contents.StdDev < (this.maxYObserved - this.minYObserved) * contents.Weight * (maxWindowX - minWindowX)
                 && contents.Weight > 2)
@@ -161,9 +161,9 @@ namespace ActivityRecommendation
                 //newX1 = (minWindowX * 3 + maxWindowX) / 4;
                 //newX2 = (minWindowX + maxWindowX * 3) / 4;
                 // find the standard deviation of all points within this domain
-                contents = this.searchHelper.SumBetweenKeys(newX1, true, newX2, true);
+                contents = this.searchHelper.CombineBetweenKeys(newX1, true, newX2, true);
             }
-            Distribution result = this.searchHelper.SumBetweenKeys(minWindowX, true, maxWindowX, true);
+            Distribution result = this.searchHelper.CombineBetweenKeys(minWindowX, true, maxWindowX, true);
             return result;
         }
 

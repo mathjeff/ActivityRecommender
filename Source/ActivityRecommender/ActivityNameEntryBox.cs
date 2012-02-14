@@ -114,13 +114,13 @@ namespace ActivityRecommendation
         {
             get
             {
-                string prefix = this.nameBox.Text;
-                if (prefix == null || prefix == "")
+                string text = this.nameBox.Text;
+                if (text == null || text == "")
                 {
                     return null;
                 }
                 ActivityDescriptor descriptor = new ActivityDescriptor();
-                descriptor.NamePrefix = prefix;
+                descriptor.ActivityName = text;
                 descriptor.PreferHigherProbability = true;
                 descriptor.RequiresPerfectMatch = false;
                 return descriptor;

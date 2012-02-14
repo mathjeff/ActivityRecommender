@@ -19,7 +19,7 @@ namespace ActivityRecommendation
         }
 
         // assigns some datapoints to the plot
-        public void SetData(List<Point> points)
+        public void SetData(List<Datapoint> points)
         {
             this.pointsToPlot = points;
             // find the min and max coordinates
@@ -27,14 +27,14 @@ namespace ActivityRecommendation
             {
                 return;
             }
-            this.minXPresent = this.maxXPresent = this.pointsToPlot[0].X;
-            this.minYPresent = this.maxYPresent = this.pointsToPlot[0].Y;
-            double x, y;
-            this.sumX = this.sumX2 = this.sumXY = this.sumY = this.sumY2 = 0;
-            foreach (Point point in this.pointsToPlot)
+            this.minXPresent = this.maxXPresent = this.pointsToPlot[0].Input;
+            this.minYPresent = this.maxYPresent = this.pointsToPlot[0].Output;
+            double x, y, weight;
+            this.totalWeight = this.sumX = this.sumX2 = this.sumXY = this.sumY = this.sumY2 = 0;
+            foreach (Datapoint point in this.pointsToPlot)
             {
                 // update the statistics for determining the proper zoom
-                x = point.X;
+                x = point.Input;
                 if (x < this.minXPresent)
                 {
                     this.minXPresent = x;
@@ -43,7 +43,7 @@ namespace ActivityRecommendation
                 {
                     this.maxXPresent = x;
                 }
-                y = point.Y;
+                y = point.Output;
                 if (y < this.minYPresent)
                 {
                     this.minYPresent = y;
@@ -52,12 +52,14 @@ namespace ActivityRecommendation
                 {
                     this.maxYPresent = y;
                 }
+                weight = point.Weight;
                 // update the statistics for drawing the Least-Squares-RegressionLine
-                this.sumX += x;
-                this.sumX2 += x * x;
-                this.sumXY += x * y;
-                this.sumY += y;
-                this.sumY2 += y * y;
+                this.totalWeight += weight;
+                this.sumX += x * weight;
+                this.sumX2 += x * x * weight;
+                this.sumXY += x * y * weight;
+                this.sumY += y * weight;
+                this.sumY2 += y * y * weight;
             }
         }
         public double? MinX { get; set; }
@@ -121,12 +123,12 @@ namespace ActivityRecommendation
 
             // plot all of the provided points
             double x1, y1, x2, y2;
-            x1 = (this.pointsToPlot[0].X - minimumX) * scaleX;
-            y1 = (maximumY - this.pointsToPlot[0].Y) * scaleY;
+            x1 = (this.pointsToPlot[0].Input - minimumX) * scaleX;
+            y1 = (maximumY - this.pointsToPlot[0].Output) * scaleY;
             for (i = 0; i < this.pointsToPlot.Count; i++)
             {
-                x2 = (this.pointsToPlot[i].X - minimumX) * scaleX;
-                y2 = (maximumY - this.pointsToPlot[i].Y) * scaleY;
+                x2 = (this.pointsToPlot[i].Input - minimumX) * scaleX;
+                y2 = (maximumY - this.pointsToPlot[i].Output) * scaleY;
 
                 Line newLine = new Line();
                 newLine.X1 = x1;
@@ -142,14 +144,14 @@ namespace ActivityRecommendation
             if (this.ShowRegressionLine)
             {
                 // compute the equation of the least-squares regression line
-                Distribution xs = new Distribution(sumX, sumX2, this.NumPointsToPlot);
-                Distribution ys = new Distribution(sumY, sumY2, this.NumPointsToPlot);
+                Distribution xs = new Distribution(sumX, sumX2, this.totalWeight);
+                Distribution ys = new Distribution(sumY, sumY2, this.totalWeight);
                 double stdDevX = xs.StdDev;
                 double stdDevY = ys.StdDev;
                 double correlation;
                 if (stdDevX != 0 && stdDevY != 0)
                 {
-                    double n = this.NumPointsToPlot;
+                    double n = this.totalWeight;
                     // calculate the correlation as follows:
                     // sum((x - mean(x)) * (y - mean(y))) / stdDev(x) / stdDev(y) / n
                     // = (sum(xy - mean(x) * y - x * mean(y) + mean(x) * mean(y))) / stdDev(x) / stdDev(y) / n
@@ -182,6 +184,7 @@ namespace ActivityRecommendation
                 }
             }
         }
+        /*
         public int NumPointsToPlot
         {
             get
@@ -189,8 +192,9 @@ namespace ActivityRecommendation
                 return this.pointsToPlot.Count;
             }
         }
+        */
 
-        private List<Point> pointsToPlot;
+        private List<Datapoint> pointsToPlot;
         //private Size drawingDimensions;
         // bounds on the data
         private double minXPresent;
@@ -203,5 +207,6 @@ namespace ActivityRecommendation
         private double sumX2;
         private double sumY2;
         private double sumXY;
+        private double totalWeight;
     }
 }

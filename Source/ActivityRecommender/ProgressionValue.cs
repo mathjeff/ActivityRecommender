@@ -9,11 +9,11 @@ namespace ActivityRecommendation
 {
     public class ProgressionValue
     {
-        public ProgressionValue(DateTime when, Distribution outputValue, int uniqueId)
+        public ProgressionValue(DateTime when, Distribution outputValue)
         {
             this.date = when;
             this.value = outputValue;
-            this.index = uniqueId;
+            //this.index = uniqueId;
         }
         public DateTime Date
         {
@@ -30,6 +30,7 @@ namespace ActivityRecommendation
                 return this.value;
             }
         }
+        /*
         public int Index
         {
             get
@@ -37,7 +38,9 @@ namespace ActivityRecommendation
                 return this.index;
             }
         }
+        */
         // returns true iff the datapoints used to create 'this' are the same datapoints used to create 'other'
+        /*
         public bool IsBasedOnSameDatapoints(ProgressionValue other)
         {
             if (this.index == other.index)
@@ -49,9 +52,9 @@ namespace ActivityRecommendation
                 return false;
             }
         }
-
+        */
         private Distribution value;
-        private int index;
+        //private int index;
         private DateTime date;
     }
 }

@@ -21,13 +21,13 @@ namespace ActivityRecommendation
             double numCycles = duration.TotalSeconds / this.cycleLength.TotalSeconds;
             double fraction = numCycles - Math.Floor(numCycles);
             Distribution currentValue = Distribution.MakeDistribution(fraction, 0, 1);
-            return new ProgressionValue(when, currentValue, 0);
+            return new ProgressionValue(when, currentValue);
         }
         public ProgressionValue GetCurrentValue(DateTime when)
         {
             return this.GetValueAt(when, false);
         }
-        public List<ProgressionValue> GetValuesAfter(int indexInclusive)
+        public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
             return new List<ProgressionValue>();
         }

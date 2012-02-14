@@ -151,7 +151,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StatList\StatList.csproj">
+    <ProjectReference Include="..\StatList\StatList\StatList\StatList.csproj">
       <Project>{D070EA92-52C2-4029-9BA0-15572B47A6FD}</Project>
       <Name>StatList</Name>
     </ProjectReference>

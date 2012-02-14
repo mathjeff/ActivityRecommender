@@ -20,12 +20,12 @@ namespace ActivityRecommendation
                 newButton.Content = title;
                 newButton.HorizontalAlignment = HorizontalAlignment.Center;
                 newButton.Click += this.ButtonClick;
-                this.AddItem(newButton);
                 if (this.selectedButton == null)
                 {
                     this.selectedButton = newButton;
                     this.selectedButton.IsChecked = true;
                 }
+                this.AddItem(newButton);
             }
             this.eventHandlers = new List<RoutedEventHandler>();
         }

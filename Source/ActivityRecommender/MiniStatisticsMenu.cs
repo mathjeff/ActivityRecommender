@@ -19,7 +19,7 @@ namespace ActivityRecommendation
             this.nameEntryBox = new ActivityNameEntryBox("Name of Activity to View");
             this.displayGrid.AddItem(this.nameEntryBox);
 
-            this.okButton = new Button();
+            this.okButton = new ResizableButton();
             this.okButton.Content = "Visualize";
             this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             this.displayGrid.AddItem(this.okButton);
@@ -56,7 +56,7 @@ namespace ActivityRecommendation
                 return this.nameEntryBox.ActivityDescriptor;
             }
         }
-        Button okButton;
+        ResizableButton okButton;
         DisplayGrid displayGrid;
         ActivityNameEntryBox nameEntryBox;
     }

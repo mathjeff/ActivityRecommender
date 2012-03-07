@@ -5,6 +5,7 @@ using System.Text;
 //using System.Windows.Forms;
 using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Media;
 
 // the ParticipationEntryView provides a place for the user to describe what they've done recently
 namespace ActivityRecommendation
@@ -17,6 +18,7 @@ namespace ActivityRecommendation
             DisplayGrid contents = new DisplayGrid(4, 2);
 
             this.nameBox = new ActivityNameEntryBox("Name");
+            this.nameBox.AddTextChangedHandler(new TextChangedEventHandler(this.nameBox_TextChanged));
             contents.AddItem(this.nameBox);
 
             this.ratingBox = new RatingEntryView("Rating (optional)");
@@ -34,20 +36,22 @@ namespace ActivityRecommendation
             contents.AddItem(this.endDateBox);
 
 
-            this.setStartdateButton = new Button();
+            this.setStartdateButton = new ResizableButton();
             this.setStartdateButton.Content = "Set start = now";
             this.setStartdateButton.VerticalAlignment = VerticalAlignment.Center;
+            this.setStartdateButton.Click += new RoutedEventHandler(setStartdateButton_Click);
             contents.AddItem(this.setStartdateButton);
 
-            this.setEnddateButton = new Button();
+            this.setEnddateButton = new ResizableButton();
             this.setEnddateButton.Content = "Set end = now";
             this.setEnddateButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
+            this.setEnddateButton.Click += new RoutedEventHandler(setEnddateButton_Click);
             contents.AddItem(this.setEnddateButton);
 
             this.commentBox = new TitledTextbox("Comment (optional)");
             contents.AddItem(this.commentBox);
 
-            this.okButton = new Button();
+            this.okButton = new ResizableButton();
             this.okButton.Content = "OK";
             this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.okButton);
@@ -55,11 +59,26 @@ namespace ActivityRecommendation
             this.SetContent(contents);
             //this.Background = System.Windows.Media.Brushes.Blue;
         }
+
+        void setEnddateButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.setEnddateButton.UnHighlight();
+        }
+        void setStartdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.setEnddateButton.Highlight();
+        }
+        void nameBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            this.setEnddateButton.Highlight();
+        }
+
         public void Clear()
         {
             this.ratingBox.Clear();
-            this.ActivityName = "";
+            this.nameBox.NameText = "";
             this.CommentText = "";
+            this.setEnddateButton.SetDefaultBackground();
         }
         public ActivityDatabase ActivityDatabase
         {
@@ -76,15 +95,15 @@ namespace ActivityRecommendation
                 this.ratingBox.LatestParticipation = value;
             }
         }
+        public void SetStartDate(DateTime newDate)
+        {
+            this.startDateBox.SetDate(newDate);
+        }
         public DateTime StartDate
         {
             get
             {
                 return this.startDateBox.GetDate();
-            }
-            set
-            {
-                this.startDateBox.SetDate(value);
             }
         }
         public DateTime EndDate
@@ -98,15 +117,17 @@ namespace ActivityRecommendation
                 this.endDateBox.SetDate(value);
             }
         }
+        public void SetActivityName(string newName)
+        {
+            this.nameBox.NameText = newName;
+            if (newName != "" && newName != null)
+                this.setEnddateButton.Highlight();
+        }
         public string ActivityName
         {
             get
             {
                 return this.nameBox.NameText;
-            }
-            set
-            {
-                this.nameBox.NameText = value;
             }
         }
         public string RatingText
@@ -127,6 +148,7 @@ namespace ActivityRecommendation
                 this.commentBox.Text = value;
             }
         }
+
         public void AddOkClickHandler(RoutedEventHandler h)
         {
             this.okButton.Click += h;
@@ -134,6 +156,12 @@ namespace ActivityRecommendation
         public void AddSetenddateHandler(RoutedEventHandler h)
         {
             this.setEnddateButton.Click += h;
+        }
+        public void SetEnddateNow(DateTime when)
+        {
+            DateTime now = DateTime.Now;
+            this.endDateBox.SetDate(now);
+            this.setEnddateButton.SetDefaultBackground();
         }
         public void AddSetstartdateHandler(RoutedEventHandler h)
         {
@@ -169,8 +197,8 @@ namespace ActivityRecommendation
         TitledTextbox commentBox;
         DateEntryView startDateBox;
         DateEntryView endDateBox;
-        Button setStartdateButton;
-        Button setEnddateButton;
-        Button okButton;
+        ResizableButton setStartdateButton;
+        ResizableButton setEnddateButton;
+        ResizableButton okButton;
     }
 }

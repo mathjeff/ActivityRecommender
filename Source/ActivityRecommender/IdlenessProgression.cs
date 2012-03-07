@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
+using AdaptiveLinearInterpolation;
 
 // An IdlenessProgression simply calculates how long it has been since the user last did something
 // It should be able to help model many types of things:
@@ -132,6 +133,13 @@ namespace ActivityRecommendation
             {
                 return this.searchHelper.NumItems;
             }
+        }
+
+        public FloatRange EstimateOutputRange()
+        {
+            // This should be improved eventually
+            // default to one day
+            return new FloatRange(0, true, 24 * 60 * 60, true);
         }
 
         #endregion

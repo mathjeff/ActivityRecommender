@@ -14,7 +14,7 @@ namespace ActivityRecommendation
             this.textBlock = new TextBlock();
             this.textBlock.TextWrapping = TextWrapping.Wrap;
             this.textBlock.HorizontalAlignment = HorizontalAlignment.Stretch;
-            this.SetContent(this.textBlock, new Resizability(0, 1));
+            this.SetContent(this.textBlock, new Resizability(1, 1));
         }
 
         public string Text

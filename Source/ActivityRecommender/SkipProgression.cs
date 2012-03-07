@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
+using AdaptiveLinearInterpolation;
 
 // A SkipProgression keeps track of how long it has been since the user said that they did not want to do a particular activity
 namespace ActivityRecommendation
@@ -17,8 +18,10 @@ namespace ActivityRecommendation
         }
         public void AddSkip(ActivitySkip newSkip)
         {
+            // keep track of the skips in the order they were discovered
             this.valuesInDiscoveryOrder.Add(newSkip);
 
+            // keep track of the skips in chronological order
             this.searchHelper.Add(newSkip.Date, newSkip);
         }
         #region Functions for IProgression
@@ -59,6 +62,12 @@ namespace ActivityRecommendation
             {
                 return "How long it has been since you last skipped this Activity";
             }
+        }
+
+        public FloatRange EstimateOutputRange()
+        {
+            // default to 1 month
+            return new FloatRange(0, true, 24 * 60 * 60, true);
         }
 
         #endregion

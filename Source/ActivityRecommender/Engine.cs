@@ -72,24 +72,44 @@ namespace ActivityRecommendation
         // currently they don't
         public void ApplyParticipationsAndRatings()
         {
-            // Optimization opportunity for the future: cache the lists of superCategories
-            // finally, cascade all of the ratings and participations to each activity
-            foreach (AbsoluteRating rating in this.unappliedRatings)
+            DateTime nextDate;
+            while (true)
             {
-                this.CascadeRating(rating);
+                // find the next date at which something happened
+                List<DateTime> dates = new List<DateTime>();
+                if (this.unappliedRatings.Count > 0)
+                    dates.Add((DateTime)this.unappliedRatings[0].Date);
+                if (this.unappliedParticipations.Count > 0)
+                    dates.Add((DateTime)this.unappliedParticipations[0].StartDate);
+                if (this.unappliedSkips.Count > 0)
+                    dates.Add((DateTime)this.unappliedSkips[0].Date);
+                if (dates.Count == 0)
+                    break;
+                nextDate = dates[0];
+                foreach (DateTime date in dates)
+                {
+                    if (date.CompareTo(nextDate) < 0)
+                        nextDate = date;
+                }
+                // apply any data for the next date            
+                // Optimization opportunity for the future: cache the lists of superCategories
+                // finally, cascade all of the ratings and participations to each activity
+                while (this.unappliedRatings.Count > 0 && ((DateTime)this.unappliedRatings[0].Date).CompareTo(nextDate) == 0)
+                {
+                    this.CascadeRating(this.unappliedRatings[0]);
+                    this.unappliedRatings.RemoveAt(0);
+                }
+                while (this.unappliedParticipations.Count > 0 && ((DateTime)this.unappliedParticipations[0].StartDate).CompareTo(nextDate) == 0)
+                {
+                    this.CascadeParticipation(this.unappliedParticipations[0]);
+                    this.unappliedParticipations.RemoveAt(0);
+                }
+                while (this.unappliedSkips.Count > 0 && ((DateTime)this.unappliedSkips[0].Date).CompareTo(nextDate) == 0)
+                {
+                    this.CascadeSkip(this.unappliedSkips[0]);
+                    this.unappliedSkips.RemoveAt(0);
+                }
             }
-            this.unappliedRatings.Clear();
-            // Optimization opportunity for the future: cache the lists of superCategories
-            foreach (Participation participation in this.unappliedParticipations)
-            {
-                this.CascadeParticipation(participation);
-            }
-            this.unappliedParticipations.Clear();
-            foreach(ActivitySkip skip in this.unappliedSkips)
-            {
-                this.CascadeSkip(skip);
-            }
-            this.unappliedSkips.Clear();
         }
 
         // assume initially that each activity was discovered when the engine was first started
@@ -324,38 +344,6 @@ namespace ActivityRecommendation
         // If it is the only child of each, then its rating should be the average of each parent's rating
         // If one parent has more children, that parent's prediction weight becomes relevant, and its characteristic weight decreases
 
-        /* // I could simply add a special case that says that if an activity has exactly one parent, its rating equals the parent's     
-        public void EstimateRating(Activity activity, DateTime when)
-        {
-            // If we've already estimated the rating at this date, then just return what we calculated
-            DateTime latestUpdateDate = activity.PredictedScore.Date;
-            if (when.CompareTo(latestUpdateDate) == 0)
-            {
-                return;
-            }
-            // If we get here, then we have to do some calculations
-            // First make sure that all parents' ratings are up-to-date
-            foreach (Activity parent in activity.Parents)
-            {
-                this.EstimateRating(parent, when);
-            }
-            // Estimate the rating that the user would give to this activity if it were done
-            List<Prediction> predictions = this.GetRatingEstimates(activity, when);
-            // now that we've made a list of guesses, combine them to make one final guess of what we expect the user's rating to be
-            Prediction actualGuess = this.CombineRatingPredictions(predictions);
-            activity.PredictedScore = actualGuess;
-
-            // Estimate the probability that the user would do this activity
-
-            // Now we estimate how useful it would be to suggest this activity to the user
-            List<Prediction> extraPredictions = this.GetSuggestionEstimates(activity, when);
-            IEnumerable<Prediction> allPredictions = predictions.Concat(extraPredictions);
-            activity.SuggestionValue = this.CombineRatingPredictions(allPredictions);
-
-            // record that we performed a calculation at this date, so we know that we don't need to redo it
-            //activity.LatestRatingEstimationDate = when;
-            //Console.WriteLine("Activity Name = " + activity.Name + " rating = " + activity.LatestEstimatedRating.Mean.ToString() + " suggestion value = " + activity.SuggestionValue.Mean.ToString());
-        }*/
         // returns a string telling the most important reason that 'activity' was last rated as it was
         public string JustifyRating(Activity activity)
         {
@@ -601,6 +589,8 @@ namespace ActivityRecommendation
             if (newSkip.SuggestionDate != null)
             {
                 TimeSpan duration = newSkip.Date.Subtract((DateTime)newSkip.SuggestionDate);
+                if (duration.TotalDays > 1)
+                    Console.WriteLine("skip duration > 1 day, this is probably a mistake");
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
             }
 

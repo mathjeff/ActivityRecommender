@@ -35,7 +35,7 @@ namespace ActivityRecommendation
             DisplayGrid statsDisplayGrid = new DisplayGrid(7, 1);
 
             // setup an exit button
-            this.exitButton = new Button();
+            this.exitButton = new ResizableButton();
             this.exitButton.Content = "Escape";
             this.exitButton.VerticalAlignment = VerticalAlignment.Center;
             this.exitButton.Width = 100;
@@ -134,6 +134,7 @@ namespace ActivityRecommendation
             newPlot.MaxX = maxX;
             double x1 = 0;
             double x2 = 0;
+            double maxXPlotted = 0;
             foreach (Participation participation in participations)
             {
                 TimeSpan duration1 = participation.StartDate.Subtract(firstDate);
@@ -148,9 +149,11 @@ namespace ActivityRecommendation
                     points.Add(new Datapoint(x1, sumY, x2 - x1));
                     sumY += participation.TotalIntensity.Mean * participation.TotalIntensity.Weight;
                     points.Add(new Datapoint(x2, sumY, x2 - x1));
+                    maxXPlotted = x2;
                 }
             }
-            points.Add(new Datapoint(maxX, sumY, maxX - x2));
+            if (maxX > maxXPlotted)
+                points.Add(new Datapoint(maxX, sumY, maxX - maxXPlotted));
             newPlot.SetData(points);
 
             this.participationsView.SetContent(newPlot);
@@ -170,15 +173,15 @@ namespace ActivityRecommendation
             DateTime startDate = this.queryStartDateDisplay.GetDate();
             DateTime endDate = this.queryEndDateDisplay.GetDate();
             Participation summary = this.activityToDisplay.SummarizeParticipationsBetween(startDate, endDate);
-            double numDaysSpent = summary.TotalIntensity.Weight / 3600 / 24;
+            double numHoursSpent = summary.TotalIntensity.Weight / 3600;
             // figure out how much time there was between these dates
             TimeSpan availableDuration = endDate.Subtract(startDate);
-            double totalNumDays = availableDuration.TotalDays;
-            double participationFraction = numDaysSpent / totalNumDays;
+            double totalNumHours = availableDuration.TotalHours;
+            double participationFraction = numHoursSpent / totalNumHours;
 
             // now update the text blocks
             //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
-            this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numDaysSpent + " days on this activity";
+            this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numHoursSpent + " hours on this activity";
             this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
             Activity bestChild = null;
             Distribution bestTotal = new Distribution();
@@ -223,7 +226,7 @@ namespace ActivityRecommendation
             this.exitHandler.Invoke(sender, e);
         }
 
-        Button exitButton;
+        ResizableButton exitButton;
         RoutedEventHandler exitHandler;
         Activity activityToDisplay;
         //PlotControl ratingsPlot;

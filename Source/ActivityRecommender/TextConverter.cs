@@ -47,6 +47,8 @@ namespace ActivityRecommendation
             if (rating != null)
                 properties[this.RatingTag] = this.ConvertToStringBody(rating);
             string comment = participation.Comment;
+            if (participation.Suggested != null)
+                properties[this.WasSuggestedTag] = this.ConvertToStringBody((bool)participation.Suggested);
             if (comment != null)
                 properties[this.CommentTag] = comment;
 
@@ -75,6 +77,19 @@ namespace ActivityRecommendation
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.ActivityDescriptor);
             properties[this.DateTag] = this.ConvertToStringBody(request.Date);
+
+            return this.ConvertToString(properties, objectName);
+        }
+        // converts the RecentUserData into a string that is ready to write to disk
+        public string ConvertToString(RecentUserData data)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            string objectName = this.RecentUserDataTag;
+
+            if (data.LatestActionDate != null)
+                properties[this.DateTag] = this.ConvertToStringBody(data.LatestActionDate);
+            if (data.LatestSuggestion != null)
+                properties[this.SuggestionTag] = this.ConvertToStringBody(data.LatestSuggestion);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -173,6 +188,11 @@ namespace ActivityRecommendation
                     if (currentItem.Name == this.ActivityRequestTag)
                     {
                         this.ProcessActivityRequest(currentItem);
+                        continue;
+                    }
+                    if (currentItem.Name == this.RecentUserDataTag)
+                    {
+                        this.ProcessRecentUserData(currentItem);
                         continue;
                     }
                 }
@@ -331,6 +351,11 @@ namespace ActivityRecommendation
         {
             ActivityRequest request = this.ReadActivityRequest(nodeRepresentation);
             this.recommenderToInform.PutActivityRequestInMemory(request);
+        }
+        private void ProcessRecentUserData(XmlNode nodeRepresentation)
+        {
+            RecentUserData data = this.ReadRecentUserData(nodeRepresentation);
+            this.recommenderToInform.SetRecentUserData(data);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -536,6 +561,11 @@ namespace ActivityRecommendation
                     rating.WorseRating = this.ReadAbsoluteRating(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.RelativeRatingScaleTag)
+                {
+                    rating.RawScoreScale = this.ReadDouble(currentChild);
+                    continue;
+                }
             }
             return rating;
         }
@@ -567,6 +597,39 @@ namespace ActivityRecommendation
         {
             string text = this.ReadText(nodeRepresentation);
             return Double.Parse(text);
+        }
+        private RecentUserData ReadRecentUserData(XmlNode nodeRepresentation)
+        {
+            RecentUserData data = new RecentUserData();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.DateTag)
+                {
+                    data.LatestActionDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SuggestionTag)
+                {
+                    data.LatestSuggestion = this.ReadSuggestion(currentChild);
+                    continue;
+                }
+            }
+            data.Synchronized = true;
+            return data;
+        }
+        private ActivitySuggestion ReadSuggestion(XmlNode nodeRepresentation)
+        {
+            ActivityDescriptor descriptor = null;
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.ActivityDescriptorTag)
+                {
+                    descriptor = this.ReadActivityDescriptor(currentChild);
+                    continue;
+                }
+            }
+            ActivitySuggestion suggestion = new ActivitySuggestion(descriptor);
+            return suggestion;
         }
 
         // converts the dictionary into a string, without adding the initial <Tag> or final </Tag>
@@ -610,6 +673,11 @@ namespace ActivityRecommendation
         {
             return value.ToString();
         }
+        // converts the bool into a string, and doesn't add the initial <Tag> or ending </Tag>
+        private string ConvertToStringBody(bool value)
+        {
+            return value.ToString();
+        }
         // converts the rating to a string based on its type, and doesn't add the initial <Tag> or ending </Tag>
         private string ConvertToStringBody(Rating rating)
         {
@@ -627,6 +695,8 @@ namespace ActivityRecommendation
 
             properties[this.BetterRatingTag] = this.ConvertToStringBody(rating.BetterRating);
             properties[this.WorseRatingTag] = this.ConvertToStringBody(rating.WorseRating);
+            if (rating.RawScoreScale != null)
+                properties[this.RelativeRatingScaleTag] = this.ConvertToStringBody((double)rating.RawScoreScale);
 
             return this.ConvertToStringBody(properties);
         }
@@ -642,7 +712,18 @@ namespace ActivityRecommendation
 
             return this.ConvertToStringBody(properties);
         }
+        // converts the ActivitySuggestion into a string, and doesn't add the inital <Tag> or ending </Tag>
+        private string ConvertToStringBody(ActivitySuggestion suggestion)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(suggestion.ActivityDescriptor);
 
+            return this.ConvertToStringBody(properties);
+        }
+
+        #endregion
+
+        #region Special String Identifiers
         public string ActivityDescriptorTag
         {
             get
@@ -722,6 +803,14 @@ namespace ActivityRecommendation
                 return "WorseRating";
             }
         }
+        public string RelativeRatingScaleTag
+        {
+            get
+            {
+                return "scale";
+            }
+        }
+
 
         private string ParticipationTag
         {
@@ -742,6 +831,13 @@ namespace ActivityRecommendation
             get
             {
                 return "EndDate";
+            }
+        }
+        private string WasSuggestedTag
+        {
+            get
+            {
+                return "Suggested";
             }
         }
 
@@ -795,6 +891,21 @@ namespace ActivityRecommendation
             get
             {
                 return "Comment";
+            }
+        }
+
+        private string SuggestionTag
+        {
+            get
+            {
+                return "Suggestion";
+            }
+        }
+        private string RecentUserDataTag
+        {
+            get
+            {
+                return "RecentData";
             }
         }
         #endregion

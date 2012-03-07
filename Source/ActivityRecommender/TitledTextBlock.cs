@@ -32,7 +32,7 @@ namespace ActivityRecommendation
                 this.textField.Text = value;
             }
         }
-
+        
         ResizableTextBlock textField;
     }
 }

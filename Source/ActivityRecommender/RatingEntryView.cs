@@ -13,8 +13,9 @@ namespace ActivityRecommendation
         public RatingEntryView(string title)
             :base(title)
         {
+            this.mainDisplay = new TitledControl("Rating Type:");
             // setup the main display grid
-            this.displayGrid = new DisplayGrid(3, 1);
+            this.displayGrid = new DisplayGrid(2, 1);
             //this.displayGrid.HorizontalAlignment = HorizontalAlignment.Stretch;
 
             this.SetupTypeSelection();
@@ -22,15 +23,11 @@ namespace ActivityRecommendation
             this.UpdateSubview();
 
 
-
-            this.SetContent(this.displayGrid);
+            this.mainDisplay.SetContent(this.displayGrid);
+            this.SetContent(this.mainDisplay);
         }
         private void SetupTypeSelection()
         {
-            ResizableTextBlock ratingTypeBlock = new ResizableTextBlock();
-            ratingTypeBlock.Text = "Rating Type:";
-            this.displayGrid.AddItem(ratingTypeBlock);
-
             List<string> titles = new List<string>();
             titles.Add("Absolute");
             titles.Add("Relative");
@@ -98,12 +95,13 @@ namespace ActivityRecommendation
         void UpdateSubview()
         {
             if (this.ShowRelativeEntryView())
-                this.displayGrid.PutItem(this.relativeRatingEntryView, 2, 0);
+                this.displayGrid.PutItem(this.relativeRatingEntryView, 1, 0);
             else
-                this.displayGrid.PutItem(this.absoluteRatingEntryView, 2, 0);
+                this.displayGrid.PutItem(this.absoluteRatingEntryView, 1, 0);
         }
 
         private SelectorView typeSelector;
+        private TitledControl mainDisplay;
         private DisplayGrid displayGrid;
         private AbsoluteRatingEntryView absoluteRatingEntryView;
         private RelativeRatingEntryView relativeRatingEntryView;

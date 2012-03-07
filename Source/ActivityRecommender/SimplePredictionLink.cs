@@ -31,6 +31,7 @@ namespace ActivityRecommendation
             // correct the weight
             double newWeight = Math.Sqrt(this.outputProgression.NumItems + 40);
             prediction.Distribution = output.CopyAndReweightTo(newWeight);
+            prediction.Date = when;
 
             return prediction;
         }

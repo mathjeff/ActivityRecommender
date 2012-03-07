@@ -125,6 +125,15 @@ namespace ActivityRecommendation
             //descriptor.Activity = result;
             return result;
         }
+        // tells whether the given descriptor can match the given activity
+        public bool Matches(ActivityDescriptor descriptor, Activity activity)
+        {
+            if (this.MatchQuality(descriptor, activity) > 0)
+                return true;
+            else
+                return false;
+
+        }
         // returns 0 if there is a discrepancy, otherwise 1 + (the number of fields that match)
         public double MatchQuality(ActivityDescriptor descriptor, Activity activity)
         {
@@ -142,7 +151,12 @@ namespace ActivityRecommendation
             else
             {
                 // up to 0.5 extra points based on the string similarity
-                matchScore += 0.5 * this.EditScore(descriptor.ActivityName, activity.Name);
+                string desiredName = descriptor.ActivityName;
+                // if the user enters a string that it rediculously long, then we don't bother comparing it
+                if (desiredName.Length < 2 * activity.Name.Length)
+                {
+                    matchScore += 0.5 * this.EditScore(desiredName, activity.Name);
+                }
             }
             // now that we've verified that this activity is allowed to be a match, we calculate its score
 

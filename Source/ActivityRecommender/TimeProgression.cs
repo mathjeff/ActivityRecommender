@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AdaptiveLinearInterpolation;
 
 // A TimeProgression is an IParticipation that simply calculates the time of Day
 namespace ActivityRecommendation
@@ -37,6 +38,10 @@ namespace ActivityRecommendation
             {
                 return 0;
             }
+        }
+        public FloatRange EstimateOutputRange()
+        {
+            return new FloatRange(0, true, 1, true);
         }
         #endregion
 

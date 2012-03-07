@@ -14,7 +14,7 @@ namespace ActivityRecommendation
             this.SetTitle("Get Suggestions");
             DisplayGrid content = new DisplayGrid(7, 1);
 
-            this.suggestionButton = new Button();
+            this.suggestionButton = new ResizableButton();
             this.suggestionButton.Content = "Suggest";
             this.suggestionButton.VerticalAlignment = VerticalAlignment.Center;
             //this.suggestionButton.HorizontalAlignment = HorizontalAlignment.Center;

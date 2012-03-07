@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,11 +39,13 @@ namespace ActivityRecommendation
             else
                 this.LogActiveTime = new Distribution();
 #endif
+            this.Suggested = null;
         }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public ActivityDescriptor ActivityDescriptor { get; set; }
+        public bool? Suggested { get; set; }     // tells whether the latest suggestion that the engine made was to do this activity
 
         public Distribution TotalIntensity // intensity measured in seconds
         {

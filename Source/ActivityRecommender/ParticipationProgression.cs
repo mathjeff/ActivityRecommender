@@ -1,8 +1,10 @@
-﻿using System;
+﻿#define PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
+using AdaptiveLinearInterpolation;
 
 // A ParticipationProgression how much of an Activity the user has done recently
 // It is intended to model brain activity and it uses exponential curves to do so
@@ -176,11 +178,12 @@ namespace ActivityRecommendation
         public ProgressionValue GetValueExponentially(DateTime when, bool strictlyEarlier)
         {
             // get a summary of all of the data, to estimate the duration of the "recent" past
-            Participation cumulativeParticipation = this.searchHelper.SumBeforeKey(when, true);
+            Participation cumulativeParticipation = this.searchHelper.CombineBeforeKey(when, true);
             // make sure that we have enough data
             if (cumulativeParticipation.Duration.TotalSeconds == 0)
             {
-                ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
+                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
+                ProgressionValue defaultValue = null;
                 return defaultValue;
             }
             Distribution logIdleTime = cumulativeParticipation.LogIdleTime;
@@ -188,7 +191,8 @@ namespace ActivityRecommendation
             // make sure that we have enough data
             if (logIdleTime.Mean == 0 || logActiveTime.Mean == 0)
             {
-                ProgressionValue defaultValue = new ProgressionValue(when, Distribution.MakeDistribution(0.5, 0.25, 0), -1);
+                //ProgressionValue defaultValue = new ProgressionValue(when, Distribution.MakeDistribution(0.5, 0.25, 0), -1);
+                ProgressionValue defaultValue = null;
                 return defaultValue;
             }
             // now we estimate the value of the exponentially moving average
@@ -249,7 +253,7 @@ namespace ActivityRecommendation
             }
 
             Distribution recentIntensity = Distribution.MakeDistribution(currentValue, 0, 1);
-            ProgressionValue result = new ProgressionValue(when, recentIntensity, endingIndexExclusive);
+            ProgressionValue result = new ProgressionValue(when, recentIntensity);
             return result;
 
 
@@ -350,7 +354,6 @@ namespace ActivityRecommendation
             }
         }
 
-
         public int NumItems
         {
             get
@@ -358,6 +361,12 @@ namespace ActivityRecommendation
                 return this.searchHelper.NumItems;
             }
         }
+
+        public FloatRange EstimateOutputRange()
+        {
+            return new FloatRange(0, true, 1, true);
+        }
+
 
         #endregion
 

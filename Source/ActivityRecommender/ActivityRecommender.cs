@@ -21,6 +21,8 @@ namespace ActivityRecommendation
 
             this.MakeEngine();
 
+            this.ReadTempFile();
+
             this.SetupDrawing();
 
             if (this.engineTester != null)
@@ -34,6 +36,8 @@ namespace ActivityRecommendation
         public void ShutDown()
         {
             //this.SuspectLatestActionDate(DateTime.Now);
+            if (!this.recentUserData.Synchronized)
+                this.WriteRecentUserData();
         }
 
         private void InitializeSettings()
@@ -46,6 +50,7 @@ namespace ActivityRecommendation
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
             this.participationEntryView = new ParticipationEntryView();
+            this.recentUserData = new RecentUserData();
         }
 
         private void SetupDrawing()
@@ -53,8 +58,9 @@ namespace ActivityRecommendation
             this.mainDisplay = new DisplayGrid(2, 1);
 
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2012-02-13T21:40";
+            titleString += " Build Date: 2012-02-28T16:35";
             ResizableTextBlock titleBlock = new ResizableTextBlock();
+            titleBlock.SetResizability(new Resizability(0, 1));
             titleBlock.Text = titleString;
             titleBlock.TextAlignment = TextAlignment.Center;
             //titleBlock.Background = new SolidColorBrush(Color.FromRgb(200, 200, 255));
@@ -107,38 +113,41 @@ namespace ActivityRecommendation
 
         private void MakeEngine()
         {
-            this.latestActionDate = new DateTime(0);
             this.engine = new Engine();
-            this.ReadFiles();
+            this.ReadEngineFiles();
             this.engine.FullUpdate();
+            this.suppressDownoteOnRecommendation = true;        // the first time they get a recommendation, we don't treat it as a skip of the latest suggestion
         }
         public void PrepareEngine()
         {
-            this.engine.MakeRecommendation();
+            this.engine.MakeRecommendation(DateTime.Parse("2012-02-25T17:00:00"));
         }
-        private void ReadFiles()
+        private void ReadEngineFiles()
         {
             this.textConverter.ReadFile(this.inheritancesFileName);
             this.textConverter.ReadFile(this.ratingsFileName);
-            this.textConverter.ReadFile(this.tempFileName);
 
             //this.textConverter.ReformatFile(this.ratingsFileName, "reformatted.txt");
+        }
+        private void ReadTempFile()
+        {
+            this.textConverter.ReadFile(this.tempFileName);
         }
         private void MakeRecommendation()
         {
             DateTime now = DateTime.Now;
-            if ((this.latestRecommendedActivity != null) && !this.suppressDownoteOnRecommendation)
+            if ((this.LatestRecommendedActivity != null) && !this.suppressDownoteOnRecommendation)
             {
                 // if they've asked for two recommendations in succession, it means they didn't like the previous one
                 
                 // Calculate the score to generate for this Activity as a result of that statement
-                Distribution previousDistribution = this.latestRecommendedActivity.PredictedScore.Distribution;
+                Distribution previousDistribution = this.LatestRecommendedActivity.PredictedScore.Distribution;
                 double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
                 if (estimatedScore < 0)
                     estimatedScore = 0;
                 // make a Skip object holding the needed data
-                ActivitySkip skip = new ActivitySkip(now, this.latestRecommendedActivity.MakeDescriptor());
-                skip.SuggestionDate = this.latestRecommendedActivity.PredictedScore.Date;
+                ActivitySkip skip = new ActivitySkip(now, this.LatestRecommendedActivity.MakeDescriptor());
+                skip.SuggestionDate = this.LatestRecommendedActivity.PredictedScore.Date;
                 AbsoluteRating rating = new AbsoluteRating();
                 rating.Score = estimatedScore;
                 skip.RawRating = rating;
@@ -195,15 +204,22 @@ namespace ActivityRecommendation
             }
             this.suggestionView.SuggestionText = recommendationText;
             this.suggestionView.JustificationText = justificationText;
-            this.latestRecommendedActivity = bestActivity;
+            this.LatestSuggestion = new ActivitySuggestion(bestActivity.MakeDescriptor());
 
             this.SuspectLatestActionDate(now);
+            if (bestActivity != null)
+            {
+                this.participationEntryView.SetActivityName(bestActivity.Name);
+            }
         }
         private void MakeRecommendation(object sender, EventArgs e)
         {
             this.MakeRecommendation();
         }
-
+        private void WriteSuggestion(Activity suggestedActivity)
+        {
+            ActivityDescriptor descriptor = suggestedActivity.MakeDescriptor();
+        }
         private void SubmitParticipation(object sender, EventArgs e)
         {
             this.SubmitParticipation();
@@ -212,6 +228,11 @@ namespace ActivityRecommendation
         {
             // give the participation to the engine
             Participation participation = this.participationEntryView.GetParticipation(this.engine.ActivityDatabase, this.engine);
+
+            if (this.LatestRecommendedActivity != null && this.ActivityDatabase.Matches(participation.ActivityDescriptor, this.LatestRecommendedActivity))
+                participation.Suggested = true;
+            else
+                participation.Suggested = false;
             this.AddParticipation(participation);
             /* // if there is a rating, give it to the engine too
             AbsoluteRating rating = this.participationEntryView.Rating;
@@ -221,7 +242,7 @@ namespace ActivityRecommendation
             }
             */
             // fill in some default data for the ParticipationEntryView
-            this.latestActionDate = new DateTime(0);
+            //this.latestActionDate = new DateTime(0);
             this.UpdateDefaultParticipationData();
             this.SuppressDownvoteOnRecommendation();
 
@@ -235,8 +256,8 @@ namespace ActivityRecommendation
         private void MakeEndNow()
         {
             DateTime now = DateTime.Now;
-            this.latestActionDate = now;
-            this.participationEntryView.EndDate = now;
+            this.LatestActionDate = now;
+            this.participationEntryView.SetEnddateNow(now);
             /*
             // first update the dates
             this.UpdateDefaultParticipationData();
@@ -348,17 +369,6 @@ namespace ActivityRecommendation
         }
 
         // writes to a text file saying that the user was is this program now. It gets deleted soon
-        private void WriteInteractionDate()
-        {
-            DateTime when = DateTime.Now;
-        }
-        private void WriteInteractionDate(DateTime when)
-        {
-            string text = this.textConverter.ConvertToString(when) + Environment.NewLine;
-            StreamWriter writer = new StreamWriter(this.tempFileName, false);
-            writer.Write(text);
-            writer.Close();
-        }
         #region Functions to be called by the TextConverter
 
         public void PutParticipationInMemory(Participation newParticipation)
@@ -410,10 +420,70 @@ namespace ActivityRecommendation
         // updates the ParticipationEntryView so that the start date is 'when'
         public void SuspectLatestActionDate(DateTime when)
         {
-            this.latestActionDate = when;
-            this.WriteInteractionDate(when);
+            this.LatestActionDate = when;
+            //this.WriteInteractionDate(when);
             this.UpdateDefaultParticipationData(when);
         }
+        // sets the given RecentUserData
+        public void SetRecentUserData(RecentUserData data)
+        {
+            this.recentUserData = data;
+            if (this.LatestSuggestion != null)
+                this.latestRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(this.LatestSuggestion.ActivityDescriptor);
+        }
+        public DateTime LatestActionDate
+        {
+            get
+            {
+                // The latest date will usually be from this.recentUserData, but in case it gets deleted, we also compare against this.engine.LatestInteractionDate
+                DateTime date1;
+                if (this.recentUserData.LatestActionDate == null)
+                    date1 = new DateTime(0);
+                else
+                    date1 = (DateTime)this.recentUserData.LatestActionDate;
+
+                DateTime date2 = this.engine.LatestInteractionDate;
+                if (date1.CompareTo(date2) > 0)
+                    return date1;
+                else
+                    return date2;
+            }
+            set
+            {
+                this.recentUserData.LatestActionDate = value;
+                //this.WriteRecentUserData();
+            }
+        }
+        public Activity LatestRecommendedActivity
+        {
+            get
+            {
+                return this.latestRecommendedActivity;
+            }
+        }
+        public ActivitySuggestion LatestSuggestion
+        {
+            get
+            {
+                return this.recentUserData.LatestSuggestion;
+            }
+            set
+            {
+                this.recentUserData.LatestSuggestion = value;
+                this.latestRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(value.ActivityDescriptor);
+                //this.WriteRecentUserData();
+            }
+        }
+        public void WriteRecentUserData()
+        {
+            this.recentUserData.Synchronized = true;
+            string text = this.textConverter.ConvertToString(this.recentUserData) + Environment.NewLine;
+            StreamWriter writer = new StreamWriter(this.tempFileName, false);
+            writer.Write(text);
+            writer.Close();
+        }
+
+
         public void VisualizeData(object sender, EventArgs e)
         {
             this.VisualizeData();
@@ -454,6 +524,13 @@ namespace ActivityRecommendation
             //this.displayManager.InvalidateMeasure();
         }
 
+        public ActivityDatabase ActivityDatabase
+        {
+            get
+            {
+                return this.engine.ActivityDatabase;
+            }
+        }
         #endregion
         // declares that the user did something that means if they ask for another recommendation then we should not downvote the latest one
         private void SuppressDownvoteOnRecommendation()
@@ -473,28 +550,12 @@ namespace ActivityRecommendation
             this.participationEntryView.Clear();
 
             this.participationEntryView.EndDate = when;
-            this.participationEntryView.StartDate = this.LatestInteractionDate;
+            this.participationEntryView.SetStartDate(this.LatestActionDate);
             //this.participationEntryView.ActivityName = "";
             //this.participationEntryView.RatingText = "";
             //this.participationEntryView.CommentText = "";
         }
-        private DateTime LatestInteractionDate
-        {
-            get
-            {
-                DateTime date1 = this.latestActionDate;
-                DateTime date2 = this.engine.LatestInteractionDate;
-                if (date1.CompareTo(date2) > 0)
-                {
-                    return date1;
-                }
-                else
-                {
-                    return date2;
-                }
-            }
-        }
-        
+  
 
         private Window mainWindow;
         private DisplayManager displayManager;
@@ -513,9 +574,10 @@ namespace ActivityRecommendation
         string ratingsFileName;         // the name of the file that stores ratings
         string inheritancesFileName;    // the name of the file that stores inheritances
         string tempFileName;
-        DateTime latestActionDate;
+        //DateTime latestActionDate;
         Participation latestParticipation;
         EngineTester engineTester;
+        RecentUserData recentUserData;
 
     }
 }

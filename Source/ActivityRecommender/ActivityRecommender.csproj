@@ -97,6 +97,7 @@
     <Compile Include="InheritanceEditingView.cs" />
     <Compile Include="IPredictionLink.cs" />
     <Compile Include="RatingEntryView.cs" />
+    <Compile Include="RecentUserData.cs" />
     <Compile Include="RelativeRatingEntryView.cs" />
     <Compile Include="Resizability.cs" />
     <Compile Include="MiniStatisticsMenu.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="RatingProgression.cs" />
     <Compile Include="RatingSource.cs" />
     <Compile Include="RelativeRating.cs" />
+    <Compile Include="ResizableButton.cs" />
     <Compile Include="ResizableRadioButton.cs" />
     <Compile Include="ResizableTextBlock.cs" />
     <Compile Include="ResizableTextBox.cs" />
@@ -133,6 +135,7 @@
     <Compile Include="SelectorView.cs" />
     <Compile Include="SimplePredictionLink.cs" />
     <Compile Include="SkipProgression.cs" />
+    <Compile Include="ActivitySuggestion.cs" />
     <Compile Include="SuggestionView.cs" />
     <Compile Include="TextConverter.cs" />
     <Compile Include="TimeProgression.cs" />
@@ -151,7 +154,11 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StatList\StatList\StatList\StatList.csproj">
+    <ProjectReference Include="..\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator.csproj">
+      <Project>{5D73F8D0-A57C-4CCE-81D8-45CAC4DC7A60}</Project>
+      <Name>AdaptiveLinearInterpolator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\StatList\StatList.csproj">
       <Project>{D070EA92-52C2-4029-9BA0-15572B47A6FD}</Project>
       <Name>StatList</Name>
     </ProjectReference>

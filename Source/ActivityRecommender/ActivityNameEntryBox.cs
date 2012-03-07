@@ -32,7 +32,10 @@ namespace ActivityRecommendation
             base.SetContent(content);
 
         }
-
+        public void AddTextChangedHandler(TextChangedEventHandler h)
+        {
+            this.nameBox.AddTextChangedHandler(h);
+        }
         void nameBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if ((this.SuggestionText != this.nameBox.Text) && (this.SuggestionText != ""))

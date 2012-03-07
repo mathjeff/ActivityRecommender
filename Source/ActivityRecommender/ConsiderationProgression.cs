@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
+using AdaptiveLinearInterpolation;
 
 // A ConsiderationProgression keeps track of times that the user was considering doing a particular Activity, and times that the user actually did it
 // It is intended to estimate the probability that the user will do the given Activity
@@ -84,6 +85,10 @@ namespace ActivityRecommendation
             {
                 return "How willing you have been recently to do this";
             }
+        }
+        public FloatRange EstimateOutputRange()
+        {
+            return new FloatRange(0, true, 1, true);
         }
 
         #endregion

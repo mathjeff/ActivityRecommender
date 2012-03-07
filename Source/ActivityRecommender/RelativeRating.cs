@@ -25,6 +25,7 @@ namespace ActivityRecommendation
         public void CopyFrom(RelativeRating original)
         {
             base.CopyFrom(original);
+            this.RawScoreScale = original.RawScoreScale;
             this.BetterRating.CopyFrom(original.BetterRating);
             this.WorseRating.CopyFrom(original.WorseRating);
         }
@@ -58,6 +59,22 @@ namespace ActivityRecommendation
                     return this.WorseRating;
                 else
                     return this.BetterRating;
+            }
+        }
+        public double? RawScoreScale  // the value the user provided for (the score of the better activity divided by the score of the worse activity)
+        {
+            get;
+            set;
+        }
+        public double? BetterScoreScale
+        {
+            get
+            {
+                if (this.RawScoreScale == null)
+                    return null;
+                if (this.RawScoreScale < 1)
+                    return 1 / this.RawScoreScale;
+                return this.RawScoreScale;
             }
         }
         // The participation itself has one Rating, and another Activity has the other rating

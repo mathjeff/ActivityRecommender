@@ -25,6 +25,7 @@ namespace ActivityRecommendation
         {
             this.titleBlock = new ResizableTextBlock();
             this.titleBlock.TextAlignment = System.Windows.TextAlignment.Center;
+            this.titleBlock.SetResizability(new Resizability(0, 0.25));    // the title doesn't need to be very big
             //this.titleBlock.TextWrapping = TextWrapping.Wrap;
             //this.titleBlock.VerticalAlignment = VerticalAlignment.Bottom;
             //this.titleBlock.HorizontalAlignment = HorizontalAlignment.Center;

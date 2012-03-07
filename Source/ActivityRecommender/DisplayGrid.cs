@@ -184,6 +184,16 @@ namespace ActivityRecommendation
             return arrangeSize;
         }
 
+        protected override void OnChildDesiredSizeChanged(UIElement child)
+        {
+            DisplayGrid parent = this.VisualParent as DisplayGrid;
+            this.InvalidateMeasure();
+            if (parent != null)
+            {
+                parent.OnChildDesiredSizeChanged(this);
+            }
+        }
+
         private void InitializeDesiredSizes(System.Windows.Size constraint)
         {
             this.desiredColumnWidths = new double[this.numColumns];
@@ -221,7 +231,7 @@ namespace ActivityRecommendation
                 for (columnIndex = 0; columnIndex < this.numColumns; columnIndex++)
                 {
                     UIElement element = this.items[rowIndex, columnIndex];
-                    if (element != null)
+                    if (element != null && this.desiredColumnWidths[columnIndex] > 0 && this.desiredRowHeights[rowIndex] > 0)
                     {
                         IResizable converted = element as IResizable;
                         Size availableSize = new Size(this.desiredColumnWidths[columnIndex] * widthScale, this.desiredRowHeights[rowIndex] * heightScale);

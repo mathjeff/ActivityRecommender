@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
+using AdaptiveLinearInterpolation;
 
 namespace ActivityRecommendation
 {
@@ -137,7 +138,10 @@ namespace ActivityRecommendation
             }
             return results;
         }
-
+        public FloatRange EstimateOutputRange()
+        {
+            return new FloatRange(0, true, 1, true);
+        }
         public string Description
         {
             get

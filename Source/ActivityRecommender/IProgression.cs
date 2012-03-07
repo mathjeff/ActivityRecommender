@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AdaptiveLinearInterpolation;
 
 // the Progression class represents the value of a (real-number) variable over time
 namespace ActivityRecommendation
@@ -14,5 +15,6 @@ namespace ActivityRecommendation
         int NumItems { get; }
         Activity Owner { get; }
         string Description { get; }
+        FloatRange EstimateOutputRange();
     }
 }

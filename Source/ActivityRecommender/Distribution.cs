@@ -10,11 +10,22 @@ namespace ActivityRecommendation
         // constructors
         public static Distribution MakeDistribution(double mean, double stdDev, double weight)
         {
-            Distribution result = new Distribution(mean * weight, (mean * mean + stdDev * stdDev) * weight, weight);
+            Distribution result = new Distribution();
+            result.Set(mean, stdDev, weight);
             return result;
         }
         public Distribution()
         {
+        }
+        private void Set(double newMean, double newStdDev, double newWeight)
+        {
+            this.sumValue = newMean * newWeight;
+            this.sumSquaredValue = (newMean * newMean + newStdDev * newStdDev) * newWeight;
+            this.sumWeight = newWeight;
+        }
+        public Distribution(AdaptiveLinearInterpolation.Distribution original)
+        {
+            this.Set(original.Mean, original.StdDev, original.Weight);
         }
         public Distribution(double totalValue, double totalSquaredValue, double totalWeight)
         {
@@ -74,7 +85,7 @@ namespace ActivityRecommendation
         }
         public Distribution Plus(double newValue)
         {
-            return new Distribution(this.sumValue, this.sumSquaredValue + newValue * newValue, this.sumWeight + 1);
+            return new Distribution(this.sumValue + newValue, this.sumSquaredValue + newValue * newValue, this.sumWeight + 1);
         }
         public Distribution Minus(Distribution other)
         {

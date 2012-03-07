@@ -7,9 +7,21 @@ using System.Text;
 // The first time (on 2012-1-15) that I calculated the Root(Mean(Squared(Error))), it was about 0.327
 
 /*
-The latest data (on 2012-1-31) is:
-typicalScoreError = 0.151660802353906
-typicalProbabilityError = 0.472799715968249
+The latest results (on 2012-2-17) using a bunch of independent, combined predictions is:
+typicalScoreError = 0.147785971030127
+typicalProbabilityError = 0.470028763507115
+
+The latest results (on 2012-2-18) using a multidimensional interpolator (which is slower) are:
+typicalScoreError = 0.113297119720235
+typicalProbabilityError = 0.470853382639463
+
+latest results (on 2012-2-20) using a slightly faster version are:
+typicalScoreError = 0.118867951358166
+typicalProbabilityError = 0.472384299236938
+
+latest results (on 2012-2-25) using a slightly faster version (where the Interpolator skips any splits that will be overwritten by later splits) are:
+typicalScoreError = 0.118790161274347
+typicalProbabilityError = 0.470607845933648
 */
 
 namespace ActivityRecommendation
@@ -49,12 +61,12 @@ namespace ActivityRecommendation
         {
             // update the error rate for the participation probability predictor
             this.UpdateParticipationProbabilityError(newParticipation.ActivityDescriptor, newParticipation.StartDate, newParticipation.TotalIntensity.Mean);
-            this.engine.PutParticipationInMemory(newParticipation);
 
             Rating rating = newParticipation.GetCompleteRating();
             if (rating != null)
                 this.AddRating(rating);
 
+            this.engine.PutParticipationInMemory(newParticipation);
         }
         public void AddRating(Rating newRating)
         {
@@ -68,28 +80,50 @@ namespace ActivityRecommendation
         }
         public void AddRating(AbsoluteRating newRating)
         {
+            this.PrintResults();
+            Console.WriteLine("Adding rating with date" + ((DateTime)newRating.Date).ToString());
             this.UpdateScoreError(newRating.ActivityDescriptor, (DateTime)newRating.Date, newRating.Score);
             this.engine.PutRatingInMemory(newRating);
         }
         public void AddRating(RelativeRating newRating)
         {
+
             AbsoluteRating betterRating = newRating.BetterRating;
             this.engine.MakeRecommendation((DateTime)betterRating.Date);
             Activity betterActivity = this.activityDatabase.ResolveDescriptor(betterRating.ActivityDescriptor);
             Distribution predictedBetterScore = betterActivity.PredictedScore.Distribution;
-
 
             AbsoluteRating worseRating = newRating.WorseRating;
             this.engine.MakeRecommendation((DateTime)worseRating.Date);
             Activity worseActivity = this.activityDatabase.ResolveDescriptor(betterRating.ActivityDescriptor);
             Distribution predictedWorseScore = worseActivity.PredictedScore.Distribution;
 
-            double error;
-            if (predictedBetterScore.Mean > predictedWorseScore.Mean)
-                error = 0;
+            if (newRating.RawScoreScale == null)
+            {
+                // if the relative rating simply said "activity X is better than Y", then we compute a penalty if we computed something different
+                double error;
+                if (predictedBetterScore.Mean > predictedWorseScore.Mean)
+                    error = 0;
+                else
+                    error = predictedWorseScore.Mean - predictedBetterScore.Mean;
+                this.UpdateScoreError(error);
+            }
             else
-                error = predictedWorseScore.Mean - predictedBetterScore.Mean;
-            this.UpdateScoreError(error);
+            {
+                // if the relative rating said "Activity X is better than Y by a factor of z", then we can compute the discrepancy
+                double scale = (double)newRating.BetterScoreScale;
+                Distribution rescaledBetterDistribution = predictedBetterScore.CopyAndReweightTo(1);
+                Distribution rescaledWorseDistribution = predictedWorseScore.CopyAndReweightTo(1);
+                Distribution total = rescaledBetterDistribution.Plus(rescaledWorseDistribution);
+                double mean = total.Mean;
+                double improvedWorseEstimate = mean * 2 / (scale + 1);
+                double improvedBetterEstimate = improvedWorseEstimate * scale;
+
+                double err2 = improvedBetterEstimate - predictedBetterScore.Mean;
+                double err1 = improvedWorseEstimate - predictedWorseScore.Mean;
+                double error = Math.Sqrt(err1 * err1 + err2 * err2);
+                this.UpdateScoreError(error);
+            }
 
             this.engine.PutRatingInMemory(newRating);
         }

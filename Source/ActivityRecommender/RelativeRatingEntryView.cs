@@ -7,27 +7,33 @@ using System.Windows;
 
 namespace ActivityRecommendation
 {
-    class RelativeRatingEntryView : DisplayGrid, IResizable
+    class RelativeRatingEntryView : TitledControl, IResizable
     {
-        public RelativeRatingEntryView()
-            : base(3, 1)
+        public RelativeRatingEntryView() : base("Comparison")
         {
-            ResizableTextBlock titleBlock = new ResizableTextBlock();
-            titleBlock.Text = "Comparison:";
-            this.AddItem(titleBlock);
+            this.mainDisplayGrid = new DisplayGrid(2, 1);
 
+            this.scaleBlock = new TitledTextbox("Score equals");
+            this.scaleBlock.Text = "2.0";
+            this.mainDisplayGrid.AddItem(this.scaleBlock);
+
+            /*
             List<string> titles = new List<string>();
             titles.Add("Better than:");
             titles.Add("Worse than:");
             this.comparisonSelector = new SelectorView(titles);
             this.AddItem(comparisonSelector);
 
+            */
+
             //this.nameBox = new ActivityNameEntryBox("the most recent instance of:");
             //this.AddItem(this.nameBox);
 
             this.nameBlock = new ResizableTextBlock();
             this.nameBlock.SetResizability(new Resizability(1, 1));
-            this.AddItem(this.nameBlock);
+            this.mainDisplayGrid.AddItem(this.nameBlock);
+
+            this.SetContent(this.mainDisplayGrid);
         }
 
         protected override System.Windows.Size MeasureOverride(System.Windows.Size constraint)
@@ -49,7 +55,7 @@ namespace ActivityRecommendation
                 if (this.latestParticipation != null)
                 {
                     string dateFormatString = "yyyy-MM-ddTHH:mm:ss";
-                    this.nameBlock.Text = "latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
+                    this.nameBlock.Text = "times the score of the latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
                 }
                 else
                 {
@@ -80,41 +86,64 @@ namespace ActivityRecommendation
             engine.MakeRecommendation(thisActivity, participation.StartDate);
             Distribution thisEstimate = thisActivity.PredictedScore.Distribution;
 
-            Distribution betterDistribution;
-            Distribution worseDistribution;
-            if (this.comparisonSelector.SelectedItemText == "Better than:")
+            double scale = 1;
+            try
             {
-                betterDistribution = thisEstimate;
+                scale = double.Parse(this.scaleBlock.Text);
+            }
+            catch
+            {
+                // if they didn't type a number, they don't get a RelativeRating
+                return null;
+            }
+            // make sure the scale is in a valid range
+            if (scale < 0)
+                return null;
+
+            // now we compute updated scores for the new activities
+            thisEstimate = thisEstimate.CopyAndReweightTo(1);
+            otherEstimate = otherEstimate.CopyAndReweightTo(1);
+            Distribution combinedDistribution = thisEstimate.Plus(otherEstimate);
+            double averageScore = combinedDistribution.Mean;
+            // compute the better and worse scores
+            double otherScore = 2 * averageScore / (scale + 1);
+            double thisScore = 2 * averageScore - otherScore;
+            
+
+            // clamp to no more than 1
+            if (thisScore > 1)
+            {
+                thisScore = 1;
+                otherScore = thisScore / scale;
+            }
+            if (otherScore > 1)
+            {
+                otherScore = 1;
+                thisScore = otherScore * scale;
+            }
+
+            thisRating.Score = thisScore;
+            otherRating.Score = otherScore;
+            if (scale >= 1)
+            {
                 rating.BetterRating = thisRating;
-
-                worseDistribution = otherEstimate;
                 rating.WorseRating = otherRating;
-
             }
             else
             {
-                betterDistribution = otherEstimate;
                 rating.BetterRating = otherRating;
-
-                worseDistribution = thisEstimate;
                 rating.WorseRating = thisRating;
             }
-            // the Participation currently being entered was worse than the other one
-            double betterScore = betterDistribution.Mean + betterDistribution.StdDev;
-            if (betterScore > 1)
-                betterScore = 1;
-            rating.BetterRating.Score = betterScore;
 
-            double worseScore = worseDistribution.Mean - worseDistribution.StdDev;
-            if (betterScore < 0)
-                betterScore = 0;
-            rating.WorseRating.Score = worseScore;
+            rating.RawScoreScale = scale;
             return rating;
         }
 
-        private SelectorView comparisonSelector;
+        //private SelectorView comparisonSelector;
         //private ActivityNameEntryBox nameBox;
+        private DisplayGrid mainDisplayGrid;
         private ResizableTextBlock nameBlock;
         private Participation latestParticipation;
+        private TitledTextbox scaleBlock;
     }
 }

@@ -21,7 +21,7 @@ namespace ActivityRecommendation
             this.parentNameBox = new ActivityNameEntryBox("Parent Name");
             content.AddItem(this.parentNameBox);
 
-            this.okButton = new Button();
+            this.okButton = new ResizableButton();
             this.okButton.Content = "OK";
             this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Top;
             content.AddItem(okButton);
@@ -64,6 +64,6 @@ namespace ActivityRecommendation
         }
         private ActivityNameEntryBox childNameBox;
         private ActivityNameEntryBox parentNameBox;
-        private Button okButton;
+        private ResizableButton okButton;
     }
 }

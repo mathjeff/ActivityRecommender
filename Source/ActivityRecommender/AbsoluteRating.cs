@@ -85,6 +85,13 @@ namespace ActivityRecommendation
             return true;
         }
 
+        public override double GetScoreForDescriptor(ActivityDescriptor descriptor)
+        {
+            if (descriptor == this.ActivityDescriptor)
+                return this.Score;
+            throw new ArgumentException("cannot ask an absolute rating for the score of a different activity");
+        }
+
         #endregion
 
         /*

@@ -69,6 +69,10 @@ namespace ActivityRecommendation
             // default to 1 month
             return new FloatRange(0, true, 24 * 60 * 60, true);
         }
+        public IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
 

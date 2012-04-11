@@ -150,6 +150,11 @@ namespace ActivityRecommendation
             }
         }
 
+        public IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Private Member Functions

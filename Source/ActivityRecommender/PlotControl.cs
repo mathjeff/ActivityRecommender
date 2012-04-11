@@ -16,6 +16,7 @@ namespace ActivityRecommendation
         {
             //this.childCanvas = new Canvas();
             //this.AddVisualChild(childCanvas);
+            this.Connected = true;
         }
 
         // assigns some datapoints to the plot
@@ -66,7 +67,10 @@ namespace ActivityRecommendation
         public double? MaxX { get; set; }
         public double? MinY { get; set; }
         public double? MaxY { get; set; }
+        //public int? NumXAxisTickMarks { get; set; }
+        public IEnumerable<double> XAxisSubdivisions { get; set; }
         public bool ShowRegressionLine { get; set; }
+        public bool Connected { get; set; }
 
         protected override Size ArrangeOverride(Size arrangeSize)
         {
@@ -131,11 +135,23 @@ namespace ActivityRecommendation
                 y2 = (maximumY - this.pointsToPlot[i].Output) * scaleY;
 
                 Line newLine = new Line();
-                newLine.X1 = x1;
-                newLine.Y1 = y1;
-                newLine.X2 = x2;
-                newLine.Y2 = y2;
-                newLine.Stroke = Brushes.Black;
+                if (this.Connected)
+                {
+                    newLine.X1 = x1;
+                    newLine.Y1 = y1;
+                    newLine.X2 = x2;
+                    newLine.Y2 = y2;
+                }
+                else
+                {
+                    newLine.X1 = x1;
+                    newLine.Y1 = y1;
+                    newLine.X2 = x1 + 1;
+                    newLine.Y2 = y1 + 1;
+                    //newLine.Width = 1;
+                    //newLine.StrokeStartLineCap = PenLineCap.Round;
+                }
+                newLine.Stroke = Brushes.DarkBlue;
                 this.Children.Add(newLine);
 
                 x1 = x2;
@@ -183,6 +199,26 @@ namespace ActivityRecommendation
                     this.Children.Add(newLine);
                 }
             }
+            // now draw some tick marks
+            if (this.XAxisSubdivisions != null)
+            {
+                y1 = displaySize.Height - 1;
+                y2 = displaySize.Height * 19 / 20;
+                foreach (double x in this.XAxisSubdivisions)
+                {
+                    x1 = x;
+                    x2 = x1;
+
+                    Line newLine = new Line();
+                    newLine.X1 = (x1 - minimumX) * scaleX;
+                    newLine.Y1 = y1;
+                    newLine.X2 = (x2 - minimumX) * scaleX;
+                    newLine.Y2 = y2;
+                    newLine.Stroke = Brushes.Black;
+                    this.Children.Add(newLine);
+                }
+            }
+
         }
         /*
         public int NumPointsToPlot

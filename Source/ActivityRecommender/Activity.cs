@@ -45,6 +45,9 @@ namespace ActivityRecommendation
             this.uniqueIdentifier = nextID;
             this.defaultDiscoveryDate = DateTime.Now;
             this.participationDurations = Distribution.MakeDistribution(3600, 0, 1);    // default duration of an activity is 1 hour
+            this.scoresWhenSuggested = new Distribution(0, 0, 0);
+            this.scoresWhenNotSuggested = new Distribution(0, 0, 0);
+            this.thinkingTimes = new Distribution(0, 0, 0);
             nextID++;
         }
 
@@ -54,8 +57,9 @@ namespace ActivityRecommendation
             this.ratingProgression = new RatingProgression(this);
             this.participationProgression = new ParticipationProgression(this);
             this.idlenessProgression = new IdlenessProgression(this);
-            this.timeOfDayProgression = new TimeProgression(new DateTime(), new TimeSpan(24, 0, 0));
-            this.timeOfWeekProgression = new TimeProgression(new DateTime(), new TimeSpan(24 * 7, 0, 0));
+            this.timeOfDayProgression = TimeProgression.DayCycle;
+            DateTime Sunday = new DateTime(2011, 1, 7);
+            this.timeOfWeekProgression = TimeProgression.WeekCycle;
             this.considerationProgression = new ConsiderationProgression(this);
             this.skipProgression = new SkipProgression(this);
             this.expectedRatingProgression = new ExpectedRatingProgression(this);
@@ -441,6 +445,27 @@ namespace ActivityRecommendation
                 return this.considerationProgression.NumItems;
             }
         }
+        public Distribution ScoresWhenSuggested     // the scores assigned to it at times when it was executed after being suggested
+        {
+            get
+            {
+                return this.scoresWhenSuggested;
+            }
+        }
+        public Distribution ScoresWhenNotSuggested  // the scores assigned to it at times when it was executed but was not suggested recently
+        {
+            get
+            {
+                return this.scoresWhenNotSuggested;
+            }
+        }
+        public Distribution ThinkingTimes           // how long it takes the user to skip this activity
+        {
+            get
+            {
+                return this.thinkingTimes;
+            }
+        }
         public void AddRating(AbsoluteRating newRating)
         {
             if (newRating.Date != null)
@@ -501,6 +526,21 @@ namespace ActivityRecommendation
             }
             // keep track of the average participation duration
             this.participationDurations = this.participationDurations.Plus(Distribution.MakeDistribution(newParticipation.Duration.TotalSeconds, 0, 1));
+
+            // keep track of the ratings when suggested
+            AbsoluteRating rating = newParticipation.GetAbsoluteRating();
+            if (rating != null)
+            {
+                // decide whether we know whether it was suggested
+                if (newParticipation.Suggested != null)
+                {
+                    // update the appropriate counts
+                    if (newParticipation.Suggested.Value == true)
+                        this.scoresWhenSuggested = this.scoresWhenSuggested.Plus(rating.Score);
+                    else
+                        this.scoresWhenNotSuggested = this.scoresWhenNotSuggested.Plus(rating.Score);
+                }
+            }
         }
         public void AddSkip(ActivitySkip newSkip)
         {
@@ -519,6 +559,12 @@ namespace ActivityRecommendation
             AdaptiveLinearInterpolation.Datapoint datapoint = new AdaptiveLinearInterpolation.Datapoint(coordinates, 0);
             this.participationInterpolator.AddDatapoint(datapoint);
 
+            // updatethe knowledge of how long the user thinks
+            if (newSkip.SuggestionDate != null)
+            {
+                TimeSpan duration = newSkip.Date.Subtract((DateTime)newSkip.SuggestionDate);
+                this.thinkingTimes = this.thinkingTimes.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
+            }
 
 
             this.skipProgression.AddSkip(newSkip);
@@ -649,6 +695,9 @@ namespace ActivityRecommendation
         private DateTime defaultDiscoveryDate;
         private Distribution participationDurations;
 
+        Distribution scoresWhenSuggested;
+        Distribution scoresWhenNotSuggested;
+        Distribution thinkingTimes;
         #endregion
 
     }

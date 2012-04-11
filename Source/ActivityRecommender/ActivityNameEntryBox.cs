@@ -129,6 +129,14 @@ namespace ActivityRecommendation
                 return descriptor;
             }
         }
+        public Activity Activity
+        {
+            get
+            {
+                ActivityDescriptor descriptor = this.ActivityDescriptor;
+                return this.database.ResolveDescriptor(descriptor);
+            }
+        }
         
         ResizableTextBox nameBox;
         ResizableTextBlock suggestionBlock;

@@ -392,6 +392,7 @@ namespace ActivityRecommendation
             DateTime startDate = DateTime.Now;
             DateTime endDate = DateTime.Now;
             string comment = null;
+            bool? suggested = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -419,10 +420,16 @@ namespace ActivityRecommendation
                     comment = this.ReadText(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.WasSuggestedTag)
+                {
+                    suggested = this.ReadBool(currentChild);
+                    continue;
+                }
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
+            currentParticipation.Suggested = suggested;
 
             /* // Check whether the participation had an embedded rating
             if (rating != null)

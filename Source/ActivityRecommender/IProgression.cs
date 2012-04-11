@@ -16,5 +16,6 @@ namespace ActivityRecommendation
         Activity Owner { get; }
         string Description { get; }
         FloatRange EstimateOutputRange();
+        IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision);
     }
 }

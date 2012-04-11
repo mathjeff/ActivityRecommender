@@ -14,15 +14,20 @@ namespace ActivityRecommendation
         public MiniStatisticsMenu()
         {
             this.SetTitle("View Statistics");
-            this.displayGrid = new DisplayGrid(2, 1);
+            this.displayGrid = new DisplayGrid(3, 1);
 
-            this.nameEntryBox = new ActivityNameEntryBox("Name of Activity to View");
-            this.displayGrid.AddItem(this.nameEntryBox);
+            this.yAxisNameBox = new ActivityNameEntryBox("Y-Axis Activity (required)");
+            this.displayGrid.AddItem(this.yAxisNameBox);
 
             this.okButton = new ResizableButton();
             this.okButton.Content = "Visualize";
             this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             this.displayGrid.AddItem(this.okButton);
+
+            this.xAxisNameBox = new ActivityNameEntryBox("X-Axis Activity (optional)");
+            this.xAxisProgressionSelector = new ProgressionSelectionView("X-Axis");
+            this.displayGrid.AddItem(this.xAxisProgressionSelector);
+
 
             this.SetContent(this.displayGrid);
         }
@@ -35,29 +40,53 @@ namespace ActivityRecommendation
         {
             set
             {
-                this.nameEntryBox.Database = value;
+                //this.xAxisNameBox.Database = value;
+                this.xAxisProgressionSelector.ActivityDatabase = value;
+                this.yAxisNameBox.Database = value;
             }
         }
-        public string ActivityName
+        /*
+        public string XAxisActivityName
         {
             get
             {
-                return this.nameEntryBox.NameText;
+                return this.xAxisNameBox.NameText;
             }
             set
             {
-                this.nameEntryBox.NameText = value;
+                this.xAxisNameBox.NameText = value;
             }
         }
-        public ActivityDescriptor ActivityDescriptor
+        */
+        public IProgression XAxisProgression
         {
             get
             {
-                return this.nameEntryBox.ActivityDescriptor;
+                return this.xAxisProgressionSelector.Progression;
+            }
+        }
+        public string YAxisActivtyName
+        {
+            get
+            {
+                return this.yAxisNameBox.NameText;
+            }
+            set
+            {
+                this.yAxisNameBox.NameText = value;
+            }
+        }
+        public ActivityDescriptor YAxisActivityDescriptor
+        {
+            get
+            {
+                return this.yAxisNameBox.ActivityDescriptor;
             }
         }
         ResizableButton okButton;
         DisplayGrid displayGrid;
-        ActivityNameEntryBox nameEntryBox;
+        ActivityNameEntryBox yAxisNameBox;
+        ActivityNameEntryBox xAxisNameBox;
+        ProgressionSelectionView xAxisProgressionSelector;
     }
 }

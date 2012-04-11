@@ -168,9 +168,9 @@ namespace ActivityRecommendation
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
             // This linear calculation has shown during testing to be useful to have
-            return this.GetValueLinearly(when, strictlyEarlier);
+            //return this.GetValueLinearly(when, strictlyEarlier);
             // The exponential calculation has shown during testing to make the predictions worse
-            //return this.GetValueExponentially(when, strictlyEarlier);
+            return this.GetValueExponentially(when, strictlyEarlier);
         }
 
 #if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
@@ -258,6 +258,11 @@ namespace ActivityRecommendation
 
 
         }
+        public IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision)
+        {
+            throw new NotImplementedException();
+        }
+
 #endif
         public ProgressionValue GetValueLinearly(DateTime when, bool strictlyEarlier)
         {

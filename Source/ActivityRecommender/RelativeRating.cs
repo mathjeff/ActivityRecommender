@@ -94,6 +94,15 @@ namespace ActivityRecommendation
             }
             base.FillInFromParticipation(participation);
         }
+
+        public override double GetScoreForDescriptor(ActivityDescriptor descriptor)
+        {
+            if (descriptor == this.BetterRating.ActivityDescriptor)
+                return this.BetterRating.Score;
+            if (descriptor == this.WorseRating.ActivityDescriptor)
+                return this.WorseRating.Score;
+            throw new ArgumentException("cannot ask for the score for an activity not known to the RelativeRating");
+        }
         #endregion
 
         #region Private Member Variables

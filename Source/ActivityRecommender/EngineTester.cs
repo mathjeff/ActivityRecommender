@@ -21,8 +21,21 @@ typicalProbabilityError = 0.472384299236938
 
 latest results (on 2012-2-25) using a slightly faster version (where the Interpolator skips any splits that will be overwritten by later splits) are:
 typicalScoreError = 0.118790161274347
-typicalProbabilityError = 0.470607845933648
-*/
+typicalProbabilityError = 0.470607845933648     // this is the error rate we'd expect if each participation probability was 0.669 (or 0.331)
+
+latest results (on 2012-4-10) simply after having acquired additional data (due to the passage of time)
+typicalScoreError = 0.131244338310556
+typicalProbabilityError = 0.456090786674865
+ 
+latest results (on 2012-4-10) after switching back to getValueExponentially in the ParticipationProgression
+typicalScoreError = 0.130215012360051
+typicalProbabilityError = 0.456090786674865     // this is the error rate we'd expect if each participation probability was 0.705 (or 0.295)
+// I think that my increased usage of the RelativeRating is increasing the information content of my ratings, and decreasing the prediction accuracy
+// I think the increased data is improving the accuracy of the participation probability
+
+
+ 
+ */
 
 namespace ActivityRecommendation
 {

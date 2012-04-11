@@ -40,6 +40,10 @@ namespace ActivityRecommendation
         {
             return new FloatRange(0, true, 1, true);
         }
+        public IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

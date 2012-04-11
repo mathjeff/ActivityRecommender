@@ -58,7 +58,7 @@ namespace ActivityRecommendation
             this.mainDisplay = new DisplayGrid(2, 1);
 
             String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2012-02-28T16:35";
+            titleString += " Build Date: 2012-04-10T18:15";
             ResizableTextBlock titleBlock = new ResizableTextBlock();
             titleBlock.SetResizability(new Resizability(0, 1));
             titleBlock.Text = titleString;
@@ -139,7 +139,7 @@ namespace ActivityRecommendation
             if ((this.LatestRecommendedActivity != null) && !this.suppressDownoteOnRecommendation)
             {
                 // if they've asked for two recommendations in succession, it means they didn't like the previous one
-                
+
                 // Calculate the score to generate for this Activity as a result of that statement
                 Distribution previousDistribution = this.LatestRecommendedActivity.PredictedScore.Distribution;
                 double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
@@ -490,19 +490,28 @@ namespace ActivityRecommendation
         }
         public void VisualizeData()
         {
-            string name = this.statisticsMenu.ActivityName;
+            //string name = this.statisticsMenu.ActivityName;
 
-            ActivityDescriptor descriptor = this.statisticsMenu.ActivityDescriptor;
-            Activity activity = null;
-            if (descriptor != null)
+            //ActivityDescriptor xAxisDescriptor = this.statisticsMenu.XAxisActivityDescriptor;
+            IProgression xAxisProgression = this.statisticsMenu.XAxisProgression;
+            ActivityDescriptor yAxisDescriptor = this.statisticsMenu.YAxisActivityDescriptor;
+            //Activity xAxisActivity = null;
+            Activity yAxisActivity = null;
+            /*
+            if (xAxisDescriptor != null)
             {
-                activity = this.engine.ActivityDatabase.ResolveDescriptor(descriptor);
-                if (activity != null)
-                {
-                    ActivityVisualizationView visualizationView = new ActivityVisualizationView(activity);
-                    visualizationView.AddExitClickHandler(new RoutedEventHandler(this.ShowMainview));
-                    this.mainDisplay.PutItem(visualizationView, 1, 0);
-                }
+                xAxisActivity = this.engine.ActivityDatabase.ResolveDescriptor(xAxisDescriptor);
+            }
+            */
+            if (yAxisDescriptor != null)
+            {
+                yAxisActivity = this.engine.ActivityDatabase.ResolveDescriptor(yAxisDescriptor);
+            }
+            if (yAxisActivity != null)
+            {
+                ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, new TimeSpan());
+                visualizationView.AddExitClickHandler(new RoutedEventHandler(this.ShowMainview));
+                this.mainDisplay.PutItem(visualizationView, 1, 0);
             }
         }
 
@@ -555,7 +564,7 @@ namespace ActivityRecommendation
             //this.participationEntryView.RatingText = "";
             //this.participationEntryView.CommentText = "";
         }
-  
+
 
         private Window mainWindow;
         private DisplayManager displayManager;

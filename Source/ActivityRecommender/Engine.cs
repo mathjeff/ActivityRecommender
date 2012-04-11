@@ -664,6 +664,8 @@ namespace ActivityRecommendation
         DateTime latestInteractionDate;
         bool requiresFullUpdate;
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
+        //Distribution ratingsForSuggestedActivities;     // the ratings that the user gives to activities that were suggested by the engine
+        //Distribution ratingsForUnsuggestedActivities;   // the ratings that the user gives to activities that were not suggestd by the engine
 
     }
 }

@@ -80,6 +80,7 @@
     <Compile Include="ActivityRequest.cs" />
     <Compile Include="ActivityVisualizationView.cs" />
     <Compile Include="ConsiderationProgression.cs" />
+    <Compile Include="CumulativeParticipationProgression.cs" />
     <Compile Include="Datapoint.cs" />
     <Compile Include="DateComparer.cs" />
     <Compile Include="DateEntryView.cs">
@@ -96,6 +97,7 @@
     <Compile Include="Inheritance.cs" />
     <Compile Include="InheritanceEditingView.cs" />
     <Compile Include="IPredictionLink.cs" />
+    <Compile Include="ProgressionSelectionView.cs" />
     <Compile Include="RatingEntryView.cs" />
     <Compile Include="RecentUserData.cs" />
     <Compile Include="RelativeRatingEntryView.cs" />
@@ -154,13 +156,13 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator.csproj">
-      <Project>{5D73F8D0-A57C-4CCE-81D8-45CAC4DC7A60}</Project>
-      <Name>AdaptiveLinearInterpolator</Name>
-    </ProjectReference>
     <ProjectReference Include="..\StatList\StatList.csproj">
       <Project>{D070EA92-52C2-4029-9BA0-15572B47A6FD}</Project>
       <Name>StatList</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator.csproj">
+      <Project>{5D73F8D0-A57C-4CCE-81D8-45CAC4DC7A60}</Project>
+      <Name>AdaptiveLinearInterpolator</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

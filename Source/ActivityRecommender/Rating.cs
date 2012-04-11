@@ -30,5 +30,7 @@ namespace ActivityRecommendation
         {
             this.Source = RatingSource.Request;
         }
+        // returns the score that this Rating has for the activity with the given descriptor
+        public abstract double GetScoreForDescriptor(ActivityDescriptor descriptor);
     }
 }

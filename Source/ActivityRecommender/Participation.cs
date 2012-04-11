@@ -92,6 +92,17 @@ namespace ActivityRecommendation
             completeRating.FillInFromParticipation(this);
             return completeRating;
         }
+        // returns an AbsoluteRating that contains as much information as possible
+        public AbsoluteRating GetAbsoluteRating()
+        {
+            Rating fullRating = this.GetCompleteRating();
+            if (fullRating == null)
+                return null;
+            AbsoluteRating converted = new AbsoluteRating();
+            converted.FillInFromParticipation(this);
+            converted.Score = fullRating.GetScoreForDescriptor(this.ActivityDescriptor);
+            return converted;
+        }
 
         private Distribution totalIntensity;
         private Rating rawRating;

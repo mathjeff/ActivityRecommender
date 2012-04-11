@@ -264,8 +264,11 @@ namespace ActivityRecommendation
             // figure out how much extra height to allocate to each row
             Resizability verticalResizability = this.GetVerticalResizability();
             double desiredHeight = this.TotalDesiredHeight;
+            if (double.IsPositiveInfinity(arrangeSize.Height))
+                arrangeSize.Height = desiredHeight;
             double extraHeight = (arrangeSize.Height - desiredHeight);
-            if (extraHeight > 0)
+
+            if (extraHeight >= 0)
             {
                 // allocate the desired size to each row
                 for (row = 0; row < this.numRows; row++)
@@ -288,6 +291,8 @@ namespace ActivityRecommendation
             // figure out how much extra width to allocate to each row
             Resizability horizontalResizability = this.GetHorizontalResizability();
             double desiredWidth = this.TotalDesiredWidth;
+            if (double.IsPositiveInfinity(arrangeSize.Width))
+                arrangeSize.Width = desiredWidth;
             double extraWidth = (arrangeSize.Width - desiredWidth);
             if (extraWidth > 0)
             {

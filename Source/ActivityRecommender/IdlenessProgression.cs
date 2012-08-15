@@ -34,6 +34,15 @@ namespace ActivityRecommendation
                 this.searchHelper.Add(newParticipation.EndDate, newParticipation);
             }
         }
+        public void RemoveParticipation(Participation participationToRemove)
+        {
+            // make sure that we had included it in the first place
+            if (this.ShouldIncludeParticipation(participationToRemove))
+            {
+                this.searchHelper.Remove(participationToRemove.StartDate);
+                this.searchHelper.Remove(participationToRemove.EndDate);
+            }
+        }
 
         // this function is a filter that tells whether this ParticipationProgression cares about this Participation
         public bool ShouldIncludeParticipation(Participation newParticipation)

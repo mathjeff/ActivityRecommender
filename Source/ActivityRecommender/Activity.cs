@@ -40,14 +40,15 @@ namespace ActivityRecommendation
             //this.LatestPrediction = new Prediction();
             //this.LatestPrediction.Date = new DateTime(0);
             this.latestRatingEstimationDate = new DateTime(0);
-            this.latestParticipationDate = new DateTime(0);
-            this.latestInteractionDate = new DateTime(0);
+            this.latestParticipationDate = null;
+            this.latestInteractionDate = null;
             this.uniqueIdentifier = nextID;
             this.defaultDiscoveryDate = DateTime.Now;
             this.participationDurations = Distribution.MakeDistribution(3600, 0, 1);    // default duration of an activity is 1 hour
             this.scoresWhenSuggested = new Distribution(0, 0, 0);
             this.scoresWhenNotSuggested = new Distribution(0, 0, 0);
             this.thinkingTimes = new Distribution(0, 0, 0);
+            this.PredictionsNeedRecalculation = true;
             nextID++;
         }
 
@@ -123,11 +124,14 @@ namespace ActivityRecommendation
             this.participationTrainingProgressions.Add(this.skipProgression);
             this.participationTestingProgressions.Add(this.skipProgression);
 
-            this.participationTrainingProgressions.Add(this.timeOfDayProgression);
-            this.participationTestingProgressions.Add(this.timeOfDayProgression);
+            //this.participationTrainingProgressions.Add(this.timeOfDayProgression);
+            //this.participationTestingProgressions.Add(this.timeOfDayProgression);
 
             this.participationTrainingProgressions.Add(this.considerationProgression);
             this.participationTestingProgressions.Add(this.considerationProgression);
+
+            //this.participationTrainingProgressions.Add(this.participationProgression);
+            //this.participationTestingProgressions.Add(this.participationProgression);
 
             //this.participationTrainingProgressions.Add(this.timeOfWeekProgression);
             //this.participationTestingProgressions.Add(this.timeOfWeekProgression);
@@ -168,17 +172,39 @@ namespace ActivityRecommendation
             this.participationProbabilityPredictors.Add(new PredictionLink(this.expectedRatingProgression, this.considerationProgression));
             this.participationProbabilityPredictors.Add(new PredictionLink(this.ratingProgression, this.considerationProgression));
             */
-            this.SetupParticipationProbabilityInterpolator();
+            
+            
+            
+            //this.SetupParticipationProbabilityInterpolator();
         }
         private void SetupParticipationProbabilityInterpolator()
         {
-            FloatRange[] coordinates = new FloatRange[this.participationTrainingProgressions.Count];
+            List<IProgression> progressions = new List<IProgression>();
+            progressions.Add(this.timeOfDayProgression);
+            List<Activity> activities = this.GetParticipationPredictionActivities();
+            foreach (Activity activity in activities)
+            {
+                foreach (IProgression progression in activity.participationTrainingProgressions)
+                {
+                    progressions.Add(progression);
+                }
+            }
+            FloatRange[] coordinates = new FloatRange[progressions.Count];
             int i;
             for (i = 0; i < coordinates.Length; i++)
             {
-                coordinates[i] = this.participationTrainingProgressions[i].EstimateOutputRange();
+                coordinates[i] = progressions[i].EstimateOutputRange();
             }
             this.participationInterpolator = new AdaptiveLinearInterpolator(new HyperBox(coordinates));
+        }
+        private Distribution QueryParticipationProbabilityInterpolator(double[] coordinates)
+        {
+            if (this.participationInterpolator == null)
+            {
+                this.SetupParticipationProbabilityInterpolator();
+            }
+            Distribution estimate = new Distribution(this.participationInterpolator.Interpolate(coordinates));
+            return estimate;
         }
         #endregion
 
@@ -246,7 +272,7 @@ namespace ActivityRecommendation
                 SimplePredictionLink probabilityLink2 = new SimplePredictionLink(newParent.expectedParticipationProbabilityProgression, this.considerationProgression, "Probably just about as likely as " + newParent.Description);
                 this.extraParticipationPredictionLinks.Add(probabilityLink2);
 
-                // need to rebuild the interpolated because the number of dimensions is wrong
+                // need to rebuild the interpolator because the number of dimensions is wrong
                 this.SetupRatingInterpolator();
                 //this.SetupParticipationProbabilityInterpolator();
             }
@@ -265,6 +291,37 @@ namespace ActivityRecommendation
                 return this.children;
             }
         }
+        // returns a list containing this activity and all of its ancestors
+        public List<Activity> GetAllSuperactivities()
+        {
+            List<Activity> superCategories = new List<Activity>();
+            superCategories.Add(this);
+            int i = 0;
+            for (i = 0; i < superCategories.Count; i++)
+            {
+                Activity activity = superCategories[i];
+                foreach (Activity parent in activity.Parents)
+                {
+                    if (!superCategories.Contains(parent))
+                    {
+                        superCategories.Add(parent);
+                    }
+                }
+            }
+            return superCategories;
+        }
+        public List<Activity> GetParticipationPredictionActivities()
+        {
+            List<Activity> activities = new List<Activity>();
+            activities.Add(this);
+            /*
+            foreach (Activity parent in this.parents)
+            {
+                activities.Add(parent);
+            }*/
+            return activities;
+        }
+        // returns a list containing this activity and all of its descendents
         public List<Activity> GetAllSubactivities()
         {
             List<Activity> subCategories = new List<Activity>();
@@ -326,6 +383,7 @@ namespace ActivityRecommendation
         public Prediction SuggestionValue { get; set; }
         // the most recent estimate about how likely the user is to do the activity if we suggest it
         public Prediction PredictedParticipationProbability { get; set; }
+        public bool PredictionsNeedRecalculation { get; set; }
         /*
         // the latest date at which the rating of this Activity was estimated
         public DateTime LatestRatingEstimationDate
@@ -399,12 +457,35 @@ namespace ActivityRecommendation
         public void ApplyKnownInteractionDate(DateTime when)
         {
             if ((this.latestInteractionDate == null) || (((DateTime)this.latestInteractionDate).CompareTo(when) < 0))
-            {
                 this.latestInteractionDate = when;
-            }
             if ((this.earliestInteractionDate == null) || (((DateTime)this.earliestInteractionDate).CompareTo(when) > 0))
-            {
                 this.earliestInteractionDate = when;
+        }
+        public void ApplyInheritanceDate(DateTime when)
+        {
+            if ((this.latestInheritanceDate == null) || (((DateTime)this.latestInheritanceDate).CompareTo(when) < 0))
+                this.latestInheritanceDate = when;
+            if ((this.earliestInheritenceDate == null) || (((DateTime)this.earliestInheritenceDate).CompareTo(when) < 0))
+                this.earliestInheritenceDate = when;
+            this.ApplyKnownInteractionDate(when);
+        }
+        private void UpdateInteractionDates()
+        {
+            if (this.considerationProgression.NumItems > 0)
+            {
+                this.latestInteractionDate = this.considerationProgression.LastDatePresent;
+                this.earliestInteractionDate = this.considerationProgression.FirstDatePresent;
+            }
+            else
+            {
+                if (this.latestInheritanceDate != null)
+                    this.latestInteractionDate = this.latestInheritanceDate;
+                else
+                    this.latestInteractionDate = null;
+                if (this.earliestInheritenceDate != null)
+                    this.earliestInteractionDate = this.earliestInheritenceDate;
+                else
+                    this.earliestInteractionDate = null;
             }
         }
         public DateTime LatestInteractionDate
@@ -466,6 +547,38 @@ namespace ActivityRecommendation
                 return this.thinkingTimes;
             }
         }
+        // says that the participation intensity was value at when, and adds that data to the participation interpolator
+        private void AddParticipationDatapoint(DateTime when, double intensity)
+        {
+            if (this.participationInterpolator == null)
+            {
+                this.SetupParticipationProbabilityInterpolator();
+            }
+
+            List<IProgression> progressions = new List<IProgression>();
+            progressions.Add(this.timeOfDayProgression);
+            List<Activity> activities = this.GetParticipationPredictionActivities();
+            foreach (Activity activity in activities)
+            {
+                foreach (IProgression progression in activity.participationTrainingProgressions)
+                {
+                    progressions.Add(progression);
+                }
+            }
+            double[] coordinates = new double[progressions.Count];
+            int i;
+            ProgressionValue value;
+            for (i = 0; i < coordinates.Length; i++)
+            {
+                value = progressions[i].GetValueAt(when, false);
+                if (value != null)
+                    coordinates[i] = value.Value.Mean;
+                else
+                    coordinates[i] = progressions[i].EstimateOutputRange().Middle;
+            }
+            AdaptiveLinearInterpolation.Datapoint newDatapoint = new AdaptiveLinearInterpolation.Datapoint(coordinates, intensity);
+            this.participationInterpolator.AddDatapoint(newDatapoint);
+        }
         public void AddRating(AbsoluteRating newRating)
         {
             if (newRating.Date != null)
@@ -494,21 +607,10 @@ namespace ActivityRecommendation
         }
         public void AddParticipation(Participation newParticipation)
         {
-
-            // get the coordinates at that time
-            double[] coordinates = new double[this.participationTrainingProgressions.Count];
-            int i;
-            for (i = 0; i < coordinates.Length; i++)
-            {
-                ProgressionValue value = this.participationTrainingProgressions[i].GetValueAt((DateTime)newParticipation.StartDate, false);
-                if (value != null)
-                    coordinates[i] = value.Value.Mean;
-                else
-                    coordinates[i] = this.participationTestingProgressions[i].EstimateOutputRange().Middle;
-            }
-            AdaptiveLinearInterpolation.Datapoint datapoint = new AdaptiveLinearInterpolation.Datapoint(coordinates, 1);
-            this.participationInterpolator.AddDatapoint(datapoint);
-
+            // get the coordinates at that time and save them
+            //if (newParticipation.Suggested == null || newParticipation.Suggested == true)
+            if (!newParticipation.Hypothetical)
+                this.AddParticipationDatapoint(newParticipation.StartDate, 1);
 
 
             // keep track of the participation
@@ -544,20 +646,8 @@ namespace ActivityRecommendation
         }
         public void AddSkip(ActivitySkip newSkip)
         {
-
-            // get the coordinates at that time
-            double[] coordinates = new double[this.participationTrainingProgressions.Count];
-            int i;
-            for (i = 0; i < coordinates.Length; i++)
-            {
-                ProgressionValue value = this.participationTrainingProgressions[i].GetValueAt((DateTime)newSkip.Date, false);
-                if (value != null)
-                    coordinates[i] = value.Value.Mean;
-                else
-                    coordinates[i] = this.participationTestingProgressions[i].EstimateOutputRange().Middle;
-            }
-            AdaptiveLinearInterpolation.Datapoint datapoint = new AdaptiveLinearInterpolation.Datapoint(coordinates, 0);
-            this.participationInterpolator.AddDatapoint(datapoint);
+            // get the coordinates at that time and save them
+            this.AddParticipationDatapoint(newSkip.Date, 0);
 
             // updatethe knowledge of how long the user thinks
             if (newSkip.SuggestionDate != null)
@@ -572,6 +662,26 @@ namespace ActivityRecommendation
             // keep track of the earliest and latest date at which anything happened
             this.ApplyKnownInteractionDate(newSkip.Date);
         }
+        public void RemoveParticipation(Participation unwantedParticipation)
+        {
+            // remove it from the progressions
+            this.participationProgression.RemoveParticipation(unwantedParticipation);
+            this.idlenessProgression.RemoveParticipation(unwantedParticipation);
+            this.considerationProgression.RemoveParticipation(unwantedParticipation);
+            // remove it from our other aggregates
+            this.participationDurations = this.participationDurations.Minus(Distribution.MakeDistribution(unwantedParticipation.Duration.TotalSeconds, 0, 1));
+            // recalculate the boundary dates
+            this.UpdateInteractionDates();
+            Participation latestParticipation = this.participationProgression.LatestParticipation;
+            if (latestParticipation != null)
+                this.latestParticipationDate = latestParticipation.EndDate;
+            else
+                this.latestParticipationDate = null;
+
+            // It would be desirable to remove it from the interpolator if it has a rating
+            // However, that functionality currently wouldn't be used so it isn't supported
+        }
+
         // returns a bunch of estimates about how it will be rated at this date
         public List<Prediction> GetRatingEstimates(DateTime when)
         {
@@ -593,7 +703,7 @@ namespace ActivityRecommendation
             // add a little bit of uncertainty
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Prediction prediction = new Prediction();
-            prediction.Date = when;
+            prediction.ApplicableDate = when;
             prediction.Distribution = scaledEstimate.Plus(extraError);
             results.Add(prediction);
 
@@ -606,18 +716,27 @@ namespace ActivityRecommendation
         // returns a bunch of estimates about the probability that the user would do this activity if it were suggested now
         public List<Prediction> GetParticipationProbabilityEstimates(DateTime when)
         {
-            double[] coordinates = new double[this.participationTestingProgressions.Count];
-            int i;
-            for (i = 0; i < coordinates.Length; i++)
+            // get the current coordinates
+            List<Activity> activities = this.GetParticipationPredictionActivities();
+            List<double> coordinateList = new List<double>();
+            // concatenate all coordinates from all supercategories
+            coordinateList.Add(this.timeOfDayProgression.GetValueAt(when, false).Value.Mean);
+            foreach (Activity activity in activities)
             {
-                ProgressionValue value = this.participationTestingProgressions[i].GetValueAt(when, false);
-                if (value != null)
-                    coordinates[i] = value.Value.Mean;
-                else
-                    coordinates[i] = this.participationTestingProgressions[i].EstimateOutputRange().Middle;
+                foreach (IProgression progression in activity.participationTestingProgressions)
+                {
+                    ProgressionValue value = progression.GetValueAt(when, false);
+                    if (value != null)
+                        coordinateList.Add(value.Value.Mean);
+                    else
+                        coordinateList.Add(progression.EstimateOutputRange().Middle);
+                }
             }
+            double[] coordinates = coordinateList.ToArray();
+
+            // have the interpolator make an estimate for these coordinates
             List<Prediction> results = new List<Prediction>();
-            Distribution estimate = new Distribution(this.participationInterpolator.Interpolate(coordinates));
+            Distribution estimate = this.QueryParticipationProbabilityInterpolator(coordinates);
             double weight = this.NumConsiderations;
             Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
 
@@ -625,9 +744,11 @@ namespace ActivityRecommendation
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
             Prediction prediction = new Prediction();
-            prediction.Date = when;
+            prediction.ApplicableDate = when;
             prediction.Distribution = finalEstimate;
             results.Add(prediction);
+
+            // add the results from any extra PredictionLinks
             foreach (IPredictionLink link in this.extraParticipationPredictionLinks)
             {
                 results.Add(link.Guess(when));
@@ -692,6 +813,10 @@ namespace ActivityRecommendation
         private DateTime? latestInteractionDate;
         private DateTime? earliestInteractionDate;
         private DateTime? latestParticipationDate;
+
+        private DateTime? earliestInheritenceDate;
+        private DateTime? latestInheritanceDate;
+
         private DateTime defaultDiscoveryDate;
         private Distribution participationDurations;
 

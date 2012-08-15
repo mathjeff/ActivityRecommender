@@ -78,7 +78,7 @@ namespace ActivityRecommendation
                 currentInput = currentValue.Value;
             Prediction result = this.Guess(currentInput);
             // set the date correctly
-            result.Date = when;
+            result.ApplicableDate = when;
             return result;
         }
 

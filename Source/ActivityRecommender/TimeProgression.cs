@@ -9,11 +9,19 @@ namespace ActivityRecommendation
 {
     class TimeProgression : IProgression
     {
+        private static DateTime ReferenceDate
+        {
+            get
+            {
+                return DateTime.Parse("2000-1-1T00:00:00");
+                //return new DateTime();
+            }
+        }
         public static TimeProgression AbsoluteTime
         {
             get
             {
-                TimeProgression progression = new TimeProgression(new DateTime(), new TimeSpan());
+                TimeProgression progression = new TimeProgression(TimeProgression.ReferenceDate, new TimeSpan());
                 progression.Description = "Time";   // the amount of time that has passed since an arbitrary reference point
                 return progression;
             }
@@ -22,7 +30,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                TimeProgression progression = new TimeProgression(new DateTime(), new TimeSpan(24, 0, 0));
+                TimeProgression progression = new TimeProgression(TimeProgression.ReferenceDate, new TimeSpan(24, 0, 0));
                 progression.Description = "what time of day it is";
                 return progression;
             }
@@ -78,14 +86,17 @@ namespace ActivityRecommendation
         }
         public FloatRange EstimateOutputRange()
         {
-            return new FloatRange(0, true, 1, true);
+            if (this.cycleLength.TotalSeconds != 0)
+                return new FloatRange(0, true, 1, true);
+            return null;
         }
         // returns a list of the natural values at which to display tick marks
         public IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision)
         {
             double startValue = 0;
             double deltaValue = 0;
-            if (this.cycleLength != null)
+            List<double> subdivisions = new List<double>();
+            if (this.cycleLength.TotalSeconds != 0)
             {
                 if (this.cycleLength.Days == 7)
                 {
@@ -97,20 +108,57 @@ namespace ActivityRecommendation
                     // split a day into hours
                     deltaValue = (double)1 / (double)24;
                 }
+                if (deltaValue != 0)
+                {
+                    double subdivision;
+                    for (subdivision = startValue; subdivision <= maxSubdivision; subdivision += deltaValue)
+                    {
+                        subdivisions.Add(subdivision);
+                    }
+                }
             }
             else
             {
                 // convert seconds into time, and split into months
-                // NOT DONE YET!
-            }
-            List<double> subdivisions = new List<double>();
-            if (deltaValue != 0)
-            {
-                double subdivision;
-                for (subdivision = startValue; subdivision <= maxSubdivision; subdivision += deltaValue)
+                DateTime reference = TimeProgression.ReferenceDate;
+                TimeSpan duration1 = TimeSpan.FromSeconds(minSubdivision);
+                TimeSpan duration2 = TimeSpan.FromSeconds(maxSubdivision);
+                DateTime startDate = reference.Add(duration1);
+                DateTime endDate = reference.Add(duration2);
+                TimeSpan windowDuration = endDate.Subtract(startDate);
+                // check whether the end date is at least 2 months after the start date
+                //if (endDate.Year * 12 + endDate.Month >= startDate.Year * 12 + startDate.Month + 2)
+                if (windowDuration.TotalDays >= 59)
                 {
-                    subdivisions.Add(subdivision);
+                    // split into months
+                    DateTime tickDate = new DateTime(startDate.Year, startDate.Month, 1);
+                    while (tickDate.CompareTo(endDate) <= 0)
+                    {
+                        subdivisions.Add(this.GetValueAt(tickDate, false).Value.Mean);
+                        tickDate = tickDate.AddMonths(1);
+                    }
                 }
+                else
+                {
+                    // check whether the end date is at least 2 days after the start date
+                    //if (endDate.Day >= startDate.Day + 2)
+                    if (windowDuration.TotalDays >= 2)
+                    {
+                        // split into days
+                        DateTime tickDate = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+                        while (tickDate.CompareTo(endDate) <= 0)
+                        {
+                            subdivisions.Add(this.GetValueAt(tickDate, false).Value.Mean);
+                            tickDate = tickDate.AddDays(1);
+                        }
+                    }
+                    else
+                    {
+                        // split into hours
+                    }
+                }
+                // Split the interval up into months, weeks, or days
+                // NOT DONE YET!
             }
             return subdivisions;
         }

@@ -18,8 +18,11 @@ namespace ActivityRecommendation
         }
         public void SetContent(UIElement newContent)
         {
+            if (this.content != null)
+                this.Children.Remove(this.content);
             this.content = newContent;
-            this.Children.Add(newContent);
+            if (this.content != null)
+                this.Children.Add(newContent);
         }
         protected override Size MeasureOverride(Size constraint)
         {

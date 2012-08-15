@@ -8,15 +8,19 @@ namespace AdaptiveLinearInterpolation
     // The IDatapoint interface requires that the object have coordinates
     public interface IDatapoint
     {
-        double[] Coordinates
+        double[] InputCoordinates
         {
             get;
         }
-        int NumDimensions
+        int NumInputDimensions
         {
             get;
         }
-        double Output
+        double Score
+        {
+            get;
+        }
+        double[] OutputCoordinates
         {
             get;
         }
@@ -24,33 +28,40 @@ namespace AdaptiveLinearInterpolation
     public class Datapoint : IDatapoint
     {
         static int nextID = 0;
-        public Datapoint(double[] startingCoordinates, double startingScore)
+        public Datapoint(double[] inputs, double startingScore)
         {
-            this.coordinates = startingCoordinates;
+            this.inputCoordinates = inputs;
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double x, double startingScore)
+        public Datapoint(double input1, double startingScore)
         {
-            this.coordinates = new double[1];
-            this.coordinates[0] = x;
+            this.inputCoordinates = new double[1];
+            this.inputCoordinates[0] = input1;
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double x, double y, double startingScore)
+        public Datapoint(double input1, double input2, double startingScore)
         {
-            this.coordinates = new double[2];
-            this.coordinates[0] = x;
-            this.coordinates[1] = y;
+            this.inputCoordinates = new double[2];
+            this.inputCoordinates[0] = input1;
+            this.inputCoordinates[1] = input2;
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double x, double y, double z, double startingScore)
+        public Datapoint(double input1, double input2, double input3, double startingScore)
         {
-            this.coordinates = new double[3];
-            this.coordinates[0] = x;
-            this.coordinates[1] = y;
-            this.coordinates[2] = z;
+            this.inputCoordinates = new double[3];
+            this.inputCoordinates[0] = input1;
+            this.inputCoordinates[1] = input2;
+            this.inputCoordinates[2] = input3;
+            this.score = startingScore;
+            this.Initialize();
+        }
+        public Datapoint(double[] inputs, double[] outputs, double startingScore)
+        {
+            this.inputCoordinates = inputs;
+            this.outputCoordinates = outputs;
             this.score = startingScore;
             this.Initialize();
         }
@@ -59,26 +70,33 @@ namespace AdaptiveLinearInterpolation
             this.id = nextID;
             nextID++;
         }
-        public double[] Coordinates
+        public double[] InputCoordinates
         {
             get
             {
-                return this.coordinates;
+                return this.inputCoordinates;
             }
         }
-        public int NumDimensions
+        public int NumInputDimensions
         {
             get
             {
-                return this.coordinates.Length;
+                return this.inputCoordinates.Length;
+            }
+        }
+        public double[] OutputCoordinates
+        {
+            get
+            {
+                return this.outputCoordinates;
             }
         }
         public bool InputEquals(Datapoint other)
         {
             int i;
-            for (i = 0; i < this.coordinates.Length; i++)
+            for (i = 0; i < this.inputCoordinates.Length; i++)
             {
-                if (this.coordinates[i] != other.coordinates[i])
+                if (this.inputCoordinates[i] != other.InputCoordinates[i])
                     return false;
             }
             return true;
@@ -87,14 +105,14 @@ namespace AdaptiveLinearInterpolation
         {
             string result = "coordinates:(";
             int i;
-            for (i = 0; i < this.coordinates.Length; i++)
+            for (i = 0; i < this.inputCoordinates.Length; i++)
             {
-                result += this.coordinates[i].ToString() + ",";
+                result += this.inputCoordinates[i].ToString() + ",";
             }
-            result += ") output=" + this.Output.ToString();
+            result += ") score=" + this.Score.ToString();
             return result;
         }
-        public double Output
+        public double Score
         {
             get
             {
@@ -108,7 +126,8 @@ namespace AdaptiveLinearInterpolation
                 return this.id;
             }
         }
-        private double[] coordinates;
+        private double[] inputCoordinates;
+        private double[] outputCoordinates;
         private double score;
         private int id;
     }

@@ -8,14 +8,14 @@ namespace AdaptiveLinearInterpolation
 {
     class DatapointComparer : IComparer<Datapoint>
     {
-        public DatapointComparer(int dimToSort)
+        public DatapointComparer(int inputDimToCompare)
         {
-            this.dimension = dimToSort;
+            this.dimension = inputDimToCompare;
         }
         #region Functions for IComparer<IDatapoint>
         public int Compare(Datapoint a, Datapoint b)
         {
-            return a.Coordinates[this.dimension].CompareTo(b.Coordinates[this.dimension]);
+            return a.InputCoordinates[this.dimension].CompareTo(b.InputCoordinates[this.dimension]);
         }
         #endregion
         private int dimension;

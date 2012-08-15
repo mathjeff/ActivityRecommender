@@ -52,7 +52,23 @@ namespace ActivityRecommendation
             this.textBox.Measure(new Size(constraint.Width, double.PositiveInfinity));
             Size rawSize = this.textBox.DesiredSize;
             return rawSize;
-
+            // figure out how many lines are in the box
+            /*int textLength = this.textBox.Text.Length;
+            int numLines;
+            if (textLength > 0)
+                numLines = this.textBox.GetLineIndexFromCharacterIndex(textLength - 1) + 1;
+            else
+                numLines = 1;
+            //Console.WriteLine("text box with text = " + this.textBox.Text + " calculates numLines = " + numLines.ToString());
+            double desiredHeight = this.textBox.FontSize * numLines;
+            //Console.WriteLine("text box with text = " + this.textBox.Text + " desires height = " + desiredHeight);
+            Size desiredSize = new Size(constraint.Width, desiredHeight);
+            return desiredSize;
+            */
+            /*this.textBox.Measure(constraint);
+            Size rawSize = this.textBox.DesiredSize;
+            return rawSize;
+            */
             /*
             // Now try again, leaving the margins slightly more equal in case other visuals need it elsewhere
             double fractionUsed = this.textBox.DesiredSize.Width * this.textBox.DesiredSize.Height / constraint.Width / constraint.Height;

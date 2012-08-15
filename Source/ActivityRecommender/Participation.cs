@@ -40,6 +40,7 @@ namespace ActivityRecommendation
                 this.LogActiveTime = new Distribution();
 #endif
             this.Suggested = null;
+            this.Hypothetical = false;
         }
 
         public DateTime StartDate { get; set; }
@@ -70,6 +71,7 @@ namespace ActivityRecommendation
         public Distribution LogActiveTime { get; set; } // the log of the duration (in seconds) of each sub-participation
 #endif
         public string Comment { get; set; }
+        public bool Hypothetical { get; set; }  // false if it actually happened, true if we are supposing that it might happen
 
         // returns the exact rating that was given to this Participation
         public Rating RawRating 

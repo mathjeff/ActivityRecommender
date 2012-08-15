@@ -51,11 +51,11 @@ namespace ActivityRecommendation
             this.participationDataDisplay = new TitledControl("Stats:");
             this.queryStartDateDisplay = new DateEntryView("Between");
             this.queryStartDateDisplay.SetDate(this.yAxisActivity.GetEarliestInteractionDate());
-            this.queryStartDateDisplay.AddTextchangedHandler(new TextChangedEventHandler(this.DateTextChanged));
+            this.queryStartDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
             statsDisplayGrid.AddItem(this.queryStartDateDisplay);
             this.queryEndDateDisplay = new DateEntryView("and");
             this.queryEndDateDisplay.SetDate(DateTime.Now);
-            this.queryEndDateDisplay.AddTextchangedHandler(new TextChangedEventHandler(this.DateTextChanged));
+            this.queryEndDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
             statsDisplayGrid.AddItem(this.queryEndDateDisplay);
 
             // display the total time spanned by the current window
@@ -163,48 +163,14 @@ namespace ActivityRecommendation
             PlotControl newPlot = new PlotControl();
             newPlot.ShowRegressionLine = true;
             newPlot.MinX = 0;
-            //double maxX = this.GetParticipationXCoordinate(lastDate);
-
-            /*
-            if (this.xAxisActivity == null)
-            {
-                maxX = lastDate.Subtract(firstDate).TotalSeconds;
-            }
-            else
-            {
-                Participation xParticipation = this.xAxisActivity.SummarizeParticipationsBetween(firstDate, lastDate);                
-                maxX = xParticipation.TotalIntensity.Mean * xParticipation.TotalIntensity.Weight;                
-            }
-            */
-            //if (this.xAxisProgression
-            //newPlot.MaxX = maxX;
             newPlot.MaxX = 1;
             double x1, x2, y;
             x1 = 0;
             double maxXPlotted = 0;
             List<double> startXs = new List<double>();
             List<double> endXs = new List<double>();
+
             // figure out which dates we care about
-            /*
-            if (this.xAxisProgression == null)
-            {
-                foreach (Participation participation in participations)
-                {
-                    dates.Add(participation.StartDate);
-                    dates.Add(participation.EndDate);
-                }
-            }
-            else
-            {
-                DateTime date = firstDate;
-                TimeSpan fullDuration = this.queryEndDateDisplay.GetDate().Subtract(firstDate);
-                TimeSpan timeStep = new TimeSpan(fullDuration.Ticks / 100);
-                while (date.CompareTo(lastDate) < 0)
-                {
-                    dates.Add(date);
-                    date = date.Add(timeStep);
-                }
-            }*/
             double startX, endX;
             int numActiveIntervals = 0;
             DateTime startDate, endDate;
@@ -227,7 +193,7 @@ namespace ActivityRecommendation
             startXs.Sort();
             endXs.Sort();
             y = 0;
-            x1 = 0;
+            x1 = this.GetParticipationXCoordinate(firstDate);
             while (endXs.Count > 0 || startXs.Count > 0)
             {
                 if (startXs.Count > 0)
@@ -297,7 +263,14 @@ namespace ActivityRecommendation
             newPlot.SetData(points);
 
             if (this.xAxisProgression != null)
-                newPlot.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(0, 1);
+            {
+                AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
+                if (inputRange == null)
+                    inputRange = new AdaptiveLinearInterpolation.FloatRange(this.xAxisProgression.GetValueAt(firstDate, false).Value.Mean, true, this.xAxisProgression.GetValueAt(lastDate, false).Value.Mean, true);
+                newPlot.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
+                newPlot.MinX = inputRange.LowCoordinate;
+                newPlot.MaxX = inputRange.HighCoordinate;
+            }
             /*if (this.xAxisActivity != null)
                 newPlot.Connected = false;
             

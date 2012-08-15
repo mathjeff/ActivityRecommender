@@ -12,7 +12,7 @@ namespace ActivityRecommendation
     {
         public DateEntryView(string startingTitle)
         {
-            this.textchangedHandlers = new List<TextChangedEventHandler>();
+            this.textChanged_handlers = new List<TextChangedEventHandler>();
 
             // create the title
             this.SetTitle(startingTitle);
@@ -62,27 +62,34 @@ namespace ActivityRecommendation
             this.dateBox.Text = text;
         }
 
-        public void AddTextchangedHandler(TextChangedEventHandler h)
+        public void Add_TextChanged_Handler(TextChangedEventHandler h)
         {
-            this.textchangedHandlers.Add(h);
+            this.textChanged_handlers.Add(h);
         }
 
         void updateDateColor()
         {
             if (this.IsDateValid())
-            {
-                this.dateBox.Background = Brushes.White;
-            }
+                this.appearValid();
             else
-            {
-                this.dateBox.Background = Brushes.Red;
-            }
+                this.appearInvalid();
         }
 
+        // alters the appearance to indicate that the given date is not valid
+        public void appearValid()
+        {
+            this.dateBox.Background = Brushes.White;
+        }
+
+        // alters the appearance to indicate that the given date is not valid
+        public void appearInvalid()
+        {
+            this.dateBox.Background = Brushes.Red;
+        }
         void dateBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             this.updateDateColor();
-            foreach (TextChangedEventHandler handler in this.textchangedHandlers)
+            foreach (TextChangedEventHandler handler in this.textChanged_handlers)
             {
                 handler.Invoke(sender, e);
             }
@@ -90,7 +97,7 @@ namespace ActivityRecommendation
 
         //TextBlock titleBox;
         ResizableTextBox dateBox;
-        List<TextChangedEventHandler> textchangedHandlers;
+        List<TextChangedEventHandler> textChanged_handlers;
 
     }
 }

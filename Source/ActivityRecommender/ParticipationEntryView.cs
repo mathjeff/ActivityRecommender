@@ -28,10 +28,12 @@ namespace ActivityRecommendation
 
 
             this.startDateBox = new DateEntryView("StartDate");
+            this.startDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
             //this.startDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.startDateBox);
 
             this.endDateBox = new DateEntryView("EndDate");
+            this.endDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
             //this.endDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             contents.AddItem(this.endDateBox);
 
@@ -60,6 +62,28 @@ namespace ActivityRecommendation
             //this.Background = System.Windows.Media.Brushes.Blue;
         }
 
+        public void DateText_Changed(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                if (this.StartDate.CompareTo(this.EndDate) <= 0)
+                {
+                    // start date is before end date
+                    this.startDateBox.appearValid();
+                    this.endDateBox.appearValid();
+                }
+                else
+                {
+                    // start date is after end date
+                    this.startDateBox.appearInvalid();
+                    this.endDateBox.appearInvalid();
+                }
+            }
+            catch (FormatException)
+            {
+                // either the start date or end date is invalid
+            }
+        }
         void setEnddateButton_Click(object sender, RoutedEventArgs e)
         {
             this.setEnddateButton.UnHighlight();

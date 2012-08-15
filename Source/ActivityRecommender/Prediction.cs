@@ -15,7 +15,8 @@ namespace ActivityRecommendation
         //public Distribution ParticipationProbability { get; set; }  // the probability that the user will take the suggestion
         //public Distribution SuggestionValue { get; set; }   // how important it is to suggest this activity
         public Activity Activity { get; set; }              // the Activity that is being suggested
-        public DateTime Date { get; set; }                  // This prediction applies to a specific date. This is the date it applies to.
+        public DateTime ApplicableDate { get; set; }                  // The date that this Prediction describes
+        public DateTime CreationDate { get; set; }
 
         public Prediction Plus(Prediction other)
         {
@@ -24,10 +25,10 @@ namespace ActivityRecommendation
             //newPrediction.ParticipationProbability = this.ParticipationProbability.Plus(other.ParticipationProbability);
             //newPrediction.SuggestionValue = this.ParticipationProbability.Plus(other.ParticipationProbability);
             newPrediction.Distribution = this.Distribution.Plus(other.Distribution);
-            if (this.Date.CompareTo(other.Date) > 0)
-                newPrediction.Date = this.Date;
+            if (this.ApplicableDate.CompareTo(other.ApplicableDate) > 0)
+                newPrediction.ApplicableDate = this.ApplicableDate;
             else
-                newPrediction.Date = other.Date;
+                newPrediction.ApplicableDate = other.ApplicableDate;
 
             return newPrediction;
         }

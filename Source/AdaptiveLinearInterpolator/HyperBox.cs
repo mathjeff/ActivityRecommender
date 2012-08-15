@@ -28,11 +28,11 @@ namespace AdaptiveLinearInterpolation
         }
         public HyperBox(IDatapoint onlyPoint)
         {
-            this.Coordinates = new FloatRange[onlyPoint.NumDimensions];
+            this.Coordinates = new FloatRange[onlyPoint.NumInputDimensions];
             int i;
-            for (i = 0; i < onlyPoint.NumDimensions; i++)
+            for (i = 0; i < onlyPoint.NumInputDimensions; i++)
             {
-                this.Coordinates[i] = new FloatRange(onlyPoint.Coordinates[i], true, onlyPoint.Coordinates[i], true);
+                this.Coordinates[i] = new FloatRange(onlyPoint.InputCoordinates[i], true, onlyPoint.InputCoordinates[i], true);
             }
         }
         public bool Contains(HyperBox other)
@@ -47,7 +47,7 @@ namespace AdaptiveLinearInterpolation
         }
         public bool Contains(IDatapoint datapoint)
         {
-            return this.Contains(datapoint.Coordinates);
+            return this.Contains(datapoint.InputCoordinates);
         }
         public bool Contains(double[] coordinates)
         {
@@ -74,7 +74,7 @@ namespace AdaptiveLinearInterpolation
             int i;
             for (i = 0; i < this.NumDimensions; i++)
             {
-                this.Coordinates[i].ExpandToInclude(newPoint.Coordinates[i]);
+                this.Coordinates[i].ExpandToInclude(newPoint.InputCoordinates[i]);
             }
         }
         public double Area

@@ -40,8 +40,8 @@ namespace ActivityRecommendation
                 object selectedItem = this.selectorView.SelectedItem;
                 if (selectedItem as string == "Time")
                 {
-                    //return TimeProgression.AbsoluteTime;
-                    return null;    // default to plotting the absolute time
+                    return TimeProgression.AbsoluteTime;
+                    //return null;    // default to plotting the absolute time
                 }
                 if (selectedItem as string == "Time of day")
                 {

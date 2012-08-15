@@ -72,9 +72,12 @@ namespace ActivityRecommendation
             {
                 this.Children.Remove(previousChild);
             }
-            Grid.SetRow(newControl, rowIndex);
-            Grid.SetColumn(newControl, columnIndex);
-            this.Children.Add(newControl);
+            if (newControl != null)
+            {
+                Grid.SetRow(newControl, rowIndex);
+                Grid.SetColumn(newControl, columnIndex);
+                this.Children.Add(newControl);
+            }
             this.items[rowIndex, columnIndex] = newControl;
             // keep track of which items implement the interface IResizable, telling how to resize them
             if (newControl is IResizable)

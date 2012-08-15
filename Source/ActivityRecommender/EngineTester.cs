@@ -34,8 +34,28 @@ typicalProbabilityError = 0.456090786674865     // this is the error rate we'd e
 // I think the increased data is improving the accuracy of the participation probability
 
 
- 
- */
+latest results (on 2012-4-11) after removing from the averages and participations that were known to not have been suggested
+typicalScoreError = 0.129996871657446
+typicalProbabilityError = 0.466402441220659
+
+latest results (on 2012-4-13) after acquiring new data
+typicalScoreError = 0.129628174126225
+typicalProbabilityError = 0.466490032356424
+
+latest results (on 2012-4-13) after adjusting the AdaptiveLinearInterpolator's input-splitting terminating condition to involve counting the number of points again,
+ rather than looking at the stdDev of the inputs
+typicalScoreError = 0.132018880366107
+typicalProbabilityError = 0.448369070940053
+
+latest results (on 2012-6-16) after acquiring new data 
+typicalScoreError = 0.132725069636051
+typicalProbabilityError = 0.462996444030975
+
+latest results (on 2012-6-16) after changing the interpolator's input-splitting-termination-criteria to be based on the number of points, not the size of the inputs
+The problem was that if coordinate was a constant, then the product of the input variations was zero
+typicalScoreError = 0.135236469558133
+typicalProbabilityError = 0.44306302626509
+*/
 
 namespace ActivityRecommendation
 {
@@ -73,7 +93,13 @@ namespace ActivityRecommendation
         public void AddParticipation(Participation newParticipation)
         {
             // update the error rate for the participation probability predictor
-            this.UpdateParticipationProbabilityError(newParticipation.ActivityDescriptor, newParticipation.StartDate, newParticipation.TotalIntensity.Mean);
+
+            if (newParticipation.Suggested == null || newParticipation.Suggested.Value == true)
+            {
+                // if the activity was certaintly not suggested, then we don't want to include it in our estimate 
+                // of "the probability that the user would do the activity, given that it was suggested"
+                this.UpdateParticipationProbabilityError(newParticipation.ActivityDescriptor, newParticipation.StartDate, newParticipation.TotalIntensity.Mean);
+            }
 
             Rating rating = newParticipation.GetCompleteRating();
             if (rating != null)
@@ -174,6 +200,10 @@ namespace ActivityRecommendation
             // compute the estimate participation probability
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             double error = activity.PredictedParticipationProbability.Distribution.Mean - actualIntensity;
+            /*if (Math.Abs(error) > 0.7 && when.CompareTo(DateTime.Parse("2012-3-1")) > 0)
+            {
+                engine.EstimateValue(activity, when);
+            }*/
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
             this.squaredParticipationProbabilityError = this.squaredParticipationProbabilityError.Plus(errorDistribution);
         }

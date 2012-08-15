@@ -31,6 +31,7 @@ namespace StatLists
             }
         }
         // locates the correct spot to put the new value, adds it, and updates any necessary statistics
+        // If there are duplicate keys, the newly added key will have the maximum index of all items with matching keys
         public void Add(KeyType newKey, ValueType newValue)
         {
             this.numItems++;
@@ -194,31 +195,58 @@ namespace StatLists
         {
             this.Remove(key, this.rootNode);
         }
-        // removes an item with the given key. It probably removes the one with the maximum index if there are several with the given key
+        // removes an item with the given key. It removes the one with the maximum index if there are several with the given key
         private void Remove(KeyType key, TreeNode<KeyType, ValueType> startingNode)
         {
             TreeNode<KeyType, ValueType> currentNode = startingNode;
+            TreeNode<KeyType, ValueType> nodeToRemove = null;
             // find the node indicated by the given key
             while (currentNode != null)
             {
                 int comparison = this.keyComparer.Compare(key, currentNode.Key);
                 if (comparison == 0)
                 {
-                    this.Remove(currentNode);
-                    return;
+                    nodeToRemove = currentNode;
+                    //this.Remove(currentNode);
+                    //return;
                 }
                 currentNode = this.ChooseChild(key, currentNode);
             }
+            if (nodeToRemove != null)
+                this.Remove(nodeToRemove);
         }
         // removes the given node
         private void Remove(TreeNode<KeyType, ValueType> nodeToRemove)
         {
+            TreeNode<KeyType, ValueType> newLatestNode = nodeToRemove.Parent;
             // remove the node and flag that the statistics need updating
             this.InvalidateAggregate(nodeToRemove);
             TreeNode<KeyType, ValueType> newChild = this.MergeChildren(nodeToRemove.LeftChild, nodeToRemove.RightChild);
             this.ReplaceChild(nodeToRemove, newChild);
             this.InvalidateAggregate(newChild);
             this.numItems--;
+
+            if (this.rootNode == null)
+            {
+                this.rightmostNode = this.leftmostNode;
+            }
+            else
+            {
+                if (nodeToRemove == this.rightmostNode)
+                {
+                    this.rightmostNode = this.GetRightmostItem(this.rootNode);
+                }
+                if (nodeToRemove == this.leftmostNode)
+                {
+                    this.leftmostNode = this.GetLeftmostItem(this.rootNode);
+                }
+            }
+
+            this.latestNode = newLatestNode;
+            if (this.latestNode == null)
+                this.latestNode = this.rootNode;
+
+
             //this.DebugCheck();
         }
         // splices the two nodes together into one
@@ -735,6 +763,16 @@ namespace StatLists
             return node;
         }
 
+        private TreeNode<KeyType, ValueType> GetLeftmostItem(TreeNode<KeyType, ValueType> startingNode)
+        {
+            TreeNode<KeyType, ValueType> node = startingNode;
+            while (node.LeftChild != null)
+            {
+                node = node.LeftChild;
+            }
+            return node;
+        }
+
         private int CountBeforeKey(KeyType key, bool inclusive, TreeNode<KeyType, ValueType> startingNode)
         {
             int lowerCount = 0;
@@ -817,15 +855,16 @@ namespace StatLists
         // finds the node that had oldChild as a child, and puts newChild in its place
         private void ReplaceChild(TreeNode<KeyType, ValueType> oldChild, TreeNode<KeyType, ValueType> newChild)
         {
-            if (oldChild == this.rootNode)
-            {
-                this.rootNode = newChild;
-            }
+            TreeNode<KeyType, ValueType> parent = oldChild.Parent;
+            if (parent != null)
+                parent.ReplaceChild(oldChild, newChild);
             else
             {
-                TreeNode<KeyType, ValueType> parent = oldChild.Parent;
-                parent.ReplaceChild(oldChild, newChild);
+                if (newChild != null && newChild.Parent != null)
+                    newChild.Parent.ReplaceChild(newChild, null);                
             }
+            if (oldChild == this.rootNode)
+                this.rootNode = newChild;
         }
         private bool DebugCheck()
         {
@@ -833,8 +872,19 @@ namespace StatLists
             {
                 if (!this.CheckNode(this.rootNode))
                     throw new Exception("debug check failed");
-                return false;
+                if (!this.CheckNode(this.leftmostNode))
+                    throw new Exception("debug check failed");
+                if (this.leftmostNode.LeftChild != null)
+                    throw new Exception("leftmost node cannot have a leftChild");
+                if (!this.CheckNode(this.rightmostNode))
+                    throw new Exception("debug check failed");
+                if (this.rightmostNode.RightChild != null)
+                    throw new Exception("righmost node cannot have a rightChild");
+                if (!this.CheckNode(this.latestNode))
+                    throw new Exception("debug check failed");
             }
+            if (this.latestNode != null && this.latestNode.Parent == null && this.latestNode != this.rootNode)
+                throw new Exception("latest node is not present in the tree");
             return true;
         }
         private bool CheckNode(TreeNode<KeyType, ValueType> node)
@@ -866,8 +916,10 @@ namespace StatLists
                 if (node.SubnodeCount != (1 + this.GetSubnodeCount(node.LeftChild) + this.GetSubnodeCount(node.RightChild)))
                     return false;
             }
+            /*
             if (Math.Abs(this.GetMaxDepth(node.LeftChild) - this.GetMaxDepth(node.RightChild)) > 1)
                 return false;
+            */
             
             return true;
         }

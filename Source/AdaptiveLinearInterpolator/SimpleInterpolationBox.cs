@@ -35,10 +35,10 @@ namespace AdaptiveLinearInterpolation
             }
             this.currentBoundary.ExpandToInclude(newDatapoint);
             // keep track of a datapoint on each extreme
-            if (this.maxPoint == null || this.maxPoint.Coordinates[this.dimensionToSort] <= newDatapoint.Coordinates[this.dimensionToSort])
+            if (this.maxPoint == null || this.maxPoint.InputCoordinates[this.dimensionToSort] <= newDatapoint.InputCoordinates[this.dimensionToSort])
                 this.maxPoint = newDatapoint;
             // keep track of a datapoint on each extreme
-            if (this.minPoint == null || this.minPoint.Coordinates[this.dimensionToSort] >= newDatapoint.Coordinates[this.dimensionToSort])
+            if (this.minPoint == null || this.minPoint.InputCoordinates[this.dimensionToSort] >= newDatapoint.InputCoordinates[this.dimensionToSort])
                 this.minPoint = newDatapoint;
             //this.datapointsByInput.Add(newDatapoint, newDatapoint);
             this.numDatapoints++;
@@ -124,9 +124,9 @@ namespace AdaptiveLinearInterpolation
             Datapoint previousPoint = this.lowerChild.maxPoint;
             if (nextPoint != null && previousPoint != null)
             {
-                double nextOutput = nextPoint.Output;
-                double previousOutput = previousPoint.Output;
-                difference = Math.Abs(nextOutput - previousOutput);
+                double nextScore = nextPoint.Score;
+                double previousScore = previousPoint.Score;
+                difference = Math.Abs(nextScore - previousScore);
                 difference *= difference;
             }
             else

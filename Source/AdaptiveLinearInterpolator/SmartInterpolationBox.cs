@@ -38,11 +38,11 @@ namespace AdaptiveLinearInterpolation
         private void AddPointNowWithoutSplitting(Datapoint newDatapoint)
         {
             // keep track of the outputs we've observed
-            this.outputs = this.outputs.Plus(newDatapoint.Output);
+            this.outputs = this.outputs.Plus(newDatapoint.Score);
             int i;
             for (i = 0; i < this.inputs.Length; i++)
             {
-                this.inputs[i] = this.inputs[i].Plus(newDatapoint.Coordinates[i]);
+                this.inputs[i] = this.inputs[i].Plus(newDatapoint.InputCoordinates[i]);
             }
 
             // if this datapoint falls outside our promised boundary, then expand our boundary to include it
@@ -71,7 +71,7 @@ namespace AdaptiveLinearInterpolation
             */
             if (this.lowerChild != null)
             {
-                if (newDatapoint.Coordinates[this.splitDimension] > this.lowerChild.currentBoundary.Coordinates[this.splitDimension].HighCoordinate)
+                if (newDatapoint.InputCoordinates[this.splitDimension] > this.lowerChild.currentBoundary.Coordinates[this.splitDimension].HighCoordinate)
                     this.upperChild.AddDatapoint(newDatapoint);
                 else
                     this.lowerChild.AddDatapoint(newDatapoint);
@@ -118,13 +118,20 @@ namespace AdaptiveLinearInterpolation
             }
             this.pendingDatapoints.Clear();
         }
+        // estimates the product of amount of variation in each dimension
         public double GetInputVariation()
         {
             this.ApplyPendingPoints();
             double variation = 1;
-            foreach (Distribution distribution in this.inputs)
+            double currentVariation;
+            int i;
+            //foreach (Distribution distribution in this.inputs)
+            for (i = 0; i < this.NumDimensions; i++)
             {
-                variation *= distribution.StdDev;
+                //currentVariation = Math.Min(this.inputs[i].StdDev, this.currentBoundary.Coordinates[i].Width / 4);
+                //currentVariation = (this.inputs[i].StdDev + this.currentBoundary.Coordinates[i].Width / this.NumDatapoints);
+                currentVariation = this.inputs[i].StdDev;
+                variation *= currentVariation;
             }
             return variation;
         }
@@ -168,7 +175,7 @@ namespace AdaptiveLinearInterpolation
         #region Functions for IComparer<Datapoint>
         public int Compare(Datapoint a, Datapoint b)
         {
-            return a.Output.CompareTo(b.Output);
+            return a.Score.CompareTo(b.Score);
         }
         #endregion
 
@@ -179,7 +186,7 @@ namespace AdaptiveLinearInterpolation
         }
         public Datapoint Combine(Datapoint a, Datapoint b)
         {
-            Datapoint result = new Datapoint(null, a.Output + b.Output);
+            Datapoint result = new Datapoint(null, a.Score + b.Score);
             return result;
         }
         #endregion
@@ -325,6 +332,10 @@ namespace AdaptiveLinearInterpolation
             this.lowerChild.AddDatapoints(lowerPoints);
             this.upperChild = new SmartInterpolationBox(upperBoundary);
             this.upperChild.AddDatapoints(upperPoints);
+#if false
+            this.lowerChild.ApplyPendingPoints();
+            this.upperChild.ApplyPendingPoints();
+#endif
 #if MIN_SPLIT_COUNTS
             this.UpdateSplitCounts();
 #endif

@@ -1,5 +1,6 @@
 ﻿<Window x:Class="ActivityRecommendation.Window1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Window1">
+    Icon="icon.png"
+    Title="ActivityRecommender By Jeff Gaston. Build Date: 2012-08-14T20:12">
 </Window>

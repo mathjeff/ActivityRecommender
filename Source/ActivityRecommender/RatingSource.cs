@@ -8,47 +8,39 @@ namespace ActivityRecommendation
 {
     public class RatingSource
     {
-        public static RatingSource Participation
+        public static RatingSource FromParticipation(Participation source)
         {
-            get
-            {
-                RatingSource cause = new RatingSource("Participation", true, false, true);
-                return cause;
-            }
+            RatingSource cause = new RatingSource("Participation", true, false, true);
+            cause.Converted = source;
+            return cause;
         }
-        public static RatingSource Skip
+        public static RatingSource FromSkip(ActivitySkip source)
         {
-            get
-            {
-                RatingSource cause = new RatingSource("Skip", false, true, false);
-                return cause;
-            }
+            RatingSource cause = new RatingSource("Skip", false, true, false);
+            cause.Converted = source;
+            return cause;
         }
-        public static RatingSource Request
+        public static RatingSource FromRequest(ActivityRequest source)
         {
-            get
-            {
-                RatingSource cause = new RatingSource("Request", false, true, false);
-                return cause;
-            }
+            RatingSource cause = new RatingSource("Request", false, true, false);
+            cause.Converted = source;
+            return cause;
         }
-        public static RatingSource Direct
+        public static RatingSource DirectRating(AbsoluteRating source)
         {
-            get
-            {
-                RatingSource cause = new RatingSource("Direct", false, true, true);
-                return cause;
-            }
+            RatingSource cause = new RatingSource("Direct", false, true, true);
+            cause.Converted = source;
+            return cause;
         }
         public static List<RatingSource> AllSources
         {
             get
             {
                 List<RatingSource> sources = new List<RatingSource>();
-                sources.Add(RatingSource.Participation);
-                sources.Add(RatingSource.Skip);
-                sources.Add(RatingSource.Request);
-                sources.Add(RatingSource.Direct);
+                sources.Add(RatingSource.FromParticipation(null));
+                sources.Add(RatingSource.FromSkip(null));
+                sources.Add(RatingSource.FromRequest(null));
+                sources.Add(RatingSource.DirectRating(null));
                 return sources;
             }
         }
@@ -112,6 +104,25 @@ namespace ActivityRecommendation
                 return this.description;
             }
         }
+
+        // an object that generated the rating
+        public object Converted
+        {
+            get;
+            set;
+        }
+        public Participation ConvertedAsParticipation
+        {
+            get
+            {
+                return this.Converted as Participation;
+            }
+            set
+            {
+                this.Converted = value;
+            }
+        }
+
         
         // private
         private bool isBasedOnPastEvent;

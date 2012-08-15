@@ -16,12 +16,14 @@ namespace AdaptiveLinearInterpolation
         }
         public void AddDatapoint(Datapoint newDatapoint)
         {
-            if (newDatapoint.NumDimensions != this.root.NumDimensions)
+            if (newDatapoint.NumInputDimensions != this.root.NumDimensions)
                 throw new ArgumentException("the number of dimensions is incorrect");
             this.root.AddDatapoint(newDatapoint);
         }
         public Distribution Interpolate(double[] coordinates)
         {
+            if (coordinates.Length != this.root.NumDimensions)
+                throw new ArgumentException("the number of dimensions is incorrect");
             // figure out how much room there was to start with
             //double maxInputArea = this.root.GetInputArea();
             double maxInputSpread = this.root.GetInputVariation();
@@ -29,7 +31,9 @@ namespace AdaptiveLinearInterpolation
             SmartInterpolationBox currentBox = this.root;
             SmartInterpolationBox nextBox;
             Distribution result = new Distribution();
-
+            //double inputFraction;
+            //double outputFraction;
+            //double datapointFraction;
             while (true)
             {
                 // decay towards the next component
@@ -46,7 +50,14 @@ namespace AdaptiveLinearInterpolation
                 // the more datapoints we have, the more often that we split
                 double nextOutputSpread = nextBox.GetOutputSpread();
                 double nextInputSpread = nextBox.GetInputVariation();
-                if (maxOutputSpread * nextBox.NumDatapoints * nextInputSpread <= maxInputSpread * nextOutputSpread)
+                //inputFraction = nextInputSpread / maxInputSpread;
+                //outputFraction = nextOutputSpread / maxOutputSpread;
+                //datapointFraction = (double)nextBox.NumDatapoints / (double)this.root.NumDatapoints;
+
+                //if (maxOutputSpread * maxOutputSpread * nextBox.NumDatapoints * nextBox.NumDatapoints * nextInputSpread <= this.root.NumDatapoints * maxInputSpread * nextOutputSpread * nextOutputSpread)
+                //if ((inputFraction + datapointFraction) * nextBox.NumDatapoints <= outputFraction)
+                //if (maxOutputSpread * nextBox.NumDatapoints * nextInputSpread <= maxInputSpread * nextOutputSpread)
+                if (maxOutputSpread * nextBox.NumDatapoints * nextBox.NumDatapoints <= this.root.NumDatapoints * nextOutputSpread)
                 {
                     // if we finally decided that we could split but didn't want to, then we probably have enough data to simply use the local data
                     // we don't need to incorporate the points that are further away

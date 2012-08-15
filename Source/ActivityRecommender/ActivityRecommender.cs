@@ -55,22 +55,10 @@ namespace ActivityRecommendation
 
         private void SetupDrawing()
         {
-            this.mainDisplay = new DisplayGrid(2, 1);
-
-            String titleString = "ActivityRecommender By Jeff Gaston.";
-            titleString += " Build Date: 2012-04-10T18:15";
-            ResizableTextBlock titleBlock = new ResizableTextBlock();
-            titleBlock.SetResizability(new Resizability(0, 1));
-            titleBlock.Text = titleString;
-            titleBlock.TextAlignment = TextAlignment.Center;
-            //titleBlock.Background = new SolidColorBrush(Color.FromRgb(200, 200, 255));
-            titleBlock.Background = Brushes.Cyan;
-
-            this.mainDisplay.AddItem(titleBlock);
 
             this.mainDisplayGrid = new DisplayGrid(1, 4);
             //this.mainDisplayGrid.OverrideArrangement = true;
-            this.mainDisplay.AddItem(this.mainDisplayGrid);
+            //this.mainDisplay.AddItem(this.mainDisplayGrid);
 
             this.inheritanceEditingView = new InheritanceEditingView();
             this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
@@ -89,11 +77,11 @@ namespace ActivityRecommendation
             this.mainDisplayGrid.AddItem(this.participationEntryView);
             this.UpdateDefaultParticipationData();
 
-            this.suggestionView = new SuggestionView();
-            this.suggestionView.AddSuggestionClickHandler(new RoutedEventHandler(this.MakeRecommendation));
-            this.suggestionView.ActivityDatabase = this.engine.ActivityDatabase;
-            this.suggestionView.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210));
-            this.mainDisplayGrid.AddItem(this.suggestionView);
+            this.suggestionsView = new SuggestionsView();
+            this.suggestionsView.AddSuggestionClickHandler(new RoutedEventHandler(this.MakeRecommendation));
+            this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
+            this.suggestionsView.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210));
+            this.mainDisplayGrid.AddItem(this.suggestionsView);
 
             this.statisticsMenu = new MiniStatisticsMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
@@ -105,7 +93,7 @@ namespace ActivityRecommendation
 
 
             //this.mainWindow.Content = this.mainDisplay;
-            this.displayManager.SetContent(this.mainDisplay);
+            this.displayManager.SetContent(this.mainDisplayGrid);
             //this.mainWindow.Content = this.participationEntryView;
 
         }
@@ -120,7 +108,8 @@ namespace ActivityRecommendation
         }
         public void PrepareEngine()
         {
-            this.engine.MakeRecommendation(DateTime.Parse("2012-02-25T17:00:00"));
+            //this.engine.MakeRecommendation(DateTime.Parse("2012-02-25T17:00:00"));
+            this.engine.MakeRecommendation();
         }
         private void ReadEngineFiles()
         {
@@ -136,8 +125,14 @@ namespace ActivityRecommendation
         private void MakeRecommendation()
         {
             DateTime now = DateTime.Now;
+            this.SuspectLatestActionDate(now);
+            //now = DateTime.Parse("2012-07-30T00:00:00").AddSeconds(this.counter);
+
+            
+            //now = this.engine.LatestInteractionDate.AddSeconds(1);
             if ((this.LatestRecommendedActivity != null) && !this.suppressDownoteOnRecommendation)
             {
+                //now = DateTime.Parse("2012-07-30T00:00:00").AddSeconds(this.counter + 1);
                 // if they've asked for two recommendations in succession, it means they didn't like the previous one
 
                 // Calculate the score to generate for this Activity as a result of that statement
@@ -147,7 +142,9 @@ namespace ActivityRecommendation
                     estimatedScore = 0;
                 // make a Skip object holding the needed data
                 ActivitySkip skip = new ActivitySkip(now, this.LatestRecommendedActivity.MakeDescriptor());
-                skip.SuggestionDate = this.LatestRecommendedActivity.PredictedScore.Date;
+                //skip.SuggestionDate = this.recentUserData.LatestSuggestion.StartDate;
+                skip.SuggestionDate = this.LatestSuggestion.StartDate;
+                //skip.SuggestionDate = this.LatestRecommendedActivity.PredictedScore.ApplicableDate;
                 AbsoluteRating rating = new AbsoluteRating();
                 rating.Score = estimatedScore;
                 skip.RawRating = rating;
@@ -158,58 +155,95 @@ namespace ActivityRecommendation
                 //this.AddRating(downvote);
             }
             this.suppressDownoteOnRecommendation = false;
-
-            // now determine which category to predict from
-            Activity bestActivity = null;
-            string categoryText = this.suggestionView.CategoryText;
+            
+            // if they requested that the first suggestion be from a certain category, find that category
+            Activity requestCategory = null;
+            string categoryText = this.suggestionsView.CategoryText;
             if (categoryText != null && categoryText != "")
             {
                 ActivityDescriptor categoryDescriptor = new ActivityDescriptor();
                 categoryDescriptor.ActivityName = categoryText;
                 categoryDescriptor.PreferHigherProbability = true;
-                Activity category = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
-                if (category != null)
+                requestCategory = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
+            }
+
+            int i;
+            DateTime suggestionDate = now;
+            List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
+            List<Participation> fakeParticipations = new List<Participation>();
+            int numSuggestions = 6;
+            for (i = 0; i < numSuggestions; i++)
+            {
+                // now determine which category to predict from
+                Activity bestActivity = null;
+                if (requestCategory != null)
                 {
                     // if the user is requesting an idea from this category, we should upvote the category
                     //double goodScore = 1;
                     //RatingSource source = RatingSource.Request;
                     //AbsoluteRating upvote = new AbsoluteRating(goodScore, now, category.MakeDescriptor(), source);
 
-                    ActivityRequest request = new ActivityRequest(category.MakeDescriptor(), now);
+                    ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
                     this.AddActivityRequest(request);
                     //this.AddRating(upvote);
                     // now we get a recommendation, from among all activities within this category
-                    bestActivity = this.engine.MakeRecommendation(category, now);
+                    bestActivity = this.engine.MakeRecommendation(requestCategory, suggestionDate);
+                }
+                else
+                {
+                    // now we get a recommendation
+                    bestActivity = this.engine.MakeRecommendation(suggestionDate);
+                }
+                // if there are no matching activities, then give up
+                if (bestActivity == null)
+                    break;
+                // after making a recommendation, get the rest of the details of the suggestion
+                // (Note that eventually the suggested duration will be calculated in a more intelligent manner than simply taking the average duration)
+                Participation participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
+                double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
+                DateTime endDate = suggestionDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
+                ActivitySuggestion suggestion = new ActivitySuggestion(bestActivity.MakeDescriptor());
+                suggestion.StartDate = suggestionDate;
+                suggestion.EndDate = endDate;
+                suggestion.ParticipationProbability = bestActivity.PredictedParticipationProbability.Distribution.Mean;
+                suggestion.PredictedScore = bestActivity.PredictedScore.Distribution;
+
+                suggestions.Add(suggestion);
+
+                if (i != numSuggestions - 1)
+                {
+                    // pretend that the user took our suggestion and tell that to the engine
+                    Participation fakeParticipation = new Participation(suggestion.StartDate, suggestion.EndDate, bestActivity.MakeDescriptor());
+                    fakeParticipation.Hypothetical = true;
+                    this.engine.PutParticipationInMemory(fakeParticipation);
+                    fakeParticipations.Add(fakeParticipation);
+                }
+                
+                // only the first suggestion is based on the requested category
+                requestCategory = null;
+
+                // make the next suggestion for the date at which the user will need another activity to do
+                suggestionDate = endDate;
+
+                if (i == 0)
+                {
+                    if (bestActivity != null)
+                    {
+                        // autofill the participationEntryView with a convenient value
+                        this.participationEntryView.SetActivityName(bestActivity.Name);
+
+                        // keep track of the latest suggestion that applies to the same date at which it was created
+                        this.LatestSuggestion = suggestion;
+                    }
                 }
             }
-            else
-            {
-                // now we get a recommendation
-                bestActivity = this.engine.MakeRecommendation(now);
-            }
-            string recommendationText;
-            string justificationText;
-            if (bestActivity == null)
-            {
-                recommendationText = "There are no activities that can be chosen!";
-                justificationText = recommendationText;
-            }
-            else
-            {
-                recommendationText = bestActivity.Name;
-                justificationText = this.engine.JustifyRating(bestActivity);
-                this.suggestionView.ExpectedScoreText = bestActivity.PredictedScore.Distribution.Mean.ToString();
-                this.suggestionView.ScoreStdDevText = bestActivity.PredictedScore.Distribution.StdDev.ToString();
-                this.suggestionView.ParticipationProbabilityText = bestActivity.PredictedParticipationProbability.Distribution.Mean.ToString();
-            }
-            this.suggestionView.SuggestionText = recommendationText;
-            this.suggestionView.JustificationText = justificationText;
-            this.LatestSuggestion = new ActivitySuggestion(bestActivity.MakeDescriptor());
+            this.suggestionsView.Suggestions = suggestions;
 
-            this.SuspectLatestActionDate(now);
-            if (bestActivity != null)
+
+            // finally, reset the engine to the state it was in originally by removing the pretend participations
+            foreach (Participation fakeParticipation in fakeParticipations)
             {
-                this.participationEntryView.SetActivityName(bestActivity.Name);
+                this.engine.RemoveParticipation(fakeParticipation);
             }
         }
         private void MakeRecommendation(object sender, EventArgs e)
@@ -391,6 +425,7 @@ namespace ActivityRecommendation
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
+            this.counter++;
             this.engine.PutSkipInMemory(newSkip);
             if (this.engineTester != null)
                 this.engineTester.AddSkip(newSkip);
@@ -511,7 +546,8 @@ namespace ActivityRecommendation
             {
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, new TimeSpan());
                 visualizationView.AddExitClickHandler(new RoutedEventHandler(this.ShowMainview));
-                this.mainDisplay.PutItem(visualizationView, 1, 0);
+                //this.mainDisplay.PutItem(visualizationView, 1, 0);
+                this.displayManager.SetContent(visualizationView);
             }
         }
 
@@ -529,8 +565,9 @@ namespace ActivityRecommendation
         }
         public void ShowMainview()
         {
-            this.mainDisplay.PutItem(this.mainDisplayGrid, 1, 0);
+            //this.mainDisplay.PutItem(this.mainDisplayGrid, 1, 0);
             //this.displayManager.InvalidateMeasure();
+            this.displayManager.SetContent(this.mainDisplayGrid);
         }
 
         public ActivityDatabase ActivityDatabase
@@ -546,7 +583,7 @@ namespace ActivityRecommendation
         {
             //this.latestRecommendationDate = new DateTime(0);
             this.suppressDownoteOnRecommendation = true;
-            this.suggestionView.ResetText();
+            this.suggestionsView.ResetText();
         }
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
@@ -573,7 +610,7 @@ namespace ActivityRecommendation
 
         ParticipationEntryView participationEntryView;
         InheritanceEditingView inheritanceEditingView;
-        SuggestionView suggestionView;
+        SuggestionsView suggestionsView;
         MiniStatisticsMenu statisticsMenu;
         Engine engine;
         //DateTime latestRecommendationDate;
@@ -587,6 +624,7 @@ namespace ActivityRecommendation
         Participation latestParticipation;
         EngineTester engineTester;
         RecentUserData recentUserData;
+        int counter = 0;
 
     }
 }

@@ -325,7 +325,14 @@ namespace ActivityRecommendation
         private void ProcessParticipation(XmlNode nodeRepresentation)
         {
             Participation currentParticipation = this.ReadParticipation(nodeRepresentation);
-            this.recommenderToInform.PutParticipationInMemory(currentParticipation);
+            if (currentParticipation.Duration.TotalSeconds >= 0)
+            {
+                this.recommenderToInform.PutParticipationInMemory(currentParticipation);
+            }
+            else
+            {
+                Console.WriteLine("Skipping invalid participation having startDate = " + currentParticipation.StartDate.ToString() + " and endDate = " + currentParticipation.EndDate);
+            }
         }
         private void ProcessRating(XmlNode nodeRepresentation)
         {
@@ -427,6 +434,8 @@ namespace ActivityRecommendation
                 }
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
+            if (rating != null)
+                rating.Source = RatingSource.FromParticipation(currentParticipation);
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
@@ -627,6 +636,8 @@ namespace ActivityRecommendation
         private ActivitySuggestion ReadSuggestion(XmlNode nodeRepresentation)
         {
             ActivityDescriptor descriptor = null;
+            DateTime startDate = new DateTime();
+            DateTime endDate = new DateTime();
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -634,8 +645,20 @@ namespace ActivityRecommendation
                     descriptor = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.SuggestionStartDateTag)
+                {
+                    startDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SuggestionEndDateTag)
+                {
+                    endDate = this.ReadDate(currentChild);
+                    continue;
+                }
             }
             ActivitySuggestion suggestion = new ActivitySuggestion(descriptor);
+            suggestion.StartDate = startDate;
+            suggestion.EndDate = endDate;
             return suggestion;
         }
 
@@ -882,6 +905,20 @@ namespace ActivityRecommendation
             get
             {
                 return "SuggestionDate";
+            }
+        }
+        private string SuggestionStartDateTag
+        {
+            get
+            {
+                return "StartDate";
+            }
+        }
+        private string SuggestionEndDateTag
+        {
+            get
+            {
+                return "EndDate";
             }
         }
 

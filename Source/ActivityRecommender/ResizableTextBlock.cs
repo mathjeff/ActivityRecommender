@@ -11,6 +11,15 @@ namespace ActivityRecommendation
     {
         public ResizableTextBlock()
         {
+            this.Initialize();
+        }
+        public ResizableTextBlock(string startingText)
+        {
+            this.Initialize();
+            this.Text = startingText;
+        }
+        private void Initialize()
+        {
             this.textBlock = new TextBlock();
             this.textBlock.TextWrapping = TextWrapping.Wrap;
             this.textBlock.HorizontalAlignment = HorizontalAlignment.Stretch;

@@ -34,6 +34,16 @@ namespace ActivityRecommendation
                 this.searchHelper.Add(startDate, newParticipation);
             }
         }
+        public void RemoveParticipation(Participation participation)
+        {
+            // make sure that we actually added it in the first place
+            if (this.ShouldIncludeParticipation(participation))
+            {
+                // for now, the searchHelper identifies the item solely based on key, but it's okay, because ties are broken in a last-in-first-out manner
+                DateTime startDate = participation.StartDate;
+                this.searchHelper.Remove(startDate);
+            }
+        }
 
         // this function is a filter that tells whether this ParticipationProgression cares about this Participation
         public bool ShouldIncludeParticipation(Participation newParticipation)
@@ -51,6 +61,16 @@ namespace ActivityRecommendation
                     results.AddLast(stats.Value);
                 }
                 return results;
+            }
+        }
+        public Participation LatestParticipation
+        {
+            get
+            {
+                ListItemStats<DateTime, Participation> stats = this.searchHelper.GetLastValue();
+                if (stats != null)
+                    return stats.Value;
+                return null;
             }
         }
         public Participation SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)

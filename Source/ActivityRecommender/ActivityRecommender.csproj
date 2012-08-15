@@ -79,6 +79,7 @@
     <Compile Include="ActivityRecommender.cs" />
     <Compile Include="ActivityRequest.cs" />
     <Compile Include="ActivityVisualizationView.cs" />
+    <Compile Include="ImageLoader.cs" />
     <Compile Include="ConsiderationProgression.cs" />
     <Compile Include="CumulativeParticipationProgression.cs" />
     <Compile Include="Datapoint.cs" />
@@ -107,7 +108,7 @@
     <Compile Include="ParticipationEntryView.cs" />
     <Compile Include="ParticipationProgression.cs" />
     <Compile Include="IProgression.cs" />
-    <Compile Include="PlotControl.cs" />
+    <Compile Include="PlotView.cs" />
     <Compile Include="Prediction.cs" />
     <Compile Include="PredictionLink.cs" />
     <Compile Include="ProgressionValue.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="SimplePredictionLink.cs" />
     <Compile Include="SkipProgression.cs" />
     <Compile Include="ActivitySuggestion.cs" />
+    <Compile Include="SuggestionsView.cs" />
     <Compile Include="SuggestionView.cs" />
     <Compile Include="TextConverter.cs" />
     <Compile Include="TimeProgression.cs" />
@@ -164,6 +166,9 @@
       <Project>{5D73F8D0-A57C-4CCE-81D8-45CAC4DC7A60}</Project>
       <Name>AdaptiveLinearInterpolator</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

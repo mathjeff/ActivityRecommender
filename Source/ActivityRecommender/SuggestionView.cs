@@ -4,133 +4,107 @@ using System.Linq;
 using System.Text;
 using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Media;
 
+// a SuggestionView displays one suggested Activity and some details of the suggestion
 namespace ActivityRecommendation
 {
-    class SuggestionView : TitledControl
+    class SuggestionView : Border, IResizable
     {
-        public SuggestionView()
+        public SuggestionView(ActivitySuggestion suggestion)
         {
-            this.SetTitle("Get Suggestions");
-            DisplayGrid content = new DisplayGrid(7, 1);
+            this.displayGrid = new DisplayGrid(3, 2);
+            
+            /*
+            //DisplayGrid grid = this.displayGrid = this;
 
-            this.suggestionButton = new ResizableButton();
-            this.suggestionButton.Content = "Suggest";
-            this.suggestionButton.VerticalAlignment = VerticalAlignment.Center;
-            //this.suggestionButton.HorizontalAlignment = HorizontalAlignment.Center;
-            this.suggestionButton.Width = 100;
-            this.suggestionButton.Height = 30;
-            content.AddItem(this.suggestionButton);
-
-            this.categoryBox = new ActivityNameEntryBox("from category (optional)");
-            content.AddItem(this.categoryBox);
+            // setup to display the desired data
+            ResizableTextBlock name_nameBlock = new ResizableTextBlock("Name:");
+            name_nameBlock.SetResizability(new Resizability(0, 1));
+            grid.AddItem(name_nameBlock);
 
 
-            this.suggestionNameBlock = new TitledTextblock("Suggestion:");
-            //this.suggestionNameBlock.Text = "<Push the button to see a suggestion here>";
-            //this.suggestionNameBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            content.AddItem(this.suggestionNameBlock);
 
-            this.justificationBlock = new TitledTextblock("Primary Justification:");
-            //this.justificationBlock.Text = "<When there is a suggestion, a very short explanation will be here>";
-            //this.justificationBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            content.AddItem(this.justificationBlock);
+            grid.AddItem(new ResizableTextBlock(suggestion.ActivityDescriptor.ActivityName));
 
-            this.scoreBlock = new TitledTextblock("Expected Score:");
-            //this.scoreBlock.Text = "<This will be an estimate of the rating you will give to the activity if you do it>";
-            content.AddItem(this.scoreBlock);
 
-            this.stdDevBlock = new TitledTextblock("Standard Deviation:");
-            //this.stdDevBlock.Text = "<This will be an estimate of the uncertainty in the expected score>";
-            content.AddItem(this.stdDevBlock);
+            ResizableTextBlock name_nameBlock = new ResizableTextBlock("StartDate:");
+            name_nameBlock.SetResizability(new Resizability(0, 1));
+            grid.AddItem(name_nameBlock);
 
-            this.participationProbabilityBlock = new TitledTextblock("Participation Probability:");
-            //this.participationProbabilityBlock.Text = "<This will be an estimate of the probability that you will take the suggestion>";
-            content.AddItem(this.participationProbabilityBlock);
 
-            this.ResetText();
 
-            this.SetContent(content);
+            ResizableTextBlock name_nameBlock = new ResizableTextBlock("Participation Probability:");
+            name_nameBlock.SetResizability(new Resizability(0, 1));
+            grid.AddItem(name_nameBlock);
+
+            */
+            this.add_displayField("Name:", suggestion.ActivityDescriptor.ActivityName);
+
+            this.add_displayField("StartDate:", suggestion.StartDate.ToString());
+
+
+            //this.AddItem(this.make_displayField("Duration:", suggestion.Duration.ToString()));
+
+
+            this.add_displayField("Participation Probability:", suggestion.ParticipationProbability.ToString());
+            //ResizableWrapper wrapper = new ResizableWrapper();
+
+            // the proper way to display a border for items found in a displayGrid (since I don't want two borders for adjacent items) would be to have the
+            // displayGrid do it. For now, we just put it on this SuggestionView because it's convenient
+            this.BorderBrush = System.Windows.Media.Brushes.Yellow;
+            this.BorderThickness = new System.Windows.Thickness(2, 1, 1, 2);
+
+
+            this.Child = this.displayGrid;
         }
-        public void AddSuggestionClickHandler(RoutedEventHandler e)
+        private void add_displayField(string propertyName, string propertyValue)
         {
-            this.suggestionButton.Click += e;
+            /*TitledTextblock result = new TitledTextblock(propertyName);
+            result.Text = propertyValue;
+            return result;
+            */
+
+            //DisplayGrid grid = new DisplayGrid(1, 2);
+            
+            ResizableTextBlock nameBlock = new ResizableTextBlock(propertyName);
+            nameBlock.SetResizability(new Resizability(0, 1));
+            nameBlock.TextAlignment = System.Windows.TextAlignment.Left;
+            nameBlock.VerticalAlignment = VerticalAlignment.Center;
+            this.displayGrid.AddItem(nameBlock);
+
+            ResizableTextBlock valueBlock = new ResizableTextBlock(propertyValue);
+            valueBlock.TextAlignment = System.Windows.TextAlignment.Center;
+            valueBlock.VerticalAlignment = VerticalAlignment.Center;
+            this.displayGrid.AddItem(valueBlock);
+            //return grid;
+            
         }
-        public string SuggestionText
+        
+        public Resizability GetHorizontalResizability()
         {
-            get
-            {
-                return this.suggestionNameBlock.Text;
-            }
-            set
-            {
-                this.suggestionNameBlock.Text = value;
-            }
+            return this.displayGrid.GetHorizontalResizability();
         }
-        public string JustificationText
+        public Resizability GetVerticalResizability()
         {
-            get
-            {
-                return this.justificationBlock.Text;
-            }
-            set
-            {
-                this.justificationBlock.Text = value;
-            }
+            return this.displayGrid.GetVerticalResizability();
         }
-        public string ExpectedScoreText
+        public Size PreliminaryMeasure(Size constraint)
         {
-            set
-            {
-                this.scoreBlock.Text = value;
-            }
+            Size availableGridsize = new Size(constraint.Width - this.BorderThickness.Left - this.BorderThickness.Right, constraint.Height - this.BorderThickness.Top - this.BorderThickness.Bottom);
+            Size desiredGridSize = this.displayGrid.PreliminaryMeasure(availableGridsize);
+            Size desiredSize = new Size(desiredGridSize.Width + this.BorderThickness.Left + this.BorderThickness.Right, desiredGridSize.Height + this.BorderThickness.Top + this.BorderThickness.Bottom);
+            //this.Measure(constraint);
+            //return this.DesiredSize;
+            return desiredSize;
         }
-        public string ScoreStdDevText
+        public Size FinalMeasure(Size finalSize)
         {
-            set
-            {
-                this.stdDevBlock.Text = value;
-            }
+            this.Measure(finalSize);
+            return this.DesiredSize;
         }
-        public string CategoryText
-        {
-            get
-            {
-                return this.categoryBox.NameText;
-            }
-            set
-            {
-                this.categoryBox.NameText = value;
-            }
-        }
-        public string ParticipationProbabilityText
-        {
-            set
-            {
-                this.participationProbabilityBlock.Text = value;
-            }
-        }
-        public ActivityDatabase ActivityDatabase
-        {
-            set
-            {
-                this.categoryBox.Database = value;
-            }
-        }
-        public void ResetText()
-        {
-            this.SuggestionText = "<Click \"Suggest\" for a suggestion>";
-            this.JustificationText = "<Here will be a short justification>";
-            this.ExpectedScoreText = "<Here will be the expected score>";
-            this.ScoreStdDevText = "<Here will be a measure of the uncertainty of the score>";
-            this.ParticipationProbabilityText = "<This will be an estimate of the probability that you will take the suggestion>";
-        }
-        private Button suggestionButton;
-        private ActivityNameEntryBox categoryBox;
-        private TitledTextblock suggestionNameBlock;
-        private TitledTextblock justificationBlock;
-        private TitledTextblock scoreBlock;
-        private TitledTextblock stdDevBlock;
-        private TitledTextblock participationProbabilityBlock;
+        
+        private DisplayGrid displayGrid;
+        
     }
 }

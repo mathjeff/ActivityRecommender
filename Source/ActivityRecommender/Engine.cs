@@ -62,14 +62,14 @@ namespace ActivityRecommendation
                 Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
                 Activity parent = this.activityDatabase.ResolveDescriptor(inheritance.ParentDescriptor);
                 if (inheritance.DiscoveryDate != null)
-                    child.ApplyKnownInteractionDate((DateTime)inheritance.DiscoveryDate);
+                    child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
                 child.AddParent(parent);
             }
             this.inheritances.Clear();
         }
         // moves the ratings and participations from the pending queues into the Activities
         // Note that there is a bug at the moment: when an inheritance is added to an activity, all of its ratings need to cascade appropriately
-        // currently they don't
+        // currently they don't. However, as long as the inheritances are always added before this function is called, then it's fine
         public void ApplyParticipationsAndRatings()
         {
             DateTime nextDate;
@@ -112,7 +112,8 @@ namespace ActivityRecommendation
             }
         }
 
-        // assume initially that each activity was discovered when the engine was first started
+
+        // this function gets called when a new activity gets created
         public void CreatingActivity(Activity activity)
         {
             activity.SetDefaultDiscoveryDate(this.firstInteractionDate);
@@ -165,22 +166,9 @@ namespace ActivityRecommendation
         // performs Depth First Search to find all superCategories of the given Activity
         public List<Activity> FindAllSupercategoriesOf(Activity child)
         {
-            List<Activity> superCategories = new List<Activity>();
-            superCategories.Add(child);
-            int i = 0;
-            for (i = 0; i < superCategories.Count; i++)
-            {
-                Activity activity = superCategories[i];
-                foreach (Activity parent in activity.Parents)
-                {
-                    if (!superCategories.Contains(parent))
-                    {
-                        superCategories.Add(parent);
-                    }
-                }
-            }
-            return superCategories;
+            return child.GetAllSuperactivities();
         }
+        // performs Depth First Search to find all subCategories of the given Activity
         public List<Activity> FindAllSubCategoriesOf(Activity parent)
         {
             return parent.GetAllSubactivities();
@@ -209,6 +197,11 @@ namespace ActivityRecommendation
             {
                 this.ApplyParticipationsAndRatings();
             }
+            //
+            foreach (Activity activity in candidates)
+            {
+                activity.PredictionsNeedRecalculation = true;
+            }
             Activity bestActivity = null;
             Distribution bestRating = null;
             foreach (Activity candidate in candidates)
@@ -230,11 +223,12 @@ namespace ActivityRecommendation
         public void EstimateValue(Activity activity, DateTime when)
         {
             // If we've already estimated the rating at this date, then just return what we calculated
-            DateTime latestUpdateDate = activity.PredictedScore.Date;
-            if (when.CompareTo(latestUpdateDate) == 0)
+            //DateTime latestUpdateDate = activity.PredictedScore.ApplicableDate;
+            if (!activity.PredictionsNeedRecalculation)
             {
                 return;
             }
+            activity.PredictionsNeedRecalculation = false;
             // If we get here, then we have to do some calculations
             // estimate the rating 
             // First make sure that all parents' ratings are up-to-date
@@ -272,6 +266,8 @@ namespace ActivityRecommendation
             activity.SuggestionValue = this.CombineRatingPredictions(suggestionPredictions);
 
         }
+
+        // attempt to calculate the probability that the user would do this activity if we suggested it at this time
         public void EstimateParticipationProbability(Activity activity, DateTime when)
         {
             List<Prediction> predictions = activity.GetParticipationProbabilityEstimates(when);
@@ -347,7 +343,7 @@ namespace ActivityRecommendation
         // returns a string telling the most important reason that 'activity' was last rated as it was
         public string JustifyRating(Activity activity)
         {
-            DateTime when = activity.SuggestionValue.Date;
+            DateTime when = activity.SuggestionValue.ApplicableDate;
             IEnumerable<Prediction> predictions = this.GetAllSuggestionEstimates(activity, when);
             double lowestScore = 1;
             string bestReason = null;
@@ -373,13 +369,13 @@ namespace ActivityRecommendation
             foreach (Prediction prediction in predictions)
             {
                 distributions.Add(prediction.Distribution);
-                if (prediction.Date.CompareTo(date) > 0)
-                    date = prediction.Date;
+                if (prediction.ApplicableDate.CompareTo(date) > 0)
+                    date = prediction.ApplicableDate;
             }
             Distribution distribution = this.CombineRatingDistributions(distributions);
             Prediction result = new Prediction();
             result.Distribution = distribution;
-            result.Date = date;
+            result.ApplicableDate = date;
             return result;
         }
         public Distribution CombineRatingDistributions(IEnumerable<Distribution> distributions)
@@ -422,13 +418,13 @@ namespace ActivityRecommendation
             foreach (Prediction prediction in predictions)
             {
                 distributions.Add(prediction.Distribution);
-                if (prediction.Date.CompareTo(date) > 0)
-                    date = prediction.Date;
+                if (prediction.ApplicableDate.CompareTo(date) > 0)
+                    date = prediction.ApplicableDate;
             }
             Distribution distribution = this.CombineProbabilityDistributions(distributions);
             Prediction result = new Prediction();
             result.Distribution = distribution;
-            result.Date = date;
+            result.ApplicableDate = date;
             return result;
         }
         public Distribution CombineProbabilityDistributions(IEnumerable<Distribution> distributions)
@@ -521,7 +517,7 @@ namespace ActivityRecommendation
                 // calculate an appropriate DiscoveryDate
                 this.CreatingActivity(child);
                 if (newInheritance.DiscoveryDate != null)
-                    child.ApplyKnownInteractionDate((DateTime)newInheritance.DiscoveryDate);
+                    child.ApplyInheritanceDate((DateTime)newInheritance.DiscoveryDate);
             }
             else
             {
@@ -564,15 +560,18 @@ namespace ActivityRecommendation
         // gets called whenever an outside source adds a participation
         public void DiscoveredParticipation(Participation newParticipation)
         {
-            DateTime when = newParticipation.StartDate;
-            if (when.CompareTo(this.firstInteractionDate) < 0)
+            if (!newParticipation.Hypothetical)
             {
-                this.firstInteractionDate = when;
-            }
-            when = newParticipation.EndDate;
-            if (when.CompareTo(this.latestInteractionDate) > 0)
-            {
-                this.latestInteractionDate = when;
+                DateTime when = newParticipation.StartDate;
+                if (when.CompareTo(this.firstInteractionDate) < 0)
+                {
+                    this.firstInteractionDate = when;
+                }
+                when = newParticipation.EndDate;
+                if (when.CompareTo(this.latestInteractionDate) > 0)
+                {
+                    this.latestInteractionDate = when;
+                }
             }
         }
         public void PutInheritanceInMemory(Inheritance newInheritance)
@@ -585,6 +584,16 @@ namespace ActivityRecommendation
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
             this.unappliedSkips.Add(newSkip);
+
+            if (newSkip.Date.CompareTo(this.firstInteractionDate) < 0)
+            {
+                this.firstInteractionDate = newSkip.Date;
+            }
+            if (newSkip.Date.CompareTo(this.latestInteractionDate) > 0)
+            {
+                this.latestInteractionDate = newSkip.Date;
+            }
+
 
             if (newSkip.SuggestionDate != null)
             {
@@ -612,6 +621,23 @@ namespace ActivityRecommendation
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
         {
             this.allActivityDescriptors.Add(newDescriptor);
+        }
+        public void RemoveParticipation(Participation participationToRemove)
+        {
+            // apply any pending participations so that they will be removed too
+            this.ApplyParticipationsAndRatings();
+
+            // remove the participation from any relevant Activity
+            ActivityDescriptor descriptor = participationToRemove.ActivityDescriptor;
+            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            if (activity != null)
+            {
+                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
+                foreach (Activity parent in superCategories)
+                {
+                    parent.RemoveParticipation(participationToRemove);
+                }
+            }
         }
         public DateTime LatestInteractionDate
         {

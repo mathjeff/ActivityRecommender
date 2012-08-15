@@ -17,10 +17,33 @@ namespace ActivityRecommendation
             this.valuesInDiscoveryOrder = new List<ProgressionValue>();
             this.owner = newOwner;
         }
+        // tells whether we care about this participation at all
+        public bool ShouldIncludeParticipation(Participation newParticipation)
+        {
+            // ignore any participation that we know for sure was not suggested by the engine
+            if (newParticipation.Suggested != null)
+            {
+                if (newParticipation.Suggested.Value == false)
+                    return false;
+            }
+            return true;
+        }
         public void AddParticipation(Participation newParticipation)
         {
-            Distribution distribution = newParticipation.TotalIntensity.CopyAndReweightTo(1);
-            this.AddValue(newParticipation.StartDate, distribution);
+            if (this.ShouldIncludeParticipation(newParticipation))
+            {
+                Distribution distribution = newParticipation.TotalIntensity.CopyAndReweightTo(1);
+                this.AddValue(newParticipation.StartDate, distribution);
+            }
+        }
+        public void RemoveParticipation(Participation participationToRemove)
+        {
+            // make sure that we had included it in the first place
+            if (this.ShouldIncludeParticipation(participationToRemove))
+            {
+                this.searchHelper.Remove(participationToRemove.StartDate);
+                this.valuesInDiscoveryOrder.RemoveAt(this.valuesInDiscoveryOrder.Count - 1);
+            }
         }
         public void AddSkip(ActivitySkip newSkip)
         {
@@ -64,6 +87,26 @@ namespace ActivityRecommendation
         {
             List<ProgressionValue> results = this.valuesInDiscoveryOrder.GetRange(indexInclusive, this.NumItems - indexInclusive);
             return results;
+        }
+        public DateTime? LastDatePresent
+        {
+            get
+            {
+                ListItemStats<DateTime, Distribution> stats = this.searchHelper.GetLastValue();
+                if (stats != null)
+                    return stats.Key;
+                return null;
+            }
+        }
+        public DateTime? FirstDatePresent
+        {
+            get
+            {
+                ListItemStats<DateTime, Distribution> stats = this.searchHelper.GetFirstValue();
+                if (stats != null)
+                    return stats.Key;
+                return null;
+            }
         }
         public int NumItems
         {

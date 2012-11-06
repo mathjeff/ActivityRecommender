@@ -9,17 +9,19 @@ using AdaptiveLinearInterpolation;
 // It is intended to estimate the probability that the user will do the given Activity
 namespace ActivityRecommendation
 {
-    class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<Distribution>
+    class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<WillingnessSummary>
     {
         public ConsiderationProgression(Activity newOwner)
         {
-            this.searchHelper = new StatList<DateTime, Distribution>(this, this);
-            this.valuesInDiscoveryOrder = new List<ProgressionValue>();
+            this.searchHelper = new StatList<DateTime, WillingnessSummary>(this, this);
+            //this.valuesInDiscoveryOrder = new List<ProgressionValue>();
             this.owner = newOwner;
         }
         // tells whether we care about this participation at all
         public bool ShouldIncludeParticipation(Participation newParticipation)
         {
+            return true;
+            /*
             // ignore any participation that we know for sure was not suggested by the engine
             if (newParticipation.Suggested != null)
             {
@@ -27,13 +29,23 @@ namespace ActivityRecommendation
                     return false;
             }
             return true;
+            */
         }
         public void AddParticipation(Participation newParticipation)
         {
             if (this.ShouldIncludeParticipation(newParticipation))
             {
-                Distribution distribution = newParticipation.TotalIntensity.CopyAndReweightTo(1);
-                this.AddValue(newParticipation.StartDate, distribution);
+                WillingnessSummary willingness = new WillingnessSummary();
+                if (newParticipation.Suggested == null || newParticipation.Suggested == true)
+                {
+                    willingness.NumPromptedParticipations = newParticipation.TotalIntensity.Mean;
+                }
+                else
+                {
+                    willingness.NumUnpromptedParticipations = newParticipation.TotalIntensity.Mean;
+                }
+                //Distribution distribution = newParticipation.TotalIntensity.CopyAndReweightTo(1);
+                this.AddValue(newParticipation.StartDate, willingness);
             }
         }
         public void RemoveParticipation(Participation participationToRemove)
@@ -42,24 +54,25 @@ namespace ActivityRecommendation
             if (this.ShouldIncludeParticipation(participationToRemove))
             {
                 this.searchHelper.Remove(participationToRemove.StartDate);
-                this.valuesInDiscoveryOrder.RemoveAt(this.valuesInDiscoveryOrder.Count - 1);
+                //this.valuesInDiscoveryOrder.RemoveAt(this.valuesInDiscoveryOrder.Count - 1);
             }
         }
         public void AddSkip(ActivitySkip newSkip)
         {
-            Distribution distribution = Distribution.MakeDistribution(0, 0, 1);
-            this.AddValue(newSkip.Date, distribution);
+            WillingnessSummary willingness = new WillingnessSummary(0, 0, 1);
+            //Distribution distribution = Distribution.MakeDistribution(0, 0, 1);
+            this.AddValue(newSkip.Date, willingness);
         }
-        public void AddValue(DateTime when, Distribution value)
+        public void AddValue(DateTime when, WillingnessSummary value)
         {
-            this.valuesInDiscoveryOrder.Add(new ProgressionValue(when, value));
+            //this.valuesInDiscoveryOrder.Add(new ProgressionValue(when, value));
             this.searchHelper.Add(when, value);
         }
         #region Functions for IProgression
 
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
-            ListItemStats<DateTime, Distribution> stats = this.searchHelper.FindPreviousItem(when, strictlyEarlier);
+            ListItemStats<DateTime, WillingnessSummary> stats = this.searchHelper.FindPreviousItem(when, strictlyEarlier);
             if (stats == null)
                 return null;
             //return new ProgressionValue(when, new Distribution(), -1);
@@ -76,23 +89,30 @@ namespace ActivityRecommendation
             // create another date that is twice as far in the past
             DateTime earlierDate = latestDate.Subtract(duration);
             // add up everything that occurred between the earlier day and now
-            Distribution sum = this.searchHelper.CombineBetweenKeys(earlierDate, true, when, !strictlyEarlier);
+            WillingnessSummary sum = this.searchHelper.CombineBetweenKeys(earlierDate, true, when, !strictlyEarlier);
             //int previousCount = this.searchHelper.CountBeforeKey(when, strictlyEarlier);
             //ProgressionValue result = new ProgressionValue(when, sum, this.searchHelper.CountBeforeKey(when, !strictlyEarlier));
-            ProgressionValue result = new ProgressionValue(when, sum);
+            double numParticipations = sum.NumUnpromptedParticipations + sum.NumPromptedParticipations;
+            double numSkips = sum.NumSkips;
+            double mean = numParticipations / (numParticipations + numSkips);
+            double weight = numParticipations + numSkips;
+            Distribution distribution = Distribution.MakeDistribution(mean, 0, weight);
+            //Distribution result = Distribution.mak
+            ProgressionValue result = new ProgressionValue(when, distribution);
             return result;
 
         }
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
-            List<ProgressionValue> results = this.valuesInDiscoveryOrder.GetRange(indexInclusive, this.NumItems - indexInclusive);
-            return results;
+            throw new NotImplementedException();
+            //List<ProgressionValue> results = this.valuesInDiscoveryOrder.GetRange(indexInclusive, this.NumItems - indexInclusive);
+            //return results;
         }
         public DateTime? LastDatePresent
         {
             get
             {
-                ListItemStats<DateTime, Distribution> stats = this.searchHelper.GetLastValue();
+                ListItemStats<DateTime, WillingnessSummary> stats = this.searchHelper.GetLastValue();
                 if (stats != null)
                     return stats.Key;
                 return null;
@@ -102,7 +122,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                ListItemStats<DateTime, Distribution> stats = this.searchHelper.GetFirstValue();
+                ListItemStats<DateTime, WillingnessSummary> stats = this.searchHelper.GetFirstValue();
                 if (stats != null)
                     return stats.Key;
                 return null;
@@ -112,7 +132,8 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.valuesInDiscoveryOrder.Count;
+                return this.searchHelper.NumItems;
+                //return this.valuesInDiscoveryOrder.Count;
             }
         }
         public Activity Owner
@@ -150,21 +171,21 @@ namespace ActivityRecommendation
 
         #region Functions for ICombiner<Distribution>
 
-        public Distribution Combine(Distribution a, Distribution b)
+        public WillingnessSummary Combine(WillingnessSummary a, WillingnessSummary b)
         {
             this.numAdditions++;
-            Distribution result = a.Plus(b);
+            WillingnessSummary result = a.Plus(b);
             return result;
         }
-        public Distribution Default()
+        public WillingnessSummary Default()
         {
-            return new Distribution();
+            return new WillingnessSummary();
         }
 
         #endregion
 
-        private StatList<DateTime, Distribution> searchHelper;
-        private List<ProgressionValue> valuesInDiscoveryOrder;
+        private StatList<DateTime, WillingnessSummary> searchHelper;
+        //private List<ProgressionValue> valuesInDiscoveryOrder;
         private Activity owner;
         int numComparisons;
         int numAdditions;

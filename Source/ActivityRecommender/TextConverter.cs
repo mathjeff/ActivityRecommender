@@ -51,6 +51,8 @@ namespace ActivityRecommendation
                 properties[this.WasSuggestedTag] = this.ConvertToStringBody((bool)participation.Suggested);
             if (comment != null)
                 properties[this.CommentTag] = comment;
+            if (participation.Consideration != null)
+                properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
 
 
             return this.ConvertToString(properties, objectName);
@@ -435,7 +437,19 @@ namespace ActivityRecommendation
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             if (rating != null)
+            {
+                // inform the rating of the participation that generated it
                 rating.Source = RatingSource.FromParticipation(currentParticipation);
+                // In case it was a relative rating, give the rating a chance to keep a pointer to the previous participation
+                RelativeRating convertedRating = rating as RelativeRating;
+                if (convertedRating != null)
+                {
+                    convertedRating.AttemptToMatch(this.latestParticipationRead);
+                    //Rating firstRating = convertedRating.FirstRating;
+                    //if (firstRating != null)
+                    //    firstRating.AttemptToMatch(this.latestParticipationRead);
+                }
+            }
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
@@ -448,6 +462,7 @@ namespace ActivityRecommendation
                 // send the rating to the engine
                 //this.recommenderToInform.PutRatingInMemory(rating);
             }*/
+            this.latestParticipationRead = currentParticipation;
             return currentParticipation;
         }
 
@@ -750,6 +765,14 @@ namespace ActivityRecommendation
 
             return this.ConvertToStringBody(properties);
         }
+        // converts the ActivitySuggestion into a string, and doesn't add the inital <Tag> or ending </Tag>
+        private string ConvertToStringBody(Consideration consideration)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(consideration.ActivityDescriptor);
+
+            return this.ConvertToStringBody(properties);
+        }
 
         #endregion
 
@@ -870,6 +893,13 @@ namespace ActivityRecommendation
                 return "Suggested";
             }
         }
+        private string ConsiderationTag
+        {
+            get
+            {
+                return "Consideration";
+            }
+        }
 
         private string InheritanceTag
         {
@@ -957,6 +987,7 @@ namespace ActivityRecommendation
         #region Private Member Variables
 
         private ActivityRecommender recommenderToInform;
+        private Participation latestParticipationRead;
 
         #endregion
     }

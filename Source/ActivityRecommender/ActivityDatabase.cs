@@ -11,11 +11,12 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
-        public ActivityDatabase()
+        public ActivityDatabase(RatingSummarizer ratingSummarizer)
         {
             //this.activitiesByName = new Dictionary<string, List<Activity> >();
             this.activitiesByName = new StatList<string, IEnumerable<Activity>>(this, this);
             this.allActivities = new List<Activity>();
+            this.ratingSummarizer = ratingSummarizer;
         }
 
         #endregion
@@ -219,7 +220,7 @@ namespace ActivityRecommendation
         // constructs an Activity from the given ActivityDescriptor
         private Activity CreateActivity(ActivityDescriptor sourceDescriptor)
         {
-            Activity result = new Activity(sourceDescriptor.ActivityName);
+            Activity result = new Activity(sourceDescriptor.ActivityName, this.ratingSummarizer);
             result.Choosable = sourceDescriptor.Choosable.GetValueOrDefault(true);
             return result;
         }
@@ -308,6 +309,7 @@ namespace ActivityRecommendation
         //private Dictionary<string, List<Activity> > activitiesByName;
         private List<Activity> allActivities;
         private StatList<string, IEnumerable<Activity>> activitiesByName;
+        private RatingSummarizer ratingSummarizer;
 
         #endregion
     }

@@ -6,7 +6,7 @@ using System.Text;
 namespace AdaptiveLinearInterpolation
 {
     // represents an n-dimensional rectangle
-    public class HyperBox
+    public class HyperBox<ScoreType>
     {
         public HyperBox(FloatRange[] coordinates)
         {
@@ -17,7 +17,7 @@ namespace AdaptiveLinearInterpolation
                 this.Coordinates[i] = new FloatRange(coordinates[i]);
             }
         }
-        public HyperBox(HyperBox source)
+        public HyperBox(HyperBox<ScoreType> source)
         {
             this.Coordinates = new FloatRange[source.NumDimensions];
             int i;
@@ -26,7 +26,7 @@ namespace AdaptiveLinearInterpolation
                 this.Coordinates[i] = new FloatRange(source.Coordinates[i]);
             }
         }
-        public HyperBox(IDatapoint onlyPoint)
+        public HyperBox(IDatapoint<ScoreType> onlyPoint)
         {
             this.Coordinates = new FloatRange[onlyPoint.NumInputDimensions];
             int i;
@@ -35,7 +35,7 @@ namespace AdaptiveLinearInterpolation
                 this.Coordinates[i] = new FloatRange(onlyPoint.InputCoordinates[i], true, onlyPoint.InputCoordinates[i], true);
             }
         }
-        public bool Contains(HyperBox other)
+        public bool Contains(HyperBox<ScoreType> other)
         {
             int i;
             for (i = 0; i < this.NumDimensions; i++)
@@ -45,7 +45,7 @@ namespace AdaptiveLinearInterpolation
             }
             return true;
         }
-        public bool Contains(IDatapoint datapoint)
+        public bool Contains(IDatapoint<ScoreType> datapoint)
         {
             return this.Contains(datapoint.InputCoordinates);
         }
@@ -59,7 +59,7 @@ namespace AdaptiveLinearInterpolation
             }
             return true;
         }
-        public bool Intersects(HyperBox other)
+        public bool Intersects(HyperBox<ScoreType> other)
         {
             int i;
             for (i = 0; i < this.NumDimensions; i++)
@@ -69,7 +69,7 @@ namespace AdaptiveLinearInterpolation
             }
             return true;
         }
-        public void ExpandToInclude(IDatapoint newPoint)
+        public void ExpandToInclude(IDatapoint<ScoreType> newPoint)
         {
             int i;
             for (i = 0; i < this.NumDimensions; i++)

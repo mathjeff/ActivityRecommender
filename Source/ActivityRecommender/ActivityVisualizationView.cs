@@ -25,7 +25,7 @@ namespace ActivityRecommendation
 
             DisplayGrid graphGrid = new DisplayGrid(2, 1);
             // setup a graph of the ratings
-            this.ratingsView = new TitledControl("This is a graph of the ratings of " + this.YAxisLabel + " vs. " + this.XAxisLabel);
+            this.ratingsView = new TitledControl("This is a graph of the ratings of " + this.YAxisLabel + " vs. Time");
             graphGrid.AddItem(this.ratingsView);
 
             // setup a graph of the participations
@@ -162,10 +162,25 @@ namespace ActivityRecommendation
             //double sumY = 0;
             PlotControl newPlot = new PlotControl();
             newPlot.ShowRegressionLine = true;
+
+            
             newPlot.MinX = 0;
             newPlot.MaxX = 1;
+
             double x1, x2, y;
             x1 = 0;
+
+            if (this.xAxisProgression != null)
+            {
+                AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
+                if (inputRange == null)
+                    inputRange = new AdaptiveLinearInterpolation.FloatRange(this.xAxisProgression.GetValueAt(firstDate, false).Value.Mean, true, this.xAxisProgression.GetValueAt(lastDate, false).Value.Mean, true);
+                newPlot.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
+                newPlot.MinX = x1 = inputRange.LowCoordinate;
+                newPlot.MaxX = inputRange.HighCoordinate;
+            }
+
+
             double maxXPlotted = 0;
             List<double> startXs = new List<double>();
             List<double> endXs = new List<double>();
@@ -193,7 +208,6 @@ namespace ActivityRecommendation
             startXs.Sort();
             endXs.Sort();
             y = 0;
-            x1 = this.GetParticipationXCoordinate(firstDate);
             while (endXs.Count > 0 || startXs.Count > 0)
             {
                 if (startXs.Count > 0)
@@ -218,8 +232,11 @@ namespace ActivityRecommendation
                 {
                     x2 = startX;
                     double weight = x2 - x1;
+                    // add a datapoint denoting the start of the interval
+                    points.Add(new Datapoint(x1, y, weight));
                     y += weight * numActiveIntervals;
                     numActiveIntervals++;
+                    // add a datapoint denoting the end of the interval
                     points.Add(new Datapoint(x2, y, weight));
                     startXs.RemoveAt(0);
                 }
@@ -227,8 +244,11 @@ namespace ActivityRecommendation
                 {
                     x2 = endX;
                     double weight = x2 - x1;
+                    // add a datapoint denoting the start of the interval
+                    points.Add(new Datapoint(x1, y, weight));
                     y += weight * numActiveIntervals;
                     numActiveIntervals--;
+                    // add a datapoint denoting the end of the interval
                     points.Add(new Datapoint(x2, y, weight));
                     endXs.RemoveAt(0);
                 }
@@ -262,15 +282,6 @@ namespace ActivityRecommendation
             */
             newPlot.SetData(points);
 
-            if (this.xAxisProgression != null)
-            {
-                AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
-                if (inputRange == null)
-                    inputRange = new AdaptiveLinearInterpolation.FloatRange(this.xAxisProgression.GetValueAt(firstDate, false).Value.Mean, true, this.xAxisProgression.GetValueAt(lastDate, false).Value.Mean, true);
-                newPlot.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
-                newPlot.MinX = inputRange.LowCoordinate;
-                newPlot.MaxX = inputRange.HighCoordinate;
-            }
             /*if (this.xAxisActivity != null)
                 newPlot.Connected = false;
             
@@ -391,6 +402,13 @@ namespace ActivityRecommendation
                 //x = xParticipation.TotalIntensity.Mean * xParticipation.TotalIntensity.Weight;
             }
             return x;
+        }
+        private double GetMin_ParticipationXCoordinate(DateTime firstDate, DateTime lastDate)
+        {
+            AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
+            if (inputRange == null)
+                inputRange = new AdaptiveLinearInterpolation.FloatRange(this.xAxisProgression.GetValueAt(firstDate, false).Value.Mean, true, this.xAxisProgression.GetValueAt(lastDate, false).Value.Mean, true);
+            return inputRange.LowCoordinate;
         }
         private double GetParticipationYCoordinate(DateTime when)
         {

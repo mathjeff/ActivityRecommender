@@ -53,7 +53,7 @@ namespace ActivityRecommendation
             // the proper way to display a border for items found in a displayGrid (since I don't want two borders for adjacent items) would be to have the
             // displayGrid do it. For now, we just put it on this SuggestionView because it's convenient
             this.BorderBrush = System.Windows.Media.Brushes.Yellow;
-            this.BorderThickness = new System.Windows.Thickness(2, 1, 1, 2);
+            this.BorderThickness = new System.Windows.Thickness(2, 1, 2, 1);
 
 
             this.Child = this.displayGrid;

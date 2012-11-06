@@ -10,7 +10,8 @@ namespace ActivityRecommendation
     {
         public Engine()
         {
-            this.activityDatabase = new ActivityDatabase();
+            this.ratingSummarizer = new RatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.activityDatabase = new ActivityDatabase(this.ratingSummarizer);
             this.unappliedRatings = new List<AbsoluteRating>();
             this.unappliedParticipations = new List<Participation>();
             this.unappliedSkips = new List<ActivitySkip>();
@@ -189,6 +190,7 @@ namespace ActivityRecommendation
         }
         public Activity MakeRecommendation(IEnumerable<Activity> candidates, DateTime when)
         {
+            // First, go estimate the value for each activity
             if (this.requiresFullUpdate)
             {
                 this.FullUpdate();
@@ -197,11 +199,12 @@ namespace ActivityRecommendation
             {
                 this.ApplyParticipationsAndRatings();
             }
-            //
             foreach (Activity activity in candidates)
             {
                 activity.PredictionsNeedRecalculation = true;
             }
+            // Now we determine which activity is most important to suggest
+            // That requires first finding the one with the highest mean
             Activity bestActivity = null;
             Distribution bestRating = null;
             foreach (Activity candidate in candidates)
@@ -217,7 +220,104 @@ namespace ActivityRecommendation
                     }
                 }
             }
-            return bestActivity;
+            // After finding the activity with the highest expected rating, we need to check for other activities having high variance but almost-as-good values
+            if (bestActivity == null)
+                return null;
+            Activity bestActivityToPairWith = bestActivity;
+            double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
+            foreach (Activity candidate in candidates)
+            {
+                if (candidate.Choosable)
+                {
+                    double currentScore = this.GetCombinedValue(bestActivity, candidate);
+                    if (currentScore > bestCombinedScore)
+                    {
+                        bestActivityToPairWith = candidate;
+                        bestCombinedScore = currentScore;
+                    }
+                }
+            }
+            // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
+            // If there was no such pair, then we just want to choose the best activity because no others could help
+            // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
+            return bestActivityToPairWith;
+        }
+        // This function essentially addresses the well-known multi-armed bandit problem
+        // Given two distributions, we estimate the expected total value from choosing values from them
+        private double GetCombinedValue(Activity activityA, Activity activityB)
+        {
+
+            Distribution a = activityA.SuggestionValue.Distribution;
+            Distribution b = activityB.SuggestionValue.Distribution;
+            TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
+            TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
+            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight, a.Mean * a.Weight);
+            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * b.Weight, b.Mean * b.Weight);
+
+            // We weight our time exponentially, estimating that it takes two years for our time to double            
+            // Here are the scales by which the importances are expected to multiply every time we consider these activities
+            TimeSpan halfLife = this.Get_UserPreferences().HalfLife;
+            double scale1 = Math.Pow(0.5, (interval1.TotalSeconds / halfLife.TotalSeconds));
+            double scale2 = Math.Pow(0.5, (interval2.TotalSeconds / halfLife.TotalSeconds));
+
+            // For now we just do a brief brute-force analysis
+            Distribution distribution = this.GetCombinedValue(distribution1, scale1, distribution2, scale2, 4);
+
+            return distribution.Mean;
+        }
+        // This function essentially addresses the multi-armed bandit problem
+        // Given two distributions, we estimate the expected total value from choosing values from them
+        // distributionA is the previously viewed values for option A
+        // weightScaleA is a multiplier about how much we care about the results of the next iteration
+        // We also assume here that each distribution is a binomial distribution
+        private Distribution GetCombinedValue(BinomialDistribution distributionA, double weightScaleA, BinomialDistribution distributionB, double weightScaleB, int numIterations)
+        {
+            // For now we just do a brief brute-force analysis
+            if (numIterations <= 0)
+            {
+                // simply choose the better activity and be done with it
+                if (distributionA.Mean > distributionB.Mean)
+                    return Distribution.MakeDistribution(distributionA.Mean, 0, 1);
+                else
+                    return Distribution.MakeDistribution(distributionB.Mean, 0, 1);
+            }
+            numIterations--;
+            // We can choose A or B. Consider both and choose the better option
+            BinomialDistribution luckyA = new BinomialDistribution(distributionA);
+            BinomialDistribution unluckyA = new BinomialDistribution(distributionA);
+            luckyA.NumOnes++;
+            unluckyA.NumZeros++;
+            BinomialDistribution luckyB = new BinomialDistribution(distributionB);
+            BinomialDistribution unluckyB = new BinomialDistribution(distributionB);
+            luckyB.NumOnes++;
+            unluckyB.NumZeros++;
+            Distribution luckyScoreA = GetCombinedValue(luckyA, weightScaleA, distributionB, weightScaleB, numIterations);
+            Distribution unluckyScoreA = GetCombinedValue(unluckyA, weightScaleA, distributionB, weightScaleB, numIterations);
+            Distribution scoreA = luckyScoreA.CopyAndReweightBy(distributionA.Mean).Plus(unluckyScoreA.CopyAndReweightBy(1 - distributionA.Mean));
+            Distribution luckyScoreB = GetCombinedValue(distributionA, weightScaleA, luckyB, weightScaleB, numIterations);
+            Distribution unluckyScoreB = GetCombinedValue(distributionA, weightScaleA, unluckyB, weightScaleB, numIterations);
+            Distribution scoreB = luckyScoreB.CopyAndReweightBy(distributionB.Mean).Plus(unluckyScoreB.CopyAndReweightBy(1 - distributionB.Mean));
+
+            Distribution earlyScore, lateScore;
+            double lateWeight;
+            if (scoreA.Mean > scoreB.Mean)
+            {
+                // choose option A
+                earlyScore = Distribution.MakeDistribution(distributionA.Mean, 0, 1);
+                lateScore = scoreA;
+                lateWeight = weightScaleA;
+            }
+            else
+            {
+                // choose option B
+                earlyScore = Distribution.MakeDistribution(distributionB.Mean, 0, 1);
+                lateScore = scoreB;
+                lateWeight = weightScaleB;
+            }
+            double earlyWeight = 1;
+            double totalWeight = earlyWeight + lateWeight;
+            Distribution score = earlyScore.Plus(lateScore.CopyAndReweightBy(lateWeight));
+            return score;
         }
         // update all of the time-sensitive estimates for Activity
         public void EstimateValue(Activity activity, DateTime when)
@@ -300,6 +400,9 @@ namespace ActivityRecommendation
                 spacer.Justification = "you did this recently";
                 predictions.Add(spacer);
             }
+            /* 
+            // We no longer need to incorporate the following distribution, which was solely to ensure that no activity was ever forgotten
+            // The right way to do this is to create a more-accurate model of the rating of an activity when it hasn't been suggested in a while
             // Finally, take into account the fact that we gain more information by suggesting activities that haven't been remembered in a while
             DateTime latestActivityInteractionDate = activity.LatestInteractionDate;
             TimeSpan idleDuration = when.Subtract(latestActivityInteractionDate);
@@ -312,9 +415,10 @@ namespace ActivityRecommendation
                 Distribution scores = Distribution.MakeDistribution(1, stdDev, weightFraction);
                 Prediction guess = new Prediction();
                 guess.Distribution = scores;
-                guess.Justification ="how long it's been since you thought about this activity";
+                guess.Justification = "how long it's been since you thought about this activity";
                 predictions.Add(guess);
             }
+            */
             return predictions;
         }
         // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time
@@ -463,6 +567,15 @@ namespace ActivityRecommendation
             // keep track of any unapplied ratings
             this.unappliedRatings.Add(newRating);
             this.PutActivityDescriptorInMemory(newRating.ActivityDescriptor);
+            // keep track of how well the user has been spending time
+            if (newRating.Source != null)
+            {
+                Participation participation = newRating.Source.ConvertedAsParticipation;
+                if (participation != null)
+                {
+                    this.ratingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
+                }
+            }
         }
         // gets called whenever any outside source provides a rating
         public void DiscoveredRating(AbsoluteRating newRating)
@@ -495,13 +608,18 @@ namespace ActivityRecommendation
         {
             // keep track of the first and last date at which anything happened
             this.DiscoveredParticipation(newParticipation);
+            
             this.unappliedParticipations.Add(newParticipation);
             this.PutActivityDescriptorInMemory(newParticipation.ActivityDescriptor);
+
+            this.ratingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
 
             
             Rating rating = newParticipation.GetCompleteRating();
             if (rating != null)
+            {
                 this.PutRatingInMemory(rating);
+            }
         }
         // provides a previously unknown Inheritance to the Engine
         public void ApplyInheritance(Inheritance newInheritance)
@@ -600,7 +718,10 @@ namespace ActivityRecommendation
                 TimeSpan duration = newSkip.Date.Subtract((DateTime)newSkip.SuggestionDate);
                 if (duration.TotalDays > 1)
                     Console.WriteLine("skip duration > 1 day, this is probably a mistake");
+                // update our estimate of how longer the user spends thinking about what to do
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
+                // record the fact that the user wasn't doing anything directly productive at this time
+                this.ratingSummarizer.AddParticipationIntensity(newSkip.SuggestionDate.Value, newSkip.Date, 0);
             }
 
 #if false
@@ -638,6 +759,7 @@ namespace ActivityRecommendation
                     parent.RemoveParticipation(participationToRemove);
                 }
             }
+            this.ratingSummarizer.RemoveParticipation(participationToRemove.StartDate);
         }
         public DateTime LatestInteractionDate
         {
@@ -652,6 +774,10 @@ namespace ActivityRecommendation
             {
                 return this.activityDatabase;
             }
+        }
+        private UserPreferences Get_UserPreferences()
+        {
+            return UserPreferences.DefaultPreferences;
         }
         /*
         // writes to disk a textual representation of the rating
@@ -692,6 +818,7 @@ namespace ActivityRecommendation
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
         //Distribution ratingsForSuggestedActivities;     // the ratings that the user gives to activities that were suggested by the engine
         //Distribution ratingsForUnsuggestedActivities;   // the ratings that the user gives to activities that were not suggestd by the engine
+        RatingSummarizer ratingSummarizer;
 
     }
 }

@@ -87,6 +87,20 @@ namespace ActivityRecommendation
         public bool? Choosable { get; set; }
         public bool PreferHigherProbability { get; set; }   // tells whether this descriptor wants to match the Activity with the best rating
         public bool RequiresPerfectMatch { get; set; }
+        public bool CanMatch(ActivityDescriptor other)
+        {
+            if (this.ActivityName != null && other.activityName != null)
+            {
+                if (!this.activityName.Equals(other.activityName))
+                    return false;
+            }
+            if (this.Choosable != null && other.Choosable != null)
+            {
+                if (this.Choosable.Value != other.Choosable.Value)
+                    return false;
+            }
+            return true;
+        }
         #endregion
 
         #region Private Member Variables

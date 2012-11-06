@@ -6,7 +6,7 @@ using System.Text;
 namespace AdaptiveLinearInterpolation
 {
     // The IDatapoint interface requires that the object have coordinates
-    public interface IDatapoint
+    public interface IDatapoint<ScoreType>
     {
         double[] InputCoordinates
         {
@@ -16,7 +16,7 @@ namespace AdaptiveLinearInterpolation
         {
             get;
         }
-        double Score
+        ScoreType Score
         {
             get;
         }
@@ -25,23 +25,23 @@ namespace AdaptiveLinearInterpolation
             get;
         }
     }
-    public class Datapoint : IDatapoint
+    public class Datapoint<ScoreType> : IDatapoint<ScoreType>
     {
         static int nextID = 0;
-        public Datapoint(double[] inputs, double startingScore)
+        public Datapoint(double[] inputs, ScoreType startingScore)
         {
             this.inputCoordinates = inputs;
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double input1, double startingScore)
+        public Datapoint(double input1, ScoreType startingScore)
         {
             this.inputCoordinates = new double[1];
             this.inputCoordinates[0] = input1;
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double input1, double input2, double startingScore)
+        public Datapoint(double input1, double input2, ScoreType startingScore)
         {
             this.inputCoordinates = new double[2];
             this.inputCoordinates[0] = input1;
@@ -49,7 +49,7 @@ namespace AdaptiveLinearInterpolation
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double input1, double input2, double input3, double startingScore)
+        public Datapoint(double input1, double input2, double input3, ScoreType startingScore)
         {
             this.inputCoordinates = new double[3];
             this.inputCoordinates[0] = input1;
@@ -58,7 +58,7 @@ namespace AdaptiveLinearInterpolation
             this.score = startingScore;
             this.Initialize();
         }
-        public Datapoint(double[] inputs, double[] outputs, double startingScore)
+        public Datapoint(double[] inputs, double[] outputs, ScoreType startingScore)
         {
             this.inputCoordinates = inputs;
             this.outputCoordinates = outputs;
@@ -91,7 +91,7 @@ namespace AdaptiveLinearInterpolation
                 return this.outputCoordinates;
             }
         }
-        public bool InputEquals(Datapoint other)
+        public bool InputEquals(Datapoint<ScoreType> other)
         {
             int i;
             for (i = 0; i < this.inputCoordinates.Length; i++)
@@ -112,7 +112,7 @@ namespace AdaptiveLinearInterpolation
             result += ") score=" + this.Score.ToString();
             return result;
         }
-        public double Score
+        public ScoreType Score
         {
             get
             {
@@ -128,7 +128,7 @@ namespace AdaptiveLinearInterpolation
         }
         private double[] inputCoordinates;
         private double[] outputCoordinates;
-        private double score;
+        private ScoreType score;
         private int id;
     }
 }

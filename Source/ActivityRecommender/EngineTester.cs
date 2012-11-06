@@ -55,7 +55,39 @@ latest results (on 2012-6-16) after changing the interpolator's input-splitting-
 The problem was that if coordinate was a constant, then the product of the input variations was zero
 typicalScoreError = 0.135236469558133
 typicalProbabilityError = 0.44306302626509
-*/
+
+ 
+latest results (on 2012-8-30) after acquiring new data 
+typicalScoreError = 0.140364754582535
+typicalProbabilityError = 0.443507071557773
+
+latest results (on 2012-8-30) after adjusting the interpolator to do a more sensible job when given data outside the promised input range
+typicalScoreError = 0.140700447417066
+typicalProbabilityError = 0.442070071914349
+
+ 
+latest results (on 2012-8-31) after telling the interpolator to update more often
+typicalScoreError = 0.140585869049799
+typicalProbabilityError = 0.439053966981607 
+equivalentProbability = 0.739231298282047
+
+latest results (on 2012-10-7) after acquiring more data:
+typicalScoreError = 0.147389266231023
+typicalProbabilityError = 0.440218252424753
+equivalentProbability = 0.737082032706184
+
+latest results (on 2012-10-7) after using some of the unprompted participations as fake, prompted participations
+typicalScoreError = 0.147260241883526
+typicalProbabilityError = 0.430046711300231
+equivalentProbability = 0.755068277329534
+
+latest results (on 2012-10-21) after updating the engine to predict the (exponentially weighted) future ratings of all activities, but without
+  having updated the EngineTester to adjust the target values accordingly:
+typicalScoreError = 0.150655861416498
+typicalProbabilityError = 0.431639712860378
+equivalentProbability = 0.752363147630177
+ 
+ */
 
 namespace ActivityRecommendation
 {
@@ -169,6 +201,10 @@ namespace ActivityRecommendation
         // runs the engine on the given activity at the given date, and keeps track of the overall error
         public void UpdateScoreError(ActivityDescriptor descriptor, DateTime when, double correctScore)
         {
+            /*if (((int)this.squaredScoreError.Weight) % 100 == 0)
+            {
+                Console.WriteLine("finished a hundred scores");
+            }*/
             // update everything
             this.engine.MakeRecommendation(when);
 
@@ -190,6 +226,9 @@ namespace ActivityRecommendation
         }
         public void UpdateScoreError(double error)
         {
+            if (Math.Abs(error) > 1)
+                Console.WriteLine("error");
+
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
             this.squaredScoreError = this.squaredScoreError.Plus(errorDistribution);
         }
@@ -204,6 +243,10 @@ namespace ActivityRecommendation
             {
                 engine.EstimateValue(activity, when);
             }*/
+            /*if (this.squaredParticipationProbabilityError.Weight > 100 && Math.Abs(error) > 0.75)
+            {
+                Console.WriteLine("fairly large error");
+            }*/
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
             this.squaredParticipationProbabilityError = this.squaredParticipationProbabilityError.Plus(errorDistribution);
         }
@@ -214,6 +257,11 @@ namespace ActivityRecommendation
             Console.WriteLine("typicalScoreError = " + typicalScoreError.ToString());
             double typicalProbabilityError = Math.Sqrt(this.squaredParticipationProbabilityError.Mean);
             Console.WriteLine("typicalProbabilityError = " + typicalProbabilityError.ToString());
+            // X * (1 - X) ^ 2 + (1 - X) * X ^ 2 = this.squaredParticipationProbabilityError.Mean
+            // X * (1 - X) = this.squaredParticipationProbabilityError.Mean
+            // X ^ 2 - X + this.squaredParticipationProbabilityError.Mean = 0
+            double equivalentProbability = (1 + Math.Sqrt(1 - 4 * this.squaredParticipationProbabilityError.Mean)) / 2;
+            Console.WriteLine("equivalentProbability = " + equivalentProbability.ToString());
         }
         public Distribution SquaredScoreError
         {

@@ -54,6 +54,7 @@
     <Compile Include="DistributionAdder.cs" />
     <Compile Include="FloatRange.cs" />
     <Compile Include="HyperBox.cs" />
+    <Compile Include="INumerifier.cs" />
     <Compile Include="SimpleInterpolationBox.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SmartInterpolationBox.cs" />

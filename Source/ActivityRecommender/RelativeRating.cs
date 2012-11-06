@@ -103,6 +103,19 @@ namespace ActivityRecommendation
                 return this.WorseRating.Score;
             throw new ArgumentException("cannot ask for the score for an activity not known to the RelativeRating");
         }
+
+        public override void AttemptToMatch(Participation participation)
+        {
+            if (this.BetterRating.IsComplete() && !this.WorseRating.IsComplete())
+            {
+                this.BetterRating.AttemptToMatch(participation);
+            }
+            if (this.WorseRating.IsComplete() && !this.BetterRating.IsComplete())
+            {
+                this.WorseRating.AttemptToMatch(participation);
+            }
+        }
+
         #endregion
 
         #region Private Member Variables

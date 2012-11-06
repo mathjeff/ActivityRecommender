@@ -8,17 +8,21 @@ using System.Text;
 // Improving it to a 1st order approximation would be a big improvement because it allows the error to drop much faster
 namespace AdaptiveLinearInterpolation
 {
-    public class AdaptiveLinearInterpolator
+    public class AdaptiveLinearInterpolator<ScoreType>
     {
-        public AdaptiveLinearInterpolator(HyperBox inputBoundary)
+        public AdaptiveLinearInterpolator(HyperBox<ScoreType> inputBoundary, INumerifier<ScoreType> scoreCombiner)
         {
-            this.root = new SmartInterpolationBox(inputBoundary);
+            this.root = new SmartInterpolationBox<ScoreType>(inputBoundary, scoreCombiner);
         }
-        public void AddDatapoint(Datapoint newDatapoint)
+        public void AddDatapoint(IDatapoint<ScoreType> newDatapoint)
         {
             if (newDatapoint.NumInputDimensions != this.root.NumDimensions)
                 throw new ArgumentException("the number of dimensions is incorrect");
             this.root.AddDatapoint(newDatapoint);
+        }
+        public void RemoveDatapoint(IDatapoint<ScoreType> datapoint)
+        {
+            this.root.RemoveDatapoint(datapoint);
         }
         public Distribution Interpolate(double[] coordinates)
         {
@@ -27,9 +31,9 @@ namespace AdaptiveLinearInterpolation
             // figure out how much room there was to start with
             //double maxInputArea = this.root.GetInputArea();
             double maxInputSpread = this.root.GetInputVariation();
-            double maxOutputSpread = this.root.GetOutputSpread();
-            SmartInterpolationBox currentBox = this.root;
-            SmartInterpolationBox nextBox;
+            double maxOutputSpread = this.root.GetScoreSpread();
+            SmartInterpolationBox<ScoreType> currentBox = this.root;
+            SmartInterpolationBox<ScoreType> nextBox;
             Distribution result = new Distribution();
             //double inputFraction;
             //double outputFraction;
@@ -48,7 +52,7 @@ namespace AdaptiveLinearInterpolation
                     break;
                 }
                 // the more datapoints we have, the more often that we split
-                double nextOutputSpread = nextBox.GetOutputSpread();
+                double nextOutputSpread = nextBox.GetScoreSpread();
                 double nextInputSpread = nextBox.GetInputVariation();
                 //inputFraction = nextInputSpread / maxInputSpread;
                 //outputFraction = nextOutputSpread / maxOutputSpread;
@@ -77,7 +81,8 @@ namespace AdaptiveLinearInterpolation
                 return this.root.NumDatapoints;
             }
         }
-        private SmartInterpolationBox root;
+        private SmartInterpolationBox<ScoreType> root;
+        //private INumerifier<ScoreType> scoreHandler;
         //FloatRange outputSpan;
     }
 }

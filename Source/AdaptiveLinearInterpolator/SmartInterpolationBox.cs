@@ -7,17 +7,18 @@ using StatLists;
 // the SmartInterpolationBox will figure out which dimensions are worth splitting and when
 namespace AdaptiveLinearInterpolation
 {
-    class SmartInterpolationBox : IComparer<Datapoint>, ICombiner<Datapoint>
+    class SmartInterpolationBox<ScoreType> // : IComparer<Datapoint>, ICombiner<Datapoint>
     {
-        public SmartInterpolationBox(HyperBox boundary)
+        public SmartInterpolationBox(HyperBox<ScoreType> boundary, INumerifier<ScoreType> scoreHandler)
         {
             int i;
+            this.scoreHandler = scoreHandler;
             this.currentBoundary = boundary;
             this.observedBoundary = null;
             this.splitDimension = -1;
-            this.datapoints = new LinkedList<Datapoint>();
-            this.pendingDatapoints = new LinkedList<Datapoint>();
-            this.outputs = new Distribution();
+            this.datapoints = new LinkedList<IDatapoint<ScoreType>>();
+            this.pendingDatapoints = new LinkedList<IDatapoint<ScoreType>>();
+            this.scores = scoreHandler.Default();
 #if MIN_SPLIT_COUNTS
             this.minSplitCounts = new int[boundary.NumDimensions];
 #endif
@@ -28,17 +29,38 @@ namespace AdaptiveLinearInterpolation
             }
         }
         // adds a datapoint
-        public void AddDatapoint(Datapoint newDatapoint)
+        public void AddDatapoint(IDatapoint<ScoreType> newDatapoint)
         {
             this.pendingDatapoints.AddLast(newDatapoint);
             //this.AddPointNowWithoutSplitting(newDatapoint);
             //this.ConsiderSplitting();
         }
+        public bool RemoveDatapoint(IDatapoint<ScoreType> datapoint)
+        {
+            if (this.pendingDatapoints.Contains(datapoint))
+            {
+                this.pendingDatapoints.Remove(datapoint);
+                return true;    // removed successfully
+            }
+            if (!this.datapoints.Contains(datapoint))
+            {
+                return false;   // datapoint was not removed
+            }
+            this.scores = this.scoreHandler.Remove(this.scores, datapoint.Score);
+            // We should update the observed boundary here, but it's not too much of a problem if we don't
+            // Furthermore, the only project that currently (2012-10-20) uses this project will always re-insert the datapoint with the same inputs anyway
+            if (this.lowerChild != null)
+                this.lowerChild.RemoveDatapoint(datapoint);
+            if (this.upperChild != null)
+                this.upperChild.RemoveDatapoint(datapoint);
+            return true;
+        }
         // adds a datapoint and does not consider splitting
-        private void AddPointNowWithoutSplitting(Datapoint newDatapoint)
+        private void AddPointNowWithoutSplitting(IDatapoint<ScoreType> newDatapoint)
         {
             // keep track of the outputs we've observed
-            this.outputs = this.outputs.Plus(newDatapoint.Score);
+            this.scores = this.scoreHandler.Combine(this.scores, newDatapoint.Score);
+            //this.scores = this.scores.Plus(newDatapoint.Score);
             int i;
             for (i = 0; i < this.inputs.Length; i++)
             {
@@ -48,7 +70,7 @@ namespace AdaptiveLinearInterpolation
             // if this datapoint falls outside our promised boundary, then expand our boundary to include it
             if (this.observedBoundary == null)
             {
-                this.observedBoundary = new HyperBox(newDatapoint);
+                this.observedBoundary = new HyperBox<ScoreType>(newDatapoint);
             }
             else
             {
@@ -81,9 +103,9 @@ namespace AdaptiveLinearInterpolation
             }
         }
         // Exactly the same as calling AddDatapoint a bunch of times, but potentially faster
-        public void AddDatapoints(IEnumerable<Datapoint> newDatapoints)
+        public void AddDatapoints(IEnumerable<IDatapoint<ScoreType>> newDatapoints)
         {
-            foreach (Datapoint newDatapoint in newDatapoints)
+            foreach (IDatapoint<ScoreType> newDatapoint in newDatapoints)
             {
                 this.AddDatapoint(newDatapoint);
             }
@@ -92,7 +114,8 @@ namespace AdaptiveLinearInterpolation
         {
             this.ApplyPendingPoints();
             // finally, return the 
-            return this.outputs;
+            return this.scoreHandler.ConvertToDistribution(this.scores);
+            //return this.scores;
         }
         // moves any points from the list of pendingPoints into the main list, and updates any stats
         private void ApplyPendingPoints()
@@ -101,7 +124,7 @@ namespace AdaptiveLinearInterpolation
             // We simulate adding them one at a time, so that the results are the same as if they were added one at a time
             int count = this.datapoints.Count;
             int splitCount = this.numPointsAtLastConsideredSplit;
-            foreach (Datapoint datapoint in this.pendingDatapoints)
+            foreach (IDatapoint<ScoreType> datapoint in this.pendingDatapoints)
             {
                 count++;
                 if (this.HasTimeToSplit(count, splitCount))
@@ -110,7 +133,7 @@ namespace AdaptiveLinearInterpolation
                 }
             }
             // Now actually add those points and do the split
-            foreach (Datapoint datapoint in this.pendingDatapoints)
+            foreach (IDatapoint<ScoreType> datapoint in this.pendingDatapoints)
             {
                 this.AddPointNowWithoutSplitting(datapoint);
                 if (this.datapoints.Count == splitCount)
@@ -140,12 +163,12 @@ namespace AdaptiveLinearInterpolation
             this.ApplyPendingPoints();
             return this.currentBoundary.Area;
         }
-        public double GetOutputSpread()
+        public double GetScoreSpread()
         {
             this.ApplyPendingPoints();
             //Distribution outputs = this.datapointsByOutput.CombineAll();
             //double spread = outputs.StdDev;
-            double spread = this.outputs.StdDev;
+            double spread = this.scoreHandler.ConvertToDistribution(this.scores).StdDev;
             return spread;
         }
         public int NumDatapoints
@@ -162,16 +185,22 @@ namespace AdaptiveLinearInterpolation
                 return this.currentBoundary.NumDimensions;
             }
         }
-        public SmartInterpolationBox ChooseChild(double[] coordinates)
+        public SmartInterpolationBox<ScoreType> ChooseChild(double[] coordinates)
         {
             this.ApplyPendingPoints();
-            if (this.lowerChild != null && this.lowerChild.currentBoundary.Contains(coordinates))
+            if (this.lowerChild == null)
+                return null;
+            if (this.lowerChild.currentBoundary.Contains(coordinates))
                 return this.lowerChild;
-            if (this.upperChild != null && this.upperChild.currentBoundary.Contains(coordinates))
+            if (this.upperChild.currentBoundary.Contains(coordinates))
                 return this.upperChild;
-            return null;
+            if (this.lowerChild.currentBoundary.Coordinates[this.splitDimension].HighCoordinate < coordinates[this.splitDimension])
+                return this.upperChild;
+            else
+                return this.lowerChild;
         }
 
+        /*
         #region Functions for IComparer<Datapoint>
         public int Compare(Datapoint a, Datapoint b)
         {
@@ -191,10 +220,12 @@ namespace AdaptiveLinearInterpolation
         }
         #endregion
 
+        */
+
         // tells whether it is worth considering a split, given the current number of datapoints and also the number that we had at the last split
         public bool HasTimeToSplit(int numDatapoints, int previousNumPoints)
         {
-            if (numDatapoints >= previousNumPoints * 2)
+            if (numDatapoints > previousNumPoints * 1.5)
                 return true;
             return false;
         }
@@ -218,7 +249,7 @@ namespace AdaptiveLinearInterpolation
             }*/
             // setup a bunch of SimpleInterpolationBox to calculate the error we'd get if we couldn't split any particular dimension
             // setup the simple children
-            SimpleInterpolationBox[] simpleChildren = new SimpleInterpolationBox[this.NumDimensions];
+            SimpleInterpolationBox<ScoreType>[] simpleChildren = new SimpleInterpolationBox<ScoreType>[this.NumDimensions];
             for (i = 0; i < simpleChildren.Length; i++)
             {
                 // tell it to split each dimension in order, except for one
@@ -230,8 +261,8 @@ namespace AdaptiveLinearInterpolation
                         dimensionsToSplit.AddLast(j);
                     }
                 }
-                SimpleInterpolationBox box = new SimpleInterpolationBox(this.currentBoundary, dimensionsToSplit, i);
-                foreach (Datapoint datapoint in this.datapoints)
+                SimpleInterpolationBox<ScoreType> box = new SimpleInterpolationBox<ScoreType>(this.currentBoundary, dimensionsToSplit, i, this.scoreHandler);
+                foreach (IDatapoint<ScoreType> datapoint in this.datapoints)
                 {
                     box.AddDatapoint(datapoint);
                 }
@@ -308,10 +339,10 @@ namespace AdaptiveLinearInterpolation
 #else
             double splitValue = (this.currentBoundary.Coordinates[dimension].LowCoordinate + this.currentBoundary.Coordinates[dimension].HighCoordinate) / 2;
 #endif
-            HyperBox lowerBoundary = new HyperBox(this.currentBoundary);
+            HyperBox<ScoreType> lowerBoundary = new HyperBox<ScoreType>(this.currentBoundary);
             lowerBoundary.Coordinates[dimension].HighCoordinate = splitValue;
             lowerBoundary.Coordinates[dimension].HighInclusive = true;
-            HyperBox upperBoundary = new HyperBox(this.currentBoundary);
+            HyperBox<ScoreType> upperBoundary = new HyperBox<ScoreType>(this.currentBoundary);
             upperBoundary.Coordinates[dimension].LowCoordinate = splitValue;
             upperBoundary.Coordinates[dimension].LowInclusive = false;
 
@@ -319,18 +350,18 @@ namespace AdaptiveLinearInterpolation
             //    upperBoundary = upperBoundary;
 
             // decide which data goes in which child
-            LinkedList<Datapoint> lowerPoints = new LinkedList<Datapoint>();
-            LinkedList<Datapoint> upperPoints = new LinkedList<Datapoint>();            
-            foreach (Datapoint datapoint in this.datapoints)
+            LinkedList<IDatapoint<ScoreType>> lowerPoints = new LinkedList<IDatapoint<ScoreType>>();
+            LinkedList<IDatapoint<ScoreType>> upperPoints = new LinkedList<IDatapoint<ScoreType>>();
+            foreach (IDatapoint<ScoreType> datapoint in this.datapoints)
             {
                 if (lowerBoundary.Contains(datapoint))
                     lowerPoints.AddLast(datapoint);
                 if (upperBoundary.Contains(datapoint))
                     upperPoints.AddLast(datapoint);
             }
-            this.lowerChild = new SmartInterpolationBox(lowerBoundary);
+            this.lowerChild = new SmartInterpolationBox<ScoreType>(lowerBoundary, this.scoreHandler);
             this.lowerChild.AddDatapoints(lowerPoints);
-            this.upperChild = new SmartInterpolationBox(upperBoundary);
+            this.upperChild = new SmartInterpolationBox<ScoreType>(upperBoundary, this.scoreHandler);
             this.upperChild.AddDatapoints(upperPoints);
 #if false
             this.lowerChild.ApplyPendingPoints();
@@ -376,15 +407,15 @@ namespace AdaptiveLinearInterpolation
         */
 
 
-        private HyperBox currentBoundary;
-        private HyperBox observedBoundary;
+        private HyperBox<ScoreType> currentBoundary;
+        private HyperBox<ScoreType> observedBoundary;
         private int splitDimension;
-        private SmartInterpolationBox lowerChild;
-        private SmartInterpolationBox upperChild;
+        private SmartInterpolationBox<ScoreType> lowerChild;
+        private SmartInterpolationBox<ScoreType> upperChild;
         //private SimpleInterpolationBox[] simpleChildren;
-        private Distribution outputs;
-        private LinkedList<Datapoint> datapoints;
-        private LinkedList<Datapoint> pendingDatapoints;    // any points that are waiting in a queue to be added. Their values aren't included in anything yet
+        private ScoreType scores;
+        private LinkedList<IDatapoint<ScoreType>> datapoints;
+        private LinkedList<IDatapoint<ScoreType>> pendingDatapoints;    // any points that are waiting in a queue to be added. Their values aren't included in anything yet
         //private StatList<Datapoint, Distribution> datapointsByOutput;
         //private StatList<Datapoint, Datapoint> datapointsByInput;
         //private double totalError;
@@ -393,5 +424,6 @@ namespace AdaptiveLinearInterpolation
         private int[] minSplitCounts;  // the minimum number of times that dimension[index] was split, over any path through the children
 #endif
         private Distribution[] inputs;
+        INumerifier<ScoreType> scoreHandler;
     }
 }

@@ -15,9 +15,9 @@ namespace ActivityRecommendation
         public ParticipationEntryView()
         {
             this.SetTitle("Type What You've Been Doing");
-            DisplayGrid contents = new DisplayGrid(4, 2);
+            DisplayGrid contents = new DisplayGrid(5, 2);
 
-            this.nameBox = new ActivityNameEntryBox("Name");
+            this.nameBox = new ActivityNameEntryBox("Activity Name");
             this.nameBox.AddTextChangedHandler(new TextChangedEventHandler(this.nameBox_TextChanged));
             contents.AddItem(this.nameBox);
 
@@ -49,6 +49,9 @@ namespace ActivityRecommendation
             this.setEnddateButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             this.setEnddateButton.Click += new RoutedEventHandler(setEnddateButton_Click);
             contents.AddItem(this.setEnddateButton);
+
+            this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
+            contents.AddItem(this.intendedActivity_box);
 
             this.commentBox = new TitledTextbox("Comment (optional)");
             contents.AddItem(this.commentBox);
@@ -101,6 +104,7 @@ namespace ActivityRecommendation
         {
             this.ratingBox.Clear();
             this.nameBox.NameText = "";
+            this.intendedActivity_box.NameText = "";
             this.CommentText = "";
             this.setEnddateButton.SetDefaultBackground();
         }
@@ -109,6 +113,7 @@ namespace ActivityRecommendation
             set
             {
                 this.nameBox.Database = value;
+                this.intendedActivity_box.Database = value;
                 //this.ratingBox.ActivityDatabase = value;
             }
         }
@@ -193,6 +198,7 @@ namespace ActivityRecommendation
         }
         public Participation GetParticipation(ActivityDatabase activities, Engine engine)
         {
+            // Fill in the necessary properties
             ActivityDescriptor descriptor = new ActivityDescriptor();
             descriptor.ActivityName = this.ActivityName;
 
@@ -204,19 +210,26 @@ namespace ActivityRecommendation
             try
             {
                 Rating rating = this.ratingBox.GetRating(activities, engine, participation);
-                //AbsoluteRating rating = new AbsoluteRating();
-                //rating.Score = double.Parse(this.ratingBox.Text);
                 participation.RawRating = rating;
             }
             catch (Exception)
             {
             }
+
+            ActivityDescriptor considerationDescriptor = this.intendedActivity_box.ActivityDescriptor;
+            if (considerationDescriptor != null)
+            {
+                Consideration consideration = new Consideration(considerationDescriptor);
+                participation.Consideration = consideration;
+            }
+            
             return participation;
         }
         
 
         // private member variables
         ActivityNameEntryBox nameBox;
+        ActivityNameEntryBox intendedActivity_box;
         RatingEntryView ratingBox;
         TitledTextbox commentBox;
         DateEntryView startDateBox;

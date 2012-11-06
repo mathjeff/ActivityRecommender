@@ -92,6 +92,30 @@ namespace ActivityRecommendation
             throw new ArgumentException("cannot ask an absolute rating for the score of a different activity");
         }
 
+        public bool CanMatch(Participation participation)
+        {
+            if (participation == null)
+                return false;
+            if (this.ActivityDescriptor != null)
+            {
+                if (!this.ActivityDescriptor.CanMatch(participation.ActivityDescriptor))
+                    return false;
+            }
+            if (this.Date != null)
+            {
+                if (!this.Date.Value.Equals(participation.StartDate))
+                    return false;
+            }
+            return true;
+        }
+        public override void AttemptToMatch(Participation participation)
+        {
+            // check whether this rating might describe this participation
+            if (!this.CanMatch(participation))
+                return;
+            // This rating seems to describe this participation, so fill in the corresponding data
+            this.FillInFromParticipation(participation);
+        }
         #endregion
 
         /*

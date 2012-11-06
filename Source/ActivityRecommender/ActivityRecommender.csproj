@@ -14,6 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -79,6 +80,9 @@
     <Compile Include="ActivityRecommender.cs" />
     <Compile Include="ActivityRequest.cs" />
     <Compile Include="ActivityVisualizationView.cs" />
+    <Compile Include="BinomialDistribution.cs" />
+    <Compile Include="Consideration.cs" />
+    <Compile Include="FloatAdder.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="ConsiderationProgression.cs" />
     <Compile Include="CumulativeParticipationProgression.cs" />
@@ -100,6 +104,8 @@
     <Compile Include="IPredictionLink.cs" />
     <Compile Include="ProgressionSelectionView.cs" />
     <Compile Include="RatingEntryView.cs" />
+    <Compile Include="RatingSummarizer.cs" />
+    <Compile Include="RatingSummary.cs" />
     <Compile Include="RecentUserData.cs" />
     <Compile Include="RelativeRatingEntryView.cs" />
     <Compile Include="Resizability.cs" />
@@ -146,6 +152,8 @@
     <Compile Include="TitledControl.cs" />
     <Compile Include="TitledTextBlock.cs" />
     <Compile Include="TitledTextbox.cs" />
+    <Compile Include="UserPreferences.cs" />
+    <Compile Include="WillingnessSummary.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -169,6 +177,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

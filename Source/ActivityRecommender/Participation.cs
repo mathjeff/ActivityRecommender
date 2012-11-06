@@ -45,7 +45,8 @@ namespace ActivityRecommendation
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public ActivityDescriptor ActivityDescriptor { get; set; }
+        public ActivityDescriptor ActivityDescriptor { get; set; }          // a description of what the user actually did
+        public Consideration Consideration { get; set; }            // The user's thoughts that contributed to the fact that they did this activity
         public bool? Suggested { get; set; }     // tells whether the latest suggestion that the engine made was to do this activity
 
         public Distribution TotalIntensity // intensity measured in seconds

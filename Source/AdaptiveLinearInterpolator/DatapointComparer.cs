@@ -6,14 +6,14 @@ using System.Text;
 // compares datapoints
 namespace AdaptiveLinearInterpolation
 {
-    class DatapointComparer : IComparer<Datapoint>
+    class DatapointComparer<ScoreType> : IComparer<Datapoint<ScoreType>>
     {
         public DatapointComparer(int inputDimToCompare)
         {
             this.dimension = inputDimToCompare;
         }
-        #region Functions for IComparer<IDatapoint>
-        public int Compare(Datapoint a, Datapoint b)
+        #region Functions for IComparer<IDatapoint<ScoreType>>
+        public int Compare(Datapoint<ScoreType> a, Datapoint<ScoreType> b)
         {
             return a.InputCoordinates[this.dimension].CompareTo(b.InputCoordinates[this.dimension]);
         }

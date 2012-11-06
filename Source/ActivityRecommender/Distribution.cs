@@ -79,6 +79,21 @@ namespace ActivityRecommendation
                 this.sumWeight = value;
             }
         }
+        public double SumValue
+        {
+            get
+            {
+                return this.sumValue;
+            }
+        }
+        public double SumSquaredValue
+        {
+            get
+            {
+                return this.sumSquaredValue;
+            }
+        }
+
         public Distribution Plus(Distribution other)
         {
             return new Distribution(this.sumValue + other.sumValue, this.sumSquaredValue + other.sumSquaredValue, this.sumWeight + other.sumWeight);

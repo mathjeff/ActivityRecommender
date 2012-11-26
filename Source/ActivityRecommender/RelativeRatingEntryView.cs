@@ -14,7 +14,7 @@ namespace ActivityRecommendation
             this.mainDisplayGrid = new DisplayGrid(2, 1);
 
             this.scaleBlock = new TitledTextbox("Score equals");
-            this.scaleBlock.Text = "2.0";
+            this.scaleBlock.Text = "1.0";
             this.mainDisplayGrid.AddItem(this.scaleBlock);
 
             /*
@@ -75,7 +75,7 @@ namespace ActivityRecommendation
             otherRating.ActivityDescriptor = this.latestParticipation.ActivityDescriptor;
             otherRating.Date = this.latestParticipation.StartDate;
             Activity otherActivity = activities.ResolveDescriptor(otherRating.ActivityDescriptor);
-            engine.EstimateValue(otherActivity, (DateTime)otherRating.Date);
+            engine.EstimateRating(otherActivity, (DateTime)otherRating.Date);
             Distribution otherEstimate = otherActivity.PredictedScore.Distribution;
 
             // make an AbsoluteRating for this Activity

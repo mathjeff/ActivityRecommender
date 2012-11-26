@@ -87,6 +87,32 @@ typicalScoreError = 0.150655861416498
 typicalProbabilityError = 0.431639712860378
 equivalentProbability = 0.752363147630177
  
+
+latest results (on 2012-11-17) after acquiring new data and then updating the engine to distinguish between expected immediate rating and expected overall future 
+ rating (and computing error based on expected immediate rating)
+typicalScoreError = 0.147185861338085
+equivalentProbability = 0.744923948566977
+
+latest results (on 2012-11-17) after 1. Adjusting the engine back to compute the difference between the predicted score and the updated score that is based on the
+ relative rating that generated it, and 2. Having the engine compute the error of the long-term prediction
+typical longtermPrediction error = 0.273375212068489
+typicalScoreError = 0.163789122061962
+equivalentProbability = 0.744923948566977
+
+
+results (on 2012-11-17) if I have the EngineTester skip any predictions having weight of 0
+typical longtermPrediction error = 0.0621895084186268
+typicalScoreError = 0.16571109025582
+typicalProbabilityError = 0.435903956644535
+equivalentProbability = 0.744923948566977
+
+ 
+results (on 2012-11-17) after having re-added the small amount of extra error to all predictions (which mattered for predictions having weight 0)
+typical longtermPrediction error = 0.105942853885603
+typicalScoreError = 0.16571109025582
+typicalProbabilityError = 0.435903956644535
+equivalentProbability = 0.744923948566977
+ 
  */
 
 namespace ActivityRecommendation
@@ -97,8 +123,11 @@ namespace ActivityRecommendation
         {
             this.engine = new Engine();
             this.activityDatabase = this.engine.ActivityDatabase;
-            this.squaredScoreError = new Distribution();
+            this.ratingSummarizer = new RatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.squared_shortTermScore_error = new Distribution();
+            this.squared_longTermValue_error = new Distribution();
             this.squaredParticipationProbabilityError = new Distribution();
+            this.valuePredictions = new Dictionary<Prediction, RatingSummary>();
         }
 
         public void AddInheritance(Inheritance newInheritance)
@@ -107,9 +136,6 @@ namespace ActivityRecommendation
         }
         public void AddRequest(ActivityRequest newRequest)
         {
-            //Rating rating = newRequest.GetCompleteRating();
-            //if (rating != null)
-            //    this.AddRating(rating);
             this.engine.PutActivityRequestInMemory(newRequest);
         }
         public void AddSkip(ActivitySkip newSkip)
@@ -117,10 +143,12 @@ namespace ActivityRecommendation
             // update the error rate for the participation probability predictor
             this.UpdateParticipationProbabilityError(newSkip.ActivityDescriptor, newSkip.Date, 0);
             this.engine.PutSkipInMemory(newSkip);
+            if (newSkip.SuggestionDate != null)
+            {
+                // inform the ratingSummarizer that the user wasn't doing anything during this time
+                this.ratingSummarizer.AddParticipationIntensity((DateTime)newSkip.SuggestionDate, newSkip.Date, 0);
+            }
 
-            //Rating rating = newSkip.GetCompleteRating();
-            //if (rating != null)
-            //    this.AddRating(rating);
         }
         public void AddParticipation(Participation newParticipation)
         {
@@ -138,6 +166,7 @@ namespace ActivityRecommendation
                 this.AddRating(rating);
 
             this.engine.PutParticipationInMemory(newParticipation);
+            this.ratingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
         }
         public void AddRating(Rating newRating)
         {
@@ -152,12 +181,30 @@ namespace ActivityRecommendation
         public void AddRating(AbsoluteRating newRating)
         {
             this.PrintResults();
+
+            this.Compute_FutureEstimate_Errors();
+
             Console.WriteLine("Adding rating with date" + ((DateTime)newRating.Date).ToString());
             this.UpdateScoreError(newRating.ActivityDescriptor, (DateTime)newRating.Date, newRating.Score);
-            this.engine.PutRatingInMemory(newRating);
+            //this.engine.PutRatingInMemory(newRating); // this gets done when we put the participation in memory
+            RatingSource ratingSource = newRating.Source;
+            // the code that figures out where a rating came from only checks the most-recently-entered participation
+            // Occasionally this participation doesn't match (and we don't yet bother scanning further back), so it's posible that the rating source can be null
+            if (ratingSource != null)
+            {
+                Participation sourceParticipation = ratingSource.ConvertedAsParticipation;
+                if (sourceParticipation != null)
+                {
+                    this.ratingSummarizer.AddRating(sourceParticipation.StartDate, sourceParticipation.EndDate, newRating.Score);
+                }
+            }
         }
         public void AddRating(RelativeRating newRating)
         {
+#if true
+            this.AddRating(newRating.FirstRating);
+            this.AddRating(newRating.SecondRating);
+#else
 
             AbsoluteRating betterRating = newRating.BetterRating;
             this.engine.MakeRecommendation((DateTime)betterRating.Date);
@@ -171,13 +218,13 @@ namespace ActivityRecommendation
 
             if (newRating.RawScoreScale == null)
             {
-                // if the relative rating simply said "activity X is better than Y", then we compute a penalty if we computed something different
+                // if the relative rating simply said "activity X is better than Y", then we compute the penalty based on the difference from what we computed
                 double error;
                 if (predictedBetterScore.Mean > predictedWorseScore.Mean)
                     error = 0;
                 else
                     error = predictedWorseScore.Mean - predictedBetterScore.Mean;
-                this.UpdateScoreError(error);
+                this.Update_ShortTerm_ScoreError(error);
             }
             else
             {
@@ -193,10 +240,11 @@ namespace ActivityRecommendation
                 double err2 = improvedBetterEstimate - predictedBetterScore.Mean;
                 double err1 = improvedWorseEstimate - predictedWorseScore.Mean;
                 double error = Math.Sqrt(err1 * err1 + err2 * err2);
-                this.UpdateScoreError(error);
+                this.Update_ShortTerm_ScoreError(error);
             }
 
             this.engine.PutRatingInMemory(newRating);
+#endif
         }
         // runs the engine on the given activity at the given date, and keeps track of the overall error
         public void UpdateScoreError(ActivityDescriptor descriptor, DateTime when, double correctScore)
@@ -210,6 +258,11 @@ namespace ActivityRecommendation
 
             // compute the estimated score
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+
+            // keep track of having made this prediction, so we can later return to it and compute the error
+            Prediction prediction = activity.SuggestionValue;
+            RatingSummary summary = new RatingSummary(when);
+            this.valuePredictions[prediction] = summary;
             /*
             if (activity == null)
             {
@@ -222,15 +275,23 @@ namespace ActivityRecommendation
             }
             */
             // compute error
-            this.UpdateScoreError(activity.PredictedScore.Distribution.Mean - correctScore);
+            this.Update_ShortTerm_ScoreError(activity.PredictedScore.Distribution.Mean - correctScore);
         }
-        public void UpdateScoreError(double error)
+        public void Update_ShortTerm_ScoreError(double error)
         {
             if (Math.Abs(error) > 1)
                 Console.WriteLine("error");
 
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
-            this.squaredScoreError = this.squaredScoreError.Plus(errorDistribution);
+            this.squared_shortTermScore_error = this.squared_shortTermScore_error.Plus(errorDistribution);
+        }
+        public void Update_LongTerm_ValueError(double error)
+        {
+            if (Math.Abs(error) > 1)
+                Console.WriteLine("error");
+
+            Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
+            this.squared_longTermValue_error = this.squared_longTermValue_error.Plus(errorDistribution);
         }
         public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
         {
@@ -250,10 +311,32 @@ namespace ActivityRecommendation
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
             this.squaredParticipationProbabilityError = this.squaredParticipationProbabilityError.Plus(errorDistribution);
         }
+        public void Finish()
+        {
+            this.Compute_FutureEstimate_Errors();
+            this.PrintResults();
+        }
 
+        // computes the error for each prediction that was made about the future
+        public void Compute_FutureEstimate_Errors()
+        {
+            Distribution errorsSquared = new Distribution();
+            foreach (Prediction prediction in this.valuePredictions.Keys)
+            {
+                RatingSummary summary = this.valuePredictions[prediction];
+                summary.Update(this.ratingSummarizer);
+                double predictedScore = prediction.Distribution.Mean;
+                double actualScore = summary.Score.Mean;
+                double error = actualScore - predictedScore;
+                errorsSquared = errorsSquared.Plus(Distribution.MakeDistribution(error * error, 0, 1));
+            }
+            double errorSquared = errorsSquared.Mean;
+            double typicalPredictionError = Math.Sqrt(errorSquared);
+            Console.WriteLine("typical longtermPrediction error = " + typicalPredictionError);
+        }
         public void PrintResults()
         {
-            double typicalScoreError = Math.Sqrt(this.squaredScoreError.Mean);
+            double typicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
             Console.WriteLine("typicalScoreError = " + typicalScoreError.ToString());
             double typicalProbabilityError = Math.Sqrt(this.squaredParticipationProbabilityError.Mean);
             Console.WriteLine("typicalProbabilityError = " + typicalProbabilityError.ToString());
@@ -263,11 +346,12 @@ namespace ActivityRecommendation
             double equivalentProbability = (1 + Math.Sqrt(1 - 4 * this.squaredParticipationProbabilityError.Mean)) / 2;
             Console.WriteLine("equivalentProbability = " + equivalentProbability.ToString());
         }
+        // a measure of how far off the engine's predicted scores are from the scores the user actually provides
         public Distribution SquaredScoreError
         {
             get
             {
-                return this.squaredScoreError;
+                return this.squared_shortTermScore_error;
             }
         }
         public Distribution SquaredParticipationProbabilityError
@@ -280,7 +364,11 @@ namespace ActivityRecommendation
 
         private Engine engine;
         private ActivityDatabase activityDatabase;
-        private Distribution squaredScoreError;
+        private Distribution squared_shortTermScore_error;
+        private Distribution squared_longTermValue_error;
         private Distribution squaredParticipationProbabilityError;
+        private RatingSummarizer ratingSummarizer;
+        private Dictionary<Prediction, RatingSummary> valuePredictions; // given a prediction, returns an object that can determine what the actual ratings were
+
     }
 }

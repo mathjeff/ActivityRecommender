@@ -74,6 +74,7 @@ namespace ActivityRecommendation
         public void ApplyParticipationsAndRatings()
         {
             DateTime nextDate;
+            int numRatingsNewlyApplied = this.unappliedRatings.Count;
             while (true)
             {
                 // find the next date at which something happened
@@ -111,6 +112,7 @@ namespace ActivityRecommendation
                     this.unappliedSkips.RemoveAt(0);
                 }
             }
+            this.Update_RatingSummaries(numRatingsNewlyApplied);
         }
 
 
@@ -209,9 +211,9 @@ namespace ActivityRecommendation
             Distribution bestRating = null;
             foreach (Activity candidate in candidates)
             {
+                this.EstimateSuggestionValue(candidate, when);
                 if (candidate.Choosable)
                 {
-                    this.EstimateValue(candidate, when);
                     Distribution currentRating = candidate.SuggestionValue.Distribution;
                     if (bestRating == null || bestRating.Mean < currentRating.Mean)
                     {
@@ -221,9 +223,9 @@ namespace ActivityRecommendation
                 }
             }
             // After finding the activity with the highest expected rating, we need to check for other activities having high variance but almost-as-good values
+            Activity bestActivityToPairWith = bestActivity;
             if (bestActivity == null)
                 return null;
-            Activity bestActivityToPairWith = bestActivity;
             double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
             foreach (Activity candidate in candidates)
             {
@@ -319,8 +321,8 @@ namespace ActivityRecommendation
             Distribution score = earlyScore.Plus(lateScore.CopyAndReweightBy(lateWeight));
             return score;
         }
-        // update all of the time-sensitive estimates for Activity
-        public void EstimateValue(Activity activity, DateTime when)
+        // update the estimate of what rating the user would give to this activity now
+        public void EstimateRating(Activity activity, DateTime when)
         {
             // If we've already estimated the rating at this date, then just return what we calculated
             //DateTime latestUpdateDate = activity.PredictedScore.ApplicableDate;
@@ -334,10 +336,10 @@ namespace ActivityRecommendation
             // First make sure that all parents' ratings are up-to-date
             foreach (Activity parent in activity.Parents)
             {
-                this.EstimateValue(parent, when);
+                this.EstimateRating(parent, when);
             }
             // Estimate the rating that the user would give to this activity if it were done
-            List<Prediction> ratingPredictions = this.GetRatingEstimates(activity, when);
+            List<Prediction> ratingPredictions = this.Get_ShortTerm_RatingEstimates(activity, when);
             // now that we've made a list of guesses, combine them to make one final guess of what we expect the user's rating to be
             Prediction ratingPrediction = this.CombineRatingPredictions(ratingPredictions);
             activity.PredictedScore = ratingPrediction;
@@ -359,12 +361,17 @@ namespace ActivityRecommendation
                 prediction.Distribution = prediction.Distribution.CopyAndStretchBy(usefulFraction);
             }
 
+        }
 
+        // update the estimate of how good it would be to suggest this activity now
+        public void EstimateSuggestionValue(Activity activity, DateTime when)
+        {
             // Now we estimate how useful it would be to suggest this activity to the user
             List<Prediction> extraPredictions = this.GetSuggestionEstimates(activity, when);
-            IEnumerable<Prediction> suggestionPredictions = ratingPredictions.Concat(extraPredictions);
-            activity.SuggestionValue = this.CombineRatingPredictions(suggestionPredictions);
 
+            //IEnumerable<Prediction> suggestionPredictions = ratingPredictions.Concat(extraPredictions);
+            IEnumerable<Prediction> suggestionPredictions = this.GetSuggestionEstimates(activity, when);
+            activity.SuggestionValue = this.CombineRatingPredictions(suggestionPredictions);
         }
 
         // attempt to calculate the probability that the user would do this activity if we suggested it at this time
@@ -376,17 +383,21 @@ namespace ActivityRecommendation
         }
 
         // returns a list of Distributions that are to be used to estimate the rating the user will assign to this Activity
-        private List<Prediction> GetRatingEstimates(Activity activity, DateTime when)
+        private List<Prediction> Get_ShortTerm_RatingEstimates(Activity activity, DateTime when)
         {
             // Now that the parents' ratings are up-to-date, the work begins
             // Make a list of predictions based on all the different factors
-            List<Prediction> predictions = activity.GetRatingEstimates(when);
+            List<Prediction> predictions = activity.Get_ShortTerm_RatingEstimate(when);
             return predictions;
         }
-        // returns a list of Predictions that were only used to predict the value of suggesting the given activity at the given time
+        // returns a list of all Predictions that are used to predict the value of suggesting the given activity at the given time
         private List<Prediction> GetSuggestionEstimates(Activity activity, DateTime when)
         {
-            List<Prediction> predictions = new List<Prediction>();
+            // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
+            this.EstimateRating(activity, when);
+            // Get the activity's estimates of what the overall value will be after having done this activity
+            List<Prediction> predictions = activity.Get_LongTerm_ValueEstimates(when);
+#if false
             // Now add a correction that helps avoid suggesting the same activity multiple times in a row
             int numActivities = this.activityDatabase.NumActivities;
             DateTime latestParticipationDate = activity.LatestParticipationDate;
@@ -400,6 +411,7 @@ namespace ActivityRecommendation
                 spacer.Justification = "you did this recently";
                 predictions.Add(spacer);
             }
+#endif
             /* 
             // We no longer need to incorporate the following distribution, which was solely to ensure that no activity was ever forgotten
             // The right way to do this is to create a more-accurate model of the rating of an activity when it hasn't been suggested in a while
@@ -424,7 +436,7 @@ namespace ActivityRecommendation
         // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time
         private IEnumerable<Prediction> GetAllSuggestionEstimates(Activity activity, DateTime when)
         {
-            List<Prediction> ratingPredictions = this.GetRatingEstimates(activity, when);
+            List<Prediction> ratingPredictions = this.Get_ShortTerm_RatingEstimates(activity, when);
             List<Prediction> suggestionPredictions = this.GetSuggestionEstimates(activity, when);
             return ratingPredictions.Concat(suggestionPredictions);
         }
@@ -577,6 +589,18 @@ namespace ActivityRecommendation
                 }
             }
         }
+        // tells each activity to spend a little bit of time updating its knowledge of the ratings that came after one of its participations
+        public void Update_RatingSummaries(int numRatingsToUpdate)
+        {
+            foreach (Activity activity in this.ActivityDatabase.AllActivities)
+            {
+                int i;
+                for (i = 0; i < numRatingsToUpdate; i++)
+                {
+                    activity.UpdateNext_RatingSummary(this.ratingSummarizer);
+                }
+            }
+        }
         // gets called whenever any outside source provides a rating
         public void DiscoveredRating(AbsoluteRating newRating)
         {
@@ -658,7 +682,7 @@ namespace ActivityRecommendation
             // However, when we need the correct value, we'll go calculate it, so it's okay
             // It's only when we're doing autocomplete that we don't bother with the full update
             // if we just created an empty child, then we can estimate its rating based on the parent's rating
-            this.EstimateValue(child, DateTime.Now);
+            this.EstimateRating(child, DateTime.Now);
             /*if (!this.requiresFullUpdate)
             {
                 // if we just created an empty child, then we can estimate its rating based on the parent's rating

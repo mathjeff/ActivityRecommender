@@ -33,6 +33,7 @@ namespace ActivityRecommendation
             titles.Add("Relative");
             this.typeSelector = new SelectorView(titles);
             this.typeSelector.AddClickHandler(this.UpdateSubview);
+            this.typeSelector.SelectIndex(1);
 
 
 

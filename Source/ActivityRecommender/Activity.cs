@@ -112,7 +112,8 @@ namespace ActivityRecommendation
             {
                 coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange();
             }
-            this.ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.longTerm_valueInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
         }
         // initialize the PredictionLinks that estimate the probability that the user will do this activity
         private void SetupParticipationProbabilityPredictors()
@@ -549,7 +550,7 @@ namespace ActivityRecommendation
         }
         public void AddRating(AbsoluteRating newRating)
         {
-            /* 
+            
             // For now, we don't care which activity the rating applied to. We just care what ratings were provided after the user participated in this activity
             if (newRating.Date != null)
             {
@@ -566,8 +567,8 @@ namespace ActivityRecommendation
                 }
                 Distribution score = Distribution.MakeDistribution(newRating.Score, 0, 1);
                 AdaptiveLinearInterpolation.Datapoint<Distribution> datapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
-                this.ratingInterpolator.AddDatapoint(datapoint);
-            }*/
+                this.shortTerm_ratingInterpolator.AddDatapoint(datapoint);
+            }
 
 
             // keep track of the ratings
@@ -663,7 +664,7 @@ namespace ActivityRecommendation
         }
 
         // returns a bunch of estimates about how it will be rated at this date
-        public List<Prediction> GetRatingEstimates(DateTime when)
+        public List<Prediction> Get_LongTerm_ValueEstimates(DateTime when)
         {
             double[] coordinates = new double[this.ratingTestingProgressions.Count];
             int i;
@@ -676,10 +677,37 @@ namespace ActivityRecommendation
                     coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
             }
             List<Prediction> results = new List<Prediction>();
-            Distribution estimate = new Distribution(this.ratingInterpolator.Interpolate(coordinates));
+            Distribution estimate = new Distribution(this.longTerm_valueInterpolator.Interpolate(coordinates));
             double weight = this.NumRatings * 4;
             Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
             
+            // add a little bit of uncertainty, which is especially important if the weight would otherwise be zero (so the default will then be a mean of 0.5)
+            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
+            Prediction prediction = new Prediction();
+            prediction.ApplicableDate = when;
+            prediction.Distribution = scaledEstimate.Plus(extraError);
+            results.Add(prediction);
+            return results;
+        }
+
+        // returns a bunch of estimates about how it will be rated at this date
+        public List<Prediction> Get_ShortTerm_RatingEstimate(DateTime when)
+        {
+            double[] coordinates = new double[this.ratingTestingProgressions.Count];
+            int i;
+            for (i = 0; i < coordinates.Length; i++)
+            {
+                ProgressionValue value = this.ratingTestingProgressions[i].GetValueAt(when, false);
+                if (value != null)
+                    coordinates[i] = value.Value.Mean;
+                else
+                    coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
+            }
+            List<Prediction> results = new List<Prediction>();
+            Distribution estimate = new Distribution(this.shortTerm_ratingInterpolator.Interpolate(coordinates));
+            double weight = this.NumRatings * 4;
+            Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
+
             // add a little bit of uncertainty
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Prediction prediction = new Prediction();
@@ -693,6 +721,7 @@ namespace ActivityRecommendation
             }
             return results;
         }
+
         // returns a bunch of estimates about the probability that the user would do this activity if it were suggested now
         public List<Prediction> GetParticipationProbabilityEstimates(DateTime when)
         {
@@ -830,7 +859,7 @@ namespace ActivityRecommendation
             // compute the score
             summary.Update(summarizer);
             // give it to the interpolator
-            this.ratingInterpolator.AddDatapoint(summary);
+            this.longTerm_valueInterpolator.AddDatapoint(summary);
             // add it to the queue to update later
             this.ratingSummariesToUpdate.Enqueue(summary);
         }
@@ -841,11 +870,11 @@ namespace ActivityRecommendation
                 // determine which datapoint should be updated
                 RatingSummary ratingSummary = this.ratingSummariesToUpdate.Dequeue();
                 // remove the datapoint from the ratings interpolator
-                this.ratingInterpolator.RemoveDatapoint(ratingSummary);
+                this.longTerm_valueInterpolator.RemoveDatapoint(ratingSummary);
                 // update the datapoint
                 ratingSummary.Update(summarizer);
                 // re-add the datapoint to the ratings interpolator
-                this.ratingInterpolator.AddDatapoint(ratingSummary);
+                this.longTerm_valueInterpolator.AddDatapoint(ratingSummary);
                 // put the participation back in the queue so we update it later
                 this.ratingSummariesToUpdate.Enqueue(ratingSummary);
             }
@@ -867,7 +896,8 @@ namespace ActivityRecommendation
         //private List<IPredictionLink> ratingPredictors;
         List<IProgression> ratingTrainingProgressions;
         List<IProgression> ratingTestingProgressions;
-        AdaptiveLinearInterpolator<Distribution> ratingInterpolator;
+        AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Activity
+        AdaptiveLinearInterpolator<Distribution> longTerm_valueInterpolator;   // this interpolator is used to estimate what user's average happiness will if they do this activity
         private List<IPredictionLink> extraRatingPredictionLinks;
 
 

@@ -28,6 +28,7 @@ namespace ActivityRecommendation
         private void Initialize(List<object> items)
         {
             // create the buttons
+            this.buttons = new List<RadioButton>();
             foreach (object item in items)
             {
                 RadioButton newButton = new ResizableRadioButton();
@@ -43,7 +44,8 @@ namespace ActivityRecommendation
                 {
                     newButton.IsChecked = false;
                 }
-                this.AddItem(newButton);
+                base.AddItem(newButton);
+                this.buttons.Add(newButton);
             }
             this.eventHandlers = new List<RoutedEventHandler>();
         }
@@ -76,6 +78,15 @@ namespace ActivityRecommendation
                 return (string)this.selectedButton.Content;
             }
         }
+        public void SelectIndex(int index)
+        {
+            if (this.selectedButton != null)
+            {
+                this.selectedButton.IsChecked = false;
+            }
+            this.selectedButton = this.buttons[index];
+            this.selectedButton.IsChecked = true;
+        }
         private void ButtonClick(object sender, RoutedEventArgs e)
         {
             this.selectedButton.IsChecked = false;
@@ -94,7 +105,8 @@ namespace ActivityRecommendation
         }
 
         private RadioButton selectedButton;
-        List<RoutedEventHandler> eventHandlers;
+        private List<RoutedEventHandler> eventHandlers;
+        private List<RadioButton> buttons;
 
 
     }

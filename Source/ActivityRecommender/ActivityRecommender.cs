@@ -27,7 +27,7 @@ namespace ActivityRecommendation
 
             if (this.engineTester != null)
             {
-                this.engineTester.PrintResults();
+                this.engineTester.Finish(); // do any cleanup calculations and print results
                 Console.WriteLine("");
             }
         }
@@ -149,10 +149,6 @@ namespace ActivityRecommendation
                 rating.Score = estimatedScore;
                 skip.RawRating = rating;
                 this.AddSkip(skip);
-
-                //RatingSource source = RatingSource.Skip;
-                //AbsoluteRating downvote = new AbsoluteRating(estimatedScore, now, this.latestRecommendedActivity.MakeDescriptor(), source);
-                //this.AddRating(downvote);
             }
             this.suppressDownoteOnRecommendation = false;
             
@@ -185,7 +181,6 @@ namespace ActivityRecommendation
 
                     ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
                     this.AddActivityRequest(request);
-                    //this.AddRating(upvote);
                     // now we get a recommendation, from among all activities within this category
                     bestActivity = this.engine.MakeRecommendation(requestCategory, suggestionDate);
                 }
@@ -268,13 +263,6 @@ namespace ActivityRecommendation
             else
                 participation.Suggested = false;
             this.AddParticipation(participation);
-            /* // if there is a rating, give it to the engine too
-            AbsoluteRating rating = this.participationEntryView.Rating;
-            if (rating != null)
-            {
-                this.AddRating(rating);
-            }
-            */
             // fill in some default data for the ParticipationEntryView
             //this.latestActionDate = new DateTime(0);
             this.UpdateDefaultParticipationData();
@@ -308,10 +296,6 @@ namespace ActivityRecommendation
         {
             this.PutParticipationInMemory(newParticipation);
             this.WriteParticipation(newParticipation);
-            /*if (newParticipation.Rating != null)
-            {
-                this.AddRating(newParticipation.Rating);
-            }*/
         }
         private void WriteParticipation(Participation newParticipation)
         {

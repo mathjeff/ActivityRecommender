@@ -1,0 +1,27 @@
+<Project>
+  <name>AdaptiveInterpolator</name>
+  <source><GitRepo/></source>
+  <version><GitVersion/></version>
+  <dependencies>
+    <DependencyList>
+      <item>
+        <name>AdaptiveInterpolator</name>
+        <version>a20b77909aae036a1c8b6f534afa2b109233bffe</version>
+        <syncher>
+          <Git>
+            <origin><Url><server>https://github.com</server><path>mathjeff/AdaptiveInterpolator</path></Url></origin>
+          </Git>
+        </syncher>
+      </item>
+      <item>
+        <name>VisiPlacer</name>
+        <version>822ad65a1a1cb4e9e7dd0b5cf3ed1d49f18c9c63</version>
+        <syncher>
+          <Git>
+            <origin><Url><server>https://github.com</server><path>mathjeff/VisiPlacer</path></Url></origin>
+          </Git>
+        </syncher>
+      </item>
+    </DependencyList>
+  </dependencies>
+</Project>

@@ -193,26 +193,33 @@ namespace ActivityRecommendation
         // writes pre-loaded data to disk
         private void WriteDataIfMissing()
         {
+            return;
             this.WriteInheritancesIfMissing();
             this.WriteParticipationsIfMissing();
         }
         private void WriteInheritancesIfMissing()
         {
+            throw new NotImplementedException();
+            /*
             if (this.textConverter.FileExists(this.inheritancesFileName))
                 return;
             string ratings = ActivityRecommendation.Resources.AppResources.Default_ActivityInheritances;
             StreamWriter writer = this.textConverter.OpenFileForAppending(this.inheritancesFileName);
             writer.Write(ratings);
             writer.Close();
+             * */
         }
         private void WriteParticipationsIfMissing()
         {
+            throw new NotImplementedException();
+            /*
             if (this.textConverter.FileExists(this.ratingsFileName))
                 return;
             string inheritances = ActivityRecommendation.Resources.AppResources.Default_ActivityRatings;
             StreamWriter writer = this.textConverter.OpenFileForAppending(this.ratingsFileName);
             writer.Write(inheritances);
             writer.Close();
+            */
         }
         private void MakeRecommendation()
         {

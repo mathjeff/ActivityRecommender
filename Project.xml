@@ -1,5 +1,5 @@
 <Project>
-  <name>AdaptiveInterpolator</name>
+  <name>ActivityRecommender</name>
   <source><GitRepo/></source>
   <version><GitVersion/></version>
   <dependencies>

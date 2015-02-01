@@ -1,7 +1,0 @@
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\bin\Debug\AdaptiveLinearInterpolator.dll
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\bin\Debug\AdaptiveLinearInterpolator.pdb
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\obj\Debug\AdaptiveLinearInterpolator.dll
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\obj\Debug\AdaptiveLinearInterpolator.pdb
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\bin\Debug\StatList.dll
-C:\Users\gastoj3\Documents\Visual Studio 2008\Projects\Artificial Intelligence\Interpolators\AdaptiveLinearInterpolator\AdaptiveLinearInterpolator\bin\Debug\StatList.pdb

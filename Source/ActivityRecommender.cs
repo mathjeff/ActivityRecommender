@@ -10,6 +10,8 @@ using VisiPlacement;
 using Windows.Storage.Pickers;
 using System.IO.IsolatedStorage;
 using System.Reflection;
+using Windows.Phone.UI.Input;
+using System.ComponentModel;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -58,20 +60,19 @@ namespace ActivityRecommendation
 
         private void SetupDrawing()
         {
+            LayoutStack layoutStack = new LayoutStack();
 
             //GridLayout unevenDisplayGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(4), LayoutScore.Get_UnCentered_LayoutScore(4));
             //GridLayout evenDisplayGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(3), LayoutScore.Zero);
-            GridLayout leftGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
-            mainGrid.AddLayout(leftGrid);
+            //GridLayout mainGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(3), LayoutScore.Zero);
+            //GridLayout leftGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            //mainGrid.AddLayout(leftGrid);
 
             this.inheritanceEditingView = new InheritanceEditingView();
             this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
             this.inheritanceEditingView.AddClickHandler(new RoutedEventHandler(this.SubmitInheritance));
-            //this.inheritanceEditingView.Background = new SolidColorBrush(Color.FromRgb(230, 230, 230));
-            //evenDisplayGrid.AddLayout(this.inheritanceEditingView);
-            //unevenDisplayGrid.AddLayout(this.inheritanceEditingView);
-            leftGrid.AddLayout(this.inheritanceEditingView);
+            //mainGrid.AddLayout(this.inheritanceEditingView);
+            //leftGrid.AddLayout(this.inheritanceEditingView);
 
             // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
             //this.participationEntryView = new ParticipationEntryView();
@@ -84,7 +85,7 @@ namespace ActivityRecommendation
             this.participationEntryView.LatestParticipation = this.latestParticipation;
             //evenDisplayGrid.AddLayout(this.participationEntryView);
             //unevenDisplayGrid.AddLayout(this.participationEntryView);
-            mainGrid.AddLayout(this.participationEntryView);
+            //mainGrid.AddLayout(this.participationEntryView);
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView();
@@ -93,76 +94,66 @@ namespace ActivityRecommendation
             //this.suggestionsView.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210));
             //evenDisplayGrid.AddLayout(this.suggestionsView);
             //unevenDisplayGrid.AddLayout(this.suggestionsView);
-            mainGrid.AddLayout(this.suggestionsView);
+            //mainGrid.AddLayout(this.suggestionsView);
 
+            /*
             this.statisticsMenu = new MiniStatisticsMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
-            //this.statisticsMenu.Background = new SolidColorBrush(Color.FromRgb(200, 200, 200));
             this.statisticsMenu.AddOkClickHandler(new RoutedEventHandler(this.VisualizeData));
-            //evenDisplayGrid.AddLayout(this.statisticsMenu);
-            //unevenDisplayGrid.AddLayout(this.statisticsMenu);
             leftGrid.AddLayout(this.statisticsMenu);
+            */
+
+
             this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);
 
-#if false
-            //this.mainLayout = new ButtonLayout(new Button(), new TextblockLayout("I am in a button!"));
-            //this.mainLayout = new TextblockLayout("I am a text block!");
-            //this.mainLayout = this.suggestionsView;
-            //GridLayout grid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(1), LayoutScore.Zero);
-            //String text = "Visualize";
-            //ButtonLayout buttonLayout = new ButtonLayout(new Button(), new TextblockLayout(text));
-            /*GridLayout gridLayout = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(1), LayoutScore.Zero);
-            gridLayout.AddLayout(new ButtonLayout(new Button(), new TextblockLayout("I am the first button")));
-            gridLayout.AddLayout(new SingleItem_Layout(new ContentControl(), new ButtonLayout(new Button(), new TextblockLayout("I am the second button")), new Thickness(), LayoutScore.Zero));
-            //grid.AddLayout(buttonLayout);
-            this.mainLayout = gridLayout;
-            */
-            
-            Grid grid = new Grid();
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.RowDefinitions.Add(new RowDefinition());
-            grid.ColumnDefinitions.Add(new ColumnDefinition());
-            
-            Button button1 = new Button();
-            button1.Content = "I am button A!";
-            button1.VerticalAlignment = VerticalAlignment.Stretch;
-            button1.HorizontalAlignment = HorizontalAlignment.Stretch;
-            grid.Children.Add(button1);
-            Grid.SetRow(button1, 0);
-            
-            TestButton button2 = new TestButton();
-            button2.VerticalAlignment = VerticalAlignment.Stretch;
-            button2.HorizontalAlignment = HorizontalAlignment.Stretch;
-            grid.Children.Add(button2);
-            Grid.SetRow(button2, 1);
-            grid.ShowGridLines = true;
-            grid.Margin = new Thickness();
-            button1.Margin = button1.Padding = button2.Margin = button2.Padding = new Thickness();
-            button2.Style = new Style(button2.GetType());
-            grid.VerticalAlignment = VerticalAlignment.Stretch;
-            TextBlock box = new TextBlock();
-            box.Text = "I am a text box, yay!";
-            grid.Children.Add(box);
-            Grid.SetRow(box, 2);
-            box.Margin = box.Padding = new Thickness();
-            box.VerticalAlignment = VerticalAlignment.Stretch;
-            box.HorizontalAlignment = HorizontalAlignment.Stretch;
-            box.Width = 400;
-            button2.Content = "Here is some content";
+
+            MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(layoutStack);
+            usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
+            usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
+            usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
+            LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
-            grid.Background = new SolidColorBrush(Colors.Red);
-            grid.Margin = new Thickness();
-            this.mainWindow.Content = grid;
+            MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(layoutStack);
+            string newline = Environment.NewLine;
+            string[] helpTexts = {"Press your phone's Back button when finished.",
+                                     "This ActivityRecommender can give you suggestions for what to do now, based on time-stamped data from you about what you've done recently and how much you liked it",
+                                     "First you must enter some activities to choose from. Go to Add New Activities, type the name of the activity, and consider making it be a subcategory of another " +
+                                     "activity. For example, you might enter 'Computer Programming' as the child activity and enter 'Useful' as the parent activity",
+                                     "If you're typing an activity into a box and you want to use the suggested value below it, press the Enter button. If you intentionally or accidentally type an " +
+                                     "activity that isn't known to this program yet, then it will be created automatically for you.",
+                                     "Then you can ask for suggestions! Go to Get Suggestions for some ideas if you're in a hurry.",
+                                     "Also be sure take a look at the Record Participations screen, and give feedback about how much you did or didn't like certain things that you did.",
+                                     "This version of this application does not use the internet and does not report your entries to anyone.",
+                                     "Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks! - Jeffry Gaston"};
 
-            
-#else
-            //this.mainLayout = new LayoutCache(new LayoutUnion(evenDisplayGrid, unevenDisplayGrid));
-            this.mainLayout = new LayoutCache(mainGrid);
-#endif
+            LinkedList<TextblockLayout> helpBoxes = new LinkedList<TextblockLayout>();
+            GridLayout helpLayout = GridLayout.New(BoundProperty_List.Uniform(helpTexts.Length), BoundProperty_List.Uniform(1), LayoutScore.Zero);
+            foreach (string message in helpTexts)
+            {
+                helpLayout.AddLayout(new TextblockLayout(message));
+            }
+
+
+            introMenu_builder.AddLayout("About", helpLayout);
+            introMenu_builder.AddLayout("Start", usageMenu);
+            LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
+
+
+            layoutStack.AddLayout(helpOrStart_menu);
+
+
+            this.mainLayout = new LayoutCache(layoutStack);
+            this.layoutStack = layoutStack;
+                        
             this.displayManager = new ViewManager(this.mainWindow, mainLayout);
 
+        }
+
+        public void GoBack(object sender, CancelEventArgs e)
+        {
+            if (this.layoutStack.GoBack())
+                e.Cancel = true;
         }
 
 
@@ -180,6 +171,7 @@ namespace ActivityRecommendation
         }
         private void ReadEngineFiles()
         {
+            //this.CleanDataIfNecessary();
             this.WriteDataIfMissing();
 
             System.Diagnostics.Debug.WriteLine("Starting to read files");
@@ -193,10 +185,10 @@ namespace ActivityRecommendation
         // writes pre-loaded data to disk
         private void WriteDataIfMissing()
         {
-            return;
-            this.WriteInheritancesIfMissing();
-            this.WriteParticipationsIfMissing();
+            //this.WriteInheritancesIfMissing();
+            //this.WriteParticipationsIfMissing();
         }
+
         private void WriteInheritancesIfMissing()
         {
             throw new NotImplementedException();
@@ -773,6 +765,7 @@ namespace ActivityRecommendation
         int counter = 0;
         // ActivityDatabase primedActivities; // activities that have already been considered and therefore are fast to consider again
         int numSuggestionsPerRequest = 1;
+        LayoutStack layoutStack;
 
     }
 }

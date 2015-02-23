@@ -1,24 +1,36 @@
-<Project>
+
+<Project>  
   <name>ActivityRecommender</name>
   <source><GitRepo/></source>
   <version><GitVersion/></version>
-  <dependencies>
-    <DependencyList>
-      <item>
+  <dependencies>  
+    <DependencyList>  
+      <item>  
         <name>AdaptiveInterpolator</name>
         <version>498bd15eb8087617ce440f8219f18b9d561bb59b</version>
-        <syncher>
-          <Git>
-            <origin><Url><server>https://github.com</server><path>mathjeff/AdaptiveInterpolator</path></Url></origin>
+        <syncher>  
+          <Git>  
+            <origin>  
+              <Url>  
+                <server>https://github.com</server>
+                <path>mathjeff/AdaptiveInterpolator</path>
+              </Url>
+            </origin>
           </Git>
         </syncher>
       </item>
-      <item>
+      
+      <item>  
         <name>VisiPlacer</name>
-        <version>fb3e12c1af648cb8e6c31d91394f3ddac7c17747</version>
-        <syncher>
-          <Git>
-            <origin><Url><server>https://github.com</server><path>mathjeff/VisiPlacer</path></Url></origin>
+        <version>e691adde1c1e994cf787a8f677f5bf038d9605be</version>
+        <syncher>  
+          <Git>  
+            <origin>  
+              <Url>  
+                <server>https://github.com</server>
+                <path>mathjeff/VisiPlacer</path>
+              </Url>
+            </origin>
           </Git>
         </syncher>
       </item>

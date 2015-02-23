@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
+using Windows.Phone.UI.Input;
+using System.ComponentModel;
 //using ActivityRecommender.Resources;
 
 namespace ActivityRecommendation
@@ -17,11 +19,20 @@ namespace ActivityRecommendation
         public MainPage()
         {
             InitializeComponent();
-            new ActivityRecommender(this.content);
+            this.recommender = new ActivityRecommender(this.content);
 
+            this.BackKeyPress += this.BackPressed;
             // Sample code to localize the ApplicationBar
             //BuildLocalizedApplicationBar();
         }
+
+        void BackPressed(object sender, CancelEventArgs e)
+        {
+            this.recommender.GoBack(sender, e);
+        }
+
+        private ActivityRecommender recommender;
+
 
         // Sample code for building a localized ApplicationBar
         //private void BuildLocalizedApplicationBar()

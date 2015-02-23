@@ -404,6 +404,42 @@ namespace ActivityRecommendation
             writer.Close();
         }
 
+        // renames everything in the given directory recursively to not start with a dot, so that it can be deleted
+        private void CleanDataIfNecessary()
+        {
+            IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication();
+
+            string[] fileNames = storage.GetFileNames();
+            Console.WriteLine(fileNames);
+            string[] directoryNames = storage.GetDirectoryNames();
+            foreach (string path in directoryNames)
+            {
+                this.SanitizeDirectory(storage, path);
+                if (path[0] == '.')
+                    storage.MoveDirectory(path, "old" + path);
+            }
+        }
+        // renames everything in the given directory to not start with a dot, so that it can be deleted
+        private void SanitizeDirectory(IsolatedStorageFile storage, string filepath)
+        {
+            String[] dirNames = storage.GetDirectoryNames(filepath + "\\*");
+            // recursively delete directories
+            for (int i = 0; i < dirNames.Length; i++)
+            {
+                this.SanitizeDirectory(storage, filepath + "\\" + dirNames[i]);
+                if (dirNames[i][0] == '.')
+                    storage.MoveDirectory(filepath + "\\" + dirNames[i], filepath + "\\old" + dirNames[i]);
+            }
+
+            // Make the files deletable too
+            String[] fileNames = storage.GetFileNames(filepath + "\\*");
+            for (int i = 0; i < fileNames.Length; ++i)
+            {
+                if (fileNames[i][0] == '.')
+                    storage.MoveFile(filepath + "\\" + fileNames[i], filepath + "\\old" + fileNames[i]);
+            }
+        }
+
         private void ProcessLatestDate(XmlNode nodeRepresentation)
         {
             DateTime when = this.ReadDate(nodeRepresentation);

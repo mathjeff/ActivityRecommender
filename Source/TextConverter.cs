@@ -154,7 +154,9 @@ namespace ActivityRecommendation
         public Boolean FileExists(string fileName)
         {
             IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication();
-            return storage.FileExists(fileName);
+            Boolean result = storage.FileExists(fileName);
+            storage.Dispose();
+            return result;
         }
         public IsolatedStorageFileStream OpenFile(string fileName, FileMode fileMode)
         {
@@ -418,6 +420,7 @@ namespace ActivityRecommendation
                 if (path[0] == '.')
                     storage.MoveDirectory(path, "old" + path);
             }
+            storage.Dispose();
         }
         // renames everything in the given directory to not start with a dot, so that it can be deleted
         private void SanitizeDirectory(IsolatedStorageFile storage, string filepath)

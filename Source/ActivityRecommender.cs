@@ -135,7 +135,7 @@ namespace ActivityRecommendation
             }
 
 
-            introMenu_builder.AddLayout("About", helpLayout);
+            introMenu_builder.AddLayout("Help", helpLayout);
             introMenu_builder.AddLayout("Start", usageMenu);
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
@@ -161,7 +161,8 @@ namespace ActivityRecommendation
         {
             this.engine = new Engine();
             this.ReadEngineFiles();
-            this.engine.FullUpdate();
+            //this.engine.FullUpdate(); // this causes this engine to categorize a bunch of data but it takes a while and we don't want to do it right away
+            this.engine.CreateActivities();
             this.suppressDownvoteOnRecommendation = true;        // the first time they get a recommendation, we don't treat it as a skip of the latest suggestion
         }
         public void PrepareEngine()

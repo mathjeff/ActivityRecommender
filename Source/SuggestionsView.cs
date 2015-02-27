@@ -11,8 +11,11 @@ namespace ActivityRecommendation
 {
     class SuggestionsView : TitledControl
     {
-        public SuggestionsView()
+        public SuggestionsView(LayoutStack layoutStack)
         {
+
+            this.layoutStack = layoutStack;
+
             this.SetTitle("Get Suggestions");
             this.content = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
@@ -21,11 +24,6 @@ namespace ActivityRecommendation
 
             this.suggestionButton = new Button();
             ButtonLayout buttonLayout = new ButtonLayout(this.suggestionButton, new TextblockLayout(suggestionTextBlock));
-            //this.suggestionButton.VerticalAlignment = VerticalAlignment.Center;
-            //this.suggestionButton.Width = 100;
-            //this.suggestionButton.Height = 30;
-            //this.content.AddItem(this.suggestionButton);
-            //this.content.AddLayout(buttonLayout);
 
             this.categoryBox = new ActivityNameEntryBox("from category (optional)");
             //this.content.AddLayout(this.categoryBox);
@@ -35,55 +33,29 @@ namespace ActivityRecommendation
             selectionLayout.AddLayout(this.categoryBox);
             this.content.AddLayout(selectionLayout);
 
-            /*
-            this.suggestionNameBlock = new TitledTextblock("Suggested activity:");
-            //this.suggestionNameBlock.Text = "<Push the button to see a suggestion here>";
-            //this.suggestionNameBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            content.AddItem(this.suggestionNameBlock);
+            this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a suggested activity")
+                .AddMessage("You can optionally enter a category (an activity containing other activities) from which to choose the first activity, or leave it blank to consider all activities")
+                .AddMessage("Then, push Suggest and you will receive a few suggestions.")
+                .AddMessage("Enjoy!")
+                .Build();
 
-            this.justificationBlock = new TitledTextblock("Primary Justification:");
-            //this.justificationBlock.Text = "<When there is a suggestion, a very short explanation will be here>";
-            //this.justificationBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            //content.AddItem(this.justificationBlock);
+            ResizableButton helpButton = new ResizableButton();
+            this.content.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+            helpButton.Click += helpButton_Click;
 
-            this.durationNameBlock = new TitledTextblock("Suggested duration:");
-            //this.suggestionNameBlock.Text = "<Push the button to see a suggestion here>";
-            //this.suggestionNameBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            content.AddItem(this.durationNameBlock);
-
-            this.scoreBlock = new TitledTextblock("Expected Score:");
-            //this.scoreBlock.Text = "<This will be an estimate of the rating you will give to the activity if you do it>";
-            content.AddItem(this.scoreBlock);
-
-            this.stdDevBlock = new TitledTextblock("Standard Deviation:");
-            //this.stdDevBlock.Text = "<This will be an estimate of the uncertainty in the expected score>";
-            //content.AddItem(this.stdDevBlock);
-
-            this.participationProbabilityBlock = new TitledTextblock("Participation Probability:");
-            //this.participationProbabilityBlock.Text = "<This will be an estimate of the probability that you will take the suggestion>";
-            content.AddItem(this.participationProbabilityBlock);
-
-            */
-
-            this.ResetText();
+            //this.ResetText();
 
             this.SetContent(this.content);
+        }
+
+        void helpButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.layoutStack.AddLayout(this.helpWindow);
         }
         public void AddSuggestionClickHandler(RoutedEventHandler e)
         {
             this.suggestionButton.Click += e;
         }
-        /*public string SuggestionText
-        {
-            get
-            {
-                return this.suggestionNameBlock.Text;
-            }
-            set
-            {
-                this.suggestionNameBlock.Text = value;
-            }
-        }*/
         public string CategoryText
         {
             get
@@ -96,51 +68,6 @@ namespace ActivityRecommendation
             }
         }
 
-        /*
-        public string JustificationText
-        {
-            get
-            {
-                return this.justificationBlock.Text;
-            }
-            set
-            {
-                this.justificationBlock.Text = value;
-            }
-        }
-        public string DurationText
-        {
-            get
-            {
-                return this.durationNameBlock.Text;
-            }
-            set
-            {
-                this.durationNameBlock.Text = value;
-            }
-        }
-        public string ExpectedScoreText
-        {
-            set
-            {
-                this.scoreBlock.Text = value;
-            }
-        }
-        public string ScoreStdDevText
-        {
-            set
-            {
-                this.stdDevBlock.Text = value;
-            }
-        }
-        public string ParticipationProbabilityText
-        {
-            set
-            {
-                this.participationProbabilityBlock.Text = value;
-            }
-        }
-        */
         public ActivityDatabase ActivityDatabase
         {
             set
@@ -151,14 +78,6 @@ namespace ActivityRecommendation
         public void ResetText()
         {
             this.Suggestions = null;
-            /*
-            this.SuggestionText = "<Click \"Suggest\" for a suggestion>";
-            this.JustificationText = "<Here will be a short justification>";
-            this.DurationText = "<Here will be the recommended time to spend on the activity";
-            this.ExpectedScoreText = "<Here will be the expected score>";
-            this.ScoreStdDevText = "<Here will be a measure of the uncertainty of the score>";
-            this.ParticipationProbabilityText = "<This will be an estimate of the probability that you will take the suggestion>";
-            */
         }
         public List<ActivitySuggestion> Suggestions
         {
@@ -258,13 +177,7 @@ namespace ActivityRecommendation
         private Button suggestionButton;
         private ActivityNameEntryBox categoryBox;
         private GridLayout content;
-        /*private TitledTextblock suggestionNameBlock;
-        private TitledTextblock durationNameBlock;
-        private TitledTextblock justificationBlock;
-        private TitledTextblock scoreBlock;
-        private TitledTextblock stdDevBlock;
-        private TitledTextblock participationProbabilityBlock;
-        private DisplayGrid suggestionsView;
-        */
+        LayoutChoice_Set helpWindow;
+        LayoutStack layoutStack;
     }
 }

@@ -22,6 +22,8 @@ namespace ActivityRecommendation
         {
             this.mainWindow = newMainWindow;
 
+            this.layoutStack = new LayoutStack();
+
             this.InitializeSettings();
 
             this.MakeEngine();
@@ -54,13 +56,12 @@ namespace ActivityRecommendation
             //this.engineTester = new EngineTester();
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
-            this.participationEntryView = new ParticipationEntryView();
+            this.participationEntryView = new ParticipationEntryView(this.layoutStack);
             this.recentUserData = new RecentUserData();
         }
 
         private void SetupDrawing()
         {
-            LayoutStack layoutStack = new LayoutStack();
 
             //GridLayout unevenDisplayGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(4), LayoutScore.Get_UnCentered_LayoutScore(4));
             //GridLayout evenDisplayGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
@@ -68,7 +69,7 @@ namespace ActivityRecommendation
             //GridLayout leftGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
             //mainGrid.AddLayout(leftGrid);
 
-            this.inheritanceEditingView = new InheritanceEditingView();
+            this.inheritanceEditingView = new InheritanceEditingView(this.layoutStack);
             this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
             this.inheritanceEditingView.AddClickHandler(new RoutedEventHandler(this.SubmitInheritance));
             //mainGrid.AddLayout(this.inheritanceEditingView);
@@ -88,7 +89,7 @@ namespace ActivityRecommendation
             //mainGrid.AddLayout(this.participationEntryView);
             this.UpdateDefaultParticipationData();
 
-            this.suggestionsView = new SuggestionsView();
+            this.suggestionsView = new SuggestionsView(this.layoutStack);
             this.suggestionsView.AddSuggestionClickHandler(new RoutedEventHandler(this.MakeRecommendation));
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
             //this.suggestionsView.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210));
@@ -107,32 +108,19 @@ namespace ActivityRecommendation
             this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);
 
 
-            MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(layoutStack);
+            MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
-            MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(layoutStack);
-            string newline = Environment.NewLine;
-            string[] helpTexts = {"Press your phone's Back button when finished.",
-                                     "This ActivityRecommender can give you suggestions for what to do now, based on time-stamped data from you about what you've done recently and how much you liked it",
-                                     "First you must enter some activities to choose from. Go to Add New Activities, type the name of the activity, and consider making it be a subcategory of another " +
-                                     "activity. For example, you might enter 'Computer Programming' as the child activity and enter 'Useful' as the parent activity",
-                                     "If you're typing an activity into a box and you want to use the suggested value below it, press the Enter button. If you intentionally or accidentally type an " +
-                                     "activity that isn't known to this program yet, then it will be created automatically for you.",
-                                     "Then you can ask for suggestions! Go to Get Suggestions for some ideas if you're in a hurry.",
-                                     "Also be sure take a look at the Record Participations screen, and give feedback about how much you did or didn't like certain things that you did.",
-                                     "This version of this application does not use the internet and does not report your entries to anyone.",
-                                     "Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks! - Jeffry Gaston"};
-
-            LinkedList<TextblockLayout> helpBoxes = new LinkedList<TextblockLayout>();
-            GridLayout helpLayout = GridLayout.New(BoundProperty_List.Uniform(helpTexts.Length), BoundProperty_List.Uniform(1), LayoutScore.Zero);
-            foreach (string message in helpTexts)
-            {
-                helpLayout.AddLayout(new TextblockLayout(message));
-            }
+            MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
+            LayoutChoice_Set helpLayout = (new HelpWindowBuilder()).AddMessage("Press your phone's Back button when finished.")
+                .AddMessage("This ActivityRecommender can give you suggestions for what to do now, based on time-stamped data from you about what you've done recently and how much you liked it")
+                .AddMessage("Create some activities, log some participations, and ask for suggestions!")
+                .AddMessage("This version of this application does not use the internet and does not report your entries to anyone.")
+                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks! - Jeffry Gaston").Build();
 
 
             introMenu_builder.AddLayout("Help", helpLayout);
@@ -140,11 +128,10 @@ namespace ActivityRecommendation
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
 
-            layoutStack.AddLayout(helpOrStart_menu);
+            this.layoutStack.AddLayout(helpOrStart_menu);
 
 
-            this.mainLayout = new LayoutCache(layoutStack);
-            this.layoutStack = layoutStack;
+            this.mainLayout = new LayoutCache(this.layoutStack);
                         
             this.displayManager = new ViewManager(this.mainWindow, mainLayout);
 

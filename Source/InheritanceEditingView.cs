@@ -10,8 +10,10 @@ namespace ActivityRecommendation
 {
     class InheritanceEditingView : TitledControl
     {
-        public InheritanceEditingView()
+        public InheritanceEditingView(LayoutStack layoutStack)
         {
+            this.layoutStack = layoutStack;
+
             this.SetTitle("Enter Activities to Choose From");
 
             GridLayout content = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
@@ -28,7 +30,25 @@ namespace ActivityRecommendation
             this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Top;
             content.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, new TextblockLayout(buttonTextBlock))));
 
+            ResizableButton helpButton = new ResizableButton();
+            TextBlock helpTextBlock = new TextBlock();
+            helpTextBlock.Text = "Help";
+            content.AddLayout(new LayoutCache(new ButtonLayout(helpButton, new TextblockLayout(helpTextBlock))));
+            helpButton.Click += helpButton_Click;
+
+            this.helpMenu = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions")
+                .AddMessage("The text box on the left is where you type the activity name.")
+                .AddMessage("The text box on the right is where you type another activity that you want to make a supercategory of the activity.")
+                .AddMessage("For example, you might specify that Exercise is a subcategory of Useful")
+                .AddMessage("Each box will offer autocomplete suggestions in case you want to type an existing activity. Press Enter to fill in the autocomplete suggestion")
+                .Build();
+
             this.SetContent(new LayoutCache(content));
+        }
+
+        void helpButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.layoutStack.AddLayout(this.helpMenu);
         }
         public string ChildName
         {
@@ -67,5 +87,7 @@ namespace ActivityRecommendation
         private ActivityNameEntryBox childNameBox;
         private ActivityNameEntryBox parentNameBox;
         private ResizableButton okButton;
+        private LayoutStack layoutStack;
+        private LayoutChoice_Set helpMenu;
     }
 }

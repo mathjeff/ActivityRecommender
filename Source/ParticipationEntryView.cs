@@ -13,9 +13,11 @@ namespace ActivityRecommendation
 {
     class ParticipationEntryView : TitledControl
     {
-        public ParticipationEntryView() : base("Type What You've Been Doing")
+        public ParticipationEntryView(LayoutStack layoutStack) : base("Type What You've Been Doing")
         {
-            GridLayout contents = GridLayout.New(BoundProperty_List.Uniform(5), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            this.layoutStack = layoutStack;
+
+            GridLayout contents = GridLayout.New(BoundProperty_List.Uniform(4), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
             this.nameBox = new ActivityNameEntryBox("Activity Name");
             this.nameBox.AddTextChangedHandler(new TextChangedEventHandler(this.nameBox_TextChanged));
@@ -63,10 +65,10 @@ namespace ActivityRecommendation
             contents.AddLayout(new ButtonLayout(this.setEnddateButton, new TextblockLayout(endDateButton_textBlock)));
 
             this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
-            contents.AddLayout(this.intendedActivity_box);
-
+            //contents.AddLayout(this.intendedActivity_box);
             this.commentBox = new TitledTextbox("Comment (optional)");
-            contents.AddLayout(this.commentBox);
+            //contents.AddLayout(this.commentBox);
+            
 
             this.okButton = new ResizableButton();
             TextBlock okButtonTextBlock = new TextBlock();
@@ -77,8 +79,27 @@ namespace ActivityRecommendation
             this.predictedRating_block = new TextBlock();
             contents.AddLayout(new TextblockLayout(this.predictedRating_block));
 
+
+
+            this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record activities you have done.")
+                .AddMessage("Type the name of the activity, and press Enter if you want to take the autocomplete suggestion")
+                .AddMessage("Enter a rating if you like")
+                .AddMessage("Enter a start date and an end date")
+                .AddMessage("Lastly, click OK!")
+                .Build();
+
+            ResizableButton helpButton = new ResizableButton();
+            helpButton.Click += helpButton_Click;
+
+            contents.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+
             this.SetContent(contents);
-            //this.Background = System.Windows.Media.Brushes.Blue;
+
+        }
+
+        void helpButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.layoutStack.AddLayout(this.helpWindow);
         }
 
         public void DateText_Changed(object sender, TextChangedEventArgs e)
@@ -288,5 +309,7 @@ namespace ActivityRecommendation
         ResizableButton okButton;
         TextBlock predictedRating_block;
         Engine engine;
+        LayoutStack layoutStack;
+        LayoutChoice_Set helpWindow;
     }
 }

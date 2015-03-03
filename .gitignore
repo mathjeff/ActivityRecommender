@@ -2,3 +2,4 @@ deps
 obj
 Bin
 *.suo
+*.csproj.user

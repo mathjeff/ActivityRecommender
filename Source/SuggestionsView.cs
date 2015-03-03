@@ -40,10 +40,11 @@ namespace ActivityRecommendation
                 .Build();
 
             ResizableButton helpButton = new ResizableButton();
-            this.content.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+            
             helpButton.Click += helpButton_Click;
+            this.helpButton_layout = new ButtonLayout(helpButton, new TextblockLayout("Help"));
 
-            //this.ResetText();
+            this.ResetText();
 
             this.SetContent(this.content);
         }
@@ -96,8 +97,16 @@ namespace ActivityRecommendation
                         newGrid.AddLayout(subView);
                     }
                 }
-                // update our contents
-                this.content.PutLayout(newGrid, 0, 1);
+                if (newSuggestions != null && newSuggestions.Count > 0)
+                {
+                    // update our contents
+                    this.content.PutLayout(newGrid, 0, 1);
+                }
+                else
+                {
+                    // show a help button
+                    this.content.PutLayout(this.helpButton_layout, 0, 1);
+                }
             }
         }
         public Composite_ActivitySuggestion Suggestion
@@ -107,8 +116,8 @@ namespace ActivityRecommendation
                 Composite_ActivitySuggestion rootSuggestion = value;
                 int numColumns = rootSuggestion.CountNumLeaves();
                 int numRows = rootSuggestion.CountNumLevelsFromLeaf() + 1;
-                // TODO: compute the title in a more maintainable manner
-                BoundProperty_List rowHeights = new BoundProperty_List(numRows);
+                // TODO figure out how to make the grid be fast and look nice without enforcing here that everything have the same height
+                BoundProperty_List rowHeights = BoundProperty_List.Uniform(numRows);
                 for (int i = rowHeights.NumProperties - 1; i >= 1; i--)
                 {
                     rowHeights.BindIndices(i - 1, i);
@@ -116,6 +125,7 @@ namespace ActivityRecommendation
                 GridLayout newGrid = GridLayout.New(rowHeights, BoundProperty_List.Uniform(numColumns), LayoutScore.Zero);
                 for (int i = 0; i < numColumns; i++)
                 {
+                    // TODO: compute the title in a more maintainable manner
                     String title = null;
                     switch (i)
                     {
@@ -178,6 +188,7 @@ namespace ActivityRecommendation
         private ActivityNameEntryBox categoryBox;
         private GridLayout content;
         LayoutChoice_Set helpWindow;
+        LayoutChoice_Set helpButton_layout;
         LayoutStack layoutStack;
     }
 }

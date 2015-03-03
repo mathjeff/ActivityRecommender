@@ -42,27 +42,11 @@ namespace ActivityRecommendation
             contents.AddLayout(this.endDateBox);
 
 
-            TextBlock startDateButton_textBlock = new TextBlock();
             this.setStartdateButton = new ResizableButton();
-            startDateButton_textBlock.Text = "Set start = now";
-            this.setStartdateButton.VerticalAlignment = VerticalAlignment.Center;
-            this.setStartdateButton.Click += new RoutedEventHandler(setStartdateButton_Click);
-            contents.AddLayout(new ButtonLayout(this.setStartdateButton, new TextblockLayout(startDateButton_textBlock)));
-            /*Image image = new Image();
-            image.Source = ImageLoader.loadImage("icon.png");
-            image.Stretch = Stretch.Fill;
-            ImageLayout imageLayout = new ImageLayout(image, new LayoutScore(100, 100));
-            TextBlock testBox = startDateButton_textBlock;
-            testBox.Text = "a s d f\nz y x w";*/
-            //ontents.AddLayout(new ButtonLayout(this.setStartdateButton, new TextblockLayout(testBox)));
-            //contents.AddLayout(imageLayout);
+            contents.AddLayout(new ButtonLayout(this.setStartdateButton, "Set start = now"));
 
             this.setEnddateButton = new ResizableButton();
-            TextBlock endDateButton_textBlock = new TextBlock();
-            endDateButton_textBlock.Text = "Set end = now";
-            this.setEnddateButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            this.setEnddateButton.Click += new RoutedEventHandler(setEnddateButton_Click);
-            contents.AddLayout(new ButtonLayout(this.setEnddateButton, new TextblockLayout(endDateButton_textBlock)));
+            contents.AddLayout(new ButtonLayout(this.setEnddateButton, "Set end = now"));
 
             this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
             //contents.AddLayout(this.intendedActivity_box);
@@ -71,10 +55,7 @@ namespace ActivityRecommendation
             
 
             this.okButton = new ResizableButton();
-            TextBlock okButtonTextBlock = new TextBlock();
-            okButtonTextBlock.Text = "OK";
-            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            contents.AddLayout(new ButtonLayout(this.okButton, new TextblockLayout(okButtonTextBlock)));
+            contents.AddLayout(new ButtonLayout(this.okButton, "OK"));
 
             this.predictedRating_block = new TextBlock();
             contents.AddLayout(new TextblockLayout(this.predictedRating_block));

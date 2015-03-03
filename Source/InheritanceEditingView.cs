@@ -24,16 +24,11 @@ namespace ActivityRecommendation
             this.parentNameBox = new ActivityNameEntryBox("Parent Name");
             content.AddLayout(this.parentNameBox);
 
-            TextBlock buttonTextBlock = new TextBlock();
-            buttonTextBlock.Text = "OK";
             this.okButton = new ResizableButton();
-            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Top;
-            content.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, new TextblockLayout(buttonTextBlock))));
+            content.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
             ResizableButton helpButton = new ResizableButton();
-            TextBlock helpTextBlock = new TextBlock();
-            helpTextBlock.Text = "Help";
-            content.AddLayout(new LayoutCache(new ButtonLayout(helpButton, new TextblockLayout(helpTextBlock))));
+            content.AddLayout(new LayoutCache(new ButtonLayout(helpButton, "Help")));
             helpButton.Click += helpButton_Click;
 
             this.helpMenu = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions")

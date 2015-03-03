@@ -20,7 +20,7 @@ namespace ActivityRecommendation
 
             // create the box to store the date
             this.dateBox = new TextBox();
-            this.dateBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            //this.dateBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
             //this.dateBox.Width = 150;
             //this.dateBox.Height = 30;
             this.dateBox.TextChanged += new TextChangedEventHandler(dateBox_TextChanged);

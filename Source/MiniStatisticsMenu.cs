@@ -20,11 +20,7 @@ namespace ActivityRecommendation
             this.yAxisNameBox = new ActivityNameEntryBox("Y-Axis Activity (required)");
             this.displayGrid.AddLayout(this.yAxisNameBox);
 
-            TextBlock buttonTextBlock = new TextBlock();
-            buttonTextBlock.Text = "Visualize";
-            this.okButton = new ResizableButton();
-            this.okButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            this.displayGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, new TextblockLayout(buttonTextBlock))));
+            this.displayGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "Visualize")));
 
             this.xAxisNameBox = new ActivityNameEntryBox("X-Axis Activity (optional)");
             //this.xAxisProgressionSelector = new ProgressionSelectionView("X-Axis");

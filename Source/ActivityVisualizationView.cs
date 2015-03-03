@@ -63,12 +63,7 @@ namespace ActivityRecommendation
 
             // setup an exit button
             this.exitButton = new ResizableButton();
-            //this.exitButton.Content = "Escape";
-            this.exitButton.VerticalAlignment = VerticalAlignment.Center;
-            this.exitButton.Width = 100;
-            this.exitButton.HorizontalAlignment = HorizontalAlignment.Center;
-            this.exitButton.Height = 30;
-            statsDisplayGrid.AddLayout(new ButtonLayout(this.exitButton, new TextblockLayout("Escape")));
+            statsDisplayGrid.AddLayout(new ButtonLayout(this.exitButton, "Escape"));
             //statsDisplayGrid.AddLayout(this.exitButton);
 
             // show some statistics of the participations

@@ -120,7 +120,8 @@ namespace ActivityRecommendation
                 .AddMessage("This ActivityRecommender can give you suggestions for what to do now, based on time-stamped data from you about what you've done recently and how much you liked it")
                 .AddMessage("Create some activities, log some participations, and ask for suggestions!")
                 .AddMessage("This version of this application does not use the internet and does not report your entries to anyone.")
-                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks! - Jeffry Gaston").Build();
+                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks! - Jeffry Gaston")
+                .AddMessage("Version: Release 1").Build();
 
 
             introMenu_builder.AddLayout("Help", helpLayout);
@@ -151,11 +152,15 @@ namespace ActivityRecommendation
             //this.engine.FullUpdate(); // this causes this engine to categorize a bunch of data but it takes a while and we don't want to do it right away
             this.engine.CreateActivities();
             this.suppressDownvoteOnRecommendation = true;        // the first time they get a recommendation, we don't treat it as a skip of the latest suggestion
+
+            this.PrepareEngine();
         }
+        // Asks the engine to do some processing so that the next recommendation will be faster
         public void PrepareEngine()
         {
             //this.engine.MakeRecommendation(DateTime.Parse("2012-02-25T17:00:00"));
-            this.engine.MakeRecommendation();
+            //this.engine.MakeRecommendation();
+            this.engine.FullUpdate();
         }
         private void ReadEngineFiles()
         {

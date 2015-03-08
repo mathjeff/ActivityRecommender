@@ -193,6 +193,7 @@ namespace ActivityRecommendation
             if (reader.BaseStream.Length <= 0)
                 return; // if the file doesn't exist (or it's empty), then there's nothing to do
             String text = "<root>" + reader.ReadToEnd() + "</root>";
+            reader.Close();
             // System.Diagnostics.Debug.WriteLine(text);
             XmlDocument document = new XmlDocument();
             document.LoadXml(text);

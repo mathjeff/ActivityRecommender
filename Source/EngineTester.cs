@@ -7,6 +7,9 @@ using System.Text;
 // The first time (on 2012-1-15) that I calculated the Root(Mean(Squared(Error))), it was about 0.327
 
 /*
+Note that at some unknown time, the absolute ratings were removed from the error calculation because they were both unimportant and also easy to predict
+The implementation of the RelativeRating was done on 2012-01-06, so it happened some time after that
+
 The latest results (on 2012-2-17) using a bunch of independent, combined predictions is:
 typicalScoreError = 0.147785971030127
 typicalProbabilityError = 0.470028763507115
@@ -162,8 +165,25 @@ equivalentProbability = 0.824679737576454
 weightedProbabilityScore = 0.2146129963213
 equivalentWeightedProbability = 0.902361777364356
 
+
+results (on 2015-03-07) after getting more data (due to the passage of time)
+typical longtermPrediction error = 0.133384666651803
+typicalScoreError = 0.182199677921326
+typicalProbabilityError = 0.389949448971249
+equivalentProbability = 0.812952755614996
+weightedProbabilityScore = 0.154158837166051
+equivalentWeightedProbability = 0.888035588760429
  
- */
+ 
+results (on 2015-03-07) after making the AdaptiveInterpolator initially do some blind splits of some dimensions for a lot more startup speed and a little less complexity
+typical longtermPrediction error = 0.133722875018643
+typicalScoreError = 0.181529779100519
+typicalProbabilityError = 0.387463782531814
+equivalentProbability = 0.816025026265546
+weightedProbabilityScore = 0.181927056060576
+equivalentWeightedProbability = 0.894896166812173
+
+*/
 
 namespace ActivityRecommendation
 {

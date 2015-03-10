@@ -12,80 +12,70 @@ namespace ActivityRecommendation
 {
     class SuggestionView : SingleItem_Layout
     {
-        public SuggestionView(ActivitySuggestion suggestion)
+        public SuggestionView(ActivitySuggestion suggestion, SuggestionsView container)
         {
-            //this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(4), new BoundProperty_List(2), LayoutScore.Zero);
-            this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(4), new BoundProperty_List(2), LayoutScore.Zero);
+            this.container = container;
+            this.suggestion = suggestion;
+
+            // have the X button use the rightmost 10% of the view
+            BoundProperty_List widths = new BoundProperty_List(2);
+            widths.SetPropertyScale(0, 9);
+            widths.SetPropertyScale(1, 1);
+            widths.BindIndices(0, 1);
+            this.mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
+
+            this.contentGrid = GridLayout.New(BoundProperty_List.Uniform(4), new BoundProperty_List(1), LayoutScore.Zero);
             
-            /*
-            //DisplayGrid grid = this.displayGrid = this;
+            this.contentGrid.AddLayout(this.make_displayField("Name:", suggestion.ActivityDescriptor.ActivityName));
+            this.contentGrid.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
+            this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 2).ToString()));
+            this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 2).ToString()));
 
-            // setup to display the desired data
-            ResizableTextBlock name_nameBlock = new ResizableTextBlock("Name:");
-            name_nameBlock.SetResizability(new Resizability(0, 1));
-            grid.AddItem(name_nameBlock);
+            this.mainGrid.AddLayout(this.contentGrid);
+            this.cancelButton = new Button();
+            this.cancelButton.Click += cancelButton_Click;
+            this.mainGrid.AddLayout(new ButtonLayout(this.cancelButton, "X"));
 
-
-
-            grid.AddItem(new ResizableTextBlock(suggestion.ActivityDescriptor.ActivityName));
-
-
-            ResizableTextBlock name_nameBlock = new ResizableTextBlock("StartDate:");
-            name_nameBlock.SetResizability(new Resizability(0, 1));
-            grid.AddItem(name_nameBlock);
-
-
-
-            ResizableTextBlock name_nameBlock = new ResizableTextBlock("Participation Probability:");
-            name_nameBlock.SetResizability(new Resizability(0, 1));
-            grid.AddItem(name_nameBlock);
-
-            */
-            this.add_displayField("Name:", suggestion.ActivityDescriptor.ActivityName);
-
-            this.add_displayField("StartDate:", suggestion.StartDate.ToString());
-
-            this.add_displayField("Participation Probability:", suggestion.ParticipationProbability.ToString());
-
-            this.add_displayField("Rating:", suggestion.PredictedScore.Mean.ToString());
-
-            //ResizableWrapper wrapper = new ResizableWrapper();
-
-            // the proper way to display a border for items found in a displayGrid (since I don't want two borders for adjacent items) would be to have the
-            // displayGrid do it. For now, we just put it on this SuggestionView because it's convenient
-            //this.BorderBrush = System.Windows.Media.Brushes.Yellow;
-            //this.BorderThickness = new System.Windows.Thickness(2, 1, 2, 1);
-
-
-            //this.Child = this.displayGrid;
-            this.SubLayout = this.displayGrid;
+            this.SubLayout = this.mainGrid;
         }
-        private void add_displayField(string propertyName, string propertyValue)
-        {
-            /*TitledTextblock result = new TitledTextblock(propertyName);
-            result.Text = propertyValue;
-            return result;
-            */
 
-            //DisplayGrid grid = new DisplayGrid(1, 2);
-            
+        void cancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.container.DeclineSuggestion(this.suggestion);
+        }
+
+        private LayoutChoice_Set make_displayField(string propertyName, string propertyValue)
+        {
+            GridLayout centeredGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout uncenteredGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+
             TextBlock nameBlock = new TextBlock();
             nameBlock.Text = propertyName;
-            //nameBlock.SetResizability(new Resizability(0, 1));
             nameBlock.TextAlignment = System.Windows.TextAlignment.Left;
             nameBlock.VerticalAlignment = VerticalAlignment.Center;
-            this.displayGrid.AddLayout(new TextblockLayout(nameBlock));
+            TextblockLayout nameLayout = new TextblockLayout(nameBlock);
+            centeredGrid.AddLayout(nameLayout);
+            uncenteredGrid.AddLayout(nameLayout);
 
             TextBlock valueBlock = new TextBlock();
             valueBlock.Text = propertyValue;
             valueBlock.TextAlignment = System.Windows.TextAlignment.Center;
             valueBlock.VerticalAlignment = VerticalAlignment.Center;
-            this.displayGrid.AddLayout(new TextblockLayout(valueBlock));
-            //return grid;
+            TextblockLayout valueLayout = new TextblockLayout(valueBlock);
+            centeredGrid.AddLayout(valueLayout);
+            uncenteredGrid.AddLayout(valueLayout);
+
+            LayoutUnion row = new LayoutUnion(centeredGrid, uncenteredGrid);
+
+            return row;
             
         }
         
-        private GridLayout displayGrid;
+        GridLayout contentGrid;
+        GridLayout mainGrid;
+        Button cancelButton;
+        SuggestionsView container;
+        ActivitySuggestion suggestion;
         
     }
 }

@@ -92,8 +92,8 @@ namespace ActivityRecommendation
 
             if (data.LatestActionDate != null)
                 properties[this.DateTag] = this.ConvertToStringBody(data.LatestActionDate);
-            if (data.LatestSuggestion != null)
-                properties[this.SuggestionTag] = this.ConvertToStringBody(data.LatestSuggestion);
+            if (data.CurrentSuggestion != null)
+                properties[this.SuggestionTag] = this.ConvertToStringBody(data.CurrentSuggestion);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -116,9 +116,11 @@ namespace ActivityRecommendation
             string objectName = this.SkipTag;
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(skip.ActivityDescriptor);
-            properties[this.DateTag] = this.ConvertToStringBody(skip.Date);
-            if (skip.SuggestionDate != null)
-                properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionDate);
+            properties[this.DateTag] = this.ConvertToStringBody(skip.CreationDate);
+            if (skip.SuggestionCreationDate != null)
+                properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionCreationDate);
+            if (skip.ApplicableDate != null)
+                properties[SuggestionStartDateTag] = this.ConvertToStringBody(skip.ApplicableDate);
             properties[this.RatingTag] = this.ConvertToStringBody(skip.RawRating);
 
             return this.ConvertToString(properties, objectName);
@@ -358,7 +360,7 @@ namespace ActivityRecommendation
                     {
                         ActivitySkip skip = this.ReadSkip(currentItem);
 
-                        if (latestSuggestion != null && latestSuggestion.ActivityDescriptor.CanMatch(skip.ActivityDescriptor) && latestSuggestion.StartDate.Equals(skip.Date))
+                        if (latestSuggestion != null && latestSuggestion.ActivityDescriptor.CanMatch(skip.ActivityDescriptor) && latestSuggestion.StartDate.Equals(skip.CreationDate))
                         {
                             // This skip applied to an existing suggestion already
                         }
@@ -367,8 +369,8 @@ namespace ActivityRecommendation
                             // This activity was suggested, and that suggestion wasn't saved yet
                             // update latestSuggestion and save it before saving the skip
                             latestSuggestion = new ActivitySuggestion(skip.ActivityDescriptor);
-                            latestSuggestion.StartDate = skip.Date;
-                            latestSuggestion.CreatedDate = skip.SuggestionDate;
+                            latestSuggestion.StartDate = skip.CreationDate;
+                            latestSuggestion.CreatedDate = skip.SuggestionCreationDate;
  
 
                             outputText += this.ConvertToString(latestSuggestion) + Environment.NewLine;
@@ -612,12 +614,17 @@ namespace ActivityRecommendation
                 }
                 if (currentChild.Name == this.DateTag)
                 {
-                    skip.Date = this.ReadDate(currentChild);
+                    skip.CreationDate = this.ReadDate(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.SuggestionDateTag)
                 {
-                    skip.SuggestionDate = this.ReadDate(currentChild);
+                    skip.SuggestionCreationDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SuggestionStartDateTag)
+                {
+                    skip.ApplicableDate = this.ReadDate(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.RatingTag)
@@ -626,6 +633,11 @@ namespace ActivityRecommendation
                     continue;
                 }
             }
+            // apply some defaults
+            if (skip.SuggestionCreationDate == null)
+                skip.SuggestionCreationDate = skip.CreationDate;
+            if (skip.ApplicableDate == null)
+                skip.ApplicableDate = skip.SuggestionCreationDate;
             return skip;
         }
 
@@ -774,7 +786,7 @@ namespace ActivityRecommendation
                 }
                 if (currentChild.Name == this.SuggestionTag)
                 {
-                    data.LatestSuggestion = this.ReadSuggestion(currentChild);
+                    data.CurrentSuggestion = this.ReadSuggestion(currentChild);
                     continue;
                 }
             }

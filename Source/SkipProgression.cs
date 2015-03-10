@@ -22,7 +22,7 @@ namespace ActivityRecommendation
             this.valuesInDiscoveryOrder.Add(newSkip);
 
             // keep track of the skips in chronological order
-            this.searchHelper.Add(newSkip.Date, newSkip);
+            this.searchHelper.Add(newSkip.ApplicableDate.Value, newSkip);
         }
         #region Functions for IProgression
 
@@ -33,7 +33,7 @@ namespace ActivityRecommendation
                 return null;
             //return new ProgressionValue(when, new Distribution(), -1);
             ActivitySkip skip = stats.Value;
-            Distribution distribution = Distribution.MakeDistribution(when.Subtract(skip.Date).TotalSeconds, 0, 1);
+            Distribution distribution = Distribution.MakeDistribution(when.Subtract(skip.CreationDate).TotalSeconds, 0, 1);
             //ProgressionValue progressionValue = new ProgressionValue(when, distribution, this.searchHelper.CountBeforeKey(when, !strictlyEarlier));
             ProgressionValue progressionValue = new ProgressionValue(when, distribution);
             return progressionValue;

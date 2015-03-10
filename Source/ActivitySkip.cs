@@ -13,12 +13,13 @@ namespace ActivityRecommendation
         }
         public ActivitySkip(DateTime when, ActivityDescriptor activityDescriptor)
         {
-            this.Date = when;
+            this.CreationDate = when;
             this.ActivityDescriptor = activityDescriptor;
         }
         public ActivityDescriptor ActivityDescriptor { get; set; }
-        public DateTime Date { get; set; }  // the date that the user skipped the suggestion
-        public DateTime? SuggestionDate { get; set; }    // the date that the suggestion was given
+        public DateTime CreationDate { get; set; }  // the date that the user skipped the suggestion
+        public DateTime? SuggestionCreationDate { get; set; }    // the date that the suggestion was given
+        public DateTime? ApplicableDate { get; set; } // the date that the user is talking about when (s)he says (s)he doesn't want to do this activity on that date
         // returns the exact rating that was given to this Skip
         public AbsoluteRating RawRating { get; set; }
         // returns a Rating with as much information filled in as possible, based on the data in this Skip

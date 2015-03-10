@@ -82,7 +82,7 @@ namespace ActivityRecommendation
                 return this.yAxisNameBox.ActivityDescriptor;
             }
         }
-        ResizableButton okButton;
+        Button okButton;
         GridLayout displayGrid;
         ActivityNameEntryBox yAxisNameBox;
         ActivityNameEntryBox xAxisNameBox;

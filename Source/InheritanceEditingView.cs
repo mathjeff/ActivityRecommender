@@ -24,10 +24,10 @@ namespace ActivityRecommendation
             this.parentNameBox = new ActivityNameEntryBox("Parent Name");
             content.AddLayout(this.parentNameBox);
 
-            this.okButton = new ResizableButton();
+            this.okButton = new Button();
             content.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
-            ResizableButton helpButton = new ResizableButton();
+            Button helpButton = new Button();
             content.AddLayout(new LayoutCache(new ButtonLayout(helpButton, "Help")));
             helpButton.Click += helpButton_Click;
 
@@ -81,7 +81,7 @@ namespace ActivityRecommendation
         }
         private ActivityNameEntryBox childNameBox;
         private ActivityNameEntryBox parentNameBox;
-        private ResizableButton okButton;
+        private Button okButton;
         private LayoutStack layoutStack;
         private LayoutChoice_Set helpMenu;
     }

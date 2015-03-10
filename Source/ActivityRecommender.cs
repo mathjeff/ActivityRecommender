@@ -89,7 +89,7 @@ namespace ActivityRecommendation
             //mainGrid.AddLayout(this.participationEntryView);
             this.UpdateDefaultParticipationData();
 
-            this.suggestionsView = new SuggestionsView(this.layoutStack);
+            this.suggestionsView = new SuggestionsView(this, this.layoutStack);
             this.suggestionsView.AddSuggestionClickHandler(new RoutedEventHandler(this.MakeRecommendation));
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
             //this.suggestionsView.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210));
@@ -109,9 +109,9 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
-            usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
+            usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
+            usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
@@ -151,14 +151,12 @@ namespace ActivityRecommendation
             this.ReadEngineFiles();
             //this.engine.FullUpdate(); // this causes this engine to categorize a bunch of data but it takes a while and we don't want to do it right away
             this.engine.CreateActivities();
-            this.suppressDownvoteOnRecommendation = true;        // the first time they get a recommendation, we don't treat it as a skip of the latest suggestion
 
             this.PrepareEngine();
         }
         // Asks the engine to do some processing so that the next recommendation will be faster
         public void PrepareEngine()
         {
-            //this.engine.MakeRecommendation(DateTime.Parse("2012-02-25T17:00:00"));
             //this.engine.MakeRecommendation();
             this.engine.FullUpdate();
         }
@@ -185,60 +183,36 @@ namespace ActivityRecommendation
         private void WriteInheritancesIfMissing()
         {
             throw new NotImplementedException();
-            /*
-            if (this.textConverter.FileExists(this.inheritancesFileName))
-                return;
-            string ratings = ActivityRecommendation.Resources.AppResources.Default_ActivityInheritances;
-            StreamWriter writer = this.textConverter.OpenFileForAppending(this.inheritancesFileName);
-            writer.Write(ratings);
-            writer.Close();
-             * */
         }
         private void WriteParticipationsIfMissing()
         {
             throw new NotImplementedException();
-            /*
-            if (this.textConverter.FileExists(this.ratingsFileName))
-                return;
-            string inheritances = ActivityRecommendation.Resources.AppResources.Default_ActivityRatings;
-            StreamWriter writer = this.textConverter.OpenFileForAppending(this.ratingsFileName);
-            writer.Write(inheritances);
-            writer.Close();
-            */
+        }
+        public void DeclineSuggestion(ActivitySuggestion suggestion)
+        {
+            // Calculate the score to generate for this Activity as a result of that statement
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
+            Distribution previousDistribution = activity.PredictedScore.Distribution;
+            double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
+            if (estimatedScore < 0)
+                estimatedScore = 0;
+            // make a Skip object holding the needed data
+            ActivitySkip skip = new ActivitySkip();
+            skip.ApplicableDate = suggestion.StartDate;
+            skip.CreationDate = DateTime.Now;
+            skip.SuggestionCreationDate = suggestion.GuessCreationDate();
+            skip.ActivityDescriptor = suggestion.ActivityDescriptor;
+
+            AbsoluteRating rating = new AbsoluteRating();
+            rating.Score = estimatedScore;
+            skip.RawRating = rating;
+            this.AddSkip(skip);
         }
         private void MakeRecommendation()
         {
-#if TEST_UI
-            DateTime now = DateTime.Parse("3000-01-01T00:00:00");
-#else
             DateTime now = DateTime.Now;
-#endif
             this.SuspectLatestActionDate(now);
-            //now = DateTime.Parse("2012-07-30T00:00:00").AddSeconds(this.counter);
 
-            
-            //now = this.engine.LatestInteractionDate.AddSeconds(1);
-            if ((this.LatestRecommendedActivity != null) && !this.suppressDownvoteOnRecommendation)
-            {
-                //now = DateTime.Parse("2012-07-30T00:00:00").AddSeconds(this.counter + 1);
-                // if they've asked for two recommendations in succession, it means they didn't like the previous one
-
-                // Calculate the score to generate for this Activity as a result of that statement
-                Distribution previousDistribution = this.LatestRecommendedActivity.PredictedScore.Distribution;
-                double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
-                if (estimatedScore < 0)
-                    estimatedScore = 0;
-                // make a Skip object holding the needed data
-                ActivitySkip skip = new ActivitySkip(now, this.LatestRecommendedActivity.MakeDescriptor());
-                //skip.SuggestionDate = this.recentUserData.LatestSuggestion.StartDate;
-                skip.SuggestionDate = this.LatestSuggestion.StartDate;
-                //skip.SuggestionDate = this.LatestRecommendedActivity.PredictedScore.ApplicableDate;
-                AbsoluteRating rating = new AbsoluteRating();
-                rating.Score = estimatedScore;
-                skip.RawRating = rating;
-                this.AddSkip(skip);
-            }
-            this.suppressDownvoteOnRecommendation = false;
             
             // if they requested that the first suggestion be from a certain category, find that category
             Activity requestCategory = null;
@@ -254,118 +228,89 @@ namespace ActivityRecommendation
                 this.AddActivityRequest(request);
             }
 
-            // try a few different values of greediness, so we can tell the user what's best overall and what's best now
-            //Composite_ActivitySuggestion completeSuggestion = new Composite_ActivitySuggestion(null, new List<ActivitySuggestion>());
+            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
-            for (double greediness = 0; greediness < 1; greediness += 1)
+
+            DateTime suggestionDate;
+            if (existingSuggestions.Count() > 0)
+                suggestionDate = existingSuggestions.Last().EndDate.Value;
+            else
+                suggestionDate = now;
+
+            // have the engine pretend that the user did everything we've suggested
+            IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
+
+            // because the engine takes some time to become fast, we keep track of how many suggestions we've asked for, and we ask for suggestions increasingly more frequently
+            if (this.numCategoriesToConsiderAtOnce < 8)
+                this.numCategoriesToConsiderAtOnce++;
+            int numCategoriesToConsider = this.numCategoriesToConsiderAtOnce;
+
+
+            // now determine which category to predict from
+            Activity bestActivity = null;
+            if (requestCategory != null)
             {
-                int i;
-                DateTime suggestionDate = now;
-                List<Participation> fakeParticipations = new List<Participation>();
-                // because the engine takes some time to become fast, we keep track of how many suggestions we've asked for, and we ask for suggestions increasingly more frequently
-                int desiredNumUniqueSuggestions = this.numSuggestionsPerRequest;
-                int numCategoriesToConsider = desiredNumUniqueSuggestions + 2;
-                if (this.numSuggestionsPerRequest < 4)
-                    this.numSuggestionsPerRequest++;
-                int maxNumIterations = desiredNumUniqueSuggestions;
-                //Composite_ActivitySuggestion parentSuggestion = completeSuggestion;
-                for (i = 0; i < maxNumIterations; i++)
-                {
-                    // now determine which category to predict from
-                    Activity bestActivity = null;
-                    if (requestCategory != null && i == 0)
-                    {
-                        // now we get a recommendation, from among all activities within this category
-                        //bestActivity = this.engine.MakeRecommendation(requestCategory, suggestionDate, greediness);
-                        bestActivity = this.engine.MakeFastRecommendation(requestCategory, suggestionDate, numCategoriesToConsider);
-                    }
-                    else
-                    {
-                        // now we get a recommendation
-                        //bestActivity = this.engine.MakeRecommendation(suggestionDate, greediness);
-                        bestActivity = this.engine.MakeFastRecommendation();
-                    }
-                    // if there are no matching activities, then give up
-                    if (bestActivity == null)
-                        break;
-                    // after making a recommendation, get the rest of the details of the suggestion
-                    // (Note that eventually the suggested duration will be calculated in a more intelligent manner than simply taking the average duration)
-                    Participation participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
-                    double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
-                    DateTime endDate = suggestionDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
-                    Composite_ActivitySuggestion suggestion = new Composite_ActivitySuggestion(bestActivity.MakeDescriptor(), new List<ActivitySuggestion>());
-                    suggestion.CreatedDate = now;
-                    suggestion.StartDate = suggestionDate;
-                    suggestion.EndDate = endDate;
-                    suggestion.ParticipationProbability = bestActivity.PredictedParticipationProbability.Distribution.Mean;
-                    suggestion.PredictedScore = bestActivity.PredictedScore.Distribution;
-
-                    //parentSuggestion.AddChild(suggestion);
-                    //parentSuggestion = suggestion;
-                    if (suggestions.Count() != 0 && suggestions.Last().ActivityDescriptor.ActivityName.Equals(suggestion.ActivityDescriptor.ActivityName) && (i != maxNumIterations - 1 || suggestions.Count() > 1))
-                    {
-                        // if two consecutive suggestions are for the same activity, then just extend the end date of the previous to make it faster to read
-                        suggestions.Last().EndDate = endDate;
-                    }
-                    else
-                    {
-                        suggestions.Add(suggestion);
-                    }
-
-                    if (i == 0 && greediness == 0)
-                    {
-                        if (bestActivity != null)
-                        {
-                            // autofill the participationEntryView with a convenient value
-                            this.participationEntryView.SetActivityName(bestActivity.Name);
-
-                            // keep track of the latest suggestion that applies to the same date at which it was created
-                            this.LatestSuggestion = suggestion;
-
-                            this.WriteSuggestion(suggestion);
-                        }
-                    }
-
-                    if (suggestions.Count == desiredNumUniqueSuggestions)
-                    {
-                        break;
-                    }
-                    //suggestions.Add(suggestion);
-
-                    if (i != maxNumIterations - 1)
-                    {
-                        // pretend that the user took our suggestion and tell that to the engine
-                        Participation fakeParticipation = new Participation(suggestion.StartDate, suggestion.EndDate.Value, bestActivity.MakeDescriptor());
-                        fakeParticipation.Hypothetical = true;
-                        this.engine.PutParticipationInMemory(fakeParticipation);
-                        fakeParticipations.Add(fakeParticipation);
-                    }
-
-                    // only the first suggestion is based on the requested category
-                    requestCategory = null;
-
-                    // update the next suggestion for the date at which the user will need another activity to do
-                    suggestionDate = endDate;
-
-                }
-
-                // Reset the engine to the state it was in originally by removing the pretend participations
-                foreach (Participation fakeParticipation in fakeParticipations)
-                {
-                    this.engine.RemoveParticipation(fakeParticipation);
-                }
-
+                // now we get a recommendation, from among all activities within this category
+                bestActivity = this.engine.MakeFastRecommendation(requestCategory, suggestionDate, numCategoriesToConsider);
             }
-
-            //Composite_ActivitySuggestion completeSuggestion = new Composite_ActivitySuggestion(null, null);
-            this.suggestionsView.Suggestions = suggestions;
-            if (this.LatestSuggestion != null)
+            else
             {
-                // we have to manually tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when preparing the engine, for speed)
-                this.engine.PutSuggestionInMemory(this.LatestSuggestion);
-                //this.suggestionsView.Suggestion = completeSuggestion;
+                // now we get a recommendation
+                bestActivity = this.engine.MakeFastRecommendation(suggestionDate, numCategoriesToConsider);
             }
+            // if there are no matching activities, then give up
+            if (bestActivity == null)
+                return;
+            // after making a recommendation, get the rest of the details of the suggestion
+            // (Note that eventually the suggested duration will be calculated in a more intelligent manner than simply taking the average duration)
+            Participation participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
+            double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
+            DateTime endDate = suggestionDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
+            ActivitySuggestion suggestion = new ActivitySuggestion(bestActivity.MakeDescriptor());
+            suggestion.CreatedDate = now;
+            suggestion.StartDate = suggestionDate;
+            suggestion.EndDate = endDate;
+            suggestion.ParticipationProbability = bestActivity.PredictedParticipationProbability.Distribution.Mean;
+            suggestion.PredictedScore = bestActivity.PredictedScore.Distribution;
 
+
+            // autofill the participationEntryView with a convenient value
+            if (existingSuggestions.Count() == 0)
+                this.participationEntryView.SetActivityName(bestActivity.Name);
+
+            this.WriteSuggestion(suggestion);
+
+            this.UndoHypotheticalSuggestions(hypotheticalParticipations);
+
+            // we have to manually tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
+            this.engine.PutSuggestionInMemory(suggestion);
+
+            if (existingSuggestions.Count() == 0)
+                this.CurrentSuggestion = suggestion;
+
+            this.suggestionsView.AddSuggestion(suggestion);
+
+        }
+
+        private IEnumerable<Participation> SupposeHypotheticalSuggestions(IEnumerable<ActivitySuggestion> suggestions)
+        {
+            LinkedList<Participation> fakeParticipations = new LinkedList<Participation>();
+            foreach (ActivitySuggestion suggestion in suggestions)
+            {
+                // pretend that the user took our suggestion and tell that to the engine
+                Participation fakeParticipation = new Participation(suggestion.StartDate, suggestion.EndDate.Value, suggestion.ActivityDescriptor);
+                fakeParticipation.Hypothetical = true;
+                this.engine.PutParticipationInMemory(fakeParticipation);
+                fakeParticipations.AddLast(fakeParticipation);
+            }
+            return fakeParticipations;
+        }
+        private void UndoHypotheticalSuggestions(IEnumerable<Participation> participations)
+        {
+            foreach (Participation participation in participations)
+            {
+                this.engine.RemoveParticipation(participation);
+            }
         }
         private void MakeRecommendation(object sender, EventArgs e)
         {
@@ -389,16 +334,30 @@ namespace ActivityRecommendation
             if (participation == null)
                 return;
 
-            if (this.LatestRecommendedActivity != null && this.ActivityDatabase.Matches(participation.ActivityDescriptor, this.LatestRecommendedActivity))
+            participation.Suggested = false;
+            if (this.CurrentSuggestion != null && participation.ActivityDescriptor.CanMatch(this.CurrentSuggestion.ActivityDescriptor))
                 participation.Suggested = true;
-            else
-                participation.Suggested = false;
+            foreach (ActivitySuggestion suggestion in this.suggestionsView.GetSuggestions())
+            {
+                if (participation.ActivityDescriptor.CanMatch(suggestion.ActivityDescriptor))
+                    participation.Suggested = true;
+            }
             this.AddParticipation(participation);
             // fill in some default data for the ParticipationEntryView
             //this.latestActionDate = new DateTime(0);
             this.participationEntryView.Clear();
+
+            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
+            if (existingSuggestions.Count() > 0 && existingSuggestions.First().ActivityDescriptor.CanMatch(participation.ActivityDescriptor))
+            {
+                this.suggestionsView.RemoveSuggestion(existingSuggestions.First());
+            }
+            else
+            {
+                this.suggestionsView.ClearSuggestions();
+            }
+
             this.UpdateDefaultParticipationData();
-            this.SuppressDownvoteOnRecommendation();
 
             // give the information to the appropriate activities
             this.engine.ApplyParticipationsAndRatings();
@@ -485,8 +444,6 @@ namespace ActivityRecommendation
 
             this.inheritanceEditingView.ChildName = "";
             this.inheritanceEditingView.ParentName = "";
-
-            this.SuppressDownvoteOnRecommendation();
         }
         private void AddInheritance(Inheritance newInheritance)
         {
@@ -579,8 +536,8 @@ namespace ActivityRecommendation
         public void SetRecentUserData(RecentUserData data)
         {
             this.recentUserData = data;
-            if (this.LatestSuggestion != null)
-                this.latestRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(this.LatestSuggestion.ActivityDescriptor);
+            if (this.CurrentSuggestion != null)
+                this.currentRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(this.CurrentSuggestion.ActivityDescriptor);
         }
         public void PutSuggestionInMemory(ActivitySuggestion suggestion)
         {
@@ -611,24 +568,25 @@ namespace ActivityRecommendation
                 //this.WriteRecentUserData();
             }
         }
-        public Activity LatestRecommendedActivity
+        public Activity CurrentRecommendedActivity
         {
             get
             {
-                return this.latestRecommendedActivity;
+                return this.currentRecommendedActivity;
             }
         }
-        public ActivitySuggestion LatestSuggestion
+        public ActivitySuggestion CurrentSuggestion
         {
             get
             {
-                return this.recentUserData.LatestSuggestion;
+                return this.recentUserData.CurrentSuggestion;
             }
             set
             {
-                this.recentUserData.LatestSuggestion = value;
-                this.latestRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(value.ActivityDescriptor);
-                //this.WriteRecentUserData();
+                this.recentUserData.CurrentSuggestion = value;
+                this.currentRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(value.ActivityDescriptor);
+
+                this.WriteRecentUserData();
             }
         }
         public void WriteRecentUserData()
@@ -702,13 +660,6 @@ namespace ActivityRecommendation
             }
         }
         #endregion
-        // declares that the user did something that means if they ask for another recommendation then we should not downvote the latest one
-        private void SuppressDownvoteOnRecommendation()
-        {
-            //this.latestRecommendationDate = new DateTime(0);
-            this.suppressDownvoteOnRecommendation = true;
-            this.suggestionsView.ResetText();
-        }
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
         {
@@ -745,8 +696,7 @@ namespace ActivityRecommendation
         MiniStatisticsMenu statisticsMenu;
         Engine engine;
         //DateTime latestRecommendationDate;
-        Activity latestRecommendedActivity;
-        bool suppressDownvoteOnRecommendation;
+        Activity currentRecommendedActivity;
         TextConverter textConverter;
         string ratingsFileName;         // the name of the file that stores ratings
         string inheritancesFileName;    // the name of the file that stores inheritances
@@ -757,7 +707,7 @@ namespace ActivityRecommendation
         RecentUserData recentUserData;
         int counter = 0;
         // ActivityDatabase primedActivities; // activities that have already been considered and therefore are fast to consider again
-        int numSuggestionsPerRequest = 1;
+        int numCategoriesToConsiderAtOnce = 3;
         LayoutStack layoutStack;
 
     }

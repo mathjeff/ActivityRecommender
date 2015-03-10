@@ -14,15 +14,18 @@ namespace ActivityRecommendation
     {
         public ActivityNameEntryBox(string startingTitle) : base(startingTitle)
         {
-            GridLayout content = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
+            GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
 
             this.nameBox = new TextBox();
             this.nameBox.TextChanged += new TextChangedEventHandler(nameBox_TextChanged);
             this.nameBox.KeyDown += new System.Windows.Input.KeyEventHandler(nameBox_PreviewKeyDown);
-            content.AddLayout(new TextboxLayout(this.nameBox));
+            TextboxLayout suggestionLayout = new TextboxLayout(this.nameBox);
+            contentWithSuggestion.AddLayout(suggestionLayout);
 
             this.suggestionBlock = new TextBlock();
-            content.AddLayout(new TextblockLayout(this.suggestionBlock));
+            contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
+
+            LayoutUnion content = new LayoutUnion(contentWithSuggestion, suggestionLayout);
 
             this.UpdateSuggestions();
 

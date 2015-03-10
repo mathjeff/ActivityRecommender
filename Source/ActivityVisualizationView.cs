@@ -62,7 +62,7 @@ namespace ActivityRecommendation
             GridLayout statsDisplayGrid = GridLayout.New(new BoundProperty_List(10), new BoundProperty_List(1), LayoutScore.Zero);
 
             // setup an exit button
-            this.exitButton = new ResizableButton();
+            this.exitButton = new Button();
             statsDisplayGrid.AddLayout(new ButtonLayout(this.exitButton, "Escape"));
             //statsDisplayGrid.AddLayout(this.exitButton);
 
@@ -459,7 +459,7 @@ namespace ActivityRecommendation
             return y;
         }
 
-        ResizableButton exitButton;
+        Button exitButton;
         RoutedEventHandler exitHandler;
         Activity yAxisActivity;
         IProgression xAxisProgression;

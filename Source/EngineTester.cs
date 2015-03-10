@@ -212,12 +212,12 @@ namespace ActivityRecommendation
         public void AddSkip(ActivitySkip newSkip)
         {
             // update the error rate for the participation probability predictor
-            this.UpdateParticipationProbabilityError(newSkip.ActivityDescriptor, newSkip.Date, 0);
+            this.UpdateParticipationProbabilityError(newSkip.ActivityDescriptor, newSkip.CreationDate, 0);
             this.engine.PutSkipInMemory(newSkip);
-            if (newSkip.SuggestionDate != null)
+            if (newSkip.SuggestionCreationDate != null)
             {
                 // inform the ratingSummarizer that the user wasn't doing anything during this time
-                this.ratingSummarizer.AddParticipationIntensity((DateTime)newSkip.SuggestionDate, newSkip.Date, 0);
+                this.ratingSummarizer.AddParticipationIntensity((DateTime)newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
             }
 
         }

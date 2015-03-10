@@ -724,14 +724,14 @@ namespace ActivityRecommendation
         public void AddSkip(ActivitySkip newSkip)
         {
             // update the knowledge of how long the user thinks
-            if (newSkip.SuggestionDate != null)
+            if (newSkip.SuggestionCreationDate != null)
             {
-                TimeSpan duration = newSkip.Date.Subtract((DateTime)newSkip.SuggestionDate);
+                TimeSpan duration = newSkip.CreationDate.Subtract((DateTime)newSkip.SuggestionCreationDate);
                 this.thinkingTimes = this.thinkingTimes.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
             }
 
             // keep track of the earliest and latest date at which anything happened
-            this.ApplyKnownInteractionDate(newSkip.Date);
+            this.ApplyKnownInteractionDate(newSkip.CreationDate);
 
             this.PendingSkips.AddLast(newSkip);
         }
@@ -741,7 +741,7 @@ namespace ActivityRecommendation
             {
                 // get the coordinates at that time and save them
                 WillingnessSummary willingness = new WillingnessSummary(0, 0, 1);
-                this.AddParticipationDatapoint(newSkip.Date, willingness);
+                this.AddParticipationDatapoint(newSkip.ApplicableDate.Value, willingness);
 
 
                 this.skipProgression.AddSkip(newSkip);

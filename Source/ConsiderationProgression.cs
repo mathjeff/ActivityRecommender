@@ -60,8 +60,7 @@ namespace ActivityRecommendation
         public void AddSkip(ActivitySkip newSkip)
         {
             WillingnessSummary willingness = new WillingnessSummary(0, 0, 1);
-            //Distribution distribution = Distribution.MakeDistribution(0, 0, 1);
-            this.AddValue(newSkip.Date, willingness);
+            this.AddValue(newSkip.ApplicableDate.Value, willingness);
         }
         public void AddValue(DateTime when, WillingnessSummary value)
         {

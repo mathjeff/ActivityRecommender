@@ -23,7 +23,7 @@ namespace ActivityRecommendation
                 this.Synchronized = false;
             }
         }
-        public ActivitySuggestion LatestSuggestion 
+        public ActivitySuggestion CurrentSuggestion 
         {
             get
             {

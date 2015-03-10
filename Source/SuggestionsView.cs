@@ -11,13 +11,14 @@ namespace ActivityRecommendation
 {
     class SuggestionsView : TitledControl
     {
-        public SuggestionsView(LayoutStack layoutStack)
+        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack)
         {
+            this.recommender = recommenderToInform;
 
             this.layoutStack = layoutStack;
 
             this.SetTitle("Get Suggestions");
-            this.content = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            //this.content = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
             TextBlock suggestionTextBlock = new TextBlock();
             suggestionTextBlock.Text = "Suggest";
@@ -25,28 +26,37 @@ namespace ActivityRecommendation
             this.suggestionButton = new Button();
             ButtonLayout buttonLayout = new ButtonLayout(this.suggestionButton, new TextblockLayout(suggestionTextBlock));
 
-            this.categoryBox = new ActivityNameEntryBox("from category (optional)");
-            //this.content.AddLayout(this.categoryBox);
+            this.categoryBox = new ActivityNameEntryBox("Category (optional)");
 
-            GridLayout selectionLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
-            selectionLayout.AddLayout(buttonLayout);
-            selectionLayout.AddLayout(this.categoryBox);
-            this.content.AddLayout(selectionLayout);
+            /* // Try to put the Suggest button above its text box
+            GridLayout verticalSelectionLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            verticalSelectionLayout.AddLayout(buttonLayout);
+            verticalSelectionLayout.AddLayout(this.categoryBox);
+            */
+            // It's acceptable to put the Suggest button to the side of its text box, but that looks worse and we count it as uncentered
+            GridLayout horizontalSelectionLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+            horizontalSelectionLayout.AddLayout(buttonLayout);
+            horizontalSelectionLayout.AddLayout(this.categoryBox);
+            this.selectorLayout = horizontalSelectionLayout;
+            //LayoutUnion selectionLayout = new LayoutUnion(verticalSelectionLayout, horizontalSelectionLayout);
+
+            //this.content.PutLayout(horizontalSelectionLayout, 0, 1);
 
             this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a suggested activity")
                 .AddMessage("You can optionally enter a category (an activity containing other activities) from which to choose the first activity, or leave it blank to consider all activities")
                 .AddMessage("Then, push Suggest and you will receive a few suggestions.")
+                .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, and"
+            + " an estimate of the rating that you are expected to give to that activity (if you provide a rating).")
                 .AddMessage("Enjoy!")
                 .Build();
 
-            ResizableButton helpButton = new ResizableButton();
+            Button helpButton = new Button();
             
             helpButton.Click += helpButton_Click;
             this.helpButton_layout = new ButtonLayout(helpButton, new TextblockLayout("Help"));
 
-            this.ResetText();
-
-            this.SetContent(this.content);
+            this.UpdateLayout();
+            //this.SetContent(this.content);
         }
 
         void helpButton_Click(object sender, RoutedEventArgs e)
@@ -76,40 +86,71 @@ namespace ActivityRecommendation
                 this.categoryBox.Database = value;
             }
         }
-        public void ResetText()
+
+        public void RemoveSuggestion(ActivitySuggestion suggestion)
         {
-            this.Suggestions = null;
+            this.suggestions.Remove(suggestion);
+            this.suggestionLayouts.Remove(suggestion);
+            this.UpdateLayout();
         }
-        public List<ActivitySuggestion> Suggestions
+
+        public void DeclineSuggestion(ActivitySuggestion suggestion)
         {
-            set
+            this.RemoveSuggestion(suggestion);
+            this.recommender.DeclineSuggestion(suggestion);
+        }
+        public void ClearSuggestions()
+        {
+            this.suggestions.Clear();
+            this.suggestionLayouts.Clear();
+            this.UpdateLayout();
+        }
+        public void AddSuggestion(ActivitySuggestion suggestion)
+        {
+            this.suggestions.Add(suggestion);
+            this.UpdateLayout();
+        }
+        public IEnumerable<ActivitySuggestion> GetSuggestions()
+        {
+            return this.suggestions;
+        }
+
+        private void UpdateLayout()
+        {
+            LinkedList<LayoutChoice_Set> layouts = new LinkedList<LayoutChoice_Set>();
+            foreach (ActivitySuggestion suggestion in this.suggestions)
             {
-                // TODO: change this display grid with a ScrollView (which does not exist yet)
-                // set up a new grid to hold the new suggestions
-                List<ActivitySuggestion> newSuggestions = value;
-                GridLayout newGrid = null;
-                if (newSuggestions != null) 
-                {
-                    newGrid = GridLayout.New(BoundProperty_List.Uniform(newSuggestions.Count), new BoundProperty_List(1), LayoutScore.Zero);
-                    foreach (ActivitySuggestion suggestion in newSuggestions)
-                    {
-                        SuggestionView subView = new SuggestionView(suggestion);
-                        newGrid.AddLayout(subView);
-                    }
-                }
-                if (newSuggestions != null && newSuggestions.Count > 0)
-                {
-                    // update our contents
-                    this.content.PutLayout(newGrid, 0, 1);
-                }
-                else
-                {
-                    // show a help button
-                    this.content.PutLayout(this.helpButton_layout, 0, 1);
-                }
+                layouts.AddLast(this.getLayout(suggestion));
             }
+            if (this.suggestions.Count < this.maxNumSuggestions)
+                layouts.AddLast(this.selectorLayout);
+            if (this.suggestions.Count == 0)
+                layouts.AddLast(this.helpButton_layout);
+
+            GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(layouts.Count), new BoundProperty_List(1), LayoutScore.Zero);
+            foreach (LayoutChoice_Set layout in layouts)
+            {
+                grid.AddLayout(layout);
+            }
+
+            this.SetContent(grid);
         }
-        public Composite_ActivitySuggestion Suggestion
+
+        private LayoutChoice_Set getLayout(ActivitySuggestion suggestion)
+        {
+            if (this.suggestionLayouts.ContainsKey(suggestion))
+            {
+                return this.suggestionLayouts[suggestion];
+            }
+            return this.makeLayout(suggestion);
+        }
+
+        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion)
+        {
+            return new LayoutCache(new SuggestionView(suggestion, this));
+        }
+
+        /*public Composite_ActivitySuggestion Suggestion
         {
             set
             {
@@ -180,15 +221,20 @@ namespace ActivityRecommendation
                         x++;
                 }
                 // update our contents
-                this.content.PutLayout(newGrid, 0, 1);
+                this.content.PutLayout(newGrid, 0, 0);
             }
-        }
+        }*/
 
-        private Button suggestionButton;
-        private ActivityNameEntryBox categoryBox;
-        private GridLayout content;
+        LayoutChoice_Set selectorLayout;
+        Button suggestionButton;
+        ActivityNameEntryBox categoryBox;
+        //GridLayout content;
         LayoutChoice_Set helpWindow;
         LayoutChoice_Set helpButton_layout;
         LayoutStack layoutStack;
+        List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
+        Dictionary<ActivitySuggestion, LayoutChoice_Set> suggestionLayouts = new Dictionary<ActivitySuggestion, LayoutChoice_Set>();
+        int maxNumSuggestions = 4;
+        ActivityRecommender recommender;
     }
 }

@@ -94,7 +94,7 @@ namespace ActivityRecommendation
                 if (this.unappliedParticipations.Count > 0)
                     dates.Add((DateTime)this.unappliedParticipations[0].StartDate);
                 if (this.unappliedSkips.Count > 0)
-                    dates.Add((DateTime)this.unappliedSkips[0].Date);
+                    dates.Add((DateTime)this.unappliedSkips[0].CreationDate);
                 if (this.unappliedSuggestions.Count > 0)
                     dates.Add(this.unappliedSuggestions[0].GuessCreationDate());
                 if (dates.Count == 0)
@@ -118,7 +118,7 @@ namespace ActivityRecommendation
                     this.CascadeParticipation(this.unappliedParticipations[0]);
                     this.unappliedParticipations.RemoveAt(0);
                 }
-                while (this.unappliedSkips.Count > 0 && ((DateTime)this.unappliedSkips[0].Date).CompareTo(nextDate) == 0)
+                while (this.unappliedSkips.Count > 0 && ((DateTime)this.unappliedSkips[0].CreationDate).CompareTo(nextDate) == 0)
                 {
                     this.CascadeSkip(this.unappliedSkips[0]);
                     this.unappliedSkips.RemoveAt(0);
@@ -236,6 +236,10 @@ namespace ActivityRecommendation
         {
             List<Activity> availableCandidates = this.FindAllSubCategoriesOf(categoryToConsider);
             return this.MakeFastRecommendation(availableCandidates, when, maxNumActivitiesToConsider);
+        }
+        public Activity MakeFastRecommendation(DateTime when, int maxNumActivitiesToConsider)
+        {
+            return this.MakeFastRecommendation(this.activityDatabase.AllActivities, when, maxNumActivitiesToConsider);
         }
         public Activity MakeFastRecommendation(IEnumerable<Activity> categoriesToConsider, DateTime when, int maxNumActivitiesToConsider)
         {
@@ -842,17 +846,17 @@ namespace ActivityRecommendation
             this.unappliedSkips.Add(newSkip);
             this.numSkips++;
 
-            this.DiscoveredActionDate(newSkip.Date);
+            this.DiscoveredActionDate(newSkip.CreationDate);
 
-            if (newSkip.SuggestionDate != null)
+            if (newSkip.SuggestionCreationDate != null)
             {
-                TimeSpan duration = newSkip.Date.Subtract((DateTime)newSkip.SuggestionDate);
+                TimeSpan duration = newSkip.CreationDate.Subtract((DateTime)newSkip.SuggestionCreationDate);
                 if (duration.TotalDays > 1)
                     System.Diagnostics.Debug.WriteLine("skip duration > 1 day, this is probably a mistake");
                 // update our estimate of how longer the user spends thinking about what to do
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
                 // record the fact that the user wasn't doing anything directly productive at this time
-                this.ratingSummarizer.AddParticipationIntensity(newSkip.SuggestionDate.Value, newSkip.Date, 0);
+                this.ratingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate.Value, newSkip.CreationDate, 0);
             }
 
 #if false

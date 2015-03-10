@@ -42,10 +42,10 @@ namespace ActivityRecommendation
             contents.AddLayout(this.endDateBox);
 
 
-            this.setStartdateButton = new ResizableButton();
+            this.setStartdateButton = new Button();
             contents.AddLayout(new ButtonLayout(this.setStartdateButton, "Set start = now"));
 
-            this.setEnddateButton = new ResizableButton();
+            this.setEnddateButton = new Button();
             contents.AddLayout(new ButtonLayout(this.setEnddateButton, "Set end = now"));
 
             this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
@@ -54,7 +54,7 @@ namespace ActivityRecommendation
             //contents.AddLayout(this.commentBox);
             
 
-            this.okButton = new ResizableButton();
+            this.okButton = new Button();
             contents.AddLayout(new ButtonLayout(this.okButton, "OK"));
 
             this.predictedRating_block = new TextBlock();
@@ -69,7 +69,7 @@ namespace ActivityRecommendation
                 .AddMessage("Lastly, click OK!")
                 .Build();
 
-            ResizableButton helpButton = new ResizableButton();
+            Button helpButton = new Button();
             helpButton.Click += helpButton_Click;
 
             contents.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
@@ -107,16 +107,16 @@ namespace ActivityRecommendation
         }
         void setEnddateButton_Click(object sender, RoutedEventArgs e)
         {
-            this.setEnddateButton.UnHighlight();
+            //this.setEnddateButton.UnHighlight();
         }
         void setStartdateButton_Click(object sender, RoutedEventArgs e)
         {
-            this.setEnddateButton.Highlight();
+            //this.setEnddateButton.Highlight();
             this.Update_ExpectedRating_Text();
         }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            this.setEnddateButton.Highlight();
+            //this.setEnddateButton.Highlight();
         }
 
         public void Clear()
@@ -125,7 +125,7 @@ namespace ActivityRecommendation
             this.nameBox.NameText = "";
             this.intendedActivity_box.NameText = "";
             this.CommentText = "";
-            this.setEnddateButton.SetDefaultBackground();
+            //this.setEnddateButton.SetDefaultBackground();
             this.predictedRating_block.Text = "";
         }
         public ActivityDatabase ActivityDatabase
@@ -176,8 +176,8 @@ namespace ActivityRecommendation
         public void SetActivityName(string newName)
         {
             this.nameBox.NameText = newName;
-            if (newName != "" && newName != null)
-                this.setEnddateButton.Highlight();
+            //if (newName != "" && newName != null)
+            //    this.setEnddateButton.Highlight();
         }
         public string ActivityName
         {
@@ -217,7 +217,7 @@ namespace ActivityRecommendation
         {
             DateTime now = DateTime.Now;
             this.endDateBox.SetDate(now);
-            this.setEnddateButton.SetDefaultBackground();
+            //this.setEnddateButton.SetDefaultBackground();
         }
         public void AddSetstartdateHandler(RoutedEventHandler h)
         {
@@ -285,9 +285,9 @@ namespace ActivityRecommendation
         TitledTextbox commentBox;
         DateEntryView startDateBox;
         DateEntryView endDateBox;
-        ResizableButton setStartdateButton;
-        ResizableButton setEnddateButton;
-        ResizableButton okButton;
+        Button setStartdateButton;
+        Button setEnddateButton;
+        Button okButton;
         TextBlock predictedRating_block;
         Engine engine;
         LayoutStack layoutStack;

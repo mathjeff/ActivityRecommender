@@ -59,7 +59,7 @@ namespace ActivityRecommendation
         public override void FillInFromSkip(ActivitySkip skip)
         {
             this.ActivityDescriptor = skip.ActivityDescriptor;
-            this.Date = skip.Date;
+            this.Date = skip.CreationDate;
             base.FillInFromSkip(skip);
         }
 

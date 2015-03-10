@@ -285,10 +285,11 @@ namespace ActivityRecommendation
             // we have to manually tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
             this.engine.PutSuggestionInMemory(suggestion);
 
-            if (existingSuggestions.Count() == 0)
-                this.CurrentSuggestion = suggestion;
-
             this.suggestionsView.AddSuggestion(suggestion);
+
+            // I'm not sure precisely when we want to update the list of current suggestions (which is used for determining whether a participation was prompted by being suggested)
+            // Currently (2015-03-09) it's only modified when the user asks for another suggestion, at which point it's updated to match the suggestions that are displayed
+            this.CurrentSuggestions = new LinkedList<ActivitySuggestion>(this.suggestionsView.GetSuggestions());
 
         }
 
@@ -335,9 +336,7 @@ namespace ActivityRecommendation
                 return;
 
             participation.Suggested = false;
-            if (this.CurrentSuggestion != null && participation.ActivityDescriptor.CanMatch(this.CurrentSuggestion.ActivityDescriptor))
-                participation.Suggested = true;
-            foreach (ActivitySuggestion suggestion in this.suggestionsView.GetSuggestions())
+            foreach (ActivitySuggestion suggestion in this.CurrentSuggestions)
             {
                 if (participation.ActivityDescriptor.CanMatch(suggestion.ActivityDescriptor))
                     participation.Suggested = true;
@@ -536,8 +535,6 @@ namespace ActivityRecommendation
         public void SetRecentUserData(RecentUserData data)
         {
             this.recentUserData = data;
-            if (this.CurrentSuggestion != null)
-                this.currentRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(this.CurrentSuggestion.ActivityDescriptor);
         }
         public void PutSuggestionInMemory(ActivitySuggestion suggestion)
         {
@@ -572,19 +569,21 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.currentRecommendedActivity;
+                ActivitySuggestion suggestion = this.CurrentSuggestions.FirstOrDefault(null);
+                if (suggestion != null)
+                    return this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
+                return null;
             }
         }
-        public ActivitySuggestion CurrentSuggestion
+        public LinkedList<ActivitySuggestion> CurrentSuggestions
         {
             get
             {
-                return this.recentUserData.CurrentSuggestion;
+                return this.recentUserData.Suggestions;
             }
             set
             {
-                this.recentUserData.CurrentSuggestion = value;
-                this.currentRecommendedActivity = this.ActivityDatabase.ResolveDescriptor(value.ActivityDescriptor);
+                this.recentUserData.Suggestions = value;
 
                 this.WriteRecentUserData();
             }
@@ -593,7 +592,7 @@ namespace ActivityRecommendation
         {
             this.recentUserData.Synchronized = true;
             string text = this.textConverter.ConvertToString(this.recentUserData) + Environment.NewLine;
-            StreamWriter writer = this.textConverter.OpenFileForAppending(this.tempFileName);
+            StreamWriter writer = this.textConverter.EraseFileAndOpenForWriting(this.tempFileName);
             writer.Write(text);
             writer.Close();
         }
@@ -696,7 +695,7 @@ namespace ActivityRecommendation
         MiniStatisticsMenu statisticsMenu;
         Engine engine;
         //DateTime latestRecommendationDate;
-        Activity currentRecommendedActivity;
+        //Activity currentRecommendedActivity;
         TextConverter textConverter;
         string ratingsFileName;         // the name of the file that stores ratings
         string inheritancesFileName;    // the name of the file that stores inheritances

@@ -92,8 +92,8 @@ namespace ActivityRecommendation
 
             if (data.LatestActionDate != null)
                 properties[this.DateTag] = this.ConvertToStringBody(data.LatestActionDate);
-            if (data.CurrentSuggestion != null)
-                properties[this.SuggestionTag] = this.ConvertToStringBody(data.CurrentSuggestion);
+            if (data.Suggestions != null)
+                properties[this.SuggestionsTag] = this.ConvertToStringBody(data.Suggestions);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -172,30 +172,24 @@ namespace ActivityRecommendation
         }
         public StreamWriter EraseFileAndOpenForWriting(string fileName)
         {
-            return new StreamWriter(this.OpenFile(fileName, FileMode.CreateNew));
+            return new StreamWriter(this.OpenFile(fileName, FileMode.Create));
         }
         public StreamReader OpenFileForReading(string fileName)
         {
             return new StreamReader(this.OpenFile(fileName, FileMode.OpenOrCreate));
         }
-        /*
-        public StreamReader OpenResource(string fileName)
-        {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            Stream stream = assembly.GetManifestResourceStream(fileName);
-            return new StreamReader(stream);
-        }
-        //*/
 
         // opens the file, converts it into a sequence of objects, and sends them to the Engine
-        // This function isn't done yet
         public void ReadFile(string fileName)
         {
             StreamReader reader = this.OpenFileForReading(fileName);
-            if (reader.BaseStream.Length <= 0)
-                return; // if the file doesn't exist (or it's empty), then there's nothing to do
-            String text = "<root>" + reader.ReadToEnd() + "</root>";
+            String text = "";
+            if (reader.BaseStream.Length > 0)
+                text = "<root>" + reader.ReadToEnd() + "</root>";
             reader.Close();
+            if (text.Length <= 0)
+                return;
+            //reader.Dispose();
             // System.Diagnostics.Debug.WriteLine(text);
             XmlDocument document = new XmlDocument();
             document.LoadXml(text);
@@ -784,14 +778,24 @@ namespace ActivityRecommendation
                     data.LatestActionDate = this.ReadDate(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.SuggestionTag)
+                if (currentChild.Name == this.SuggestionsTag)
                 {
-                    data.CurrentSuggestion = this.ReadSuggestion(currentChild);
+                    data.Suggestions = this.ReadSuggestions(currentChild);
                     continue;
                 }
             }
             data.Synchronized = true;
             return data;
+        }
+        private LinkedList<ActivitySuggestion> ReadSuggestions(XmlNode nodeRepresentation)
+        {
+            LinkedList<ActivitySuggestion> suggestions = new LinkedList<ActivitySuggestion>();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                ActivitySuggestion suggestion = this.ReadSuggestion(currentChild);
+                suggestions.AddLast(suggestion);
+            }
+            return suggestions;
         }
         private ActivitySuggestion ReadSuggestion(XmlNode nodeRepresentation)
         {
@@ -925,6 +929,16 @@ namespace ActivityRecommendation
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(consideration.ActivityDescriptor);
 
             return this.ConvertToStringBody(properties);
+        }
+        // converts the list of suggestions into a string without the initial <Tag> or ending </Tag>
+        private string ConvertToStringBody(IEnumerable<ActivitySuggestion> suggestions)
+        {
+            string result = "";
+            foreach (ActivitySuggestion suggestion in suggestions)
+            {
+                result += this.ConvertToString(suggestion);
+            }
+            return result;
         }
 
         #endregion
@@ -1126,6 +1140,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Suggestion";
+            }
+        }
+        private string SuggestionsTag
+        {
+            get
+            {
+                return "Suggestions";
             }
         }
         private string RecentUserDataTag

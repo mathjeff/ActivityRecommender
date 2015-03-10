@@ -55,7 +55,7 @@ namespace ActivityRecommendation
             helpButton.Click += helpButton_Click;
             this.helpButton_layout = new ButtonLayout(helpButton, new TextblockLayout("Help"));
 
-            this.UpdateLayout();
+            this.UpdateSuggestions();
             //this.SetContent(this.content);
         }
 
@@ -91,7 +91,7 @@ namespace ActivityRecommendation
         {
             this.suggestions.Remove(suggestion);
             this.suggestionLayouts.Remove(suggestion);
-            this.UpdateLayout();
+            this.UpdateSuggestions();
         }
 
         public void DeclineSuggestion(ActivitySuggestion suggestion)
@@ -103,18 +103,35 @@ namespace ActivityRecommendation
         {
             this.suggestions.Clear();
             this.suggestionLayouts.Clear();
-            this.UpdateLayout();
+            this.UpdateSuggestions();
         }
         public void AddSuggestion(ActivitySuggestion suggestion)
         {
             this.suggestions.Add(suggestion);
-            this.UpdateLayout();
+            this.UpdateSuggestions();
         }
         public IEnumerable<ActivitySuggestion> GetSuggestions()
         {
+            this.Update_Suggestion_StartTimes();
             return this.suggestions;
         }
 
+        private void UpdateSuggestions()
+        {
+            this.Update_Suggestion_StartTimes();
+            this.UpdateLayout();
+        }
+        private void Update_Suggestion_StartTimes()
+        {
+            // Update the start time of each activity to be when the previous one ends
+            DateTime start = DateTime.Now;
+            foreach (ActivitySuggestion suggestion in this.suggestions)
+            {
+                TimeSpan duration = suggestion.Duration.Value;
+                suggestion.StartDate = start;
+                suggestion.EndDate = start = start.Add(duration);
+            }
+        }
         private void UpdateLayout()
         {
             LinkedList<LayoutChoice_Set> layouts = new LinkedList<LayoutChoice_Set>();

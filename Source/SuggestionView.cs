@@ -28,8 +28,8 @@ namespace ActivityRecommendation
             
             this.contentGrid.AddLayout(this.make_displayField("Name:", suggestion.ActivityDescriptor.ActivityName));
             this.contentGrid.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
-            this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 2).ToString()));
-            this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 2).ToString()));
+            this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 3).ToString()));
+            this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 3).ToString()));
 
             this.mainGrid.AddLayout(this.contentGrid);
             this.cancelButton = new Button();

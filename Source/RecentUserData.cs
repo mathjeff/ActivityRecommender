@@ -23,22 +23,22 @@ namespace ActivityRecommendation
                 this.Synchronized = false;
             }
         }
-        public ActivitySuggestion CurrentSuggestion 
+        public LinkedList<ActivitySuggestion> Suggestions
         {
             get
             {
-                return this.latestSuggestion;
+                return this.suggestions;
             }
             set
             {
-                this.latestSuggestion = value;
+                this.suggestions = value;
                 this.Synchronized = false;
             }
         }
         public bool Synchronized { get; set; }  // tells whether the information on disk matches the information in memory
 
         private DateTime? latestActionDate;
-        private ActivitySuggestion latestSuggestion;
+        private LinkedList<ActivitySuggestion> suggestions = new LinkedList<ActivitySuggestion>();
 
     }
 }

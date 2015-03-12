@@ -10,23 +10,19 @@ namespace ActivityRecommendation
 {
     class RelativeRatingEntryView : TitledControl
     {
-        public RelativeRatingEntryView() : base("Comparison")
+        public RelativeRatingEntryView() : base("Relative Score (Optional)")
         {
-            this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(3), new BoundProperty_List(1), LayoutScore.Zero);
+            this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
-            TextBlock titleBox = new TextBlock();
-            titleBox.Text = "Score equals";
-            this.mainDisplayGrid.AddLayout(new TextblockLayout(titleBox));
+            //TextBlock titleBox = new TextBlock();
+            //titleBox.Text = "Score equals";
+            //this.mainDisplayGrid.AddLayout(new TextblockLayout(titleBox));
             this.scaleBlock = new TextBox();
             this.Clear();
             this.mainDisplayGrid.AddLayout(new TextboxLayout(this.scaleBlock));
 
 
-            //this.nameBox = new ActivityNameEntryBox("the most recent instance of:");
-            //this.AddItem(this.nameBox);
-
             this.nameBlock = new TextBlock();
-            //this.nameBlock.SetResizability(new Resizability(1, 1));
             this.mainDisplayGrid.AddLayout(new TextblockLayout(this.nameBlock));
 
             this.SetContent(this.mainDisplayGrid);
@@ -40,8 +36,14 @@ namespace ActivityRecommendation
 
                 if (this.latestParticipation != null)
                 {
-                    string dateFormatString = "yyyy-MM-ddTHH:mm:ss";
-                    this.nameBlock.Text = "times the score of the latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
+                    DateTime now = DateTime.Now;
+                    string dateFormatString;
+                    // Show the day if it happened more than 24 hours ago
+                    if (now.Subtract(value.StartDate).CompareTo(new TimeSpan(24, 0, 0)) > 0)
+                        dateFormatString = "yyyy-MM-ddTHH:mm:ss";
+                    else
+                        dateFormatString = "HH:mm:ss";
+                    this.nameBlock.Text = "times the score of your latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
                 }
                 else
                 {

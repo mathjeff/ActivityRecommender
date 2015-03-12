@@ -17,50 +17,25 @@ namespace ActivityRecommendation
         {
             this.layoutStack = layoutStack;
 
-            GridLayout contents = GridLayout.New(BoundProperty_List.Uniform(4), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            BoundProperty_List rowHeights = new BoundProperty_List(4);
+            rowHeights.BindIndices(0, 1);
+            rowHeights.BindIndices(0, 2);
+            rowHeights.BindIndices(0, 3);
+            rowHeights.SetPropertyScale(0, 2);
+            rowHeights.SetPropertyScale(1, 2);
+            rowHeights.SetPropertyScale(2, 2);
+            rowHeights.SetPropertyScale(3, 1);
+
+            GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
             this.nameBox = new ActivityNameEntryBox("Activity Name");
             this.nameBox.AddTextChangedHandler(new TextChangedEventHandler(this.nameBox_TextChanged));
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
-            //this.ratingBox = new RatingEntryView("Rating (optional)");
+            GridLayout grid2 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
-            //this.ratingBox.Background = System.Windows.Media.Brushes.Yellow;
-            contents.AddLayout(this.ratingBox);
-
-
-
-            this.startDateBox = new DateEntryView("StartDate");
-            this.startDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
-            //this.startDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            contents.AddLayout(this.startDateBox);
-
-            this.endDateBox = new DateEntryView("EndDate");
-            this.endDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
-            //this.endDateBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            contents.AddLayout(this.endDateBox);
-
-
-            this.setStartdateButton = new Button();
-            contents.AddLayout(new ButtonLayout(this.setStartdateButton, "Set start = now"));
-
-            this.setEnddateButton = new Button();
-            contents.AddLayout(new ButtonLayout(this.setEnddateButton, "Set end = now"));
-
-            this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
-            //contents.AddLayout(this.intendedActivity_box);
-            this.commentBox = new TitledTextbox("Comment (optional)");
-            //contents.AddLayout(this.commentBox);
-            
-
-            this.okButton = new Button();
-            contents.AddLayout(new ButtonLayout(this.okButton, "OK"));
-
-            this.predictedRating_block = new TextBlock();
-            contents.AddLayout(new TextblockLayout(this.predictedRating_block));
-
-
+            grid2.AddLayout(this.ratingBox);
 
             this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record activities you have done.")
                 .AddMessage("Type the name of the activity, and press Enter if you want to take the autocomplete suggestion")
@@ -72,7 +47,33 @@ namespace ActivityRecommendation
             Button helpButton = new Button();
             helpButton.Click += helpButton_Click;
 
-            contents.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+            grid2.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+            contents.AddLayout(grid2);
+
+            GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+
+            this.startDateBox = new DateEntryView("Start Time");
+            this.startDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
+            grid3.AddLayout(this.startDateBox);
+            this.endDateBox = new DateEntryView("End Time");
+            this.endDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
+            grid3.AddLayout(this.endDateBox);
+            this.setStartdateButton = new Button();
+            grid3.AddLayout(new ButtonLayout(this.setStartdateButton, "Set start = now"));
+            this.setEnddateButton = new Button();
+            grid3.AddLayout(new ButtonLayout(this.setEnddateButton, "Set end = now"));
+            contents.AddLayout(grid3);
+
+
+            this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
+            this.commentBox = new TitledTextbox("Comment (optional)");
+
+            GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            this.okButton = new Button();
+            grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));
+            this.predictedRating_block = new TextBlock();
+            grid4.AddLayout(new TextblockLayout(this.predictedRating_block));
+            contents.AddLayout(grid4);
 
             this.SetContent(contents);
 
@@ -134,7 +135,6 @@ namespace ActivityRecommendation
             {
                 this.nameBox.Database = value;
                 this.intendedActivity_box.Database = value;
-                //this.ratingBox.ActivityDatabase = value;
             }
         }
         public Engine Engine
@@ -271,7 +271,6 @@ namespace ActivityRecommendation
                 if (activity != null)
                 {
                     this.engine.EstimateRating(activity, startDate);
-                    //this.predictedRating_block.Text = "Predicted Rating = " + activity.PredictedScore.Distribution.Mean.ToString() + "\nfor " + activity.Name + "\nat " + startDate.ToString();
                     this.predictedRating_block.Text = "Predicted Rating = " + activity.PredictedScore.Distribution.Mean.ToString() + " for " + activity.Name + " at " + startDate.ToString();
                 }
             }

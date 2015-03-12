@@ -241,8 +241,7 @@ namespace ActivityRecommendation
             IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
 
             // because the engine takes some time to become fast, we keep track of how many suggestions we've asked for, and we ask for suggestions increasingly more frequently
-            if (this.numCategoriesToConsiderAtOnce < 8)
-                this.numCategoriesToConsiderAtOnce++;
+            this.numCategoriesToConsiderAtOnce++;
             int numCategoriesToConsider = this.numCategoriesToConsiderAtOnce;
 
 

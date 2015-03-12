@@ -25,8 +25,8 @@ namespace ActivityRecommendation
             this.mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
 
             this.contentGrid = GridLayout.New(BoundProperty_List.Uniform(4), new BoundProperty_List(1), LayoutScore.Zero);
-            
-            this.contentGrid.AddLayout(this.make_displayField("Name:", suggestion.ActivityDescriptor.ActivityName));
+
+            this.contentGrid.AddLayout(new TextblockLayout(suggestion.ActivityDescriptor.ActivityName, TextAlignment.Center));
             this.contentGrid.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
             this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 3).ToString()));
             this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 3).ToString()));

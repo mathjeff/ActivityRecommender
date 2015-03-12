@@ -139,10 +139,10 @@ namespace ActivityRecommendation
             {
                 layouts.AddLast(this.getLayout(suggestion));
             }
-            if (this.suggestions.Count < this.maxNumSuggestions)
-                layouts.AddLast(this.selectorLayout);
             if (this.suggestions.Count == 0)
                 layouts.AddLast(this.helpButton_layout);
+            if (this.suggestions.Count < this.maxNumSuggestions)
+                layouts.AddLast(this.selectorLayout);
 
             GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(layouts.Count), new BoundProperty_List(1), LayoutScore.Zero);
             foreach (LayoutChoice_Set layout in layouts)

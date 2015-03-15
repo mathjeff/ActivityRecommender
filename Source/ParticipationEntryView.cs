@@ -46,7 +46,6 @@ namespace ActivityRecommendation
 
             Button helpButton = new Button();
             helpButton.Click += helpButton_Click;
-
             grid2.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
             contents.AddLayout(grid2);
 
@@ -86,7 +85,7 @@ namespace ActivityRecommendation
 
         public void DateText_Changed(object sender, TextChangedEventArgs e)
         {
-            try
+            if (this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid())
             {
                 if (this.StartDate.CompareTo(this.EndDate) <= 0)
                 {
@@ -100,10 +99,6 @@ namespace ActivityRecommendation
                     this.startDateBox.appearInvalid();
                     this.endDateBox.appearInvalid();
                 }
-            }
-            catch (FormatException)
-            {
-                // either the start date or end date is invalid
             }
         }
         void setEnddateButton_Click(object sender, RoutedEventArgs e)

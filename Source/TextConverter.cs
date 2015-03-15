@@ -6,6 +6,10 @@ using System.IO;
 using System.Xml;
 using System.IO.IsolatedStorage;
 using System.Reflection;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
+using Microsoft.Phone.Tasks;
 
 // The TextConverter class will convert an object into a string or parse a string into a list of objects
 // It only works on the specific types of objects that matter in the ActivityRecommender project
@@ -152,7 +156,6 @@ namespace ActivityRecommendation
             return "<" + objectName + ">" + stringBody + "</" + objectName + ">";
         }
 
-#if true
         public Boolean FileExists(string fileName)
         {
             IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication();
@@ -247,13 +250,21 @@ namespace ActivityRecommendation
             }
         }
 
+        public string ReadAllText(string fileName)
+        {
+            // If the file exists, then we want to read all of its data
+            StreamReader reader = this.OpenFileForReading(fileName);
+            string content = reader.ReadToEnd();
+            reader.Close();
+            return content;
+        }
+
         // opens the file, converts it into a sequence of objects, updates them to the latest format, and writes it out to the new file
         public void ReformatFile(string currentFileName, string newFileName)
         {
             // If the file exists, then we want to read all of its data
-            StreamReader reader = this.OpenFileForReading(currentFileName);
             XmlDocument document = new XmlDocument();
-            document.LoadXml(reader.ReadToEnd());
+            document.LoadXml(this.ReadAllText(currentFileName));
             XmlNode root = document.FirstChild;
             string outputText = "";
             Participation latestParticipation = null;
@@ -832,7 +843,28 @@ namespace ActivityRecommendation
             suggestion.EndDate = endDate;
             return suggestion;
         }
-#endif
+
+        // saves text to a file where the user can do something with it
+        public async void ExportFile(string fileName, string content) //, string content)
+        {
+            StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
+            writer.Write(content);
+            writer.Close();
+
+            StorageFolder storage = Windows.Storage.ApplicationData.Current.LocalFolder;
+            StorageFile storageFile = await storage.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+
+            await Windows.System.Launcher.LaunchFileAsync(storageFile);
+        }
+
+        void task_Completed(object sender, PhotoResult e)
+        {
+            Console.WriteLine("completed " + e);
+            Stream photo = e.ChosenPhoto;
+            StreamWriter writer = new StreamWriter(photo);
+            writer.Write("sample text");
+            writer.Close();
+        }
 
         // converts the dictionary into a string, without adding the initial <Tag> or final </Tag>
         private string ConvertToStringBody(Dictionary<string, string> properties)
@@ -1165,4 +1197,6 @@ namespace ActivityRecommendation
 
         #endregion
     }
+
+
 }

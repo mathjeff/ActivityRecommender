@@ -12,6 +12,7 @@ using System.IO.IsolatedStorage;
 using System.Reflection;
 using Windows.Phone.UI.Input;
 using System.ComponentModel;
+using ActivityRecommendation.Source;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -104,14 +105,18 @@ namespace ActivityRecommendation
             leftGrid.AddLayout(this.statisticsMenu);
             */
 
+            this.dataExportView = new DataExportView();
+            this.dataExportView.Add_ClickHandler(new RoutedEventHandler(this.ExportData));
+
 
             this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
-            usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
+            usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
+            usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
+            usageMenu_builder.AddLayout("Export Data", this.dataExportView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
@@ -134,8 +139,16 @@ namespace ActivityRecommendation
 
             this.mainLayout = new LayoutCache(this.layoutStack);
                         
-            this.displayManager = new ViewManager(this.mainWindow, mainLayout);
+            this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
 
+        }
+
+        public void ExportData(object sender, EventArgs e)
+        {
+            string content = "";
+            content += this.textConverter.ReadAllText(this.inheritancesFileName);
+            content += this.textConverter.ReadAllText(this.ratingsFileName);
+            this.textConverter.ExportFile("ActivityData.txt", content);
         }
 
         public void GoBack(object sender, CancelEventArgs e)
@@ -157,37 +170,17 @@ namespace ActivityRecommendation
         // Asks the engine to do some processing so that the next recommendation will be faster
         public void PrepareEngine()
         {
-            //this.engine.MakeRecommendation();
             this.engine.FullUpdate();
         }
         private void ReadEngineFiles()
         {
-            //this.CleanDataIfNecessary();
-            this.WriteDataIfMissing();
-
             System.Diagnostics.Debug.WriteLine("Starting to read files");
             this.textConverter.ReadFile(this.inheritancesFileName);
             this.textConverter.ReadFile(this.ratingsFileName);
             this.textConverter.ReadFile(this.tempFileName);
             System.Diagnostics.Debug.WriteLine("Done parsing files");
-            //this.textConverter.ReformatFile(this.ratingsFileName, "reformatted.txt");
         }
 
-        // writes pre-loaded data to disk
-        private void WriteDataIfMissing()
-        {
-            //this.WriteInheritancesIfMissing();
-            //this.WriteParticipationsIfMissing();
-        }
-
-        private void WriteInheritancesIfMissing()
-        {
-            throw new NotImplementedException();
-        }
-        private void WriteParticipationsIfMissing()
-        {
-            throw new NotImplementedException();
-        }
         public void DeclineSuggestion(ActivitySuggestion suggestion)
         {
             // Calculate the score to generate for this Activity as a result of that statement
@@ -224,8 +217,11 @@ namespace ActivityRecommendation
                 categoryDescriptor.PreferHigherProbability = true;
                 requestCategory = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
 
-                ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
-                this.AddActivityRequest(request);
+                if (requestCategory != null)
+                {
+                    ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
+                    this.AddActivityRequest(request);
+                }
             }
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
@@ -691,6 +687,7 @@ namespace ActivityRecommendation
         ParticipationEntryView participationEntryView;
         InheritanceEditingView inheritanceEditingView;
         SuggestionsView suggestionsView;
+        DataExportView dataExportView;
         MiniStatisticsMenu statisticsMenu;
         Engine engine;
         //DateTime latestRecommendationDate;

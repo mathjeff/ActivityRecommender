@@ -109,6 +109,7 @@
     <Compile Include="Source\Consideration.cs" />
     <Compile Include="Source\ConsiderationProgression.cs" />
     <Compile Include="Source\CumulativeParticipationProgression.cs" />
+    <Compile Include="Source\DataExportView.cs" />
     <Compile Include="Source\Datapoint.cs" />
     <Compile Include="Source\DateComparer.cs" />
     <Compile Include="Source\DateEntryView.cs" />

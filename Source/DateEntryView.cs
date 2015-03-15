@@ -37,24 +37,23 @@ namespace ActivityRecommendation
         
         public bool IsDateValid()
         {
-            try
-            {
-                this.GetDate();
-            }
-            catch (System.FormatException)
-            {
-                return false;
-            }
-            return true;
+            DateTime result;
+            return this.Parse(out result);
         }
         
         public DateTime GetDate()
         {
-            // example date: "YYYY-MM-DDThh:mm:ss"
-            string text = this.dateBox.Text;
             DateTime result;
-            result = DateTime.Parse(text);
+            bool valid = this.Parse(out result);
+            if (!valid)
+                throw new FormatException("Invalid date");
             return result;
+        }
+
+        private bool Parse(out DateTime result)
+        {
+            // example date: "YYYY-MM-DDThh:mm:ss"
+            return DateTime.TryParse(this.dateBox.Text, out result);
         }
         
         public void SetDate(DateTime when)

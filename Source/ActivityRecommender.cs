@@ -163,7 +163,7 @@ namespace ActivityRecommendation
             this.engine = new Engine();
             this.ReadEngineFiles();
             //this.engine.FullUpdate(); // this causes this engine to categorize a bunch of data but it takes a while and we don't want to do it right away
-            this.engine.CreateActivities();
+            this.engine.CreateNewActivities();
 
             this.PrepareEngine();
         }
@@ -255,7 +255,10 @@ namespace ActivityRecommendation
             }
             // if there are no matching activities, then give up
             if (bestActivity == null)
+            {
+                this.suggestionsView.SetErrorMessage("No activities! Go create some activities first, and then return here for suggestions.");
                 return;
+            }
             // after making a recommendation, get the rest of the details of the suggestion
             // (Note that eventually the suggested duration will be calculated in a more intelligent manner than simply taking the average duration)
             Participation participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
@@ -338,7 +341,6 @@ namespace ActivityRecommendation
             }
             this.AddParticipation(participation);
             // fill in some default data for the ParticipationEntryView
-            //this.latestActionDate = new DateTime(0);
             this.participationEntryView.Clear();
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
@@ -381,6 +383,7 @@ namespace ActivityRecommendation
         {
             this.PutParticipationInMemory(newParticipation);
             this.WriteParticipation(newParticipation);
+            this.ActivityDatabase.CreateActivityIfMissing(newParticipation.ActivityDescriptor);
         }
         private void WriteParticipation(Participation newParticipation)
         {

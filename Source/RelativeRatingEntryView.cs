@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Controls;
 using System.Windows;
 using VisiPlacement;
+using System.Windows.Media;
 
 namespace ActivityRecommendation
 {
@@ -14,10 +15,8 @@ namespace ActivityRecommendation
         {
             this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
-            //TextBlock titleBox = new TextBlock();
-            //titleBox.Text = "Score equals";
-            //this.mainDisplayGrid.AddLayout(new TextblockLayout(titleBox));
             this.scaleBlock = new TextBox();
+            this.scaleBlock.TextChanged += this.ScaleBlock_TextChanged;
             this.Clear();
             this.mainDisplayGrid.AddLayout(new TextboxLayout(this.scaleBlock));
 
@@ -26,6 +25,49 @@ namespace ActivityRecommendation
             this.mainDisplayGrid.AddLayout(new TextblockLayout(this.nameBlock));
 
             this.SetContent(this.mainDisplayGrid);
+        }
+
+        private void ScaleBlock_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            this.UpdateDateColor();
+        }
+        private bool IsRatioValid()
+        {
+            return (this.GetRatio() != null);
+        }
+        private double? GetRatio()
+        {
+            string text = this.scaleBlock.Text;
+            try
+            {
+                double value = double.Parse(this.scaleBlock.Text);
+                if (value < 0)
+                    return null;
+                return value;
+            }
+            catch (FormatException)
+            {
+                return null;
+            }
+        }
+        void UpdateDateColor()
+        {
+            if (this.IsRatioValid() || this.scaleBlock.Text == "")
+                this.AppearValid();
+            else
+                this.AppearInvalid();
+        }
+
+        // alters the appearance to indicate that the given date is not valid
+        void AppearValid()
+        {
+            this.scaleBlock.Background = new SolidColorBrush(Colors.White);
+        }
+
+        // alters the appearance to indicate that the given date is not valid
+        void AppearInvalid()
+        {
+            this.scaleBlock.Background = new SolidColorBrush(Colors.Red);
         }
 
         public Participation LatestParticipation
@@ -54,17 +96,10 @@ namespace ActivityRecommendation
         // creates the rating to assign to the given Participation
         public Rating GetRating(ActivityDatabase activities, Engine engine, Participation participation)
         {
-            double scale = 1;
-            try
-            {
-                scale = double.Parse(this.scaleBlock.Text);
-            }
-            catch
-            {
-                // if they didn't type a number, they don't get a RelativeRating
+            double? maybeScale = this.GetRatio();
+            if (maybeScale == null)
                 return null;
-            }
-
+            double scale = maybeScale.Value;
             
             
             if (this.latestParticipation == null)
@@ -86,10 +121,6 @@ namespace ActivityRecommendation
             // calculate the predicted rating for this activity
             engine.MakeRecommendation(thisActivity, participation.StartDate);
             Distribution thisEstimate = thisActivity.PredictedScore.Distribution;
-
-            // make sure the scale is in a valid range
-            if (scale < 0)
-                return null;
 
             // now we compute updated scores for the new activities
             thisEstimate = thisEstimate.CopyAndReweightTo(1);
@@ -135,8 +166,6 @@ namespace ActivityRecommendation
             this.scaleBlock.Text = "";
         }
 
-        //private SelectorView comparisonSelector;
-        //private ActivityNameEntryBox nameBox;
         private GridLayout mainDisplayGrid;
         private Participation latestParticipation;
         private TextBlock nameBlock;

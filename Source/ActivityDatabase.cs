@@ -24,7 +24,7 @@ namespace ActivityRecommendation
         #region Public Member Functions
 
         // returns the newly created Activity, or null if none was created
-        public Activity AddOrCreateActivity(ActivityDescriptor descriptor)
+        public Activity CreateActivityIfMissing(ActivityDescriptor descriptor)
         {
             // attempt to find an activity that matches
             Activity activity = this.ResolveDescriptor(descriptor);

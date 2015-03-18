@@ -27,7 +27,7 @@ namespace ActivityRecommendation
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
         public void FullUpdate()
         {
-            this.CreateActivities();
+            this.CreateNewActivities();
 
             this.ApplyInheritances();
 
@@ -43,12 +43,12 @@ namespace ActivityRecommendation
             this.requiresFullUpdate = false;
         }
         // creates an Activity object for each ActivityDescriptor that needs one
-        public void CreateActivities()
+        public void CreateNewActivities()
         {
             // first, create the necessary Activities
             foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
             {
-                Activity newActivity = this.activityDatabase.AddOrCreateActivity(descriptor);
+                Activity newActivity = this.activityDatabase.CreateActivityIfMissing(descriptor);
                 if (newActivity != null)
                 {
                     this.CreatingActivity(newActivity);
@@ -781,7 +781,7 @@ namespace ActivityRecommendation
             if (child == null)
             {
                 // if the activity doesn't exist, then create it
-                child = this.activityDatabase.AddOrCreateActivity(childDescriptor);
+                child = this.activityDatabase.CreateActivityIfMissing(childDescriptor);
                 // calculate an appropriate DiscoveryDate
                 this.CreatingActivity(child);
                 if (newInheritance.DiscoveryDate != null)
@@ -797,11 +797,8 @@ namespace ActivityRecommendation
             Activity parent = this.activityDatabase.ResolveDescriptor(parentDescriptor);
             if (parent == null)
             {
-                parent = this.activityDatabase.AddOrCreateActivity(parentDescriptor);
-            }
-            else
-            {
-                this.CreatingActivity(child);
+                parent = this.activityDatabase.CreateActivityIfMissing(parentDescriptor);
+                this.CreatingActivity(parent);
             }
             child.AddParent(parent);
             // Important! if (this.requiresFullUpdate) then the value calculated in EstimateRating will be wrong
@@ -815,7 +812,6 @@ namespace ActivityRecommendation
                 this.EstimateRating(child, DateTime.Now);
                 //this.MakeRecommendation(child, DateTime.Now);
             }*/
-            //this.WriteInheritance(newInheritance);
         }
         // gets called whenever an outside source adds a participation
         public void DiscoveredParticipation(Participation newParticipation)

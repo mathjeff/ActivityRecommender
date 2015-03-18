@@ -226,10 +226,18 @@ namespace ActivityRecommendation
             if (descriptor.ActivityName == null || descriptor.ActivityName.Length == 0)
                 return null;
 
-            Participation participation = new Participation(this.StartDate, this.EndDate, descriptor);
+            Participation participation;
+            try
+            {
+                participation = new Participation(this.StartDate, this.EndDate, descriptor);
+            }
+            catch (FormatException)
+            {
+                // if the dates are invalid, then give up
+                return null;
+            }
             if (this.CommentText != "" && this.CommentText != null)
                 participation.Comment = this.CommentText;
-
 
             try
             {
@@ -238,6 +246,7 @@ namespace ActivityRecommendation
             }
             catch (Exception)
             {
+                // If the rating is invalid, then we can ignore that
             }
 
             ActivityDescriptor considerationDescriptor = this.intendedActivity_box.ActivityDescriptor;

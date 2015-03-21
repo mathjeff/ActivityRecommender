@@ -125,7 +125,7 @@ namespace ActivityRecommendation
                 .AddMessage("This ActivityRecommender can give you suggestions for what to do now, based on time-stamped data from you about what you've done recently and how much you liked it")
                 .AddMessage("Create some activities, log some participations, and ask for suggestions!")
                 .AddMessage("This version of this application does not use the internet and does not report your entries to anyone.")
-                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks! - Jeffry Gaston")
+                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks!")
                 .AddMessage("Version: Release 1").Build();
 
 

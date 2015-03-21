@@ -38,13 +38,13 @@ namespace ActivityRecommendation
         }
         void nameBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if ((this.SuggestionText != this.nameBox.Text) && (this.SuggestionText != ""))
+            if ((this.suggestedActivityName != this.nameBox.Text) && (this.suggestedActivityName != ""))
             {
                 // if there is text to fill in, then check whether they pushed a key that indicates a request for an autocomplete
                 if (e.Key == Key.Enter || e.Key == Key.Tab)
                 {
                     // automatically fill the suggestion text into the box
-                    this.nameBox.Text = this.suggestionBlock.Text;
+                    this.nameBox.Text = this.suggestedActivityName;
                     e.Handled = true;
                 }
             }
@@ -72,14 +72,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return (this.NameText == this.SuggestionText);
-            }
-        }
-        string SuggestionText
-        {
-            get
-            {
-                return this.suggestionBlock.Text;
+                return (this.NameText == this.suggestedActivityName);
             }
         }
         // this function gets called right after the text changes
@@ -95,34 +88,35 @@ namespace ActivityRecommendation
         // update the UI based on a change in the text that the user has typed
         void UpdateSuggestions()
         {
-            // default to a white background for the suggestion box
-            //this.suggestionBlock.Background = Brushes.White;
             ActivityDescriptor descriptor = this.ActivityDescriptor;
             if (descriptor == null)
             {
-                this.suggestionBlock.Text = null;
-                return;
-            }
-            Activity activity = this.database.ResolveDescriptor(descriptor);
-            if (activity != null)
-            {
-                if (activity.Name == this.nameBox.Text)
-                {
-                    // if this is a valid activity, then show a white background
-                    //this.suggestionBlock.Background = Brushes.White;
-                }
-                else
-                {
-                    // if this is a valid prefix, then show a yellow background
-                    //this.suggestionBlock.Background = Brushes.Yellow;
-                }
-                this.suggestionBlock.Text = activity.Name;
+                this.suggestedActivityName = "";
+                this.suggestionBlock.Text = "";
             }
             else
             {
-                // if this is not a valid prefix, then show a red background
-                //this.suggestionBlock.Background = Brushes.Red;
-                this.suggestionBlock.Text = "";
+                Activity activity = this.database.ResolveDescriptor(descriptor);
+                if (activity != null)
+                {
+                    // Also consider using color to prompt users to accept the suggestion
+                    this.suggestedActivityName = activity.Name;
+                    if (activity.Name == descriptor.ActivityName)
+                    {
+                        // perfect match, so just display the activity
+                        this.suggestionBlock.Text = activity.Name;
+                    }
+                    else
+                    {
+                        // Remind the user that they have to accept the suggestion
+                        this.suggestionBlock.Text = activity.Name + "?";
+                    }
+                }
+                else
+                {
+                    this.suggestedActivityName = "";
+                    this.suggestionBlock.Text = null;
+                }
             }
         }
         public ActivityDescriptor ActivityDescriptor
@@ -154,6 +148,7 @@ namespace ActivityRecommendation
         TextBox nameBox;
         TextBlock suggestionBlock;
         ActivityDatabase database;
+        string suggestedActivityName = "";
     }
 
     // Summary:

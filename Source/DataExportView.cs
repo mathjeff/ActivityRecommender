@@ -17,7 +17,7 @@ namespace ActivityRecommendation.Source
             this.SetTitle("Export Data");
             
             HelpWindowBuilder helper = new HelpWindowBuilder();
-            helper.AddMessage("Warning: this txt file contains most of what you've entered into this application, and so it may become large");
+            helper.AddMessage("Warning: this txt file contains most of what you've entered into this application, and so it may become large.");
             helper.AddMessage("After you export this file and it opens in another program, it is probably easiest for you to simply save the file, close that program, and transfer it to a more powerful device, rather than trying to read it inside that program.");
             LayoutChoice_Set help = helper.Build();
 

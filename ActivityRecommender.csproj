@@ -187,6 +187,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ActivityRecommender_2015_03_22_16_22_21.sap" />
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml">
       <SubType>Designer</SubType>

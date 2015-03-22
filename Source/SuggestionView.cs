@@ -17,16 +17,28 @@ namespace ActivityRecommendation
             this.container = container;
             this.suggestion = suggestion;
 
-            // have the X button use the rightmost 10% of the view
+            // have the X button use a certain amount of space on the right
             BoundProperty_List widths = new BoundProperty_List(2);
-            widths.SetPropertyScale(0, 9);
+            int titleWidthWeight = 6;
+            widths.SetPropertyScale(0, titleWidthWeight + 1);
             widths.SetPropertyScale(1, 1);
             widths.BindIndices(0, 1);
             this.mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
-
             this.contentGrid = GridLayout.New(BoundProperty_List.Uniform(4), new BoundProperty_List(1), LayoutScore.Zero);
 
-            this.contentGrid.AddLayout(new TextblockLayout(suggestion.ActivityDescriptor.ActivityName, TextAlignment.Center));
+            // Attempt to center the activity name, but allow it to be off-center if necessary
+            TextblockLayout titleLayout = new TextblockLayout(suggestion.ActivityDescriptor.ActivityName, TextAlignment.Center);
+            BoundProperty_List titleComponentWidths = new BoundProperty_List(2);
+            titleComponentWidths.BindIndices(0, 1);
+            titleComponentWidths.SetPropertyScale(0, 1);
+            titleComponentWidths.SetPropertyScale(1, titleWidthWeight);
+            GridLayout centeredTitle = GridLayout.New(BoundProperty_List.Uniform(1), titleComponentWidths, LayoutScore.Zero);
+            centeredTitle.PutLayout(titleLayout, 1, 0);
+            GridLayout offsetTitle = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(1), LayoutScore.Get_UnCentered_LayoutScore(1));
+            offsetTitle.PutLayout(titleLayout, 0, 0);
+            this.contentGrid.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
+
+            // Add the remaining fields
             this.contentGrid.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
             this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 3).ToString()));
             this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 3).ToString()));

@@ -183,6 +183,14 @@ equivalentProbability = 0.816025026265546
 weightedProbabilityScore = 0.181927056060576
 equivalentWeightedProbability = 0.894896166812173
 
+results (on 2015-03-07) after new data (plus ignoring any parent that already has lots of considerations on startup)
+typical longtermPrediction error = 0.133944756855872
+typicalScoreError = 0.178996813609837
+typicalProbabilityError = 0.393833200208718
+equivalentProbability = 0.808050986710577
+weightedProbabilityScore = 0.085217612980164
+equivalentWeightedProbability = 0.868608281702737
+
 */
 
 namespace ActivityRecommendation

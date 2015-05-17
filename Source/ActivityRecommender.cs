@@ -126,7 +126,7 @@ namespace ActivityRecommendation
                 .AddMessage("Create some activities, log some participations, and ask for suggestions!")
                 .AddMessage("This version of this application does not use the internet and does not report your entries to anyone.")
                 .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender-WPhone for more information and to contribute. Thanks!")
-                .AddMessage("Version: Release 1").Build();
+                .Build();
 
 
             introMenu_builder.AddLayout("Help", helpLayout);

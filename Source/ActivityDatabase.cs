@@ -17,6 +17,9 @@ namespace ActivityRecommendation
             this.activitiesByName = new StatList<string, IEnumerable<Activity>>(this, this);
             this.allActivities = new List<Activity>();
             this.ratingSummarizer = ratingSummarizer;
+            this.rootActivity = new Activity("Activity", ratingSummarizer);
+            this.rootActivity.Choosable = false;
+            this.AddActivity(this.rootActivity);
         }
 
         #endregion
@@ -221,6 +224,7 @@ namespace ActivityRecommendation
             Activity result = new Activity(sourceDescriptor.ActivityName, this.ratingSummarizer);
             if (sourceDescriptor.Choosable != null)
                 result.Choosable = sourceDescriptor.Choosable.Value;
+            result.AddParent(this.rootActivity);
             return result;
         }
 
@@ -308,6 +312,7 @@ namespace ActivityRecommendation
         private List<Activity> allActivities;
         private StatList<string, IEnumerable<Activity>> activitiesByName;
         private RatingSummarizer ratingSummarizer;
+        private Activity rootActivity;
 
         #endregion
     }

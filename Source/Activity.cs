@@ -30,13 +30,14 @@ namespace ActivityRecommendation
         {
             this.name = activityName;
             this.parents = new List<Activity>();
+            this.parentsUsedForPrediction = new List<Activity>();
             this.children = new List<Activity>();
             this.parentDescriptors = new List<ActivityDescriptor>();
             this.ratingSummariesToUpdate = new Queue<RatingSummary>();
             this.overallRatings_summarizer = overallRatings_summarizer;
 
             this.SetupProgressions();
-            this.SetupRatingPredictors();
+            //this.SetupRatingPredictors();
             this.SetupParticipationProbabilityPredictors();
 
             this.PredictedScore = new Prediction();
@@ -69,149 +70,6 @@ namespace ActivityRecommendation
             this.skipProgression = new SkipProgression(this);
             this.expectedRatingProgression = new ExpectedRatingProgression(this);
             this.expectedParticipationProbabilityProgression = new ExpectedParticipationProbabilityProgression(this);
-        }
-        // initialize the PredictionLinks that estimate the rating of this Activity
-        private void SetupRatingPredictors()
-        {
-            this.extraRatingPredictionLinks = new List<IPredictionLink>();
-            this.ratingTrainingProgressions = new List<IProgression>();
-            this.ratingTestingProgressions = new List<IProgression>();
-
-            this.ratingTrainingProgressions.Add(this.idlenessProgression);
-            this.ratingTestingProgressions.Add(this.idlenessProgression);
-            this.ratingTrainingProgressions.Add(this.participationProgression);
-            this.ratingTestingProgressions.Add(this.participationProgression);
-            this.ratingTrainingProgressions.Add(this.timeOfDayProgression);
-            this.ratingTestingProgressions.Add(this.timeOfDayProgression);
-            //this.ratingTrainingProgressions.Add(this.timeOfWeekProgression);
-            //this.ratingTestingProgressions.Add(this.timeOfWeekProgression);
-            //this.ratingTrainingProgressions.Add(this.ratingProgression);
-            //this.ratingTestingProgressions.Add(this.ratingProgression);
-            //this.ratingTrainingProgressions.Add(this.skipProgression);
-            //this.ratingTestingProgressions.Add(this.skipProgression);
-            //this.ratingTrainingProgressions.Add(this.considerationProgression);
-            //this.ratingTestingProgressions.Add(this.considerationProgression);
-
-            this.SetupRatingInterpolator();
-            /*
-            PredictionLink predictorFromOwnParticipations = new PredictionLink(this.participationProgression, this.ratingProgression);
-            this.ratingPredictors.Add(predictorFromOwnParticipations);
-
-            PredictionLink predictorFromOwnIdleness = new PredictionLink(this.idlenessProgression, this.ratingProgression);
-            this.ratingPredictors.Add(predictorFromOwnIdleness);
-
-            PredictionLink predictorFromTimeOfDay = new PredictionLink(this.timeOfDayProgression, this.ratingProgression);
-            predictorFromTimeOfDay.InputWrapsAround = true;
-            this.ratingPredictors.Add(predictorFromTimeOfDay);
-
-            */
-        }
-
-        private void SetupRatingInterpolator()
-        {
-            FloatRange[] coordinates = new FloatRange[this.ratingTrainingProgressions.Count];
-            int i;
-            for (i = 0; i < coordinates.Length; i++)
-            {
-                coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange();
-            }
-            this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
-            this.longTerm_valueInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
-        }
-        // initialize the PredictionLinks that estimate the probability that the user will do this activity
-        private void SetupParticipationProbabilityPredictors()
-        {
-            this.extraParticipationPredictionLinks = new List<IPredictionLink>();
-
-            this.participationTrainingProgressions = new List<IProgression>();
-            this.participationTestingProgressions = new List<IProgression>();
-
-            this.participationTrainingProgressions.Add(this.skipProgression);
-            this.participationTestingProgressions.Add(this.skipProgression);
-
-            //this.participationTrainingProgressions.Add(this.timeOfDayProgression);
-            //this.participationTestingProgressions.Add(this.timeOfDayProgression);
-
-            this.participationTrainingProgressions.Add(this.considerationProgression);
-            this.participationTestingProgressions.Add(this.considerationProgression);
-
-            //this.participationTrainingProgressions.Add(this.participationProgression);
-            //this.participationTestingProgressions.Add(this.participationProgression);
-
-            //this.participationTrainingProgressions.Add(this.timeOfWeekProgression);
-            //this.participationTestingProgressions.Add(this.timeOfWeekProgression);
-            
-
-            /*
-            this.participationTrainingProgressions.Add(this.participationProgression);
-            this.participationTestingProgressions.Add(this.participationProgression);
-
-
-            this.participationTrainingProgressions.Add(this.idlenessProgression);
-            this.participationTestingProgressions.Add(this.idlenessProgression);
-
-            */
-
-            //this.participationTrainingProgressions.Add(this.ratingProgression);
-            //this.participationTestingProgressions.Add(this.ratingProgression);
-
-            /*
-
-            this.participationTrainingProgressions.Add(this.considerationProgression);
-            this.participationTestingProgressions.Add(this.considerationProgression);
-            */
-
-            //this.participationTrainingProgressions.Add(this.expectedRatingProgression);
-            //this.participationTestingProgressions.Add(this.considerationProgression);
-
-            //this.participationTrainingProgressions.Add(this.ratingProgression);
-            //this.participationTestingProgressions.Add(this.ratingProgression);
-
-            /*
-            //this.participationProbabilityPredictors = new List<IPredictionLink>();
-            this.participationProbabilityPredictors.Add(new PredictionLink(this.skipProgression, this.considerationProgression));
-            this.participationProbabilityPredictors.Add(new PredictionLink(this.idlenessProgression, this.considerationProgression));
-            //this.participationProbabilityPredictors.Add(new PredictionLink(this.timeOfDayProgression, this.considerationProgression));
-            //this.participationProbabilityPredictors.Add(new PredictionLink(this.participationProgression, this.considerationProgression));
-            this.participationProbabilityPredictors.Add(new PredictionLink(this.considerationProgression, this.considerationProgression));
-            this.participationProbabilityPredictors.Add(new PredictionLink(this.expectedRatingProgression, this.considerationProgression));
-            this.participationProbabilityPredictors.Add(new PredictionLink(this.ratingProgression, this.considerationProgression));
-            */
-            
-            
-            
-            //this.SetupParticipationProbabilityInterpolator();
-        }
-        private void SetupParticipationProbabilityInterpolator()
-        {
-            List<IProgression> progressions = new List<IProgression>();
-            progressions.Add(this.timeOfDayProgression);
-            List<Activity> activities = this.GetParticipationPredictionActivities();
-            foreach (Activity activity in activities)
-            {
-                foreach (IProgression progression in activity.participationTrainingProgressions)
-                {
-                    progressions.Add(progression);
-                }
-            }
-            FloatRange[] coordinates = new FloatRange[progressions.Count];
-            int i;
-            for (i = 0; i < coordinates.Length; i++)
-            {
-                coordinates[i] = progressions[i].EstimateOutputRange();
-            }
-            this.participationInterpolator = new AdaptiveLinearInterpolator<WillingnessSummary>(new HyperBox<WillingnessSummary>(coordinates), this);
-        }
-        private Distribution QueryParticipationProbabilityInterpolator(double[] coordinates)
-        {
-            this.ApplyPendingParticipations();
-            this.ApplyPendingSkips();
-            if (this.participationInterpolator == null)
-            {
-                this.SetupParticipationProbabilityInterpolator();
-            }
-            Distribution estimate = new Distribution(this.participationInterpolator.Interpolate(coordinates));
-            return estimate;
         }
         #endregion
 
@@ -272,45 +130,11 @@ namespace ActivityRecommendation
         {
             if (!this.parents.Contains(newParent))
             {
-                
-                if (newParent.name == "Activity")
-                {
-                    System.Diagnostics.Debug.WriteLine("TODO: figure out how to spend less time analyzing the root activity (probably by simply using the parent's average rating)");
-                    return;
-                }
-                
-
                 this.parents.Add(newParent);
                 newParent.children.Add(this);
 
-                this.ratingTrainingProgressions.Add(newParent.ratingProgression);
-                this.ratingTestingProgressions.Add(newParent.expectedRatingProgression);
-                //this.ratingTestingProgressions.Add(newParent.ratingProgression);
-
-                //this.ratingTrainingProgressions.Add(newParent.participationProgression);
-                //this.ratingTestingProgressions.Add(newParent.participationProgression);
-
-                //this.ratingTrainingProgressions.Add(newParent.ParticipationProgression);
-                //this.ratingTestingProgressions.Add(newParent.ParticipationProgression);
-                //this.ratingTestingProgressions.Add(newParent.expectedRatingProgression);
-                //PredictionLink link1 = new PredictionLink(newParent.RatingProgression, newParent.ExpectedRatingProgression, this.RatingProgression);
-                //link1.Justification = "predicted based on the rating of " + newParent.Description;
-                //this.ratingPredictors.Add(link1);
-
-                //this.participationTrainingProgressions.Add(newParent.participationProgression);
-                //this.participationTestingProgressions.Add(newParent.participationProgression);
-
-                SimplePredictionLink link2 = new SimplePredictionLink(newParent.ExpectedRatingProgression, this.RatingProgression, "Probably close to the rating of " + newParent.Description);
-                //SimplePredictionLink link2 = new SimplePredictionLink(newParent.RatingProgression, this.RatingProgression, "Probably close to the rating of " + newParent.Description);
-                this.extraRatingPredictionLinks.Add(link2);
-
-
-                SimplePredictionLink probabilityLink2 = new SimplePredictionLink(newParent.expectedParticipationProbabilityProgression, this.considerationProgression, "Probably just about as likely as " + newParent.Description);
-                this.extraParticipationPredictionLinks.Add(probabilityLink2);
-
                 // need to rebuild the interpolator because the number of dimensions is wrong
-                this.SetupRatingInterpolator();
-                //this.SetupParticipationProbabilityInterpolator();
+                //this.SetupRatingInterpolator();
             }
         }
         public List<Activity> Parents
@@ -320,6 +144,13 @@ namespace ActivityRecommendation
                 return this.parents;
             }
         }
+        public List<Activity> ParentsUsedForPrediction
+        {
+            get
+            {
+                return this.parentsUsedForPrediction;
+            }
+        }
         public List<Activity> Children
         {
             get
@@ -327,6 +158,7 @@ namespace ActivityRecommendation
                 return this.children;
             }
         }
+
         // returns a list containing this activity and all of its ancestors
         public List<Activity> GetAllSuperactivities()
         {
@@ -528,7 +360,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.considerationProgression.NumItems;
+                return this.considerationProgression.NumItems + this.PendingParticipations.Count + this.PendingSkips.Count;
             }
         }
         public Distribution ScoresWhenSuggested     // the scores assigned to it at times when it was executed after being suggested
@@ -597,6 +429,8 @@ namespace ActivityRecommendation
         }
         private void ApplyPendingRatings()
         {
+            this.SetupRatingPredictorsIfNeeded();
+
             foreach (AbsoluteRating newRating in this.PendingRatings)
             {
                 // For now, we don't care which activity the rating applied to. We just care what ratings were provided after the user participated in this activity
@@ -1011,6 +845,117 @@ namespace ActivityRecommendation
             }
         }
 
+        public void SetupRatingPredictorsIfNeeded()
+        {
+            if (this.extraRatingPredictionLinks == null)
+                this.SetupRatingPredictors();
+        }
+
+        #endregion
+
+        #region Private Member Functions
+
+        private bool shouldUseNewlyAddedParentForPrediction(Activity parent)
+        {
+            // If the parent activity has been done a bunch of times already, then it takes a long time to analyze it and we don't want that
+            // If this activity has been done a bunch of times already, then we already have enough information and don't need it
+            if (parent.NumConsiderations < 1000)
+                return true;
+            else
+                return false;
+        }
+
+        // initialize the PredictionLinks that estimate the rating of this Activity
+        private void SetupRatingPredictors()
+        {
+            this.extraRatingPredictionLinks = new List<IPredictionLink>();
+            this.ratingTrainingProgressions = new List<IProgression>();
+            this.ratingTestingProgressions = new List<IProgression>();
+
+            this.ratingTrainingProgressions.Add(this.idlenessProgression);
+            this.ratingTestingProgressions.Add(this.idlenessProgression);
+            this.ratingTrainingProgressions.Add(this.participationProgression);
+            this.ratingTestingProgressions.Add(this.participationProgression);
+            this.ratingTrainingProgressions.Add(this.timeOfDayProgression);
+            this.ratingTestingProgressions.Add(this.timeOfDayProgression);
+
+            foreach (Activity parent in this.parents)
+            {
+                if (this.shouldUseNewlyAddedParentForPrediction(parent))
+                {
+                    this.parentsUsedForPrediction.Add(parent);
+
+                    this.ratingTrainingProgressions.Add(parent.ratingProgression);
+                    this.ratingTestingProgressions.Add(parent.expectedRatingProgression);
+
+                    SimplePredictionLink link2 = new SimplePredictionLink(parent.ExpectedRatingProgression, this.RatingProgression, "Probably close to the rating of " + parent.Description);
+                    this.extraRatingPredictionLinks.Add(link2);
+
+                    SimplePredictionLink probabilityLink2 = new SimplePredictionLink(parent.expectedParticipationProbabilityProgression, this.considerationProgression, "Probably just about as likely as " + parent.Description);
+                    this.extraParticipationPredictionLinks.Add(probabilityLink2);
+                }
+            }
+
+            this.SetupRatingInterpolator();
+        }
+
+        private void SetupRatingInterpolator()
+        {
+            FloatRange[] coordinates = new FloatRange[this.ratingTrainingProgressions.Count];
+            int i;
+            for (i = 0; i < coordinates.Length; i++)
+            {
+                coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange();
+            }
+            this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.longTerm_valueInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+        }
+        // initialize the PredictionLinks that estimate the probability that the user will do this activity
+        private void SetupParticipationProbabilityPredictors()
+        {
+            this.extraParticipationPredictionLinks = new List<IPredictionLink>();
+
+            this.participationTrainingProgressions = new List<IProgression>();
+            this.participationTestingProgressions = new List<IProgression>();
+
+            this.participationTrainingProgressions.Add(this.skipProgression);
+            this.participationTestingProgressions.Add(this.skipProgression);
+
+            this.participationTrainingProgressions.Add(this.considerationProgression);
+            this.participationTestingProgressions.Add(this.considerationProgression);
+
+        }
+        private void SetupParticipationProbabilityInterpolator()
+        {
+            List<IProgression> progressions = new List<IProgression>();
+            progressions.Add(this.timeOfDayProgression);
+            List<Activity> activities = this.GetParticipationPredictionActivities();
+            foreach (Activity activity in activities)
+            {
+                foreach (IProgression progression in activity.participationTrainingProgressions)
+                {
+                    progressions.Add(progression);
+                }
+            }
+            FloatRange[] coordinates = new FloatRange[progressions.Count];
+            int i;
+            for (i = 0; i < coordinates.Length; i++)
+            {
+                coordinates[i] = progressions[i].EstimateOutputRange();
+            }
+            this.participationInterpolator = new AdaptiveLinearInterpolator<WillingnessSummary>(new HyperBox<WillingnessSummary>(coordinates), this);
+        }
+        private Distribution QueryParticipationProbabilityInterpolator(double[] coordinates)
+        {
+            this.ApplyPendingParticipations();
+            this.ApplyPendingSkips();
+            if (this.participationInterpolator == null)
+            {
+                this.SetupParticipationProbabilityInterpolator();
+            }
+            Distribution estimate = new Distribution(this.participationInterpolator.Interpolate(coordinates));
+            return estimate;
+        }
 
         #endregion
 
@@ -1021,6 +966,7 @@ namespace ActivityRecommendation
         //private string description;
         private DateTime latestRatingEstimationDate;
         private List<Activity> parents;
+        private List<Activity> parentsUsedForPrediction;
         private List<Activity> children;
         private List<ActivityDescriptor> parentDescriptors;
 

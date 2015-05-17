@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using StatLists;
 
-// A RatingSummarizer computes the (exponentially weighted) average score of a bunch of ratings within a certain period of time
+// A RatingSummarizer computes the (exponentially weighted) average value for a bunch of ratings and participations within a certain period of time
+// Note that it takes into account both the scores of the ratings and the fraction of time spent idle
 namespace ActivityRecommendation
 {
     public class RatingSummarizer
@@ -34,7 +35,7 @@ namespace ActivityRecommendation
             // now add the value
             this.ratingsByDate.Add(startDate, additionalDistribution);
         }
-        // Calling this function declares that user put to good use 'intensity' (a fraction) of his/her time between startDate and endDate to some meaningful use
+        // Calling this function declares that user put to good use <intensity> (a fraction) of his/her time between startDate and endDate to some meaningful use
         public void AddParticipationIntensity(DateTime startDate, DateTime endDate, double intensity)
         {
             if (this.ratingsByDate.NumItems == 0 && this.participationIntensitiesByDate.NumItems == 0)

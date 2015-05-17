@@ -31,14 +31,7 @@ namespace ActivityRecommendation
 
             this.ApplyInheritances();
 
-            // check for any activities that don't have parents
-            foreach (Activity activity in this.activityDatabase.AllActivities)
-            {
-                if (activity.Parents.Count == 0 && activity.Name != "Activity")
-                {
-                    System.Diagnostics.Debug.WriteLine("Warning: Activity named " + activity.Name + " has no parents and may be a typo");
-                }
-            }
+
             this.ApplyParticipationsAndRatings();
             this.requiresFullUpdate = false;
         }
@@ -406,8 +399,9 @@ namespace ActivityRecommendation
             activity.PredictionsNeedRecalculation = false;
             // If we get here, then we have to do some calculations
             // estimate the rating 
+            activity.SetupRatingPredictorsIfNeeded();
             // First make sure that all parents' ratings are up-to-date
-            foreach (Activity parent in activity.Parents)
+            foreach (Activity parent in activity.ParentsUsedForPrediction)
             {
                 this.EstimateRating(parent, when);
             }

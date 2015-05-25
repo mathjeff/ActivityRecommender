@@ -216,6 +216,13 @@ namespace ActivityRecommendation
         {
             this.activitiesByName.Clear();
         }
+        public Activity RootActivity
+        {
+            get
+            {
+                return this.rootActivity;
+            }
+        }
         #endregion
 
         // constructs an Activity from the given ActivityDescriptor

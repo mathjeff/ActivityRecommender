@@ -377,6 +377,13 @@ namespace ActivityRecommendation
                 return this.scoresWhenNotSuggested;
             }
         }
+        public Distribution Scores
+        {
+            get
+            {
+                return this.scoresWhenSuggested.Plus(this.scoresWhenNotSuggested);
+            }
+        }
         public Distribution ThinkingTimes           // how long it takes the user to skip this activity
         {
             get

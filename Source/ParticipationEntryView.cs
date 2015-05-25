@@ -275,7 +275,11 @@ namespace ActivityRecommendation
                 if (activity != null)
                 {
                     this.engine.EstimateRating(activity, startDate);
-                    this.predictedRating_block.Text = "Predicted Rating = " + activity.PredictedScore.Distribution.Mean.ToString() + " for " + activity.Name + " at " + startDate.ToString();
+                    double expectedRating = activity.PredictedScore.Distribution.Mean;
+                    double overallAverageRating = this.engine.ActivityDatabase.RootActivity.Scores.Mean;
+                    double ratio = expectedRating / overallAverageRating;
+                    this.predictedRating_block.Text = "Predicted Rating for " + activity.Name + " at " + startDate.ToString() +
+                        " = " + ratio.ToString() + " times your average rating";
                 }
             }
         }

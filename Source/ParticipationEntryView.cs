@@ -37,16 +37,9 @@ namespace ActivityRecommendation
             this.ratingBox = new RelativeRatingEntryView();
             grid2.AddLayout(this.ratingBox);
 
-            this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record activities you have done.")
-                .AddMessage("Type the name of the activity, and press Enter if you want to take the autocomplete suggestion")
-                .AddMessage("Enter a rating if you like")
-                .AddMessage("Enter a start date and an end date")
-                .AddMessage("Lastly, click OK!")
-                .Build();
-
-            Button helpButton = new Button();
-            helpButton.Click += helpButton_Click;
-            grid2.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+            this.predictedRating_block = new TextBlock();
+            grid2.AddLayout(new TextblockLayout(this.predictedRating_block));
+            
             contents.AddLayout(grid2);
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
@@ -69,9 +62,19 @@ namespace ActivityRecommendation
 
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.okButton = new Button();
+
+            this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record activities you have done.")
+                .AddMessage("Type the name of the activity, and press Enter if you want to take the autocomplete suggestion")
+                .AddMessage("Enter a rating if you like")
+                .AddMessage("Enter a start date and an end date")
+                .AddMessage("Lastly, click OK!")
+                .Build();
+
+            Button helpButton = new Button();
+            helpButton.Click += helpButton_Click;
+
             grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));
-            this.predictedRating_block = new TextBlock();
-            grid4.AddLayout(new TextblockLayout(this.predictedRating_block));
+            grid4.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
             contents.AddLayout(grid4);
 
             this.SetContent(contents);
@@ -274,12 +277,23 @@ namespace ActivityRecommendation
                 Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
                 if (activity != null)
                 {
-                    this.engine.EstimateRating(activity, startDate);
-                    double expectedRating = activity.PredictedScore.Distribution.Mean;
-                    double overallAverageRating = this.engine.ActivityDatabase.RootActivity.Scores.Mean;
-                    double ratio = expectedRating / overallAverageRating;
-                    this.predictedRating_block.Text = "Predicted Rating for " + activity.Name + " at " + startDate.ToString() +
-                        " = " + ratio.ToString() + " times your average rating";
+                    Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
+                    //this.engine.EstimateSuggestionValue(rootActivity, startDate);
+                    this.engine.EstimateSuggestionValue(activity, startDate);
+
+                    double expectedShortermRating = activity.PredictedScore.Distribution.Mean;
+                    double overallAverageRating = rootActivity.Scores.Mean;
+                    double shorttermRatio = expectedShortermRating / overallAverageRating;
+
+                    //double expectedLongtermRating = activity.SuggestionValue.Distribution.Mean;
+                    //double overallAverageUtility = rootActivity.SuggestionValue.Distribution.Mean;
+
+                    //double longtermRatio = expectedLongtermRating / overallAverageUtility;
+
+                    this.predictedRating_block.Text = "Predicted rating for " + activity.Name + " at " + startDate.ToString() +
+                        " = " + shorttermRatio.ToString() + " times average";
+                        //. Predicted long-term value = " + longtermRatio.ToString()
+                        //+ " time average.";
                 }
             }
         }

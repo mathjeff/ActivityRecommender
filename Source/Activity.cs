@@ -576,6 +576,25 @@ namespace ActivityRecommendation
 
             this.PendingSkips.AddLast(newSkip);
         }
+        // Returns the average value that the user derives when doing or thinking about doing this activity
+        public double GetAverageUtility()
+        {
+            // TODO: figure out how to consolidate this logic with RatingSummarizer.GetValueDistributionForDates
+            double participationFraction = this.GetAverageParticipationUsageFraction();
+            double ratingFraction = this.Scores.Mean;
+            return participationFraction * ratingFraction;
+        }
+
+        // Returns (the amount of time that the user spends doing this activity) divided (by the amount of time that the user is either doing this activity or considering doing it)
+        private double GetAverageParticipationUsageFraction()
+        {
+            double activeDuration = this.participationDurations.SumValue;
+            double idleDuration = this.thinkingTimes.SumValue;
+            double totalDuration = activeDuration + idleDuration;
+            if (totalDuration == 0)
+                return 0;
+            return activeDuration / totalDuration;
+        }
         private void ApplyPendingSkips()
         {
             foreach (ActivitySkip newSkip in this.PendingSkips)

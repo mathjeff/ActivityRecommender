@@ -206,100 +206,25 @@ namespace ActivityRecommendation
         }
         public Activity MakeRecommendation(DateTime when)
         {
-            return this.MakeRecommendation(this.activityDatabase.AllActivities, when);           
-        }
-        public Activity MakeRecommendation(Activity categoryToConsider, DateTime when)
-        {
-            return this.MakeRecommendation(categoryToConsider, when, 0);
-        }
-        public Activity MakeRecommendation(List<Activity> categoriesToConsider, DateTime when)
-        {
-            return this.MakeRecommendation(categoriesToConsider, when, 0);
-        }
-        public Activity MakeRecommendation(DateTime when, double greediness)
-        {
-            return this.MakeRecommendation(this.activityDatabase.AllActivities, when, greediness);
+            return this.MakeRecommendation(when, null);
         }
 
-        /*public Activity MakeFastRecommendation()
+        public Activity MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
         {
-            return this.MakeFastRecommendation(this.activityDatabase.AllActivities, DateTime.Now, 3);
-        }*/
-        public Activity MakeFastRecommendation(Activity categoryToConsider, DateTime when, int maxNumActivitiesToConsider)
+            return this.MakeRecommendation(this.activityDatabase.AllActivities, when, 0, requestedProcessingTime);
+        }
+
+        public Activity MakeRecommendation(Activity categoryToConsider, DateTime when, TimeSpan? requestedProcessingTime)
         {
             List<Activity> availableCandidates = this.FindAllSubCategoriesOf(categoryToConsider);
-            return this.MakeFastRecommendation(availableCandidates, when, maxNumActivitiesToConsider);
-        }
-        public Activity MakeFastRecommendation(DateTime when, int maxNumActivitiesToConsider)
-        {
-            return this.MakeFastRecommendation(this.activityDatabase.AllActivities, when, maxNumActivitiesToConsider);
-        }
-        // returns a weight for how likely we are to consider this activity
-        private double get_fastRecommendation_weight(Activity activity, DateTime when)
-        {
-            double numerator = activity.NumSuggestions + 1;
-            double denominator = when.Subtract(activity.DiscoveryDate).TotalDays;
-            if (denominator <= 1)
-                denominator = 1;
-            return numerator / denominator;
-        }
-        public Activity MakeFastRecommendation(IEnumerable<Activity> categoriesToConsider, DateTime when, int maxNumActivitiesToConsider)
-        {
-            List<Activity> availableCandidates = new List<Activity>();
-            foreach (Activity candidate in categoriesToConsider)
-            {
-                if (candidate.Choosable)
-                    availableCandidates.Add(candidate);
-            }
-            int numCategoriesToConsider = Math.Min(maxNumActivitiesToConsider, availableCandidates.Count);
-            List<Activity> chosenCandidates = new List<Activity>();
-            if (maxNumActivitiesToConsider >= categoriesToConsider.Count())
-            {
-                chosenCandidates = availableCandidates;
-            }
-            else
-            {
-                // total the weights for each activity
-                double totalWeight = 0;
-                int i;
-                for (i = 0; i < availableCandidates.Count; i++)
-                {
-                    totalWeight += this.get_fastRecommendation_weight(availableCandidates[i], when);
-                }
-                // repeatedly choose an activity
-                for (i = 0; i < numCategoriesToConsider; i++)
-                {
-                    // choose a random activity
-                    double chosenWeight = this.randomGenerator.NextDouble() * totalWeight;
-                    int j;
-                    for (j = 0; j < availableCandidates.Count - 1; j++) // note that if rounding error occurs we can still choose the last activity
-                    {
-                        Activity candidate = availableCandidates[j];
-                        double activityWeight = this.get_fastRecommendation_weight(candidate, when);
-                        if (chosenWeight < activityWeight)
-                        {
-                            break;
-                        }
-                        chosenWeight -= activityWeight;
-                    }
-                    // choose this activity
-                    Activity activity = availableCandidates[j];
-                    totalWeight -= this.get_fastRecommendation_weight(activity, when);
-                    chosenCandidates.Add(activity);
-                    availableCandidates.RemoveAt(j);
-                }
-            }
-            return this.MakeRecommendation(chosenCandidates, when, 0);
+            return this.MakeRecommendation(availableCandidates, when, 0, requestedProcessingTime);
         }
 
-        public Activity MakeRecommendation(Activity categoryToConsider, DateTime when, double greediness)
+        public Activity MakeRecommendation(IEnumerable<Activity> candidateActivities, DateTime when, double greediness, TimeSpan? requestedProcessingTime)
         {
-            List<Activity> candidates = this.FindAllSubCategoriesOf(categoryToConsider);
-            return this.MakeRecommendation(candidates, when, greediness);
-        }
-        public Activity MakeRecommendation(IEnumerable<Activity> candidates, DateTime when, double greediness)
-        {
-            //System.Diagnostics.Debug.WriteLine("Making recommendation for date " + when);
+            List<Activity> candidates = new List<Activity>(candidateActivities);
+            List<Activity> consideredCandidates = new List<Activity>();
+            DateTime processingStartTime = DateTime.Now;
             // First, go estimate the value for each activity
             if (this.requiresFullUpdate)
             {
@@ -309,7 +234,6 @@ namespace ActivityRecommendation
             {
                 this.ApplyParticipationsAndRatings();
             }
-            //foreach (Activity activity in candidates)
             foreach (Activity activity in this.activityDatabase.AllActivities)
             {
                 activity.PredictionsNeedRecalculation = true;
@@ -318,17 +242,38 @@ namespace ActivityRecommendation
             // That requires first finding the one with the highest mean
             Activity bestActivity = null;
             Distribution bestRating = null;
-            foreach (Activity candidate in candidates)
+            while (candidates.Count > 0)
             {
-                this.EstimateSuggestionValue(candidate, when);
+                // Choose a random activity.
+                // Note that it would be more representative to weight activities by how often they're suggested
+                // However, those activities take longer to process, so for now the hope is that if we choose a rare activity that it'll be fast
+                // to process and to move on to the next activity
+                int index = this.randomGenerator.Next(candidates.Count);
+                Activity candidate = candidates[index];
+                candidates.RemoveAt(index);
                 if (candidate.Choosable)
                 {
-                    // compute a score of how much the user would want to do this
+                    consideredCandidates.Add(candidate);
+                    System.Diagnostics.Debug.WriteLine("Considering " + candidate);
+                    // estimate how good it is for us to suggest this particular activity
+                    this.EstimateSuggestionValue(candidate, when);
                     Distribution currentRating = candidate.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(candidate.PredictedScore.Distribution.CopyAndReweightBy(greediness));
                     if (bestRating == null || bestRating.Mean < currentRating.Mean)
                     {
                         bestActivity = candidate;
                         bestRating = currentRating;
+                    }
+                    if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
+                    {
+                        // check whether we've used up all of our processing time, but always consider at least two activities
+                        DateTime now = DateTime.Now;
+                        TimeSpan spentDuration = now.Subtract(processingStartTime);
+                        if (spentDuration.CompareTo(requestedProcessingTime) >= 0)
+                        {
+                            // we've used up all of our processing time; clean up and return
+                            System.Diagnostics.Debug.WriteLine("Spent " + spentDuration + " to consider " + consideredCandidates.Count + " activities");
+                            break;
+                        }
                     }
                 }
             }
@@ -337,16 +282,13 @@ namespace ActivityRecommendation
             if (bestActivity == null)
                 return null;
             double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith, greediness);
-            foreach (Activity candidate in candidates)
+            foreach (Activity candidate in consideredCandidates)
             {
-                if (candidate.Choosable)
+                double currentScore = this.GetCombinedValue(bestActivity, candidate, greediness);
+                if (currentScore > bestCombinedScore)
                 {
-                    double currentScore = this.GetCombinedValue(bestActivity, candidate, greediness);
-                    if (currentScore > bestCombinedScore)
-                    {
-                        bestActivityToPairWith = candidate;
-                        bestCombinedScore = currentScore;
-                    }
+                    bestActivityToPairWith = candidate;
+                    bestCombinedScore = currentScore;
                 }
             }
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best

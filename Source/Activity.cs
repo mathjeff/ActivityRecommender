@@ -277,6 +277,13 @@ namespace ActivityRecommendation
                 return this.ratingProgression.NumItems + this.PendingRatings.Count;
             }
         }
+        public int NumSuggestions
+        {
+            get
+            {
+                return this.numSuggestions;
+            }
+        }
         public double MeanParticipationDuration // in seconds
         {
             get
@@ -619,6 +626,7 @@ namespace ActivityRecommendation
 
         public void AddSuggestion(ActivitySuggestion newSuggestion)
         {
+            this.numSuggestions++;
             this.PendingSuggestions.AddLast(newSuggestion);
         }
         private void ApplyPendingSuggestions()
@@ -1041,6 +1049,8 @@ namespace ActivityRecommendation
 
         private DateTime defaultDiscoveryDate;
         private Distribution participationDurations;
+        
+        int numSuggestions;
 
         Distribution scoresWhenSuggested;
         Distribution scoresWhenNotSuggested;

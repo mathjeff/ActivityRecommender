@@ -174,6 +174,7 @@ namespace ActivityRecommendation
         public void SetActivityName(string newName)
         {
             this.nameBox.NameText = newName;
+            this.Update_ExpectedRating_Text();
             //if (newName != "" && newName != null)
             //    this.setEnddateButton.Highlight();
         }

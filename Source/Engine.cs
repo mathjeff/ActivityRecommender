@@ -211,18 +211,13 @@ namespace ActivityRecommendation
 
         public Activity MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
         {
-            return this.MakeRecommendation(this.activityDatabase.AllActivities, when, 0, requestedProcessingTime);
+            return this.MakeRecommendation(null, when, requestedProcessingTime);
         }
 
-        public Activity MakeRecommendation(Activity categoryToConsider, DateTime when, TimeSpan? requestedProcessingTime)
-        {
-            List<Activity> availableCandidates = this.FindAllSubCategoriesOf(categoryToConsider);
-            return this.MakeRecommendation(availableCandidates, when, 0, requestedProcessingTime);
-        }
 
-        public Activity MakeRecommendation(IEnumerable<Activity> candidateActivities, DateTime when, double greediness, TimeSpan? requestedProcessingTime)
+        public Activity MakeRecommendation(Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
-            List<Activity> candidates = new List<Activity>(candidateActivities);
+            List<Activity> candidates = new List<Activity>(this.activityDatabase.AllActivities);
             List<Activity> consideredCandidates = new List<Activity>();
             DateTime processingStartTime = DateTime.Now;
             // First, go estimate the value for each activity
@@ -241,7 +236,15 @@ namespace ActivityRecommendation
             // Now we determine which activity is most important to suggest
             // That requires first finding the one with the highest mean
             Activity bestActivity = null;
-            Distribution bestRating = null;
+            if (activityToBeat != null)
+            {
+                // If the user has given another activity that they're tempted to try instead, then evaluate that activity
+                // Use its short-term value as a minimum when considering other activities
+                this.EstimateSuggestionValue(activityToBeat, when);
+                bestActivity = activityToBeat;
+                candidates.Remove(activityToBeat);
+                consideredCandidates.Add(activityToBeat);
+            }
             while (candidates.Count > 0)
             {
                 // Choose a random activity.
@@ -257,11 +260,18 @@ namespace ActivityRecommendation
                     System.Diagnostics.Debug.WriteLine("Considering " + candidate);
                     // estimate how good it is for us to suggest this particular activity
                     this.EstimateSuggestionValue(candidate, when);
-                    Distribution currentRating = candidate.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(candidate.PredictedScore.Distribution.CopyAndReweightBy(greediness));
-                    if (bestRating == null || bestRating.Mean < currentRating.Mean)
+                    Distribution currentRating = candidate.SuggestionValue.Distribution;
+                    bool better = false;
+                    if (activityToBeat != null && candidate.Utility < activityToBeat.Utility)
+                        better = false; // user doesn't have enough will power to do this activity
+                    else
+                    {
+                        if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
+                            better = true; // found a better activity
+                    }
+                    if (better)
                     {
                         bestActivity = candidate;
-                        bestRating = currentRating;
                     }
                     if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
                     {
@@ -281,6 +291,7 @@ namespace ActivityRecommendation
             Activity bestActivityToPairWith = bestActivity;
             if (bestActivity == null)
                 return null;
+            double greediness = 0;
             double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith, greediness);
             foreach (Activity candidate in consideredCandidates)
             {
@@ -300,8 +311,8 @@ namespace ActivityRecommendation
         // Given two distributions, we estimate the expected total value from choosing values from them
         private double GetCombinedValue(Activity activityA, Activity activityB, double greediness)
         {
-            Distribution a = activityA.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(activityA.PredictedScore.Distribution.CopyAndReweightBy(greediness));
-            Distribution b = activityB.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(activityB.PredictedScore.Distribution.CopyAndReweightBy(greediness));
+            Distribution a = activityA.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(activityA.Utility * greediness);
+            Distribution b = activityB.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(activityB.Utility * greediness);
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
             BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight, a.Mean * a.Weight);
@@ -402,7 +413,7 @@ namespace ActivityRecommendation
             Prediction probabilityPrediction = this.CombineProbabilityPredictions(probabilityPredictions);
             activity.PredictedParticipationProbability = probabilityPrediction;
 
-#if false   // Would need to bring back something like this if we need to directly account for the possibility that the user won't take our suggestion
+#if true
             // For each action the user might take (do it, skip it, or do something else), compute its probability
             double suggestedParticipation_probability = probabilityPrediction.Distribution.Mean;
             double skipProbability = (1 - suggestedParticipation_probability) * (double)(this.numSkips + 1) / ((double)this.numSkips + (double)this.numUnpromptedParticipations + 2);
@@ -418,10 +429,13 @@ namespace ActivityRecommendation
             // = -1 + 1 / (1 - (the probability that the user will skip the activity))
             // So the amount of waste is (the average length of a skip) * (-1 + 1 / (1 - (the probability that the user will skip the activity)))
 
-            
+            double valueWhenChosen = probabilitySuggested * activity.PredictedScore.Distribution.Mean + (1 - probabilitySuggested) * this.ratingsOfUnpromptedActivities.Mean;
+            // TODO: for activities other than this one, use a better estimate of the participation duration than just the usual duration of the current activity
+            double overallValue = valueWhenChosen * activity.MeanParticipationDuration / (averageWastedSeconds + activity.MeanParticipationDuration);
 
+            activity.Utility = overallValue;
             
-            // Finally, when calculating the suggestionValue, we can update all the scores
+            /* // Finally, when calculating the suggestionValue, we can update all the scores
             foreach (Prediction prediction in ratingPredictions)
             {
                 // Now compute what the expected value would be, assuming that we choose something
@@ -430,13 +444,13 @@ namespace ActivityRecommendation
 
                 //double usefulFraction = activity.MeanParticipationDuration / (averageWastedSeconds + activity.MeanParticipationDuration);
                 
-                // TODO: for activities other than this one, use a better estimate of the participation duration than just the usual duration of the current activity
                 double overallValue = valueWhenChosen * activity.MeanParticipationDuration / (averageWastedSeconds + activity.MeanParticipationDuration);
 
                 double scale = overallValue / prediction.Distribution.Mean;
                 prediction.Distribution = prediction.Distribution.CopyAndStretchBy(scale);
                 //prediction.Distribution = Distribution.MakeDistribution(overallValue, prediction.Distribution.StdDev, prediction.Distribution.Weight);
             }
+            */
 #endif
 
         }

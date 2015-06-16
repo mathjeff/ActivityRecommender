@@ -25,7 +25,7 @@ namespace ActivityRecommendation
             this.suggestionButton = new Button();
             ButtonLayout buttonLayout = new ButtonLayout(this.suggestionButton, new TextblockLayout(suggestionTextBlock));
 
-            this.categoryBox = new ActivityNameEntryBox("Category (optional)");
+            this.categoryBox = new ActivityNameEntryBox("At least as fun as this activity (optional):");
 
             // It's acceptable to put the Suggest button to the side of its text box, but that looks worse and we count it as uncentered
             GridLayout horizontalSelectionLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
@@ -35,10 +35,11 @@ namespace ActivityRecommendation
 
 
             this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a suggested activity")
-                .AddMessage("You can optionally enter a category (an activity containing other activities) from which to choose the first activity, or leave it blank to consider all activities")
-                .AddMessage("Then, push Suggest and you will receive a few suggestions.")
+                .AddMessage("If you want something fun, you can enter the activity that you're considering doing, "
+            + "and your suggestion will be one that is expected to provide at least as much short-term value as the one that you entered.")
+                .AddMessage("Then, push Suggest to see the activity that is expected to maximize the overall long-term value to you.")
                 .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, and"
-            + " an estimate of the rating that you are expected to give to that activity (if you provide a rating).")
+            + " an estimate of the rating that you'd be expected to give to that activity.")
                 .AddMessage("Enjoy!")
                 .Build();
 

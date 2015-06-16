@@ -252,6 +252,8 @@ namespace ActivityRecommendation
         public Prediction SuggestionValue { get; set; }
         // the most recent estimate about how likely the user is to do the activity if we suggest it
         public Prediction PredictedParticipationProbability { get; set; }
+        // the most recent estimate of the short-term average of what the user's happiness will be if this is suggested
+        public double Utility { get; set; } // TODO change into a distribution having variance
         public bool PredictionsNeedRecalculation { get; set; }
         public TimeSpan AverageTimeBetweenConsiderations
         {
@@ -582,14 +584,6 @@ namespace ActivityRecommendation
             this.ApplyKnownInteractionDate(newSkip.CreationDate);
 
             this.PendingSkips.AddLast(newSkip);
-        }
-        // Returns the average value that the user derives when doing or thinking about doing this activity
-        public double GetAverageUtility()
-        {
-            // TODO: figure out how to consolidate this logic with RatingSummarizer.GetValueDistributionForDates
-            double participationFraction = this.GetAverageParticipationUsageFraction();
-            double ratingFraction = this.Scores.Mean;
-            return participationFraction * ratingFraction;
         }
 
         // Returns (the amount of time that the user spends doing this activity) divided (by the amount of time that the user is either doing this activity or considering doing it)

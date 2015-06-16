@@ -241,6 +241,7 @@ namespace ActivityRecommendation
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
                 this.EstimateSuggestionValue(activityToBeat, when);
+                activityToBeat.Utility = activityToBeat.Scores.Mean; // if they're asking for us to beat this activity then it means they want to do it
                 bestActivity = activityToBeat;
                 candidates.Remove(activityToBeat);
                 consideredCandidates.Add(activityToBeat);
@@ -256,7 +257,6 @@ namespace ActivityRecommendation
                 candidates.RemoveAt(index);
                 if (candidate.Choosable)
                 {
-                    consideredCandidates.Add(candidate);
                     System.Diagnostics.Debug.WriteLine("Considering " + candidate);
                     // estimate how good it is for us to suggest this particular activity
                     this.EstimateSuggestionValue(candidate, when);
@@ -266,6 +266,7 @@ namespace ActivityRecommendation
                         better = false; // user doesn't have enough will power to do this activity
                     else
                     {
+                        consideredCandidates.Add(candidate);
                         if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
                             better = true; // found a better activity
                     }
@@ -292,10 +293,10 @@ namespace ActivityRecommendation
             if (bestActivity == null)
                 return null;
             double greediness = 0;
-            double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith, greediness);
+            double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
             foreach (Activity candidate in consideredCandidates)
             {
-                double currentScore = this.GetCombinedValue(bestActivity, candidate, greediness);
+                double currentScore = this.GetCombinedValue(bestActivity, candidate);
                 if (currentScore > bestCombinedScore)
                 {
                     bestActivityToPairWith = candidate;
@@ -309,14 +310,15 @@ namespace ActivityRecommendation
         }
         // This function essentially addresses the well-known multi-armed bandit problem
         // Given two distributions, we estimate the expected total value from choosing values from them
-        private double GetCombinedValue(Activity activityA, Activity activityB, double greediness)
+        private double GetCombinedValue(Activity activityA, Activity activityB)
         {
-            Distribution a = activityA.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(activityA.Utility * greediness);
-            Distribution b = activityB.SuggestionValue.Distribution.CopyAndReweightBy(1 - greediness).Plus(activityB.Utility * greediness);
+            Distribution a = activityA.SuggestionValue.Distribution;
+            Distribution b = activityB.SuggestionValue.Distribution;
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
-            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight, a.Mean * a.Weight);
-            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * b.Weight, b.Mean * b.Weight);
+            // Convert and also remove a little bit of uncertainty because the input distributions are already estimates rather than samples
+            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight - 1, a.Mean * a.Weight - 1);
+            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * b.Weight - 1, b.Mean * b.Weight - 1);
 
             // We weight our time exponentially, estimating that it takes two years for our time to double            
             // Here are the scales by which the importances are expected to multiply every time we consider these activities
@@ -416,7 +418,10 @@ namespace ActivityRecommendation
 #if true
             // For each action the user might take (do it, skip it, or do something else), compute its probability
             double suggestedParticipation_probability = probabilityPrediction.Distribution.Mean;
-            double skipProbability = (1 - suggestedParticipation_probability) * (double)(this.numSkips + 1) / ((double)this.numSkips + (double)this.numUnpromptedParticipations + 2);
+            // It's probably more accurate to assume that the user will find something to do, but the user doesn't want us to model it like that because that's annoying
+            // If we determine that the user will probably skip a particular activity, then they want us to consider it to be not much fun and try pretty hard to not suggest it
+            double skipProbability = 1 - suggestedParticipation_probability;
+            // double skipProbability = (1 - suggestedParticipation_probability) * (double)(this.numSkips + 1) / ((double)this.numSkips + (double)this.numUnpromptedParticipations + 2);
             double nonsuggestedParticipation_probability = 1 - (suggestedParticipation_probability + skipProbability);
 
             // Now compute the probability that the eventual selection will be a suggested activity (assuming that all activities are like this one)

@@ -346,13 +346,7 @@ namespace ActivityRecommendation
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             if (existingSuggestions.Count() > 0 && existingSuggestions.First().ActivityDescriptor.CanMatch(participation.ActivityDescriptor))
-            {
                 this.suggestionsView.RemoveSuggestion(existingSuggestions.First());
-            }
-            else
-            {
-                this.suggestionsView.ClearSuggestions();
-            }
 
             this.UpdateDefaultParticipationData();
 

@@ -207,7 +207,7 @@ namespace ActivityRecommendation
             this.SuspectLatestActionDate(now);
 
             
-            // if they requested that the first suggestion be from a certain category, find that category
+            // If the user requested that the first suggestion be from a certain category, find that category
             Activity requestCategory = null;
             string categoryText = this.suggestionsView.CategoryText;
             if (categoryText != null && categoryText != "")
@@ -222,6 +222,17 @@ namespace ActivityRecommendation
                     ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
                     this.AddActivityRequest(request);
                 }
+            }
+
+            // If the user requested that the suggestion be at least as good as a certain activity, then find that activity
+            Activity desiredActivity = null;
+            string desiredActivity_text = this.suggestionsView.DesiredActivity_Text;
+            if (desiredActivity_text != null && desiredActivity_text != "")
+            {
+                ActivityDescriptor categoryDescriptor = new ActivityDescriptor();
+                categoryDescriptor.ActivityName = desiredActivity_text;
+                categoryDescriptor.PreferHigherProbability = true;
+                desiredActivity = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
             }
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
@@ -247,7 +258,7 @@ namespace ActivityRecommendation
             if (requestCategory != null)
             {
                 // now we get a recommendation, from among all activities within this category
-                bestActivity = this.engine.MakeRecommendation(requestCategory, suggestionDate, processingTime);
+                bestActivity = this.engine.MakeRecommendation(requestCategory, desiredActivity, suggestionDate, processingTime);
             }
             else
             {
@@ -257,7 +268,7 @@ namespace ActivityRecommendation
             // if there are no matching activities, then give up
             if (bestActivity == null)
             {
-                this.suggestionsView.SetErrorMessage("No activities! Go create some activities first, and then return here for suggestions.");
+                this.suggestionsView.SetErrorMessage("No activities available! Go create some activities, and return here for suggestions.");
                 return;
             }
             // after making a recommendation, get the rest of the details of the suggestion

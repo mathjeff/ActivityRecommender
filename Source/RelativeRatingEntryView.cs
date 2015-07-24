@@ -119,7 +119,7 @@ namespace ActivityRecommendation
             // figure out which activity this one is
             Activity thisActivity = activities.ResolveDescriptor(participation.ActivityDescriptor);
             // calculate the predicted rating for this activity
-            engine.MakeRecommendation(thisActivity, participation.StartDate, TimeSpan.FromSeconds(0));
+            engine.MakeRecommendation(thisActivity, null, participation.StartDate, TimeSpan.FromSeconds(0));
             Distribution thisEstimate = thisActivity.PredictedScore.Distribution;
 
             // now we compute updated scores for the new activities

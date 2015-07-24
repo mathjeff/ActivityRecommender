@@ -211,13 +211,17 @@ namespace ActivityRecommendation
 
         public Activity MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
         {
-            return this.MakeRecommendation(null, when, requestedProcessingTime);
+            return this.MakeRecommendation(null, null, when, requestedProcessingTime);
         }
 
 
-        public Activity MakeRecommendation(Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        public Activity MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
-            List<Activity> candidates = new List<Activity>(this.activityDatabase.AllActivities);
+            List<Activity> candidates;
+            if (requestCategory != null)
+                candidates = requestCategory.GetAllSubactivities();
+            else
+                candidates = new List<Activity>(this.activityDatabase.AllActivities);
             List<Activity> consideredCandidates = new List<Activity>();
             DateTime processingStartTime = DateTime.Now;
             // First, go estimate the value for each activity
@@ -242,8 +246,12 @@ namespace ActivityRecommendation
                 // Use its short-term value as a minimum when considering other activities
                 this.EstimateSuggestionValue(activityToBeat, when);
                 activityToBeat.Utility = activityToBeat.Scores.Mean; // if they're asking for us to beat this activity then it means they want to do it
+                if (candidates.Contains(activityToBeat))
+                {
+                    candidates.Remove(activityToBeat);
+                }
+                // Here we add the activityToBeat as a candidate so that if activityToBeat is the best activity, then we still have give a suggestion
                 bestActivity = activityToBeat;
-                candidates.Remove(activityToBeat);
                 consideredCandidates.Add(activityToBeat);
             }
             while (candidates.Count > 0)
@@ -292,7 +300,6 @@ namespace ActivityRecommendation
             Activity bestActivityToPairWith = bestActivity;
             if (bestActivity == null)
                 return null;
-            double greediness = 0;
             double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
             foreach (Activity candidate in consideredCandidates)
             {

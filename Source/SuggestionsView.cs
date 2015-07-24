@@ -25,13 +25,18 @@ namespace ActivityRecommendation
             this.suggestionButton = new Button();
             ButtonLayout buttonLayout = new ButtonLayout(this.suggestionButton, new TextblockLayout(suggestionTextBlock));
 
-            this.categoryBox = new ActivityNameEntryBox("At least as fun as this activity (optional):");
+            this.categoryBox = new ActivityNameEntryBox("From category (optional):");
+            this.desiredActivity_box = new ActivityNameEntryBox("At least as fun as this activity (optional):");
 
-            // It's acceptable to put the Suggest button to the side of its text box, but that looks worse and we count it as uncentered
-            GridLayout horizontalSelectionLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
-            horizontalSelectionLayout.AddLayout(buttonLayout);
-            horizontalSelectionLayout.AddLayout(this.categoryBox);
-            this.selectorLayout = horizontalSelectionLayout;
+            GridLayout selectionLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+            selectionLayout.AddLayout(buttonLayout);
+
+            GridLayout categoriesLayout = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
+            categoriesLayout.AddLayout(this.categoryBox);
+            categoriesLayout.AddLayout(this.desiredActivity_box);
+            selectionLayout.AddLayout(categoriesLayout);
+
+            this.selectorLayout = selectionLayout;
 
 
             this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a suggested activity")
@@ -59,15 +64,18 @@ namespace ActivityRecommendation
         {
             this.suggestionButton.Click += e;
         }
+        public string DesiredActivity_Text
+        {
+            get
+            {
+                return this.desiredActivity_box.NameText;
+            }
+        }
         public string CategoryText
         {
             get
             {
                 return this.categoryBox.NameText;
-            }
-            set
-            {
-                this.categoryBox.NameText = value;
             }
         }
 
@@ -76,6 +84,7 @@ namespace ActivityRecommendation
             set
             {
                 this.categoryBox.Database = value;
+                this.desiredActivity_box.Database = value;
             }
         }
 
@@ -170,6 +179,7 @@ namespace ActivityRecommendation
 
         LayoutChoice_Set selectorLayout;
         Button suggestionButton;
+        ActivityNameEntryBox desiredActivity_box;
         ActivityNameEntryBox categoryBox;
         LayoutChoice_Set helpWindow;
         LayoutChoice_Set helpButton_layout;

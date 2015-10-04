@@ -6,7 +6,7 @@ using System.Text;
 // the RelativeRating class represents the statement that the rating of one Activity at one time is better than the rating of another Activity at another time
 namespace ActivityRecommendation
 {
-    class RelativeRating : Rating
+    public class RelativeRating : Rating
     {
         #region Public Member Functions
 

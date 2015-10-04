@@ -89,6 +89,8 @@ namespace ActivityRecommendation
         public bool RequiresPerfectMatch { get; set; }
         public bool CanMatch(ActivityDescriptor other)
         {
+            if (other == null)
+                return false;
             if (this.ActivityName != null && other.activityName != null)
             {
                 if (!this.activityName.Equals(other.activityName))

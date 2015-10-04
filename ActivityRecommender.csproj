@@ -119,6 +119,8 @@
     <Compile Include="Source\DistributionAdder.cs" />
     <Compile Include="Source\Engine.cs" />
     <Compile Include="Source\EngineTester.cs" />
+    <Compile Include="Source\RatingRenormalizer.cs" />
+    <Compile Include="Source\RatingReplayer.cs" />
     <Compile Include="Source\ExpectedParticipationProbabilityProgression.cs" />
     <Compile Include="Source\ExpectedRatingProgression.cs" />
     <Compile Include="Source\FloatAdder.cs" />
@@ -154,6 +156,7 @@
     <Compile Include="Source\ScatterPlot.cs" />
     <Compile Include="Source\SelectorView.cs" />
     <Compile Include="Source\SimplePredictionLink.cs" />
+    <Compile Include="Source\HistoryWriter.cs" />
     <Compile Include="Source\SkipProgression.cs" />
     <Compile Include="Source\SuggestionsView.cs" />
     <Compile Include="Source\SuggestionView.cs" />

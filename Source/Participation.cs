@@ -95,6 +95,45 @@ namespace ActivityRecommendation
             completeRating.FillInFromParticipation(this);
             return completeRating;
         }
+        // Uses the given rawRating as the new RawRating except removes some redundant data from it first
+        public void PutAndCompressRating(RelativeRating rawRating)
+        {
+            RelativeRating dehydrated = new RelativeRating();
+            dehydrated.CopyFrom(rawRating);
+            // check whether the existing rating specifies any duplicate data
+            if (rawRating.BetterRating.ActivityDescriptor != null && rawRating.WorseRating.ActivityDescriptor != null)
+            {
+                // rating specifies data that is redundant with the participation, so find and remove the duplicate data
+                bool betterMatchesThis = false;
+                if (this.ActivityDescriptor.CanMatch(rawRating.BetterRating.ActivityDescriptor))
+                {
+                    if (rawRating.BetterRating.Date.Equals(this.StartDate))
+                        betterMatchesThis = true;
+                }
+
+                bool worseMatchesThis = false;
+                if (this.ActivityDescriptor.CanMatch(rawRating.WorseRating.ActivityDescriptor))
+                {
+                    if (rawRating.WorseRating.Date.Equals(this.StartDate))
+                        worseMatchesThis = true;
+                }
+                if (betterMatchesThis && worseMatchesThis)
+                    throw new Exception("Could not determine which AbsoluteRating in " + rawRating + " describes " + this + "(both match)");
+                if ((!betterMatchesThis) && (!worseMatchesThis))
+                    throw new Exception("Could not determine which AbsoluteRating in " + rawRating + " describes " + this + "(neither match)");
+
+                AbsoluteRating ratingToDehydrate = null;
+                if (betterMatchesThis)
+                    ratingToDehydrate = dehydrated.BetterRating;
+                else
+                    ratingToDehydrate = dehydrated.WorseRating;
+                // clear any fields that are implied due to being attached to this object
+                ratingToDehydrate.Date = null;
+                ratingToDehydrate.ActivityDescriptor = null;
+            }
+            // save the simplified rating
+            this.rawRating = dehydrated;
+        }
         // returns an AbsoluteRating that contains as much information as possible
         public AbsoluteRating GetAbsoluteRating()
         {

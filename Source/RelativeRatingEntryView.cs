@@ -96,68 +96,14 @@ namespace ActivityRecommendation
         // creates the rating to assign to the given Participation
         public Rating GetRating(ActivityDatabase activities, Engine engine, Participation participation)
         {
+            // abort if null input
             double? maybeScale = this.GetRatio();
             if (maybeScale == null)
                 return null;
             double scale = maybeScale.Value;
-            
-            
             if (this.latestParticipation == null)
                 return null;
-            // make the RelativeRating
-            RelativeRating rating = new RelativeRating();
-            // make an AbsoluteRating for the other Activity
-            AbsoluteRating otherRating = new AbsoluteRating();
-            otherRating.ActivityDescriptor = this.latestParticipation.ActivityDescriptor;
-            otherRating.Date = this.latestParticipation.StartDate;
-            Activity otherActivity = activities.ResolveDescriptor(otherRating.ActivityDescriptor);
-            engine.EstimateRating(otherActivity, (DateTime)otherRating.Date);
-            Distribution otherEstimate = otherActivity.PredictedScore.Distribution;
-
-            // make an AbsoluteRating for this Activity
-            AbsoluteRating thisRating = new AbsoluteRating();
-            // figure out which activity this one is
-            Activity thisActivity = activities.ResolveDescriptor(participation.ActivityDescriptor);
-            // calculate the predicted rating for this activity
-            engine.MakeRecommendation(thisActivity, null, participation.StartDate, TimeSpan.FromSeconds(0));
-            Distribution thisEstimate = thisActivity.PredictedScore.Distribution;
-
-            // now we compute updated scores for the new activities
-            thisEstimate = thisEstimate.CopyAndReweightTo(1);
-            otherEstimate = otherEstimate.CopyAndReweightTo(1);
-            Distribution combinedDistribution = thisEstimate.Plus(otherEstimate);
-            double averageScore = combinedDistribution.Mean;
-            // compute the better and worse scores
-            double otherScore = 2 * averageScore / (scale + 1);
-            double thisScore = 2 * averageScore - otherScore;
-            
-
-            // clamp to no more than 1
-            if (thisScore > 1)
-            {
-                thisScore = 1;
-                otherScore = thisScore / scale;
-            }
-            if (otherScore > 1)
-            {
-                otherScore = 1;
-                thisScore = otherScore * scale;
-            }
-
-            thisRating.Score = thisScore;
-            otherRating.Score = otherScore;
-            if (scale >= 1)
-            {
-                rating.BetterRating = thisRating;
-                rating.WorseRating = otherRating;
-            }
-            else
-            {
-                rating.BetterRating = otherRating;
-                rating.WorseRating = thisRating;
-            }
-
-            rating.RawScoreScale = scale;
+            RelativeRating rating = engine.MakeRelativeRating(participation, scale, this.latestParticipation);
             return rating;
         }
 

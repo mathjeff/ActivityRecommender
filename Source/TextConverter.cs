@@ -125,7 +125,7 @@ namespace ActivityRecommendation
                 properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionCreationDate);
             if (skip.ApplicableDate != null)
                 properties[SuggestionStartDateTag] = this.ConvertToStringBody(skip.ApplicableDate);
-            properties[this.RatingTag] = this.ConvertToStringBody(skip.RawRating);
+            //properties[this.RatingTag] = this.ConvertToStringBody(skip.RawRating);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -459,14 +459,12 @@ namespace ActivityRecommendation
         private void ProcessParticipation(XmlNode nodeRepresentation)
         {
             Participation currentParticipation = this.ReadParticipation(nodeRepresentation);
+            // we found something that happened after the latest pending skip, so we update the date of any pending skip to the start date
+            this.setPendingSkip(null, currentParticipation.StartDate);
             if (currentParticipation.Duration.TotalSeconds >= 0)
-            {
                 this.recommenderToInform.PutParticipationInMemory(currentParticipation);
-            }
             else
-            {
                 System.Diagnostics.Debug.WriteLine("Skipping invalid participation having startDate = " + currentParticipation.StartDate.ToString() + " and endDate = " + currentParticipation.EndDate);
-            }
         }
         private void ProcessRating(XmlNode nodeRepresentation)
         {
@@ -486,7 +484,8 @@ namespace ActivityRecommendation
         private void ProcessSkip(XmlNode nodeRepresentation)
         {
             ActivitySkip skip = this.ReadSkip(nodeRepresentation);
-            this.recommenderToInform.PutSkipInMemory(skip);
+            if (skip != null)
+                this.recommenderToInform.PutSkipInMemory(skip);
         }
         private void ProcessActivityRequest(XmlNode nodeRepresentation)
         {
@@ -501,6 +500,7 @@ namespace ActivityRecommendation
         private void ProcessSuggestion(XmlNode nodeRepresentation)
         {
             ActivitySuggestion suggestion = this.ReadSuggestion(nodeRepresentation);
+            this.setPendingSkip(null, suggestion.GuessCreationDate());
             this.recommenderToInform.PutSuggestionInMemory(suggestion);
         }
         // reads the Inheritance represented by nodeRepresentation
@@ -638,12 +638,37 @@ namespace ActivityRecommendation
                     continue;
                 }
             }
-            // apply some defaults
+            // check that the values all make sense, and if not then compensate for legacy behavior
             if (skip.SuggestionCreationDate == null)
-                skip.SuggestionCreationDate = skip.CreationDate;
-            if (skip.ApplicableDate == null)
-                skip.ApplicableDate = skip.SuggestionCreationDate;
+            {
+                // This skip was created long enough ago that it's missing a SuggestionCreationDate, so its CreationDate is also wrong
+                skip.ApplicableDate = skip.CreationDate;
+                skip.SuggestionCreationDate = skip.ApplicableDate;
+                this.setPendingSkip(skip, skip.ApplicableDate.Value);
+                return null;
+            }
+            else
+            {
+                if (skip.ApplicableDate == null)
+                {
+                    // The values in the skip are correct, and it says when it was created and when the skip was created,
+                    // but it doesn't say which date the suggestion recommended (so the suggestion suggested doing the activity immediately)
+                    skip.ApplicableDate = skip.SuggestionCreationDate;
+                }
+            }
             return skip;
+        }
+
+        // sets the pending skip at the given time (and submits the previous pending skip if it exists)
+        private void setPendingSkip(ActivitySkip skip, DateTime when)
+        {
+            if (this.pendingSkip != null)
+            {
+                if (this.pendingSkip.CreationDate.CompareTo(when) < 0)
+                    this.pendingSkip.CreationDate = when;
+                this.recommenderToInform.PutSkipInMemory(this.pendingSkip);
+            }
+            this.pendingSkip = skip;
         }
 
         private ActivityRequest ReadActivityRequest(XmlNode nodeRepresentation)
@@ -1194,6 +1219,7 @@ namespace ActivityRecommendation
 
         private ActivityRecommender recommenderToInform;
         private Participation latestParticipationRead;
+        private ActivitySkip pendingSkip;
 
         #endregion
     }

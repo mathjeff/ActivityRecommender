@@ -33,9 +33,9 @@ namespace ActivityRecommendation
 
             this.SetupDrawing();
 
-            if (this.engineTester != null)
+            if (this.ratingReplayer != null)
             {
-                this.engineTester.Finish(); // do any cleanup calculations and print results
+                this.ratingReplayer.Finish(); // do any cleanup calculations and print results
                 System.Diagnostics.Debug.WriteLine("");
             }
         }
@@ -54,7 +54,9 @@ namespace ActivityRecommendation
             this.inheritancesFileName = "ActivityInheritances.txt";
             this.tempFileName = "TemporaryData.txt";
             this.textConverter = new TextConverter(this);
-            //this.engineTester = new EngineTester();
+            //this.ratingReplayer = new EngineTester();
+            //this.ratingReplayer = new RatingRenormalizer(this.textConverter);
+            //this.ratingReplayer = new HistoryWriter(this.textConverter);
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
             this.participationEntryView = new ParticipationEntryView(this.layoutStack);
@@ -288,14 +290,15 @@ namespace ActivityRecommendation
             if (existingSuggestions.Count() == 0)
                 this.participationEntryView.SetActivityName(bestActivity.Name);
 
+            // add the suggestion to the list (note that this makes the startDate a couple seconds later if it took a couple seconds to compute the suggestion)
+            this.suggestionsView.AddSuggestion(suggestion);
+
             this.WriteSuggestion(suggestion);
 
             this.UndoHypotheticalSuggestions(hypotheticalParticipations);
 
-            // we have to manually tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
+            // we have to separately tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
             this.engine.PutSuggestionInMemory(suggestion);
-
-            this.suggestionsView.AddSuggestion(suggestion);
 
             // I'm not sure precisely when we want to update the list of current suggestions (which is used for determining whether a participation was prompted by being suggested)
             // Currently (2015-03-09) it's only modified when the user asks for another suggestion, at which point it's updated to match the suggestions that are displayed
@@ -490,27 +493,27 @@ namespace ActivityRecommendation
                     this.participationEntryView.LatestParticipation = this.latestParticipation;
             }
             this.engine.PutParticipationInMemory(newParticipation);
-            if (this.engineTester != null)
-                this.engineTester.AddParticipation(newParticipation);
+            if (this.ratingReplayer != null)
+                this.ratingReplayer.AddParticipation(newParticipation);
         }
         public void PutRatingInMemory(Rating newRating)
         {
             this.engine.PutRatingInMemory(newRating);
-            if (this.engineTester != null)
-                this.engineTester.AddRating(newRating);
+            if (this.ratingReplayer != null)
+                this.ratingReplayer.AddRating(newRating);
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
             this.counter++;
             this.engine.PutSkipInMemory(newSkip);
-            if (this.engineTester != null)
-                this.engineTester.AddSkip(newSkip);
+            if (this.ratingReplayer != null)
+                this.ratingReplayer.AddSkip(newSkip);
         }
         public void PutActivityRequestInMemory(ActivityRequest newRequest)
         {
             this.engine.PutActivityRequestInMemory(newRequest);
-            if (this.engineTester != null)
-                this.engineTester.AddRequest(newRequest);
+            if (this.ratingReplayer != null)
+                this.ratingReplayer.AddRequest(newRequest);
         }
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
         {
@@ -519,8 +522,8 @@ namespace ActivityRecommendation
         public void PutInheritanceInMemory(Inheritance newInheritance)
         {
             this.engine.PutInheritanceInMemory(newInheritance);
-            if (this.engineTester != null)
-                this.engineTester.AddInheritance(newInheritance);
+            if (this.ratingReplayer != null)
+                this.ratingReplayer.AddInheritance(newInheritance);
         }
         // updates the ParticipationEntryView so that the start date is DateTime.Now
         public void MakeStartNow(object sender, EventArgs e)
@@ -543,8 +546,8 @@ namespace ActivityRecommendation
         public void PutSuggestionInMemory(ActivitySuggestion suggestion)
         {
             this.engine.PutSuggestionInMemory(suggestion);
-            if (this.engineTester != null)
-                this.engineTester.AddSuggestion(suggestion);
+            if (this.ratingReplayer != null)
+                this.ratingReplayer.AddSuggestion(suggestion);
         }
         public DateTime LatestActionDate
         {
@@ -707,7 +710,7 @@ namespace ActivityRecommendation
         string tempFileName;
         //DateTime latestActionDate;
         Participation latestParticipation;
-        EngineTester engineTester;
+        RatingReplayer ratingReplayer;
         RecentUserData recentUserData;
         int counter = 0;
         // ActivityDatabase primedActivities; // activities that have already been considered and therefore are fast to consider again

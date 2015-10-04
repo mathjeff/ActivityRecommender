@@ -218,13 +218,9 @@ namespace ActivityRecommendation
         public Activity MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
             List<Activity> candidates;
-            if (requestCategory != null)
-                candidates = requestCategory.GetAllSubactivities();
-            else
-                candidates = new List<Activity>(this.activityDatabase.AllActivities);
             List<Activity> consideredCandidates = new List<Activity>();
             DateTime processingStartTime = DateTime.Now;
-            // First, go estimate the value for each activity
+            // First, go update the stats for existing activities
             if (this.requiresFullUpdate)
             {
                 this.FullUpdate();
@@ -237,6 +233,11 @@ namespace ActivityRecommendation
             {
                 activity.PredictionsNeedRecalculation = true;
             }
+            // determine which activities to consider
+            if (requestCategory != null)
+                candidates = requestCategory.GetAllSubactivities();
+            else
+                candidates = new List<Activity>(this.activityDatabase.AllActivities);
             // Now we determine which activity is most important to suggest
             // That requires first finding the one with the highest mean
             Activity bestActivity = null;
@@ -265,7 +266,6 @@ namespace ActivityRecommendation
                 candidates.RemoveAt(index);
                 if (candidate.Choosable)
                 {
-                    System.Diagnostics.Debug.WriteLine("Considering " + candidate);
                     // estimate how good it is for us to suggest this particular activity
                     this.EstimateSuggestionValue(candidate, when);
                     Distribution currentRating = candidate.SuggestionValue.Distribution;
@@ -903,6 +903,89 @@ namespace ActivityRecommendation
                 }
             }
             this.ratingSummarizer.RemoveParticipation(participationToRemove.StartDate);
+        }
+        public RelativeRating MakeRelativeRating(Participation mainParticipation, double scale, Participation otherParticipation)
+        {
+            // Create activities if missing
+            if (this.requiresFullUpdate)
+                this.FullUpdate();
+            // Compute updated rating estimates for these activities
+            Activity thisActivity = this.activityDatabase.ResolveDescriptor(mainParticipation.ActivityDescriptor);
+            Activity otherActivity = this.activityDatabase.ResolveDescriptor(otherParticipation.ActivityDescriptor);
+            DateTime when = mainParticipation.StartDate;
+            this.MakeRecommendation(thisActivity, null, when, null);
+            this.MakeRecommendation(otherActivity, null, when, null);
+            this.MakeRecommendation(mainParticipation.StartDate);
+
+            // make an AbsoluteRating for the Activity (leave out date + activity because it's implied)
+            AbsoluteRating thisRating = new AbsoluteRating();
+            this.EstimateRating(thisActivity, mainParticipation.StartDate);
+            Distribution thisPrediction = thisActivity.PredictedScore.Distribution;
+
+            // make an AbsoluteRating for the other Activity (include date + activity because they're not implied)
+            AbsoluteRating otherRating = new AbsoluteRating();
+            otherRating.Date = otherParticipation.StartDate;
+            otherRating.ActivityDescriptor = otherParticipation.ActivityDescriptor;
+            this.EstimateRating(otherActivity, otherParticipation.StartDate);
+            Distribution otherPrediction = otherActivity.PredictedScore.Distribution;
+
+            // now we compute updated scores for the new activities
+            thisPrediction = thisPrediction.CopyAndReweightTo(1);
+            otherPrediction = otherPrediction.CopyAndReweightTo(1);
+            Distribution combinedDistribution = thisPrediction.Plus(otherPrediction);
+            // Solve:
+            // (thisActual - thisPredicted) * otherStddev = (otherPredicted - otherActual) * thisStddev
+            // thisActual = otherActual * scale
+            // So:
+            // (otherActual * scale - thisPredicted) * otherStddev = (otherPredicted - otherActual) * thisStddev
+            // otherActual * (scale * otherStddev + thisStddev) - thisPredicted  * otherStddev = otherPredicted * thisStddev
+            // otherActual = (otherPredicted * thisStddev + thisPredicted * otherStddev) / (scale * otherStdddev + thisStddev)
+            double numerator = (otherPrediction.Mean * thisPrediction.StdDev + thisPrediction.Mean * otherPrediction.StdDev);
+            double otherDenominator = scale * otherPrediction.StdDev + thisPrediction.StdDev;
+            // compute the better and worse scores
+            double otherScore = numerator / otherDenominator;
+            double thisScore = otherScore * scale;
+
+
+            // clamp to no more than 1
+            if (thisScore > 1)
+            {
+                thisScore = 1;
+                otherScore = thisScore / scale;
+            }
+            if (otherScore > 1)
+            {
+                otherScore = 1;
+                thisScore = otherScore * scale;
+            }
+            if (thisScore > 1 || thisScore < 0 || otherScore > 1 || otherScore < 0)
+            {
+                throw new Exception("Invalid scores: " + thisScore + " and " + otherScore);
+            }
+
+            thisRating.Score = thisScore;
+            otherRating.Score = otherScore;
+
+            RelativeRating rating = new RelativeRating();
+            
+
+            if (scale >= 1)
+            {
+                rating.BetterRating = thisRating;
+                rating.WorseRating = otherRating;
+            }
+            else
+            {
+                rating.BetterRating = otherRating;
+                rating.WorseRating = thisRating;
+            }
+            if (rating.BetterRating.Score < rating.WorseRating.Score)
+            {
+                throw new Exception("Internal error creating relative rating - attempted to assign lower score to WorseRating");
+            }
+            rating.RawScoreScale = scale;
+            return rating;
+
         }
         public DateTime LatestInteractionDate
         {

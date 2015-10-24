@@ -100,12 +100,12 @@ namespace ActivityRecommendation
             //unevenDisplayGrid.AddLayout(this.suggestionsView);
             //mainGrid.AddLayout(this.suggestionsView);
 
-            /*
+            
             this.statisticsMenu = new MiniStatisticsMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
             this.statisticsMenu.AddOkClickHandler(new RoutedEventHandler(this.VisualizeData));
-            leftGrid.AddLayout(this.statisticsMenu);
-            */
+            //leftGrid.AddLayout(this.statisticsMenu);
+            
 
             this.dataExportView = new DataExportView();
             this.dataExportView.Add_ClickHandler(new RoutedEventHandler(this.ExportData));
@@ -118,6 +118,7 @@ namespace ActivityRecommendation
             usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
+            usageMenu_builder.AddLayout("View Statistics", this.statisticsMenu);
             usageMenu_builder.AddLayout("Export Data", this.dataExportView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
@@ -611,6 +612,7 @@ namespace ActivityRecommendation
         }
         public void VisualizeData()
         {
+            this.engine.EnsureRatingsAreAssociated();
             //string name = this.statisticsMenu.ActivityName;
 
             //ActivityDescriptor xAxisDescriptor = this.statisticsMenu.XAxisActivityDescriptor;
@@ -630,11 +632,10 @@ namespace ActivityRecommendation
             }
             if (yAxisActivity != null)
             {
-                // TODO: fix this
+                yAxisActivity.ApplyPendingData();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, UserPreferences.DefaultPreferences.HalfLife, this.engine.RatingSummarizer);
-                visualizationView.AddExitClickHandler(new RoutedEventHandler(this.ShowMainview));
-                //this.displayManager
-                this.displayManager.SetLayout(visualizationView);
+                //visualizationView.AddExitClickHandler(new RoutedEventHandler(this.ShowMainview));
+                this.layoutStack.AddLayout(visualizationView);
             }
         }
 

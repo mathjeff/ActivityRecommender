@@ -637,7 +637,7 @@ namespace ActivityRecommendation
             this.PendingSuggestions.Clear();
         }
 
-        private void ApplyPendingData()
+        public void ApplyPendingData()
         {
             this.ApplyPendingRatings();
             this.ApplyPendingParticipations();

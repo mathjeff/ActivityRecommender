@@ -41,7 +41,7 @@ namespace ActivityRecommendation
             this.smoothingDuration = smoothingWindow;
 
             // setup the title
-            this.SetTitle("Here is a visualization of " + this.YAxisLabel + " vs. " + this.XAxisLabel + ". Press [ESCAPE] to return to the main screen.");
+            this.SetTitle(this.YAxisLabel + " vs. " + this.XAxisLabel);
             //this.KeyDown += new System.Windows.Input.KeyEventHandler(ActivityVisualizationView_KeyDown);
             this.displayGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
             this.SetContent(this.displayGrid);
@@ -105,7 +105,7 @@ namespace ActivityRecommendation
             statsDisplayGrid.AddLayout(this.ratingWhenNotSuggested_Display);
 
             // put the stats view into the main view
-            this.displayGrid.AddLayout(statsDisplayGrid);
+            //this.displayGrid.AddLayout(statsDisplayGrid);
 
 
             this.UpdateParticipationStatsView();
@@ -143,7 +143,7 @@ namespace ActivityRecommendation
             List<Datapoint> points = new List<Datapoint>();
 
             // make a plot
-            PlotControl newPlot = new PlotControl();
+            PlotView newPlot = new PlotView();
             newPlot.ShowRegressionLine = true;
             newPlot.MinX = 0;
             newPlot.MaxX = endDate.Subtract(startDate).TotalDays;
@@ -200,7 +200,7 @@ namespace ActivityRecommendation
             DateTime lastDate = this.queryEndDateDisplay.GetDate();
             List<Datapoint> points = new List<Datapoint>();
             //double sumY = 0;
-            PlotControl newPlot = new PlotControl();
+            PlotView newPlot = new PlotView();
             newPlot.ShowRegressionLine = true;
 
             

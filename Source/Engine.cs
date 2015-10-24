@@ -35,6 +35,13 @@ namespace ActivityRecommendation
             this.ApplyParticipationsAndRatings();
             this.requiresFullUpdate = false;
         }
+        public void EnsureRatingsAreAssociated()
+        {
+            if (this.requiresFullUpdate)
+                this.FullUpdate();
+            else
+                this.ApplyParticipationsAndRatings();
+        }
         // creates an Activity object for each ActivityDescriptor that needs one
         public void CreateNewActivities()
         {
@@ -221,14 +228,7 @@ namespace ActivityRecommendation
             List<Activity> consideredCandidates = new List<Activity>();
             DateTime processingStartTime = DateTime.Now;
             // First, go update the stats for existing activities
-            if (this.requiresFullUpdate)
-            {
-                this.FullUpdate();
-            }
-            else
-            {
-                this.ApplyParticipationsAndRatings();
-            }
+            this.EnsureRatingsAreAssociated();
             foreach (Activity activity in this.activityDatabase.AllActivities)
             {
                 activity.PredictionsNeedRecalculation = true;

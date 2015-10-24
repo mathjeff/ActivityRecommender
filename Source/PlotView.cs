@@ -7,18 +7,21 @@ using System.Windows;
 using System.Windows.Shapes;
 using System.Windows.Controls;
 using System.Windows.Media;
+using VisiPlacement;
 
 // The PlotControl shows a visual representation of some (x,y) points
 namespace ActivityRecommendation
 {
-    class PlotControl : Canvas
+    class PlotView : Panel
     {
-        public PlotControl()
+        public PlotView()
         {
-            //this.childCanvas = new Canvas();
+            this.canvas = new Canvas();
+            this.Children.Add(this.canvas);
+            
             //this.AddVisualChild(childCanvas);
             this.Connected = true;
-            this.Background = new SolidColorBrush(Colors.LightGray);
+            this.canvas.Background = new SolidColorBrush(Colors.LightGray);
         }
 
         // assigns some datapoints to the plot
@@ -97,18 +100,18 @@ namespace ActivityRecommendation
         public bool ShowRegressionLine { get; set; }
         public bool Connected { get; set; }
 
-#if false
+#if true
         protected override Size MeasureOverride(Size availableSize)
         {
             this.UpdatePoints(availableSize);
             return base.MeasureOverride(availableSize);
         }
 #endif
-
+                
         // updates the locations at which to draw the provided points
         private void UpdatePoints(Size displaySize)
         {
-            this.Children.Clear();
+            this.canvas.Children.Clear();
             if (this.pointsToPlot.Count == 0)
                 return;
 
@@ -136,6 +139,9 @@ namespace ActivityRecommendation
             {
                 List<Datapoint> pointList = this.pointsToPlot[i];
 
+                if (pointList.Count < 1)
+                    continue;
+
                 x1 = (pointList[0].Input - minimumX) * scaleX;
                 y1 = (maximumY - pointList[0].Output) * scaleY;
 
@@ -143,10 +149,10 @@ namespace ActivityRecommendation
                 switch (i)
                 {
                     case 0:
-                        brush = new SolidColorBrush(Colors.Blue);
+                        brush = new SolidColorBrush(Colors.Green);
                         break;
                     default:
-                        brush = new SolidColorBrush(Colors.Black);
+                        brush = new SolidColorBrush(Colors.Blue);
                         break;
                 }
 
@@ -173,7 +179,7 @@ namespace ActivityRecommendation
                         //newLine.StrokeStartLineCap = PenLineCap.Round;
                     }
                     newLine.Stroke = brush;
-                    this.Children.Add(newLine);
+                    this.canvas.Children.Add(newLine);
 
                     x1 = x2;
                     y1 = y2;
@@ -220,7 +226,7 @@ namespace ActivityRecommendation
                     newLine.X2 = (x2 - minimumX) * scaleX;
                     newLine.Y2 = (maximumY - y2) * scaleY;
                     newLine.Stroke = new SolidColorBrush(Colors.Red);
-                    this.Children.Add(newLine);
+                    this.canvas.Children.Add(newLine);
                 }
             }
             // now draw some tick marks
@@ -255,6 +261,8 @@ namespace ActivityRecommendation
         */
 
         private List<List<Datapoint>> pointsToPlot;
+
+        private Canvas canvas;
         //private Size drawingDimensions;
         // bounds on the data
         private double minXPresent;

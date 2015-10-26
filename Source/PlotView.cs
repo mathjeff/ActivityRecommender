@@ -221,12 +221,47 @@ namespace ActivityRecommendation
                     y2 = (x2 - xs.Mean) * slope + ys.Mean;
 
                     Line newLine = new Line();
-                    newLine.X1 = (x1 - minimumX) * scaleX;
-                    newLine.Y1 = (maximumY - y1) * scaleY;
-                    newLine.X2 = (x2 - minimumX) * scaleX;
-                    newLine.Y2 = (maximumY - y2) * scaleY;
+                    double renderX1 = (x1 - minimumX) * scaleX;
+                    double renderY1 = (maximumY - y1) * scaleY;
+                    double renderX2 = (x2 - minimumX) * scaleX;
+                    double renderY2 = (maximumY - y2) * scaleY;
+
+                    double rescaleRatio;
+                    // cut off the right side of the line if it goes out of bounds
+                    rescaleRatio = 1;
+                    if (renderY2 > displaySize.Height)
+                    {
+                        rescaleRatio = (displaySize.Height - renderY1) / (renderY2 - renderY1);
+                    }
+                    else
+                    {
+                        if (renderY2 < 0)
+                            rescaleRatio = (renderY1) / (renderY1 - renderY2);
+                    }
+                    renderY2 = renderY1 + (renderY2 - renderY1) * rescaleRatio;
+                    renderX2 = renderX1 + (renderX2 - renderX1) * rescaleRatio;
+                    // cut off the left side of the line if it goes out of bounds
+                    rescaleRatio = 1;
+                    if (renderY1 > displaySize.Height)
+                    {
+                        rescaleRatio = (displaySize.Height - renderY2) / (renderY1 - renderY2);
+                    }
+                    else
+                    {
+                        if (renderY1 < 0)
+                            rescaleRatio = (renderY2) / (renderY2 - renderY1);
+                    }
+                    renderY1 = renderY2 - (renderY2 - renderY1) * rescaleRatio;
+                    renderX1 = renderX2 - (renderX2 - renderX1) * rescaleRatio;
+
+                    newLine.X1 = renderX1;
+                    newLine.Y1 = renderY1;
+                    newLine.X2 = renderX2;
+                    newLine.Y2 = renderY2;
+
                     newLine.Stroke = new SolidColorBrush(Colors.Red);
                     this.canvas.Children.Add(newLine);
+
                 }
             }
             // now draw some tick marks
@@ -244,8 +279,8 @@ namespace ActivityRecommendation
                     newLine.Y1 = y1;
                     newLine.X2 = (x2 - minimumX) * scaleX;
                     newLine.Y2 = y2;
-                    newLine.Stroke = new SolidColorBrush(Colors.Black);
-                    this.Children.Add(newLine);
+                    newLine.Stroke = new SolidColorBrush(Colors.Cyan);
+                    this.canvas.Children.Add(newLine);
                 }
             }
 

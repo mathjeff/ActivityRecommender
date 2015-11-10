@@ -43,12 +43,24 @@ namespace ActivityRecommendation
             this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 3).ToString()));
             this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 3).ToString()));
 
+            // Add buttons
             this.mainGrid.AddLayout(this.contentGrid);
             this.cancelButton = new Button();
             this.cancelButton.Click += cancelButton_Click;
-            this.mainGrid.AddLayout(new ButtonLayout(this.cancelButton, "X"));
+            this.justifyButton = new Button();
+            this.justifyButton.Click += justifyButton_Click;
+            GridLayout buttonsLayout = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(1), LayoutScore.Zero);
+            buttonsLayout.AddLayout(new ButtonLayout(this.justifyButton, "?"));
+            buttonsLayout.AddLayout(new ButtonLayout(this.cancelButton, "X"));
+            this.mainGrid.AddLayout(buttonsLayout);
+
 
             this.SubLayout = this.mainGrid;
+        }
+
+        void justifyButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.container.JustifySuggestion(this.suggestion);
         }
 
         void cancelButton_Click(object sender, RoutedEventArgs e)
@@ -86,6 +98,7 @@ namespace ActivityRecommendation
         GridLayout contentGrid;
         GridLayout mainGrid;
         Button cancelButton;
+        Button justifyButton;
         SuggestionsView container;
         ActivitySuggestion suggestion;
         

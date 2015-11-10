@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using VisiPlacement;
 
 // Allows the user to export their data
-namespace ActivityRecommendation.Source
+namespace ActivityRecommendation
 {
     class DataExportView : TitledControl
     {

@@ -7,7 +7,7 @@
     <DependencyList>  
       <item>  
         <name>AdaptiveInterpolator</name>
-        <version>f7d92e4438d03319c85f202d669131768ffa0ebe</version>
+        <version>d48b3ade205096e02f62fc78a582f244d6cb0fb4</version>
         <syncher>  
           <Git>  
             <origin>  

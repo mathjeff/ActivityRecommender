@@ -100,6 +100,10 @@ namespace ActivityRecommendation
             this.RemoveSuggestion(suggestion);
             this.recommender.DeclineSuggestion(suggestion);
         }
+        public void JustifySuggestion(ActivitySuggestion suggestion)
+        {
+            this.recommender.JustifySuggestion(suggestion);
+        }
         public void ClearSuggestions()
         {
             this.suggestions.Clear();

@@ -55,7 +55,7 @@ namespace ActivityRecommendation
                 return this.InputCoordinates.Length;
             }
         }
-        public Distribution Score
+        public Distribution Item
         {
             get
             {

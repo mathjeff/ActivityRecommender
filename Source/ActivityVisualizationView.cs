@@ -178,7 +178,7 @@ namespace ActivityRecommendation
                 DateTime when = startDate.Add(currentDuration);
                 ratingSummary.Update(this.ratingSummarizer, when, endDate);
                 double x = currentDuration.TotalDays;
-                double y = ratingSummary.Score.Mean;
+                double y = ratingSummary.Item.Mean;
                 if (!double.IsNaN(y))
                     smoothedPoints.Add(new Datapoint(x, y, 1));
             }

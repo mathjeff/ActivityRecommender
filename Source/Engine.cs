@@ -472,14 +472,12 @@ namespace ActivityRecommendation
         {
             DateTime startDate = DateTime.Now;
             // Now we estimate how useful it would be to suggest this activity to the user
-            //List<Prediction> extraPredictions = this.GetSuggestionEstimates(activity, when);
 
-            //IEnumerable<Prediction> suggestionPredictions = ratingPredictions.Concat(extraPredictions);
-            IEnumerable<Prediction> suggestionPredictions = this.GetSuggestionEstimates(activity, when);
-            activity.SuggestionValue = this.CombineRatingPredictions(suggestionPredictions);
+            Prediction suggestionPrediction = this.GetSuggestionEstimates(activity, when);
+            activity.SuggestionValue = suggestionPrediction;
             DateTime endDate = DateTime.Now;
-            TimeSpan predictionDuration = endDate.Subtract(startDate);
-            //System.Diagnostics.Debug.WriteLine(predictionDuration.ToString() + " to evaluate " + activity.Name);
+            /*TimeSpan predictionDuration = endDate.Subtract(startDate);
+            System.Diagnostics.Debug.WriteLine(predictionDuration.ToString() + " to evaluate " + activity.Name);*/
         }
 
         // attempt to calculate the probability that the user would do this activity if we suggested it at this time
@@ -495,58 +493,25 @@ namespace ActivityRecommendation
         {
             // Now that the parents' ratings are up-to-date, the work begins
             // Make a list of predictions based on all the different factors
-            List<Prediction> predictions = activity.Get_ShortTerm_RatingEstimate(when);
+            List<Prediction> predictions = activity.Get_ShortTerm_RatingEstimates(when);
             return predictions;
         }
-        // returns a list of all Predictions that are used to predict the value of suggesting the given activity at the given time
-        private List<Prediction> GetSuggestionEstimates(Activity activity, DateTime when)
+        // returns a Prediction of the value of suggesting the given activity at the given time
+        private Prediction GetSuggestionEstimates(Activity activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
             // Get the activity's estimates of what the overall value will be after having done this activity
-            List<Prediction> predictions = activity.Get_LongTerm_ValueEstimates(when);
-#if false
-            // Now add a correction that helps avoid suggesting the same activity multiple times in a row
-            int numActivities = this.activityDatabase.NumActivities;
-            DateTime latestParticipationDate = activity.LatestParticipationDate;
-            TimeSpan unplayedDuration = when.Subtract(latestParticipationDate);
-            double numUnplayedHours = unplayedDuration.TotalHours;
-            double weightFraction = (double)1 - numUnplayedHours / (double)24;
-            if (weightFraction > 0)
-            {
-                Prediction spacer = new Prediction();
-                spacer.Distribution = new Distribution(0, 0.5, weightFraction * 8);
-                spacer.Justification = "you did this recently";
-                predictions.Add(spacer);
-            }
-#endif
-            /* 
-            // We no longer need to incorporate the following distribution, which was solely to ensure that no activity was ever forgotten
-            // The right way to do this is to create a more-accurate model of the rating of an activity when it hasn't been suggested in a while
-            // Finally, take into account the fact that we gain more information by suggesting activities that haven't been remembered in a while
-            DateTime latestActivityInteractionDate = activity.LatestInteractionDate;
-            TimeSpan idleDuration = when.Subtract(latestActivityInteractionDate);
-            double numIdleHours = idleDuration.TotalHours;
-            if (numIdleHours > 0)
-            {
-                weightFraction = Math.Pow(numIdleHours, 0.7);
-                double stdDev = 1;
-                //guess = new Distribution(
-                Distribution scores = Distribution.MakeDistribution(1, stdDev, weightFraction);
-                Prediction guess = new Prediction();
-                guess.Distribution = scores;
-                guess.Justification = "how long it's been since you thought about this activity";
-                predictions.Add(guess);
-            }
-            */
-            return predictions;
+            Prediction prediction = activity.Get_LongTerm_ValueEstimates(when);
+            return prediction;
         }
         // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time
         private IEnumerable<Prediction> GetAllSuggestionEstimates(Activity activity, DateTime when)
         {
-            List<Prediction> ratingPredictions = this.Get_ShortTerm_RatingEstimates(activity, when);
-            List<Prediction> suggestionPredictions = this.GetSuggestionEstimates(activity, when);
-            return ratingPredictions.Concat(suggestionPredictions);
+            List<Prediction> predictions = this.Get_ShortTerm_RatingEstimates(activity, when);
+            Prediction suggestionPredictions = this.GetSuggestionEstimates(activity, when);
+            predictions.Add(suggestionPredictions);
+            return predictions;
         }
         // suppose there only Activities are A,B,C,D
         // suppose A and B are parents of C
@@ -564,7 +529,13 @@ namespace ActivityRecommendation
         // If it is the only child of each, then its rating should be the average of each parent's rating
         // If one parent has more children, that parent's prediction weight becomes relevant, and its characteristic weight decreases
 
-        // returns a string telling the most important reason that 'activity' was last rated as it was
+        public IActivitySuggestionJustification JustifySuggestion(ActivitySuggestion suggestion)
+        {
+            Activity activity = this.activityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
+            IActivitySuggestionJustification justification = activity.JustifyInterpolation(suggestion);
+            return justification;
+        }
+        /* // returns a string telling the most important reason that 'activity' was last rated as it was
         public string JustifyRating(Activity activity)
         {
             DateTime when = activity.SuggestionValue.ApplicableDate;
@@ -585,7 +556,7 @@ namespace ActivityRecommendation
                 }
             }
             return bestReason;
-        }
+        }*/
         public Prediction CombineRatingPredictions(IEnumerable<Prediction> predictions)
         {
             List<Distribution> distributions = new List<Distribution>();

@@ -646,7 +646,44 @@ namespace ActivityRecommendation
         }
 
         // returns a bunch of estimates about how it will be rated at this date
-        public List<Prediction> Get_LongTerm_ValueEstimates(DateTime when)
+        public Prediction Get_LongTerm_ValueEstimates(DateTime when)
+        {
+            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
+            Distribution estimate = new Distribution(this.longTerm_valueInterpolator.Interpolate(coordinates));
+            double weight = this.NumRatings * 4;
+            Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
+            
+            // add a little bit of uncertainty, which is especially important if the weight would otherwise be zero (so the default will then be a mean of 0.5)
+            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
+            Prediction prediction = new Prediction();
+            prediction.ApplicableDate = when;
+            prediction.Distribution = scaledEstimate.Plus(extraError);
+            return prediction;
+        }
+
+        public ActivitySuggestionJustification JustifyInterpolation(ActivitySuggestion suggestion)
+        {
+            DateTime when = suggestion.StartDate;
+            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
+            // find size of neighborhood
+            HyperBox<Distribution> box = this.longTerm_valueInterpolator.FindNeighborhoodCoordinates(coordinates);
+            // get predicted value
+            Distribution prediction = new Distribution(this.longTerm_valueInterpolator.Interpolate(coordinates));
+            InterpolatorSuggestionJustification justification = new InterpolatorSuggestionJustification(suggestion);
+            int i;
+            // copy the coordinates and their labels onto the justification
+            for (i = 0; i < coordinates.Length; i++)
+            {
+                String description = this.ratingTestingProgressions[i].Description;
+                double value = coordinates[i];
+                justification.AddInput(description, value, box.Coordinates[i]);
+            }
+            justification.AddOutput("Score", suggestion.PredictedScore.Mean);
+            return justification;
+        }
+
+        // returns the coordinates from which a rating prediction is made
+        private double[] Get_Rating_PredictionCoordinates(DateTime when)
         {
             this.ApplyPendingData();
 
@@ -660,22 +697,11 @@ namespace ActivityRecommendation
                 else
                     coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
             }
-            List<Prediction> results = new List<Prediction>();
-            Distribution estimate = new Distribution(this.longTerm_valueInterpolator.Interpolate(coordinates));
-            double weight = this.NumRatings * 4;
-            Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
-            
-            // add a little bit of uncertainty, which is especially important if the weight would otherwise be zero (so the default will then be a mean of 0.5)
-            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
-            Prediction prediction = new Prediction();
-            prediction.ApplicableDate = when;
-            prediction.Distribution = scaledEstimate.Plus(extraError);
-            results.Add(prediction);
-            return results;
+            return coordinates;
         }
 
         // returns a bunch of estimates about how it will be rated at this date
-        public List<Prediction> Get_ShortTerm_RatingEstimate(DateTime when)
+        public List<Prediction> Get_ShortTerm_RatingEstimates(DateTime when)
         {
             this.ApplyPendingRatings();
 

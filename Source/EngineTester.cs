@@ -388,7 +388,7 @@ namespace ActivityRecommendation
                 RatingSummary summary = this.valuePredictions[prediction];
                 summary.Update(this.ratingSummarizer);
                 double predictedScore = prediction.Distribution.Mean;
-                double actualScore = summary.Score.Mean;
+                double actualScore = summary.Item.Mean;
                 double error = actualScore - predictedScore;
                 errorsSquared = errorsSquared.Plus(Distribution.MakeDistribution(error * error, 0, 1));
             }

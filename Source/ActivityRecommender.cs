@@ -12,7 +12,6 @@ using System.IO.IsolatedStorage;
 using System.Reflection;
 using Windows.Phone.UI.Input;
 using System.ComponentModel;
-using ActivityRecommendation.Source;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -203,6 +202,13 @@ namespace ActivityRecommendation
             rating.Score = estimatedScore;
             skip.RawRating = rating;
             this.AddSkip(skip);
+        }
+        public void JustifySuggestion(ActivitySuggestion suggestion)
+        {
+            IActivitySuggestionJustification justification = this.engine.JustifySuggestion(suggestion);
+            String text = justification.Summarize();
+            TextblockLayout layout = new TextblockLayout(text);
+            this.layoutStack.AddLayout(layout);
         }
         private void MakeRecommendation()
         {

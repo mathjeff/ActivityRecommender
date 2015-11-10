@@ -119,6 +119,7 @@
     <Compile Include="Source\DistributionAdder.cs" />
     <Compile Include="Source\Engine.cs" />
     <Compile Include="Source\EngineTester.cs" />
+    <Compile Include="Source\InterpolatorSuggestionJustification.cs" />
     <Compile Include="Source\RatingRenormalizer.cs" />
     <Compile Include="Source\RatingReplayer.cs" />
     <Compile Include="Source\ExpectedParticipationProbabilityProgression.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="Source\SimplePredictionLink.cs" />
     <Compile Include="Source\HistoryWriter.cs" />
     <Compile Include="Source\SkipProgression.cs" />
+    <Compile Include="Source\SuggestionJustification.cs" />
     <Compile Include="Source\SuggestionsView.cs" />
     <Compile Include="Source\SuggestionView.cs" />
     <Compile Include="Source\TextConverter.cs" />

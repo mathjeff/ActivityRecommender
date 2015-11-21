@@ -10,8 +10,9 @@ namespace ActivityRecommendation
     {
         public Engine()
         {
-            this.ratingSummarizer = new RatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
-            this.activityDatabase = new ActivityDatabase(this.ratingSummarizer);
+            this.weightedRatingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.unweightedRatingSummarizer = new LinearRatingSummarizer();
+            this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer);
             this.unappliedRatings = new List<AbsoluteRating>();
             this.unappliedParticipations = new List<Participation>();
             this.unappliedSkips = new List<ActivitySkip>();
@@ -275,7 +276,8 @@ namespace ActivityRecommendation
                     else
                     {
                         consideredCandidates.Add(candidate);
-                        if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
+                        //if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
+                        if (bestActivity == null || candidate.SuggestionValue.ValueMinusAverage.Mean >= bestActivity.SuggestionValue.ValueMinusAverage.Mean)
                             better = true; // found a better activity
                     }
                     if (better)
@@ -319,13 +321,13 @@ namespace ActivityRecommendation
         // Given two distributions, we estimate the expected total value from choosing values from them
         private double GetCombinedValue(Activity activityA, Activity activityB)
         {
-            Distribution a = activityA.SuggestionValue.Distribution;
-            Distribution b = activityB.SuggestionValue.Distribution;
+            Distribution a = activityA.SuggestionValue.ValueMinusAverage;
+            Distribution b = activityB.SuggestionValue.ValueMinusAverage;
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
             // Convert and also remove a little bit of uncertainty because the input distributions are already estimates rather than samples
-            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight - 1, a.Mean * a.Weight - 1);
-            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * b.Weight - 1, b.Mean * b.Weight - 1);
+            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * 0.5 * a.Weight - 1, a.Mean * 0.5 * a.Weight - 1);
+            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * 0.5 * b.Weight - 1, b.Mean * 0.5 * b.Weight - 1);
 
             // We weight our time exponentially, estimating that it takes two years for our time to double            
             // Here are the scales by which the importances are expected to multiply every time we consider these activities
@@ -503,6 +505,10 @@ namespace ActivityRecommendation
             this.EstimateRating(activity, when);
             // Get the activity's estimates of what the overall value will be after having done this activity
             Prediction prediction = activity.Get_LongTerm_ValueEstimates(when);
+            // Also figure out how happy the user has been since having discovered this activity
+            DateTime discoveryDate = activity.DiscoveryDate;
+            Distribution averageValue = this.unweightedRatingSummarizer.GetValueDistributionForDates(discoveryDate, when);
+            prediction.ValueMinusAverage = Distribution.MakeDistribution(prediction.Distribution.Mean - averageValue.Mean, 0, prediction.Distribution.Weight);
             return prediction;
         }
         // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time
@@ -669,7 +675,8 @@ namespace ActivityRecommendation
                 if (participation != null)
                 {
                     // exponential moving average with all necessary history
-                    this.ratingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
+                    this.weightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
+                    this.unweightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
                     // usual average of the activities that were not suggested
                     if (participation.Suggested != null && participation.Suggested.Value == false)
                         this.ratingsOfUnpromptedActivities = this.ratingsOfUnpromptedActivities.Plus(newRating.Score);
@@ -681,7 +688,7 @@ namespace ActivityRecommendation
         {
             foreach (Activity activity in this.ActivityDatabase.AllActivities)
             {
-                activity.UpdateNext_RatingSummaries(this.ratingSummarizer, numRatingsToUpdate);
+                activity.UpdateNext_RatingSummaries(this.weightedRatingSummarizer, numRatingsToUpdate);
             }
         }
         // gets called whenever any outside source provides a rating
@@ -739,7 +746,8 @@ namespace ActivityRecommendation
             this.unappliedParticipations.Add(newParticipation);
             this.PutActivityDescriptorInMemory(newParticipation.ActivityDescriptor);
 
-            this.ratingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
+            this.weightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
+            this.unweightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
 
             
             Rating rating = newParticipation.GetCompleteRating();
@@ -829,7 +837,8 @@ namespace ActivityRecommendation
                 // update our estimate of how longer the user spends thinking about what to do
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
                 // record the fact that the user wasn't doing anything directly productive at this time
-                this.ratingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate.Value, newSkip.CreationDate, 0);
+                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate.Value, newSkip.CreationDate, 0);
+                this.unweightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate.Value, newSkip.CreationDate, 0);
             }
 
 #if false
@@ -873,7 +882,8 @@ namespace ActivityRecommendation
                     parent.RemoveParticipation(participationToRemove);
                 }
             }
-            this.ratingSummarizer.RemoveParticipation(participationToRemove.StartDate);
+            this.weightedRatingSummarizer.RemoveParticipation(participationToRemove.StartDate);
+            this.unweightedRatingSummarizer.RemoveParticipation(participationToRemove.StartDate);
         }
         public RelativeRating MakeRelativeRating(Participation mainParticipation, double scale, Participation otherParticipation)
         {
@@ -976,7 +986,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.ratingSummarizer;
+                return this.weightedRatingSummarizer;
             }
         }
         private UserPreferences Get_UserPreferences()
@@ -1005,7 +1015,8 @@ namespace ActivityRecommendation
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
         //Distribution ratingsForSuggestedActivities;     // the ratings that the user gives to activities that were suggested by the engine
         //Distribution ratingsForUnsuggestedActivities;   // the ratings that the user gives to activities that were not suggestd by the engine
-        RatingSummarizer ratingSummarizer;
+        RatingSummarizer weightedRatingSummarizer;
+        RatingSummarizer unweightedRatingSummarizer;
         
         Distribution ratingsOfUnpromptedActivities;
         int numSkips;

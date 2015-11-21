@@ -4,16 +4,15 @@ using System.Linq;
 using System.Text;
 using StatLists;
 
-// A RatingSummarizer computes the (exponentially weighted) average value for a bunch of ratings and participations within a certain period of time
+// A RatingSummarizer computes the average value for a bunch of ratings and participations within a certain period of time
 // Note that it takes into account both the scores of the ratings and the fraction of time spent idle
 namespace ActivityRecommendation
 {
-    public class RatingSummarizer
+    public abstract class RatingSummarizer
     {
         // The weight of each rating (continuously) decays exponentially, and cuts in half after a TimeSpan of halfLife
-        public RatingSummarizer(TimeSpan halfLife)
+        public RatingSummarizer()
         {
-            this.halfLife = halfLife;
             this.ratingsByDate = new StatList<DateTime,Distribution>(new DateComparer(), new DistributionAdder());
             this.participationIntensitiesByDate = new StatList<DateTime, Distribution>(new DateComparer(), new DistributionAdder());
         }
@@ -77,16 +76,11 @@ namespace ActivityRecommendation
             }
         }
         // returns the cumulative weight for all dates through the given date
-        private double GetWeightThroughDate(DateTime when)
-        {
-            TimeSpan duration = when.Subtract(this.firstDate);
-            return 1 - Math.Pow(2, -duration.TotalSeconds / this.halfLife.TotalSeconds);
-        }
+        protected abstract double GetWeightThroughDate(DateTime when);
 
         private StatList<DateTime, Distribution> ratingsByDate;
         private StatList<DateTime, Distribution> participationIntensitiesByDate;
-        private DateTime firstDate;
-        //private int numRatings;
+        protected DateTime firstDate;
         private TimeSpan halfLife;
     }
 }

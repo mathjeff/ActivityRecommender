@@ -231,7 +231,7 @@ namespace ActivityRecommendation
             this.squaredParticipationProbabilityError = new Distribution();
             this.participationPrediction_score = new Distribution();
             this.valuePredictions = new Dictionary<Prediction, RatingSummary>();
-            this.ratingSummarizer = new RatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
         {

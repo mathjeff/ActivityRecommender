@@ -119,7 +119,9 @@
     <Compile Include="Source\DistributionAdder.cs" />
     <Compile Include="Source\Engine.cs" />
     <Compile Include="Source\EngineTester.cs" />
+    <Compile Include="Source\ExponentialRatingSummarizer.cs" />
     <Compile Include="Source\InterpolatorSuggestionJustification.cs" />
+    <Compile Include="Source\LinearRatingSummarizer.cs" />
     <Compile Include="Source\RatingRenormalizer.cs" />
     <Compile Include="Source\RatingReplayer.cs" />
     <Compile Include="Source\ExpectedParticipationProbabilityProgression.cs" />

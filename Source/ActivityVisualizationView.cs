@@ -20,7 +20,7 @@ namespace ActivityRecommendation
             }
             else
             {
-                this.ratingSummarizer = new RatingSummarizer(smoothingWindow);
+                this.ratingSummarizer = new ExponentialRatingSummarizer(smoothingWindow);
                 foreach (AbsoluteRating rating in yAxisActivity.RatingProgression.GetRatingsInDiscoveryOrder())
                 {
                     Participation ratingSource = null;

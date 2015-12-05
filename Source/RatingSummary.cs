@@ -13,7 +13,6 @@ namespace ActivityRecommendation
         {
             this.earliestKnownDate = when;
             this.latestKnownDate = when;
-            this.ratings = new Distribution();
         }
 
         // Pulls all newer ratings from the RatingSummarizer
@@ -22,25 +21,28 @@ namespace ActivityRecommendation
             DateTime latestDate = summarizer.LatestKnownDate;
             // fetch any ratings that appeared since our last update
             this.Update(summarizer, this.latestKnownDate, latestDate);
-            //this.ratings = this.ratings.Plus(summarizer.GetValueDistributionForDates(this.date, this.latestKnownDate, latestDate));
-            //this.ratings = this.ratings.Plus(summarizer.GetValueDistributionForDates(this.latestKnownDate, latestDate));
-            // keep track of the date of our last update
-            //this.latestKnownDate = latestDate;
         }
 
-        // Pulls new ratings from the RatingSummarizer within a certain date range
+        // Pulls new ratings from the RatingSummarizer within a certain date range and updates metadata (min/max)
         public void Update(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
         {
             if (earliestDateToInclude.CompareTo(this.earliestKnownDate) < 0)
             {
-                this.ratings = this.ratings.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, this.earliestKnownDate));
+                this.importData(summarizer, earliestDateToInclude, this.earliestKnownDate);
                 this.earliestKnownDate = earliestDateToInclude;
             }
             if (latestDateToInclude.CompareTo(this.latestKnownDate) > 0)
             {
-                this.ratings = this.ratings.Plus(summarizer.GetValueDistributionForDates(this.latestKnownDate, latestDateToInclude));
+                this.importData(summarizer, this.latestKnownDate, latestDateToInclude);
                 this.latestKnownDate = latestDateToInclude;
             }
+        }
+
+        // implements the pull of new data from the RatingSummarizer
+        private void importData(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
+        {
+            this.scores = this.scores.Plus(summarizer.GetRatingDistributionForDates(earliestDateToInclude, latestDateToInclude));
+            this.participations = this.participations.Plus(summarizer.GetParticipationDistributionForDates(earliestDateToInclude, latestDateToInclude));
         }
 
         #region Required for IDatapoint
@@ -59,10 +61,13 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.ratings.CopyAndReweightTo(1);
-                //Distribution result = this.ratings.CopyAndReweightTo(1);
-                //Distribution reverse = Distribution.MakeDistribution(1 - result.Mean, result.StdDev, result.Weight);
-                //return reverse;
+                double usefulFraction = this.participations.Mean;
+                double averageRating = this.scores.Mean;
+                double overallValue = usefulFraction * averageRating;
+                double weight = 1;
+                if (this.participations.Weight == 0 || this.scores.Weight == 0)
+                    weight = 0;
+                return Distribution.MakeDistribution(overallValue, 0, weight);
             }
         }
         public double[] OutputCoordinates
@@ -77,6 +82,7 @@ namespace ActivityRecommendation
         
         DateTime earliestKnownDate;  // the date that this RatingSummary describes
         DateTime latestKnownDate;   // the date of the latest rating known to this RatingSummary
-        Distribution ratings;
+        Distribution scores = new Distribution();
+        Distribution participations = new Distribution();
     }
 }

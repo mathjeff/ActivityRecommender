@@ -508,7 +508,15 @@ namespace ActivityRecommendation
             // Also figure out how happy the user has been since having discovered this activity
             DateTime discoveryDate = activity.DiscoveryDate;
             Distribution averageValue = this.unweightedRatingSummarizer.GetValueDistributionForDates(discoveryDate, when);
-            prediction.ValueMinusAverage = Distribution.MakeDistribution(prediction.Distribution.Mean - averageValue.Mean, 0, prediction.Distribution.Weight);
+            if (averageValue.Weight > 0)
+                prediction.ValueMinusAverage = prediction.Distribution.CopyAndShiftBy(-averageValue.Mean);
+            else
+                prediction.ValueMinusAverage = prediction.Distribution.CopyAndShiftBy(-0.5);
+            System.Diagnostics.Debug.WriteLine("Value of " + activity + " = " + prediction.ValueMinusAverage + " at " + when);
+            if (prediction.ValueMinusAverage.Mean > 0.25)
+            {
+                System.Diagnostics.Debug.WriteLine("Unusually good " + activity + " value = " + prediction.ValueMinusAverage + " at " + when);
+            }
             return prediction;
         }
         // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time

@@ -117,6 +117,11 @@ namespace ActivityRecommendation
                 this.choosable = value;
             }
         }
+        public override string ToString()
+        {
+            return "Activity " + this.name;
+        }
+
         public LinkedList<AbsoluteRating> PendingRatings = new LinkedList<AbsoluteRating>();
         public LinkedList<Participation> PendingParticipations = new LinkedList<Participation>();
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();

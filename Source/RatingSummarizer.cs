@@ -53,26 +53,45 @@ namespace ActivityRecommendation
         {
             this.participationIntensitiesByDate.Remove(startDate);
         }
-        // Returns a distribution of appropriately weighted scores between startDate and endDate
+        // Returns a distribution of scores (possibly weighted by time) between startDate and endDate
         // In the future, the weight of the resultant distribution might adjusted so that any date equal to referenceDate has weight equal to 1
+        public Distribution GetRatingDistributionForDates(DateTime startDate, DateTime endDate)
+        {
+            return this.ratingsByDate.CombineBetweenKeys(startDate, true, endDate, false);
+        }
+        // Returns a distribution of the participations and skips (possibly weighted by time) between startDate and endDate
+        public Distribution GetParticipationDistributionForDates(DateTime startDate, DateTime endDate)
+        {
+            return this.participationIntensitiesByDate.CombineBetweenKeys(startDate, true, endDate, false);
+        }
         public Distribution GetValueDistributionForDates(DateTime startDate, DateTime endDate)
         {
-            Distribution ratings = this.ratingsByDate.CombineBetweenKeys(startDate, true, endDate, false);
-            Distribution participationIntensities = this.participationIntensitiesByDate.CombineBetweenKeys(startDate, true, endDate, false);
-            double usefulFraction = participationIntensities.Mean;
-            double averageRating = ratings.Mean;
-            double overallValue = usefulFraction * averageRating;
-            Distribution result = Distribution.MakeDistribution(overallValue, 0, ratings.Weight);
-            return result;
+            RatingSummary summary = new RatingSummary(startDate);
+            summary.Update(this, startDate, endDate);
+            return summary.Item;
         }
         public DateTime LatestKnownDate
         {
             get
             {
-                ListItemStats<DateTime, Distribution> stats = this.ratingsByDate.GetLastValue();
-                if (stats == null)
-                    return new DateTime();
-                return stats.Key;
+                ListItemStats<DateTime, Distribution> ratingStats = this.ratingsByDate.GetLastValue();
+                ListItemStats<DateTime, Distribution> participationStats = this.participationIntensitiesByDate.GetLastValue();
+                if (ratingStats == null)
+                {
+                    if (participationStats == null)
+                        return new DateTime();
+                    else
+                        return participationStats.Key;
+                }
+                else
+                {
+                    if (participationStats == null)
+                        return ratingStats.Key;
+                    if (ratingStats.Key.CompareTo(participationStats.Key) > 0)
+                        return ratingStats.Key;
+                    else
+                        return participationStats.Key;
+                }
             }
         }
         // returns the cumulative weight for all dates through the given date

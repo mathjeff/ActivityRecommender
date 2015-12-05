@@ -138,6 +138,11 @@ namespace ActivityRecommendation
             }
             return this.CopyAndReweightBy(scale);
         }
+        public Distribution CopyAndShiftBy(double shift)
+        {
+            Distribution result = Distribution.MakeDistribution(this.Mean + shift, this.StdDev, this.Weight);
+            return result;
+        }
         private double sumValue;
         private double sumSquaredValue;
         private double sumWeight;

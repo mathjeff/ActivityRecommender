@@ -875,8 +875,11 @@ namespace ActivityRecommendation
             summary.InputCoordinates = inputCoordinates;
             // compute the score
             summary.Update(summarizer);
-            // give it to the interpolator
-            this.longTerm_valueInterpolator.AddDatapoint(summary);
+            if (this.shouldIncludeRatingSummaryInInterpolator(summary))
+            {
+                // give it to the interpolator
+                this.longTerm_valueInterpolator.AddDatapoint(summary);
+            }
             // add it to the queue to update later
             this.ratingSummariesToUpdate.Enqueue(summary);
         }
@@ -886,7 +889,7 @@ namespace ActivityRecommendation
             {
                 // determine which datapoint should be updated
                 RatingSummary ratingSummary = this.ratingSummariesToUpdate.Dequeue();
-                // remove the datapoint from the ratings interpolator
+                // remove the datapoint from the ratings interpolator (or skip removing it if it was never added)
                 this.longTerm_valueInterpolator.RemoveDatapoint(ratingSummary);
                 // update the datapoint
                 ratingSummary.Update(summarizer);
@@ -913,6 +916,12 @@ namespace ActivityRecommendation
         #endregion
 
         #region Private Member Functions
+
+        private bool shouldIncludeRatingSummaryInInterpolator(RatingSummary summary)
+        {
+            return summary.Item.Weight > 0;
+        }
+
 
         private bool shouldUseNewlyAddedParentForPrediction(Activity parent)
         {

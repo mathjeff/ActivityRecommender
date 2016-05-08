@@ -511,7 +511,15 @@ namespace ActivityRecommendation
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
-            this.counter++;
+            // link the skip to its suggestion
+            DateTime? suggestionCreationDate = newSkip.SuggestionCreationDate;
+            if (suggestionCreationDate != null)
+            {
+                ActivitySuggestion suggestion = this.suggestionDatabase.GetSuggestion(newSkip.ActivityDescriptor, suggestionCreationDate.Value);
+                if (suggestion != null)
+                    suggestion.Skip = newSkip;
+            }
+            // save the skip
             this.engine.PutSkipInMemory(newSkip);
             if (this.ratingReplayer != null)
                 this.ratingReplayer.AddSkip(newSkip);
@@ -552,6 +560,7 @@ namespace ActivityRecommendation
         }
         public void PutSuggestionInMemory(ActivitySuggestion suggestion)
         {
+            this.suggestionDatabase.AddSuggestion(suggestion);
             this.engine.PutSuggestionInMemory(suggestion);
             if (this.ratingReplayer != null)
                 this.ratingReplayer.AddSuggestion(suggestion);
@@ -719,10 +728,10 @@ namespace ActivityRecommendation
         Participation latestParticipation;
         RatingReplayer ratingReplayer;
         RecentUserData recentUserData;
-        int counter = 0;
         // ActivityDatabase primedActivities; // activities that have already been considered and therefore are fast to consider again
         int numCategoriesToConsiderAtOnce = 3;
         LayoutStack layoutStack;
+        SuggestionDatabase suggestionDatabase = new SuggestionDatabase();
 
     }
 }

@@ -632,9 +632,10 @@ namespace ActivityRecommendation
         {
             foreach (ActivitySuggestion newSuggestion in this.PendingSuggestions)
             {
-                // We want to predict the user's overall happiness after this activity gets suggested.
-                // So, whenever we're told that this activity was suggested, we record this as a date to track
-                this.AddNew_RatingSummary(newSuggestion.GuessCreationDate(), this.overallRatings_summarizer);
+                // We want to predict the user's overall happiness after this activity gets suggested, so that we can detect if merely suggesting this activity has a positive impact
+                // We note the dates of suggestions that the user didn't immediately decline, because only those suggestions most likely didn't contribute appreciably to the decision of which activity to do
+                if (newSuggestion.Skip == null)
+                    this.AddNew_RatingSummary(newSuggestion.GuessCreationDate(), this.overallRatings_summarizer);
             }
             // Also update an older datapoint so that no datapoint's value gets old
             this.UpdateNext_RatingSummaries(this.overallRatings_summarizer, this.PendingSuggestions.Count);

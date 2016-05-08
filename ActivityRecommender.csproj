@@ -105,6 +105,7 @@
     <Compile Include="Source\ActivitySuggestion.cs" />
     <Compile Include="Source\ActivityVisualizationView.cs" />
     <Compile Include="Source\BinomialDistribution.cs" />
+    <Compile Include="Source\SuggestionDatabase.cs" />
     <Compile Include="Source\Composite_ActivitySuggestion.cs" />
     <Compile Include="Source\Consideration.cs" />
     <Compile Include="Source\ConsiderationProgression.cs" />

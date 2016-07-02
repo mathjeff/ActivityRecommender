@@ -41,8 +41,7 @@ namespace ActivityRecommendation
         // implements the pull of new data from the RatingSummarizer
         private void importData(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
         {
-            this.scores = this.scores.Plus(summarizer.GetRatingDistributionForDates(earliestDateToInclude, latestDateToInclude));
-            this.participations = this.participations.Plus(summarizer.GetParticipationDistributionForDates(earliestDateToInclude, latestDateToInclude));
+            this.values = this.values.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, latestDateToInclude));
         }
 
         #region Required for IDatapoint
@@ -61,13 +60,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                double usefulFraction = this.participations.Mean;
-                double averageRating = this.scores.Mean;
-                double overallValue = usefulFraction * averageRating;
-                double weight = 1;
-                if (this.participations.Weight == 0 || this.scores.Weight == 0)
-                    weight = 0;
-                return Distribution.MakeDistribution(overallValue, 0, weight);
+                return this.values;
             }
         }
         public double[] OutputCoordinates
@@ -82,7 +75,6 @@ namespace ActivityRecommendation
         
         DateTime earliestKnownDate;  // the date that this RatingSummary describes
         DateTime latestKnownDate;   // the date of the latest rating known to this RatingSummary
-        Distribution scores = new Distribution();
-        Distribution participations = new Distribution();
+        Distribution values = new Distribution();
     }
 }

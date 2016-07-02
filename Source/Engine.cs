@@ -282,6 +282,10 @@ namespace ActivityRecommendation
                     }
                     if (better)
                     {
+                        if (bestActivity != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.ValueMinusAverage.Mean + " replaced " + bestActivity + " with suggestion value " + bestActivity.SuggestionValue.ValueMinusAverage.Mean + " as highest-value suggestion");
+                        }
                         bestActivity = candidate;
                     }
                     if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
@@ -308,6 +312,7 @@ namespace ActivityRecommendation
                 double currentScore = this.GetCombinedValue(bestActivity, candidate);
                 if (currentScore > bestCombinedScore)
                 {
+                    System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.ValueMinusAverage.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
                     bestActivityToPairWith = candidate;
                     bestCombinedScore = currentScore;
                 }
@@ -325,9 +330,9 @@ namespace ActivityRecommendation
             Distribution b = activityB.SuggestionValue.ValueMinusAverage;
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
-            // Convert and also remove a little bit of uncertainty because the input distributions are already estimates rather than samples
-            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * 0.5 * a.Weight - 1, a.Mean * 0.5 * a.Weight - 1);
-            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * 0.5 * b.Weight - 1, b.Mean * 0.5 * b.Weight - 1);
+            // Convert to BinomialDistribution
+            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * 0.5 * a.Weight, (a.Mean + 1) * 0.5 * a.Weight);
+            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * 0.5 * b.Weight, (b.Mean + 1) * 0.5 * b.Weight);
 
             // We weight our time exponentially, estimating that it takes two years for our time to double            
             // Here are the scales by which the importances are expected to multiply every time we consider these activities
@@ -505,9 +510,11 @@ namespace ActivityRecommendation
             this.EstimateRating(activity, when);
             // Get the activity's estimates of what the overall value will be after having done this activity
             Prediction prediction = activity.Get_LongTerm_ValueEstimates(when);
-            // Also figure out how happy the user has been since having discovered this activity
+            // Also figure out how happy the user has been on average since twice as long ago as having discovered the activity
             DateTime discoveryDate = activity.DiscoveryDate;
-            Distribution averageValue = this.unweightedRatingSummarizer.GetValueDistributionForDates(discoveryDate, when);
+            TimeSpan existentDuration = when.Subtract(discoveryDate);
+            DateTime begin = discoveryDate.Subtract(existentDuration);
+            Distribution averageValue = this.unweightedRatingSummarizer.GetValueDistributionForDates(begin, when);
             if (averageValue.Weight > 0)
                 prediction.ValueMinusAverage = prediction.Distribution.CopyAndShiftBy(-averageValue.Mean);
             else

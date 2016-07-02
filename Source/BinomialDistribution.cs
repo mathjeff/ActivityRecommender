@@ -9,6 +9,10 @@ namespace ActivityRecommendation
     {
         public BinomialDistribution(double numZeros, double numOnes)
         {
+            if (numZeros < 0)
+                throw new ArgumentException("numZeros (" + numZeros + ") in a BinomialDistribution cannot be negative");
+            if (numOnes < 0)
+                throw new ArgumentException("numOnes (" + numOnes + ") in a BinomialDistribution cannot be negative");
             this.NumZeros = numZeros;
             this.NumOnes = numOnes;
         }

@@ -3,6 +3,7 @@ By Jeff Gaston
 
 The ActivityRecommender was created to answer the question “What should I be doing now?” based on user-provided data. Humans can be both forgetful and irrational; computers are neither.
 
+
 Step 1: Enter Activities to Choose From
 One form of user-input is to enter into the system the name of an activity to be considered in the future. The program will only suggest activities that it has been informed of in this way.
 Each activity may also be optionally assigned one or more super categories to which it belongs. For instance, the activity named Frisbee may be an example of the activity named Exercise, which may belong to the activity named Useful. Frisbee may also belong to the activity named Fun.
@@ -14,8 +15,11 @@ Step 2: Type What You’ve Been Doing
 The other primary method of user input is to type in the name of an activity that you performed, along with the starting and ending date and time, and optionally a numerical rating indicating the value of having performed this activity compared to having performed the previous activity. For example, if you believe there was twice as much value in your latest participation than in the previous one, then enter the number "2". If you don’t want to enter a rating, just don’t type anything.
 Tip: use the buttons below the start-time and end-time boxes to automatically fill the current time into the start or end time.
 
+
 Step 3: Get Suggestions
 After having supplied some data to the program, you may ask for a suggestion by pushing the button labeled “Suggest”. This is the step that you will probably use most often.
+
+Essentially the way that the suggestions work is: your timestamped ratings and participations are used to compute moving averages, and these moving averages are further smoothed by averaging with those of related activities based on the user-defined hierarchies. These moving averages are then sampled at relevant points and given to a machine learning algorithm tasked with predicting the net-present-value (in the economics sense with exponential discounting) of the user's life. Finally, the activity that is expected to maximize the overall net-present-value is identified and suggested.
 
 
 Step 4: Export Data

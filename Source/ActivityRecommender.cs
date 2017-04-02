@@ -100,9 +100,9 @@ namespace ActivityRecommendation
             //mainGrid.AddLayout(this.suggestionsView);
 
             
-            this.statisticsMenu = new MiniStatisticsMenu();
+            this.statisticsMenu = new ActivityVisualizationMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
-            this.statisticsMenu.AddOkClickHandler(new RoutedEventHandler(this.VisualizeData));
+            this.statisticsMenu.AddOkClickHandler(new RoutedEventHandler(this.VisualizeActivity));
             //leftGrid.AddLayout(this.statisticsMenu);
             
 
@@ -621,11 +621,11 @@ namespace ActivityRecommendation
         }
 
 
-        public void VisualizeData(object sender, EventArgs e)
+        public void VisualizeActivity(object sender, EventArgs e)
         {
-            this.VisualizeData();
+            this.VisualizeActivity();
         }
-        public void VisualizeData()
+        public void VisualizeActivity()
         {
             this.engine.EnsureRatingsAreAssociated();
             //string name = this.statisticsMenu.ActivityName;
@@ -716,7 +716,7 @@ namespace ActivityRecommendation
         InheritanceEditingView inheritanceEditingView;
         SuggestionsView suggestionsView;
         DataExportView dataExportView;
-        MiniStatisticsMenu statisticsMenu;
+        ActivityVisualizationMenu statisticsMenu;
         Engine engine;
         //DateTime latestRecommendationDate;
         //Activity currentRecommendedActivity;

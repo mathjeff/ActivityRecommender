@@ -10,9 +10,9 @@ using VisiPlacement;
 // This menu is used to allow the user to open that view
 namespace ActivityRecommendation
 {
-    class MiniStatisticsMenu : TitledControl
+    class ActivityVisualizationMenu : TitledControl
     {
-        public MiniStatisticsMenu()
+        public ActivityVisualizationMenu()
         {
             this.SetTitle("View Statistics");
             this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(1), LayoutScore.Zero);

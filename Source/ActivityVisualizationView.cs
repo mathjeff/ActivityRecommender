@@ -43,8 +43,12 @@ namespace ActivityRecommendation
             // setup the title
             this.SetTitle(this.YAxisLabel + " vs. " + this.XAxisLabel);
             //this.KeyDown += new System.Windows.Input.KeyEventHandler(ActivityVisualizationView_KeyDown);
-            this.displayGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
-            this.SetContent(this.displayGrid);
+
+            // explicitly call out an even split as a possibility, to improve the runtime performance of finding the best the layout
+            //GridLayout flexibleGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
+            GridLayout fixedGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            //this.SetContent(new LayoutUnion(fixedGrid, flexibleGrid));
+            this.SetContent(fixedGrid);
 
             GridLayout graphGrid = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
             // setup a graph of the ratings
@@ -55,57 +59,12 @@ namespace ActivityRecommendation
             this.participationsView = new TitledControl("This is a graph of the participations in " + this.YAxisLabel + " vs. " + this.XAxisLabel);
             graphGrid.AddLayout(this.participationsView);
 
-            this.displayGrid.AddLayout(graphGrid);
-
-
-            // setup a display for some statistics
-            GridLayout statsDisplayGrid = GridLayout.New(new BoundProperty_List(10), new BoundProperty_List(1), LayoutScore.Zero);
-
-            // setup an exit button
-            this.exitButton = new Button();
-            statsDisplayGrid.AddLayout(new ButtonLayout(this.exitButton, "Escape"));
-            //statsDisplayGrid.AddLayout(this.exitButton);
-
-            // show some statistics of the participations
-            this.participationDataDisplay = new TitledControl("Stats:");
-            this.queryStartDateDisplay = new DateEntryView("Between");
-            this.queryStartDateDisplay.SetDate(this.yAxisActivity.GetEarliestInteractionDate());
-            this.queryStartDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
-            statsDisplayGrid.AddLayout(this.queryStartDateDisplay);
-            this.queryEndDateDisplay = new DateEntryView("and");
-            this.queryEndDateDisplay.SetDate(DateTime.Now);
-            this.queryEndDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
-            statsDisplayGrid.AddLayout(this.queryEndDateDisplay);
-
-            // display the total time spanned by the current window
-            this.totalTimeDisplay = new TextBlock();
-            statsDisplayGrid.AddLayout(new TextblockLayout(this.totalTimeDisplay));
-            this.timeFractionDisplay = new TextBlock();
-            statsDisplayGrid.AddLayout(new TextblockLayout(this.timeFractionDisplay));
-
-            this.thinkingTime_Display = new TitledTextblock("You often spend");
-            this.thinkingTime_Display.Text = this.yAxisActivity.ThinkingTimes.Mean.ToString() + " seconds considering this activity";
-            statsDisplayGrid.AddLayout(this.thinkingTime_Display);
-
-            this.mostPopularChild_View = new TitledTextblock("Your most common immediate subactivity:");
-            this.mostPopularChild_View.Text = "[There are none]";
-            statsDisplayGrid.AddLayout(this.mostPopularChild_View);
-
-            this.mostPopularDescendent_View = new TitledTextblock("Your most common subactivity,\n among those having no subactivities:");
-            this.mostPopularDescendent_View.Text = "[There are none]";
-            statsDisplayGrid.AddLayout(this.mostPopularDescendent_View);
-
-            // display rating statistics
-            this.ratingWhenSuggested_Display = new TitledTextblock("Mean rating when suggested:");
-            this.ratingWhenSuggested_Display.Text = this.yAxisActivity.ScoresWhenSuggested.Mean.ToString();
-            statsDisplayGrid.AddLayout(this.ratingWhenSuggested_Display);
-
-            this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating when not suggested:");
-            this.ratingWhenNotSuggested_Display.Text = this.yAxisActivity.ScoresWhenNotSuggested.Mean.ToString();
-            statsDisplayGrid.AddLayout(this.ratingWhenNotSuggested_Display);
+            //flexibleGrid.AddLayout(graphGrid);
+            fixedGrid.AddLayout(graphGrid);
 
             // put the stats view into the main view
-            //this.displayGrid.AddLayout(statsDisplayGrid);
+            //flexibleGrid.AddLayout(this.Make_StatsView());
+            fixedGrid.AddLayout(this.Make_StatsView());
 
 
             this.UpdateParticipationStatsView();
@@ -113,6 +72,70 @@ namespace ActivityRecommendation
 
             //CalculateExtraStats();
         }
+        private LayoutChoice_Set Make_StatsView()
+        {
+            // many of the entries in this function are disabled because they're probably not that useful but might be worth re-adding somehow
+
+            // setup a display for some statistics
+            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
+
+#if false
+            // setup an exit button
+            this.exitButton = new Button();
+            builder.AddLayout(new ButtonLayout(this.exitButton, "Escape"));
+#endif
+
+
+            // display an editable date range
+            this.participationDataDisplay = new TitledControl("Stats:");
+            this.queryStartDateDisplay = new DateEntryView("Between");
+            this.queryStartDateDisplay.SetDate(this.yAxisActivity.GetEarliestInteractionDate());
+            this.queryStartDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
+            builder.AddLayout(this.queryStartDateDisplay);
+            this.queryEndDateDisplay = new DateEntryView("and");
+            this.queryEndDateDisplay.SetDate(DateTime.Now);
+            this.queryEndDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
+            builder.AddLayout(this.queryEndDateDisplay);
+
+            // display the total time spanned by the current window
+            this.totalTimeDisplay = new TextBlock();
+            this.totalTimeDisplay.TextAlignment = TextAlignment.Center;
+            builder.AddLayout(new TextblockLayout(this.totalTimeDisplay));
+            this.timeFractionDisplay = new TextBlock();
+            this.timeFractionDisplay.TextAlignment = TextAlignment.Center;
+            builder.AddLayout(new TextblockLayout(this.timeFractionDisplay));
+
+#if false
+            this.thinkingTime_Display = new TitledTextblock("You often spend");
+            this.thinkingTime_Display.Text = this.yAxisActivity.ThinkingTimes.Mean.ToString() + " seconds considering this activity";
+            builder.AddLayout(this.thinkingTime_Display);
+#endif
+
+#if false
+            this.mostPopularChild_View = new TitledTextblock("Your most common immediate subactivity:");
+            this.mostPopularChild_View.Text = "[There are none]";
+            builder.AddLayout(this.mostPopularChild_View);
+#endif
+
+#if false
+            this.mostPopularDescendent_View = new TitledTextblock("Your most common subactivity,\n among those having no subactivities:");
+            this.mostPopularDescendent_View.Text = "[There are none]";
+            builder.AddLayout(this.mostPopularDescendent_View);
+#endif
+
+            // display rating statistics
+            this.ratingWhenSuggested_Display = new TitledTextblock("Mean rating when suggested:");
+            this.ratingWhenSuggested_Display.Text = this.yAxisActivity.ScoresWhenSuggested.Mean.ToString();
+            builder.AddLayout(this.ratingWhenSuggested_Display);
+
+            this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating when not suggested:");
+            this.ratingWhenNotSuggested_Display.Text = this.yAxisActivity.ScoresWhenNotSuggested.Mean.ToString();
+            builder.AddLayout(this.ratingWhenNotSuggested_Display);
+            
+            return builder.Build();
+        }
+
+
         public void CalculateExtraStats()
         {
             // Sunday = index 0, Saturday = index 6
@@ -352,7 +375,8 @@ namespace ActivityRecommendation
             // now update the text blocks
             //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
             this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numHoursSpent + " hours on " + this.YAxisLabel;
-            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
+            //this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
+            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + (participationFraction * 24 * 60).ToString() + " minutes per day";
             Activity bestChild = null;
             Distribution bestTotal = new Distribution();
             foreach (Activity child in this.yAxisActivity.Children)
@@ -365,26 +389,29 @@ namespace ActivityRecommendation
                     bestTotal = currentTotal;
                 }
             }
-            if (bestChild != null)
-                this.mostPopularChild_View.Text = bestChild.Name;
-
-            bestChild = null;
-            bestTotal = new Distribution();
-            foreach (Activity child in this.yAxisActivity.GetAllSubactivities())
+            if (this.mostPopularChild_View != null)
             {
-                if (child.Children.Count == 0)
+                if (bestChild != null)
+                    this.mostPopularChild_View.Text = bestChild.Name;
+
+                bestChild = null;
+                bestTotal = new Distribution();
+                foreach (Activity child in this.yAxisActivity.GetAllSubactivities())
                 {
-                    Participation participation = child.SummarizeParticipationsBetween(startDate, endDate);
-                    Distribution currentTotal = participation.TotalIntensity;
-                    if (currentTotal.Weight > bestTotal.Weight)
+                    if (child.Children.Count == 0)
                     {
-                        bestChild = child;
-                        bestTotal = currentTotal;
+                        Participation participation = child.SummarizeParticipationsBetween(startDate, endDate);
+                        Distribution currentTotal = participation.TotalIntensity;
+                        if (currentTotal.Weight > bestTotal.Weight)
+                        {
+                            bestChild = child;
+                            bestTotal = currentTotal;
+                        }
                     }
                 }
+                if (bestChild != null)
+                    this.mostPopularDescendent_View.Text = bestChild.Name;
             }
-            if (bestChild != null)
-                this.mostPopularDescendent_View.Text = bestChild.Name;
         }
         public void AddExitClickHandler(RoutedEventHandler e)
         {
@@ -470,7 +497,7 @@ namespace ActivityRecommendation
         TitledControl participationsView;
         TitledTextblock mostPopularChild_View;
         TitledTextblock mostPopularDescendent_View;
-        GridLayout displayGrid;
+        //GridLayout displayGrid;
         RatingSummarizer ratingSummarizer;
 
         TitledControl participationDataDisplay;

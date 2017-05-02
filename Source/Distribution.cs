@@ -143,6 +143,16 @@ namespace ActivityRecommendation
             Distribution result = Distribution.MakeDistribution(this.Mean + shift, this.StdDev, this.Weight);
             return result;
         }
+        public void Add(double newValue)
+        {
+            this.Add(newValue, 1);
+        }
+        public void Add(double newValue, double weight)
+        {
+            this.sumValue += (newValue * weight);
+            this.sumSquaredValue += (newValue * newValue * weight);
+            this.sumWeight += weight;
+        }
         private double sumValue;
         private double sumSquaredValue;
         private double sumWeight;

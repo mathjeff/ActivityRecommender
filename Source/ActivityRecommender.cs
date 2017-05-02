@@ -12,6 +12,7 @@ using System.IO.IsolatedStorage;
 using System.Reflection;
 using Windows.Phone.UI.Input;
 using System.ComponentModel;
+using ActivityRecommendation.View;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -99,10 +100,17 @@ namespace ActivityRecommendation
             //unevenDisplayGrid.AddLayout(this.suggestionsView);
             //mainGrid.AddLayout(this.suggestionsView);
 
+            MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
+            visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationCorrelationMenu(this.layoutStack, this.ActivityDatabase, this.engine));
+
             
             this.statisticsMenu = new ActivityVisualizationMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
             this.statisticsMenu.AddOkClickHandler(new RoutedEventHandler(this.VisualizeActivity));
+
+            visualizationBuilder.AddLayout("Visualize one Activity", this.statisticsMenu);
+
+            LayoutChoice_Set visualizationMenu = visualizationBuilder.Build();
             //leftGrid.AddLayout(this.statisticsMenu);
             
 
@@ -117,7 +125,7 @@ namespace ActivityRecommendation
             usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
-            usageMenu_builder.AddLayout("View Statistics", this.statisticsMenu);
+            usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
             usageMenu_builder.AddLayout("Export Data", this.dataExportView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 

@@ -217,7 +217,7 @@ namespace ActivityRecommendation
             if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
                 return;
             // draw the ParticipationProgression
-            ParticipationProgression participationProgression = this.yAxisActivity.ParticipationProgression;
+            AutoSmoothed_ParticipationProgression participationProgression = this.yAxisActivity.ParticipationProgression;
             IEnumerable<Participation> participations = participationProgression.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
             DateTime lastDate = this.queryEndDateDisplay.GetDate();

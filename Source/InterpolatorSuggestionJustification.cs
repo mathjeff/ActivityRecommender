@@ -55,6 +55,6 @@ namespace ActivityRecommendation
         Dictionary<string, FloatRange> inputNeighborhoodsByLabel = new Dictionary<string, FloatRange>();
         // the value of each output
         Dictionary<string, double> outputValuesByLabel = new Dictionary<string, double>();
-        int neighborhoodCount = 0; // number of datapoints from which this suggestion was made
+        //int neighborhoodCount = 0; // number of datapoints from which this suggestion was made
     }
 }

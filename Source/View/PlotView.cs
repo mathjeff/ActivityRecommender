@@ -43,7 +43,6 @@ namespace ActivityRecommendation
                 }
             }
             double x, y, weight;
-            this.totalWeight = this.sumX = this.sumX2 = this.sumXY = this.sumY = this.sumY2 = 0;
             int sequenceNumber;
             for (sequenceNumber = 0; sequenceNumber < this.pointsToPlot.Count; sequenceNumber++)
             {
@@ -74,12 +73,13 @@ namespace ActivityRecommendation
                     {
                         weight = point.Weight;
                         // update the statistics for drawing the Least-Squares-RegressionLine
-                        this.totalWeight += weight;
+                        /*this.totalWeight += weight;
                         this.sumX += x * weight;
                         this.sumX2 += x * x * weight;
                         this.sumXY += x * y * weight;
                         this.sumY += y * weight;
-                        this.sumY2 += y * y * weight;
+                        this.sumY2 += y * y * weight;*/
+                        this.correlator.Add(x, y, weight);
                     }
                 }
             }
@@ -184,41 +184,20 @@ namespace ActivityRecommendation
                     x1 = x2;
                     y1 = y2;
                 }
-
-            
             }
             if (this.ShowRegressionLine)
             {
-                // compute the equation of the least-squares regression line
-                Distribution xs = new Distribution(sumX, sumX2, this.totalWeight);
-                Distribution ys = new Distribution(sumY, sumY2, this.totalWeight);
-                double stdDevX = xs.StdDev;
-                double stdDevY = ys.StdDev;
-                double correlation;
-                if (stdDevX != 0 && stdDevY != 0)
-                {
-                    double n = this.totalWeight;
-                    // calculate the correlation as follows:
-                    // sum((x - mean(x)) * (y - mean(y))) / stdDev(x) / stdDev(y) / n
-                    // = (sum(xy - mean(x) * y - x * mean(y) + mean(x) * mean(y))) / stdDev(x) / stdDev(y) / n
-                    // = (sum(xy) - 2 * mean(x) * mean(y) * n + mean(x) * mean(y) * n) / stdDev(x) / stdDev(y) / n
-                    // = (sum(xy) / n - 2 * sum(x) * sum(y) + mean(x) * mean(y)) / stdDev(x) / stdDev(y)
-                    correlation = (this.sumXY / n - 2 * xs.Mean * ys.Mean + xs.Mean * ys.Mean) / stdDevX / stdDevY;
-                }
-                else
-                {
-                    // the datapoints form a vertical or a horizontal line, so the correlation is 1
-                    correlation = 1;
-                }
                 // if stdDevX == 0, we'll skip it
-                if (stdDevX != 0)
+                if (this.correlator.StdDevX != 0)
                 {
+                    // compute the equation of the least-squares regression line
+                    double correlation = this.correlator.Correlation;
                     // plot the least-squares regression line
-                    double slope = correlation * stdDevY / stdDevX;
+                    double slope = this.correlator.Slope;
                     x1 = minimumX;
-                    y1 = (x1 - xs.Mean) * slope + ys.Mean;
+                    y1 = (x1 - this.correlator.MeanX) * slope + this.correlator.MeanY;
                     x2 = maximumX;
-                    y2 = (x2 - xs.Mean) * slope + ys.Mean;
+                    y2 = (x2 - this.correlator.MeanX) * slope + this.correlator.MeanY;
 
                     Line newLine = new Line();
                     double renderX1 = (x1 - minimumX) * scaleX;
@@ -261,7 +240,6 @@ namespace ActivityRecommendation
 
                     newLine.Stroke = new SolidColorBrush(Colors.Red);
                     this.canvas.Children.Add(newLine);
-
                 }
             }
             // now draw some tick marks
@@ -305,12 +283,13 @@ namespace ActivityRecommendation
         private double minYPresent;
         private double maxYPresent;
 
-        private double sumX;
-        private double sumY;
-        private double sumX2;
-        private double sumY2;
-        private double sumXY;
-        private double totalWeight;
+        //private double sumX;
+        //private double sumY;
+        //private double sumX2;
+        //private double sumY2;
+        //private double sumXY;
+        //private double totalWeight;
+        private Correlator correlator = new Correlator();
     }
 }
 

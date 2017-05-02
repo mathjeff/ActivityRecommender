@@ -8,7 +8,7 @@ namespace ActivityRecommendation
 {
     class CumulativeParticipationProgression : IProgression
     {
-        public CumulativeParticipationProgression(ParticipationProgression datasource)
+        public CumulativeParticipationProgression(AutoSmoothed_ParticipationProgression datasource)
         {
             this.participationProgression = datasource;
         }
@@ -52,6 +52,6 @@ namespace ActivityRecommendation
             throw new NotImplementedException();
         }
 
-        private ParticipationProgression participationProgression;
+        private AutoSmoothed_ParticipationProgression participationProgression;
     }
 }

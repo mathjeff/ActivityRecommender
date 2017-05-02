@@ -103,6 +103,8 @@
     <Compile Include="Source\ActivityRequest.cs" />
     <Compile Include="Source\ActivitySkip.cs" />
     <Compile Include="Source\ActivitySuggestion.cs" />
+    <Compile Include="Source\Correlator.cs" />
+    <Compile Include="Source\LinearProgression.cs" />
     <Compile Include="Source\View\ActivityVisualizationView.cs" />
     <Compile Include="Source\BinomialDistribution.cs" />
     <Compile Include="Source\SuggestionDatabase.cs" />
@@ -110,6 +112,7 @@
     <Compile Include="Source\Consideration.cs" />
     <Compile Include="Source\ConsiderationProgression.cs" />
     <Compile Include="Source\CumulativeParticipationProgression.cs" />
+    <Compile Include="Source\View\ParticipationCorrelationMenu.cs" />
     <Compile Include="Source\View\DataExportView.cs" />
     <Compile Include="Source\Datapoint.cs" />
     <Compile Include="Source\DateComparer.cs" />
@@ -136,8 +139,9 @@
     <Compile Include="Source\IProgression.cs" />
     <Compile Include="Source\View\ActivityVisualizationMenu.cs" />
     <Compile Include="Source\Participation.cs" />
+    <Compile Include="Source\View\ParticipationCorrelationView.cs" />
     <Compile Include="Source\View\ParticipationEntryView.cs" />
-    <Compile Include="Source\ParticipationProgression.cs" />
+    <Compile Include="Source\AutoSmoothed_ParticipationProgression.cs" />
     <Compile Include="Source\View\PlotView.cs" />
     <Compile Include="Source\Prediction.cs" />
     <Compile Include="Source\PredictionLink.cs" />
@@ -157,7 +161,7 @@
     <Compile Include="Source\View\ResizableRadioButton.cs" />
     <Compile Include="Source\View\ResizableTextBlock.cs" />
     <Compile Include="Source\View\ResizableTextBox.cs" />
-    <Compile Include="Source\View\ScatterPlot.cs" />
+    <Compile Include="Source\ScatterPlot.cs" />
     <Compile Include="Source\View\SelectorView.cs" />
     <Compile Include="Source\SimplePredictionLink.cs" />
     <Compile Include="Source\HistoryWriter.cs" />

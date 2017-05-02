@@ -9,7 +9,7 @@ using VisiPlacement;
 // the TitledControl adds a title above another Control
 namespace ActivityRecommendation
 {
-    class TitledControl : LayoutCache
+    public class TitledControl : LayoutCache
     {
         public TitledControl()
         {

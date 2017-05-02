@@ -10,11 +10,11 @@ using AdaptiveLinearInterpolation;
 // It is intended to model brain activity and it uses exponential curves to do so
 namespace ActivityRecommendation
 {
-    public class ParticipationProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
+    public class AutoSmoothed_ParticipationProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
     {
         #region Constructor
 
-        public ParticipationProgression(Activity owner)
+        public AutoSmoothed_ParticipationProgression(Activity owner)
         {
             this.Owner = owner;
             this.searchHelper = new StatList<DateTime, Participation>(this, this);
@@ -90,6 +90,29 @@ namespace ActivityRecommendation
             }
             return results;
         }
+        public LinearProgression Smoothed(TimeSpan windowSize, DateTime maxDate)
+        {
+            // make a LinkedList of the cumulative time spent
+            DateTime minDate = this.Owner.DiscoveryDate;
+            IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+            LinearProgression cumulatives = new LinearProgression();
+            DateTime when = minDate;
+            double sum = 0;
+            foreach (ListItemStats<DateTime, Participation> item in items)
+            {
+                cumulatives.Add(item.Value.StartDate, sum);
+                sum += item.Value.Duration.TotalSeconds;
+                cumulatives.Add(item.Value.EndDate, sum);
+            }
+            // find what's in the sliding window by subtracting the cumulative from the shifted cumulative
+            LinearProgression shiftedCumulatives = cumulatives.Shifted((new TimeSpan()).Subtract(windowSize));
+//            shiftedCumulatives.RemoveAllBefore(minDate);
+            LinearProgression result = shiftedCumulatives.Minus(cumulatives);
+            result.RemoveAllBefore(minDate);
+
+            return result;
+        }
+
         #endregion
 
         #region Functions for IComparer<Participation>

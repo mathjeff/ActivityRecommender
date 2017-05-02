@@ -61,7 +61,7 @@ namespace ActivityRecommendation
         private void SetupProgressions()
         {
             this.ratingProgression = new RatingProgression(this);
-            this.participationProgression = new ParticipationProgression(this);
+            this.participationProgression = new AutoSmoothed_ParticipationProgression(this);
             this.idlenessProgression = new IdlenessProgression(this);
             this.timeOfDayProgression = TimeProgression.DayCycle;
             DateTime Sunday = new DateTime(2011, 1, 7);
@@ -236,7 +236,7 @@ namespace ActivityRecommendation
             }
         }
 
-        public ParticipationProgression ParticipationProgression
+        public AutoSmoothed_ParticipationProgression ParticipationProgression
         {
             get
             {
@@ -1048,7 +1048,7 @@ namespace ActivityRecommendation
         private RatingProgression ratingProgression;
         private ExpectedRatingProgression expectedRatingProgression;
         //private PredictionLink predictorFromOwnRatings;
-        private ParticipationProgression participationProgression;
+        private AutoSmoothed_ParticipationProgression participationProgression;
         //private PredictionLink predictorFromOwnParticipations;
         private IdlenessProgression idlenessProgression;
         //private PredictionLink predictorFromOwnIdleness;

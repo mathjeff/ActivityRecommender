@@ -9,7 +9,7 @@ using AdaptiveLinearInterpolation;
 // It is intended to estimate the probability that the user will do the given Activity
 namespace ActivityRecommendation
 {
-    class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<WillingnessSummary>
+    public class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<WillingnessSummary>
     {
         public ConsiderationProgression(Activity newOwner)
         {
@@ -106,6 +106,13 @@ namespace ActivityRecommendation
             throw new NotImplementedException();
             //List<ProgressionValue> results = this.valuesInDiscoveryOrder.GetRange(indexInclusive, this.NumItems - indexInclusive);
             //return results;
+        }
+        public IEnumerable<ListItemStats<DateTime, WillingnessSummary>> AllItems
+        {
+            get
+            {
+                return this.searchHelper.AllItems;
+            }
         }
         public DateTime? LastDatePresent
         {

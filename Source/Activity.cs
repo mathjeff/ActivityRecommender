@@ -126,6 +126,7 @@ namespace ActivityRecommendation
         public LinkedList<Participation> PendingParticipations = new LinkedList<Participation>();
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
         public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
+        public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
 
         public void AddParentDescriptor(ActivityDescriptor newParent)
         {

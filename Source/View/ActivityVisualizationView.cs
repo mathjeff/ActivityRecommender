@@ -1,4 +1,5 @@
 ﻿#if true // this will be really cool when it works
+using StatLists;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -221,8 +222,10 @@ namespace ActivityRecommendation
             IEnumerable<Participation> participations = participationProgression.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
             DateTime lastDate = this.queryEndDateDisplay.GetDate();
-            List<Datapoint> points = new List<Datapoint>();
-            //double sumY = 0;
+            List<Datapoint> cumulativeParticipationDurations = new List<Datapoint>();
+            List<Datapoint> cumulativeSuggestionCounts = new List<Datapoint>();
+            List<double> suggestionDates = new List<double>();
+
             PlotView newPlot = new PlotView();
             newPlot.ShowRegressionLine = true;
 
@@ -230,7 +233,7 @@ namespace ActivityRecommendation
             newPlot.MinX = 0;
             newPlot.MaxX = 1;
 
-            double x1, x2, y;
+            double x1, x2, cumulativeParticipationDuration, cumulativeSuggestionCount;
             x1 = 0;
 
             if (this.xAxisProgression != null)
@@ -255,6 +258,7 @@ namespace ActivityRecommendation
             
             foreach (Participation participation in participations)
             {
+                // update some data about cumulative participation duration
                 startDate = participation.StartDate;
                 endDate = participation.EndDate;
                 // make sure this participation is relevant
@@ -267,10 +271,17 @@ namespace ActivityRecommendation
                     if (startX > endX)
                         numActiveIntervals++;
                 }
+
+                // update some data about cumulative num suggestions
+                if (participation.Suggested.GetValueOrDefault(false))
+                {
+                    // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
+                    suggestionDates.Add(this.GetParticipationXCoordinate(participation.StartDate));
+                }
             }
             startXs.Sort();
             endXs.Sort();
-            y = 0;
+            cumulativeParticipationDuration = 0;
             while (endXs.Count > 0 || startXs.Count > 0)
             {
                 if (startXs.Count > 0)
@@ -296,11 +307,11 @@ namespace ActivityRecommendation
                     x2 = startX;
                     double weight = x2 - x1;
                     // add a datapoint denoting the start of the interval
-                    points.Add(new Datapoint(x1, y, weight));
-                    y += weight * numActiveIntervals;
+                    cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationDuration, weight));
+                    cumulativeParticipationDuration += weight * numActiveIntervals;
                     numActiveIntervals++;
                     // add a datapoint denoting the end of the interval
-                    points.Add(new Datapoint(x2, y, weight));
+                    cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationDuration, weight));
                     startXs.RemoveAt(0);
                 }
                 else
@@ -308,47 +319,61 @@ namespace ActivityRecommendation
                     x2 = endX;
                     double weight = x2 - x1;
                     // add a datapoint denoting the start of the interval
-                    points.Add(new Datapoint(x1, y, weight));
-                    y += weight * numActiveIntervals;
+                    cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationDuration, weight));
+                    cumulativeParticipationDuration += weight * numActiveIntervals;
                     numActiveIntervals--;
                     // add a datapoint denoting the end of the interval
-                    points.Add(new Datapoint(x2, y, weight));
+                    cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationDuration, weight));
                     endXs.RemoveAt(0);
                 }
                 maxXPlotted = x2;
                 x1 = x2;
             }
-            /*
-            foreach (DateTime date in dates)
-            {
-                // calculate x1 and x2
-                x2 = this.GetParticipationXCoordinate(date);
-                // make sure that we care about this point
-                if (x2 <= newPlot.MaxX && x2 >= newPlot.MinX)
-                {
-                    y = this.GetParticipationYCoordinate(date);
-                    double weight = x2 - x1;
-                    if (this.xAxisProgression != null)
-                    {
-                        weight = 1;
-                    }
-                    points.Add(new Datapoint(x2, y, weight));
-                    //sumY += participation.TotalIntensity.Mean * participation.TotalIntensity.Weight;
-                    //points.Add(new Datapoint(x2, sumY, x2 - x1));
-                    maxXPlotted = x2;
-                    x1 = x2;
-                }
-            }*/
-            /*
-            if (maxX > maxXPlotted)
-                points.Add(new Datapoint(maxX, sumY, maxX - maxXPlotted));
-            */
-            newPlot.SetData(points);
 
-            /*if (this.xAxisActivity != null)
-                newPlot.Connected = false;
-            
-            */
+            // rescale cumulativeParticipationDurations to total 1
+            if (cumulativeParticipationDuration != 0)
+            {
+                foreach (Datapoint item in cumulativeParticipationDurations)
+                {
+                    item.Output = item.Output / cumulativeParticipationDuration;
+                }
+            }
+
+
+            // We also want to plot the number of times that the activity was suggested
+            cumulativeSuggestionCount = 0;
+            foreach (ListItemStats<DateTime, WillingnessSummary> item in this.yAxisActivity.ConsiderationProgression.AllItems)
+            {
+                double x = this.GetParticipationXCoordinate(item.Key);
+                if (item.Value.NumSkips > 0)
+                {
+                    // found a skip
+                    suggestionDates.Add(x);
+                }
+            }
+            suggestionDates.Sort();
+            foreach (double x in suggestionDates)
+            {
+                cumulativeSuggestionCounts.Add(new Datapoint(x, cumulativeSuggestionCount, 1));
+                cumulativeSuggestionCount += 1;
+                cumulativeSuggestionCounts.Add(new Datapoint(x, cumulativeSuggestionCount, 1));
+            }
+
+            // rescale cumulativeSuggestionCounts to total 1
+            if (cumulativeSuggestionCount != 0)
+            {
+                foreach (Datapoint item in cumulativeSuggestionCounts)
+                {
+                    item.Output /= cumulativeSuggestionCount;
+                }
+            }
+
+            List<List<Datapoint>> plots = new List<List<Datapoint>>();
+            plots.Add(cumulativeParticipationDurations);
+            plots.Add(cumulativeSuggestionCounts);
+            newPlot.SetData(plots);
+
+
             this.participationsView.SetContent(new ImageLayout(newPlot, LayoutScore.Get_UsedSpace_LayoutScore(1)));
 
         }

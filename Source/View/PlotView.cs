@@ -73,12 +73,6 @@ namespace ActivityRecommendation
                     {
                         weight = point.Weight;
                         // update the statistics for drawing the Least-Squares-RegressionLine
-                        /*this.totalWeight += weight;
-                        this.sumX += x * weight;
-                        this.sumX2 += x * x * weight;
-                        this.sumXY += x * y * weight;
-                        this.sumY += y * weight;
-                        this.sumY2 += y * y * weight;*/
                         this.correlator.Add(x, y, weight);
                     }
                 }
@@ -104,7 +98,7 @@ namespace ActivityRecommendation
         protected override Size MeasureOverride(Size availableSize)
         {
             DateTime start = DateTime.Now;
-            this.UpdatePoints(availableSize);
+            this.UpdatePoints(availableSize, 1);
             DateTime end = DateTime.Now;
             System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " in PlotView.MeasureOverride");
             return base.MeasureOverride(availableSize);
@@ -112,7 +106,7 @@ namespace ActivityRecommendation
 #endif
                 
         // updates the locations at which to draw the provided points
-        private void UpdatePoints(Size displaySize)
+        private void UpdatePoints(Size displaySize, double resolution)
         {
             this.canvas.Children.Clear();
             if (this.pointsToPlot.Count == 0)
@@ -163,6 +157,9 @@ namespace ActivityRecommendation
                 {
                     x2 = (pointList[j].Input - minimumX) * scaleX;
                     y2 = (maximumY - pointList[j].Output) * scaleY;
+
+                    if (Math.Abs(x2 - x1) < resolution && Math.Abs(y2 - y1) < resolution)
+                        continue; // skip any lines that the user won't be able to see
 
                     Line newLine = new Line();
                     if (this.Connected)
@@ -266,15 +263,7 @@ namespace ActivityRecommendation
             }
 
         }
-        /*
-        public int NumPointsToPlot
-        {
-            get
-            {
-                return this.pointsToPlot.Count;
-            }
-        }
-        */
+
 
         private List<List<Datapoint>> pointsToPlot;
 

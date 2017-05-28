@@ -117,7 +117,11 @@ namespace ActivityRecommendation
 
         private bool Parse(out DateTime result)
         {
-            return DateTime.TryParse(this.dateBox.Text, out result);
+            return DateTime.TryParse(this.getText(), out result);
+        }
+        private string getText()
+        {
+            return this.dateBox.Text;
         }
 
         private String getDateFormatString()
@@ -134,6 +138,12 @@ namespace ActivityRecommendation
             string text = when.ToString(this.getDateFormatString());
             this.dateBox.Text = text;
         }
+        // sets the day only (not the time)
+        public void SetDay(DateTime day)
+        {
+            this.dateBox.Text = day.ToString("yyyy-MM-dd");
+        }
+
 
         public void Add_TextChanged_Handler(TextChangedEventHandler h)
         {
@@ -183,6 +193,12 @@ namespace ActivityRecommendation
         }
         void dateBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // skip duplicate firings of the event
+            string text = this.getText();
+            if (text == this.latestText)
+                return;
+            this.latestText = text;
+
             this.updateDateColor();
             foreach (TextChangedEventHandler handler in this.textChanged_handlers)
             {
@@ -195,6 +211,7 @@ namespace ActivityRecommendation
         List<TextChangedEventHandler> textChanged_handlers;
         //String dateFormat = "yyyy-MM-ddTHH:mm:ss";
         List<DateCharacter> dateFormat = new List<DateCharacter>();
+        string latestText = null;
 
     }
 }

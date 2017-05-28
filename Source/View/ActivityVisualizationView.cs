@@ -92,11 +92,11 @@ namespace ActivityRecommendation
             // display an editable date range
             this.participationDataDisplay = new TitledControl("Stats:");
             this.queryStartDateDisplay = new DateEntryView("Between");
-            this.queryStartDateDisplay.SetDate(this.yAxisActivity.GetEarliestInteractionDate());
+            this.queryStartDateDisplay.SetDay(this.yAxisActivity.GetEarliestInteractionDate());
             this.queryStartDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
             builder.AddLayout(this.queryStartDateDisplay);
             this.queryEndDateDisplay = new DateEntryView("and");
-            this.queryEndDateDisplay.SetDate(DateTime.Now);
+            this.queryEndDateDisplay.SetDay(DateTime.Today.AddDays(1));
             this.queryEndDateDisplay.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateTextChanged));
             builder.AddLayout(this.queryEndDateDisplay);
 
@@ -529,14 +529,10 @@ namespace ActivityRecommendation
         RoutedEventHandler exitHandler;
         Activity yAxisActivity;
         IProgression xAxisProgression;
-        //Activity xAxisActivity;
-        //PlotControl ratingsPlot;
-        //PlotControl participationsPlot;
         TitledControl ratingsView;
         TitledControl participationsView;
         TitledTextblock mostPopularChild_View;
         TitledTextblock mostPopularDescendent_View;
-        //GridLayout displayGrid;
         RatingSummarizer ratingSummarizer;
 
         TitledControl participationDataDisplay;

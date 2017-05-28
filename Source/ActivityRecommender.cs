@@ -158,6 +158,21 @@ namespace ActivityRecommendation
             string content = "";
             content += this.textConverter.ReadAllText(this.inheritancesFileName);
             content += this.textConverter.ReadAllText(this.ratingsFileName);
+            int maxNumLines = this.dataExportView.Get_NumLines();
+            if (maxNumLines > 0)
+            {
+                int startIndex = content.Length - 1;
+                for (int i = 0; i < maxNumLines; i++)
+                {
+                    startIndex = content.LastIndexOf('\n', startIndex - 1);
+                    if (startIndex < 0)
+                    {
+                        startIndex = 0;
+                        break;
+                    }
+                }
+                content = content.Substring(startIndex);
+            }
             this.textConverter.ExportFile("ActivityData.txt", content);
         }
 

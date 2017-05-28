@@ -66,6 +66,8 @@ namespace ActivityRecommendation
             // put the stats view into the main view
             //flexibleGrid.AddLayout(this.Make_StatsView());
             fixedGrid.AddLayout(this.Make_StatsView());
+            //this.Make_StatsView();
+            //fixedGrid.AddLayout(new TextblockLayout("stats here"));
 
 
             this.UpdateParticipationStatsView();
@@ -157,6 +159,7 @@ namespace ActivityRecommendation
         }
         public void UpdateRatingsPlot()
         {
+            DateTime start = DateTime.Now;
             if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
                 return;
             // draw the RatingProgression
@@ -211,10 +214,17 @@ namespace ActivityRecommendation
             allSequences.Add(smoothedPoints);
             newPlot.SetData(allSequences);
 
+            DateTime end = DateTime.Now;
+
             this.ratingsView.SetContent(new ImageLayout(newPlot, LayoutScore.Get_UsedSpace_LayoutScore(1)));
+
+            System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " to update ratings plot");
+
         }
         public void UpdateParticipationsPlot()
         {
+            DateTime start = DateTime.Now;
+
             if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
                 return;
             // draw the ParticipationProgression
@@ -375,6 +385,10 @@ namespace ActivityRecommendation
 
 
             this.participationsView.SetContent(new ImageLayout(newPlot, LayoutScore.Get_UsedSpace_LayoutScore(1)));
+
+            DateTime end = DateTime.Now;
+
+            System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " to update partipations plot");
 
         }
         private void DateTextChanged(object sender, RoutedEventArgs e)

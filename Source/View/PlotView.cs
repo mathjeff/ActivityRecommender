@@ -103,7 +103,10 @@ namespace ActivityRecommendation
 #if true
         protected override Size MeasureOverride(Size availableSize)
         {
+            DateTime start = DateTime.Now;
             this.UpdatePoints(availableSize);
+            DateTime end = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " in PlotView.MeasureOverride");
             return base.MeasureOverride(availableSize);
         }
 #endif

@@ -5,7 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using VisiPlacement;
+using VisiPlacement.Misc;
 
 // Allows the user to export their data
 namespace ActivityRecommendation
@@ -24,11 +27,15 @@ namespace ActivityRecommendation
             this.exportButton = new Button();
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
 
-            GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(1), LayoutScore.Zero);
-            grid.AddLayout(help);
-            grid.AddLayout(buttonLayout);
+            this.lineCount_box = new TextBox();
 
-            this.SetContent(grid);
+            TextblockLayout numLines_label = new TextblockLayout("Max num lines to include (default all)");
+            LayoutChoice_Set entryLayout = new Horizontal_GridLayout_Builder().AddLayout(numLines_label).AddLayout(new TextboxLayout(this.lineCount_box)).Build();
+
+            this.lineCount_box.InputScope = InputScopeUtils.Numeric;
+            this.lineCount_box.TextChanged += lineCount_box_TextChanged;
+
+            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(entryLayout).AddLayout(buttonLayout).Build());
         }
 
         public void Add_ClickHandler(RoutedEventHandler handler)
@@ -36,6 +43,40 @@ namespace ActivityRecommendation
             this.exportButton.Click += handler;
         }
 
+        public int Get_NumLines()
+        {
+            string text = this.lineCount_box.Text;
+            if (text == "")
+            {
+                return 0;
+            }
+            long numLines = -1;
+            if (!Int64.TryParse(text, out numLines)) {
+                numLines = -1;
+            }
+            return (int)numLines;
+        }
+
+        private void lineCount_box_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            this.update_linecountBox_appearance();
+        }
+
+        private void update_linecountBox_appearance()
+        {
+            Color backgroundColor;
+            if (this.Get_NumLines() >= 0)
+            {
+                backgroundColor = Colors.White;
+            }
+            else
+            {
+                backgroundColor = Colors.Red;
+            }
+            this.lineCount_box.Background = new SolidColorBrush(backgroundColor);
+        }
+
         Button exportButton;
+        TextBox lineCount_box;
     }
 }

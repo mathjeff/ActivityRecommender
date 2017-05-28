@@ -25,8 +25,6 @@ namespace ActivityRecommendation
             this.titleBlock = new TextBlock();
             this.titleBlock.TextAlignment = System.Windows.TextAlignment.Center;
             this.gridLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
-            //this.SetContent(
-            //this.titleBlock.SetResizability(new Resizability(0, 0.25));    // the title doesn't need to be very big
             this.gridLayout.AddLayout(new TextblockLayout(this.titleBlock));
             base.LayoutToManage = gridLayout;
         }

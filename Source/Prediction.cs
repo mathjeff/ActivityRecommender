@@ -12,7 +12,7 @@ namespace ActivityRecommendation
         }
         public string Justification { get; set; }           // the primary reason that the PredictedScore is as high as it is
         public Distribution Distribution { get; set; }    // the expected rating that the user would assign to the activity
-        public Distribution ValueMinusAverage { get; set; } // the expected change in rating caused by doing this activity
+        //public Distribution ValueMinusAverage { get; set; } // the expected change in rating caused by doing this activity
         //public Distribution ParticipationProbability { get; set; }  // the probability that the user will take the suggestion
         //public Distribution SuggestionValue { get; set; }   // how important it is to suggest this activity
         public Activity Activity { get; set; }              // the Activity that is being suggested

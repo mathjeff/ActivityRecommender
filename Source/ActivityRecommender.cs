@@ -226,13 +226,13 @@ namespace ActivityRecommendation
             skip.RawRating = rating;
             this.AddSkip(skip);
         }
-        public void JustifySuggestion(ActivitySuggestion suggestion)
+        /*public void JustifySuggestion(ActivitySuggestion suggestion)
         {
             IActivitySuggestionJustification justification = this.engine.JustifySuggestion(suggestion);
             String text = justification.Summarize();
             TextblockLayout layout = new TextblockLayout(text);
             this.layoutStack.AddLayout(layout);
-        }
+        }*/
         private void MakeRecommendation()
         {
             DateTime now = DateTime.Now;

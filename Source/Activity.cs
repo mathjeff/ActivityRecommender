@@ -33,7 +33,6 @@ namespace ActivityRecommendation
             this.parentsUsedForPrediction = new List<Activity>();
             this.children = new List<Activity>();
             this.parentDescriptors = new List<ActivityDescriptor>();
-            this.ratingSummariesToUpdate = new Queue<RatingSummary>();
             this.overallRatings_summarizer = overallRatings_summarizer;
 
             this.SetupProgressions();
@@ -127,6 +126,7 @@ namespace ActivityRecommendation
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
         public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
+        public int NumParticipations { get { return (int)this.participationDurations.Weight; } }
 
         public void AddParentDescriptor(ActivityDescriptor newParent)
         {
@@ -438,7 +438,7 @@ namespace ActivityRecommendation
             AdaptiveLinearInterpolation.Datapoint<WillingnessSummary> newDatapoint = new AdaptiveLinearInterpolation.Datapoint<WillingnessSummary>(coordinates, willingness);
             this.participationInterpolator.AddDatapoint(newDatapoint);
 
-            this.UpdateNext_RatingSummaries(this.overallRatings_summarizer, 4);
+            this.UpdateNext_RatingSummaries(4);
         }
 
 
@@ -451,24 +451,15 @@ namespace ActivityRecommendation
         }
         private void ApplyPendingRatings()
         {
-            this.SetupRatingPredictorsIfNeeded();
+            this.SetupPredictorsIfNeeded();
 
             foreach (AbsoluteRating newRating in this.PendingRatings)
             {
                 // For now, we don't care which activity the rating applied to. We just care what ratings were provided after the user participated in this activity
                 if (newRating.Date != null)
                 {
-                    // get the coordinates at that time
-                    double[] coordinates = new double[this.ratingTrainingProgressions.Count];
-                    int i;
-                    for (i = 0; i < coordinates.Length; i++)
-                    {
-                        ProgressionValue value = this.ratingTrainingProgressions[i].GetValueAt((DateTime)newRating.Date, false);
-                        if (value != null)
-                            coordinates[i] = value.Value.Mean;
-                        else
-                            coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange().Middle;
-                    }
+                    double[] coordinates = this.Get_Rating_TrainingCoordinates((DateTime)newRating.Date);
+
                     Distribution score = Distribution.MakeDistribution(newRating.Score, 0, 1);
                     AdaptiveLinearInterpolation.Datapoint<Distribution> datapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
                     this.shortTerm_ratingInterpolator.AddDatapoint(datapoint);
@@ -479,10 +470,9 @@ namespace ActivityRecommendation
             }
             this.PendingRatings.Clear();
         }
-
         public void AddParticipation(Participation newParticipation)
         {
-            // keep track of startDate, endDate, and total time spent
+            // keep track of startDate, endDate, count, and total time spent
             DateTime when = newParticipation.EndDate;
             if (!newParticipation.Hypothetical)
             {
@@ -541,6 +531,8 @@ namespace ActivityRecommendation
                         willingness.NumUnpromptedParticipations = 1;
                     this.AddParticipationDatapoint(newParticipation.StartDate, willingness);
 
+                    // make a note to use this date for predicting longterm happiness from participations
+                    this.AddNew_LongTerm_Participation_Summary_At(newParticipation.StartDate);
                 }
 
                 // keep track of the participation itself in the list
@@ -634,10 +626,10 @@ namespace ActivityRecommendation
             foreach (ActivitySuggestion newSuggestion in this.PendingSuggestions)
             {
                 // We want to predict the user's overall happiness after this activity gets suggested, so that we can detect if merely suggesting this activity has a positive impact
-                this.AddNew_RatingSummary(newSuggestion.GuessCreationDate(), this.overallRatings_summarizer);
+                this.AddNew_LongTerm_SuggestionValue_Summary_At(newSuggestion.GuessCreationDate());
             }
             // Also update an older datapoint so that no datapoint's value gets old
-            this.UpdateNext_RatingSummaries(this.overallRatings_summarizer, this.PendingSuggestions.Count);
+            this.UpdateNext_RatingSummaries(this.PendingSuggestions.Count);
 
             this.PendingSuggestions.Clear();
         }
@@ -650,30 +642,28 @@ namespace ActivityRecommendation
             this.ApplyPendingSuggestions();
         }
 
-        // returns a bunch of estimates about how it will be rated at this date
-        public Prediction Get_LongTerm_ValueEstimates(DateTime when)
+        // 
+        public Distribution Predict_LongtermValue_If_Suggested(DateTime when)
         {
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution estimate = new Distribution(this.longTerm_valueInterpolator.Interpolate(coordinates));
-            double weight = this.NumRatings * 4;
-            Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
-            
-            // add a little bit of uncertainty, which is especially important if the weight would otherwise be zero (so the default will then be a mean of 0.5)
-            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
-            Prediction prediction = new Prediction();
-            prediction.ApplicableDate = when;
-            prediction.Distribution = scaledEstimate.Plus(extraError);
-            return prediction;
+            Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates));            
+            return estimate;
+        }
+        public Distribution Predict_LongtermValue_If_Participated(DateTime when)
+        {
+            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
+            Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates));
+            return estimate;
         }
 
-        public ActivitySuggestionJustification JustifyInterpolation(ActivitySuggestion suggestion)
+        /*public ActivitySuggestionJustification JustifyInterpolation(ActivitySuggestion suggestion)
         {
             DateTime when = suggestion.StartDate;
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
             // find size of neighborhood
-            HyperBox<Distribution> box = this.longTerm_valueInterpolator.FindNeighborhoodCoordinates(coordinates);
+            HyperBox<Distribution> box = this.longTerm_suggestionValue_interpolator.FindNeighborhoodCoordinates(coordinates);
             // get predicted value
-            Distribution prediction = new Distribution(this.longTerm_valueInterpolator.Interpolate(coordinates));
+            Distribution prediction = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates));
             InterpolatorSuggestionJustification justification = new InterpolatorSuggestionJustification(suggestion);
             int i;
             // copy the coordinates and their labels onto the justification
@@ -685,6 +675,24 @@ namespace ActivityRecommendation
             }
             justification.AddOutput("Score", suggestion.PredictedScore.Mean);
             return justification;
+        }*/
+
+        // returns the coordinates from which a rating prediction is trained
+        private double[] Get_Rating_TrainingCoordinates(DateTime when)
+        {
+            this.SetupPredictorsIfNeeded();
+
+            double[] coordinates = new double[this.ratingTrainingProgressions.Count];
+            int i;
+            for (i = 0; i < coordinates.Length; i++)
+            {
+                ProgressionValue value = this.ratingTrainingProgressions[i].GetValueAt(when, false);
+                if (value != null)
+                    coordinates[i] = value.Value.Mean;
+                else
+                    coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange().Middle;
+            }
+            return coordinates;
         }
 
         // returns the coordinates from which a rating prediction is made
@@ -856,62 +864,40 @@ namespace ActivityRecommendation
         }
 
         // Adds the following date as one that we will track for the purpose of predicting rating based on coordinates
-        public void AddNew_RatingSummary(DateTime when, RatingSummarizer summarizer)
+        private void AddNew_LongTerm_SuggestionValue_Summary_At(DateTime when)
         {
-            // make a RatingSummary
-            RatingSummary summary = new RatingSummary(when);
-
             // compute the input coordinates
-            double[] inputCoordinates = new double[this.ratingTrainingProgressions.Count];
-            int i;
-            for (i = 0; i < inputCoordinates.Length; i++)
-            {
-                ProgressionValue value = this.ratingTrainingProgressions[i].GetValueAt(when, false);
-                if (value != null)
-                    inputCoordinates[i] = value.Value.Mean;
-                else
-                    inputCoordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange().Middle;
-            }
-            summary.InputCoordinates = inputCoordinates;
-            // compute the score
-            summary.Update(summarizer);
-            if (this.shouldIncludeRatingSummaryInInterpolator(summary))
-            {
-                // give it to the interpolator
-                this.longTerm_valueInterpolator.AddDatapoint(summary);
-            }
-            // add it to the queue to update later
-            this.ratingSummariesToUpdate.Enqueue(summary);
+            double[] inputCoordinates = this.Get_Rating_TrainingCoordinates(when);
+
+            // give it to the interpolator
+            this.longTerm_suggestionValue_interpolator.AddDatapoint(when, inputCoordinates);
         }
-        public void UpdateNext_RatingSummary(RatingSummarizer summarizer)
+
+        private void AddNew_LongTerm_Participation_Summary_At(DateTime when)
         {
-            if (this.ratingSummariesToUpdate.Count > 0)
-            {
-                // determine which datapoint should be updated
-                RatingSummary ratingSummary = this.ratingSummariesToUpdate.Dequeue();
-                // remove the datapoint from the ratings interpolator (or skip removing it if it was never added)
-                this.longTerm_valueInterpolator.RemoveDatapoint(ratingSummary);
-                // update the datapoint
-                ratingSummary.Update(summarizer);
-                // re-add the datapoint to the ratings interpolator
-                this.longTerm_valueInterpolator.AddDatapoint(ratingSummary);
-                // put the participation back in the queue so we update it later
-                this.ratingSummariesToUpdate.Enqueue(ratingSummary);
-            }
+            // compute the input coordinates
+            double[] inputCoordinates = this.Get_Rating_TrainingCoordinates(when);
+
+            // give it to the interpolator
+            this.longTerm_participationValue_interpolator.AddDatapoint(when, inputCoordinates);
         }
-        public void UpdateNext_RatingSummaries(RatingSummarizer summarizer, int numRatingsToUpdate)
+        public void UpdateNext_RatingSummaries(int numRatingsToUpdate)
         {
-            for (int i = 0; i < numRatingsToUpdate; i++)
+            // If the interpolators don't exist yet, then it means we don't need them yet
+            // Only do the update if the interpolators do exist already
+            if (this.longTerm_participationValue_interpolator != null)
             {
-                this.UpdateNext_RatingSummary(summarizer);
+                this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
+                this.longTerm_suggestionValue_interpolator.UpdateMany(numRatingsToUpdate);
             }
         }
 
-        public void SetupRatingPredictorsIfNeeded()
+        public void SetupPredictorsIfNeeded()
         {
             if (this.extraRatingPredictionLinks == null)
                 this.SetupRatingPredictors();
         }
+
 
         #endregion
 
@@ -937,13 +923,16 @@ namespace ActivityRecommendation
         private void SetupRatingPredictors()
         {
             this.extraRatingPredictionLinks = new List<IPredictionLink>();
+
             this.ratingTrainingProgressions = new List<IProgression>();
             this.ratingTestingProgressions = new List<IProgression>();
 
             this.ratingTrainingProgressions.Add(this.idlenessProgression);
             this.ratingTestingProgressions.Add(this.idlenessProgression);
+
             this.ratingTrainingProgressions.Add(this.participationProgression);
             this.ratingTestingProgressions.Add(this.participationProgression);
+
             this.ratingTrainingProgressions.Add(this.timeOfDayProgression);
             this.ratingTestingProgressions.Add(this.timeOfDayProgression);
 
@@ -964,10 +953,10 @@ namespace ActivityRecommendation
                 }
             }
 
-            this.SetupRatingInterpolator();
+            this.SetupInterpolators();
         }
 
-        private void SetupRatingInterpolator()
+        private void SetupInterpolators()
         {
             FloatRange[] coordinates = new FloatRange[this.ratingTrainingProgressions.Count];
             int i;
@@ -976,7 +965,8 @@ namespace ActivityRecommendation
                 coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange();
             }
             this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
-            this.longTerm_valueInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.longTerm_suggestionValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
+            this.longTerm_participationValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
         }
         // initialize the PredictionLinks that estimate the probability that the user will do this activity
         private void SetupParticipationProbabilityPredictors()
@@ -1042,7 +1032,8 @@ namespace ActivityRecommendation
         List<IProgression> ratingTrainingProgressions;
         List<IProgression> ratingTestingProgressions;
         AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Activity
-        AdaptiveLinearInterpolator<Distribution> longTerm_valueInterpolator;   // this interpolator is used to estimate what user's average happiness will if they do this activity
+        LongtermValuePredictor longTerm_participationValue_interpolator; // this interpolator is used to estimate what user's average happiness will if they do this activity
+        LongtermValuePredictor longTerm_suggestionValue_interpolator;    // this interpolator is used to estimate what user's average happiness will if this activity is suggested
         private List<IPredictionLink> extraRatingPredictionLinks;
 
 
@@ -1067,7 +1058,7 @@ namespace ActivityRecommendation
         private SkipProgression skipProgression;
         private ExpectedParticipationProbabilityProgression expectedParticipationProbabilityProgression;
 
-        private Queue<RatingSummary> ratingSummariesToUpdate;
+        //private Queue<RatingSummary> ratingSummariesToUpdate;
         //private PredictionLink 
 
         //private List<IPredictionLink> parentPredictionLinks;    // a list of all PredictionLinks that are used to predict the value of this Activity's RatingProgression from parent ratings
@@ -1090,6 +1081,7 @@ namespace ActivityRecommendation
         Distribution scoresWhenNotSuggested;
         Distribution thinkingTimes;
         RatingSummarizer overallRatings_summarizer;
+
         #endregion
 
     }

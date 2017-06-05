@@ -277,14 +277,14 @@ namespace ActivityRecommendation
                     {
                         consideredCandidates.Add(candidate);
                         //if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
-                        if (bestActivity == null || candidate.SuggestionValue.ValueMinusAverage.Mean >= bestActivity.SuggestionValue.ValueMinusAverage.Mean)
+                        if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
                             better = true; // found a better activity
                     }
                     if (better)
                     {
                         if (bestActivity != null)
                         {
-                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.ValueMinusAverage.Mean + " replaced " + bestActivity + " with suggestion value " + bestActivity.SuggestionValue.ValueMinusAverage.Mean + " as highest-value suggestion");
+                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + bestActivity.SuggestionValue.Distribution.Mean + " as highest-value suggestion");
                         }
                         bestActivity = candidate;
                     }
@@ -312,7 +312,7 @@ namespace ActivityRecommendation
                 double currentScore = this.GetCombinedValue(bestActivity, candidate);
                 if (currentScore > bestCombinedScore)
                 {
-                    System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.ValueMinusAverage.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
+                    System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
                     bestActivityToPairWith = candidate;
                     bestCombinedScore = currentScore;
                 }
@@ -326,8 +326,8 @@ namespace ActivityRecommendation
         // Given two distributions, we estimate the expected total value from choosing values from them
         private double GetCombinedValue(Activity activityA, Activity activityB)
         {
-            Distribution a = activityA.SuggestionValue.ValueMinusAverage;
-            Distribution b = activityB.SuggestionValue.ValueMinusAverage;
+            Distribution a = activityA.SuggestionValue.Distribution;
+            Distribution b = activityB.SuggestionValue.Distribution;
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
             // Convert to BinomialDistribution
@@ -412,7 +412,7 @@ namespace ActivityRecommendation
             activity.PredictionsNeedRecalculation = false;
             // If we get here, then we have to do some calculations
             // estimate the rating 
-            activity.SetupRatingPredictorsIfNeeded();
+            activity.SetupPredictorsIfNeeded();
             // First make sure that all parents' ratings are up-to-date
             foreach (Activity parent in activity.ParentsUsedForPrediction)
             {
@@ -429,11 +429,14 @@ namespace ActivityRecommendation
             Prediction probabilityPrediction = this.CombineProbabilityPredictions(probabilityPredictions);
             activity.PredictedParticipationProbability = probabilityPrediction;
 
-#if true
-            // For each action the user might take (do it, skip it, or do something else), compute its probability
-            double suggestedParticipation_probability = probabilityPrediction.Distribution.Mean;
-            // It's probably more accurate to assume that the user will find something to do, but the user doesn't want us to model it like that because that's annoying
-            // If we determine that the user will probably skip a particular activity, then they want us to consider it to be not much fun and try pretty hard to not suggest it
+
+            activity.Utility = this.RatingAndProbability_Into_Value(activity.PredictedScore.Distribution, probabilityPrediction.Distribution.Mean, activity.MeanParticipationDuration).Mean;
+        }
+
+        private Distribution RatingAndProbability_Into_Value(Distribution rating, double suggestedParticipation_probability, double meanParticipationDuration)
+        {
+            // It's probably more accurate to assume that the user will make their own selection of an activity to do, but the user doesn't want us to model it like that
+            // Because if we do model the possibility that the user will choose their own activity, then that can incentivize purposely bad suggestions to prompt the user to have to think of something
             double skipProbability = 1 - suggestedParticipation_probability;
             // double skipProbability = (1 - suggestedParticipation_probability) * (double)(this.numSkips + 1) / ((double)this.numSkips + (double)this.numUnpromptedParticipations + 2);
             double nonsuggestedParticipation_probability = 1 - (suggestedParticipation_probability + skipProbability);
@@ -448,30 +451,11 @@ namespace ActivityRecommendation
             // = -1 + 1 / (1 - (the probability that the user will skip the activity))
             // So the amount of waste is (the average length of a skip) * (-1 + 1 / (1 - (the probability that the user will skip the activity)))
 
-            double valueWhenChosen = probabilitySuggested * activity.PredictedScore.Distribution.Mean + (1 - probabilitySuggested) * this.ratingsOfUnpromptedActivities.Mean;
+            Distribution valueWhenChosen = rating.CopyAndReweightTo(probabilitySuggested).Plus(this.ratingsOfUnpromptedActivities.CopyAndReweightTo(1 - probabilitySuggested));
             // TODO: for activities other than this one, use a better estimate of the participation duration than just the usual duration of the current activity
-            double overallValue = valueWhenChosen * activity.MeanParticipationDuration / (averageWastedSeconds + activity.MeanParticipationDuration);
+            Distribution overallValue = valueWhenChosen.CopyAndReweightTo(meanParticipationDuration).Plus(Distribution.MakeDistribution(0, 0, averageWastedSeconds)).CopyAndReweightTo(rating.Weight);
 
-            activity.Utility = overallValue;
-            
-            /* // Finally, when calculating the suggestionValue, we can update all the scores
-            foreach (Prediction prediction in ratingPredictions)
-            {
-                // Now compute what the expected value would be, assuming that we choose something
-                double valueWhenChosen = probabilitySuggested * prediction.Distribution.Mean + (1 - probabilitySuggested) * this.ratingsOfUnpromptedActivities.Mean;
-
-
-                //double usefulFraction = activity.MeanParticipationDuration / (averageWastedSeconds + activity.MeanParticipationDuration);
-                
-                double overallValue = valueWhenChosen * activity.MeanParticipationDuration / (averageWastedSeconds + activity.MeanParticipationDuration);
-
-                double scale = overallValue / prediction.Distribution.Mean;
-                prediction.Distribution = prediction.Distribution.CopyAndStretchBy(scale);
-                //prediction.Distribution = Distribution.MakeDistribution(overallValue, prediction.Distribution.StdDev, prediction.Distribution.Weight);
-            }
-            */
-#endif
-
+            return overallValue;
         }
 
         // update the estimate of how good it would be to suggest this activity now
@@ -480,7 +464,7 @@ namespace ActivityRecommendation
             DateTime startDate = DateTime.Now;
             // Now we estimate how useful it would be to suggest this activity to the user
 
-            Prediction suggestionPrediction = this.GetSuggestionEstimates(activity, when);
+            Prediction suggestionPrediction = this.Get_Overall_SuggestionEstimate(activity, when);
             activity.SuggestionValue = suggestionPrediction;
             DateTime endDate = DateTime.Now;
             /*TimeSpan predictionDuration = endDate.Subtract(startDate);
@@ -504,35 +488,42 @@ namespace ActivityRecommendation
             return predictions;
         }
         // returns a Prediction of the value of suggesting the given activity at the given time
-        private Prediction GetSuggestionEstimates(Activity activity, DateTime when)
+        private Prediction Get_Overall_SuggestionEstimate(Activity activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
-            // Get the activity's estimates of what the overall value will be after having done this activity
-            Prediction prediction = activity.Get_LongTerm_ValueEstimates(when);
-            // Also figure out how happy the user has been on average since twice as long ago as having discovered the activity
-            DateTime discoveryDate = activity.DiscoveryDate;
-            TimeSpan existentDuration = when.Subtract(discoveryDate);
-            DateTime begin = discoveryDate.Subtract(existentDuration);
-            Distribution averageValue = this.unweightedRatingSummarizer.GetValueDistributionForDates(begin, when);
-            if (averageValue.Weight > 0)
-                prediction.ValueMinusAverage = prediction.Distribution.CopyAndShiftBy(-averageValue.Mean);
-            else
-                prediction.ValueMinusAverage = prediction.Distribution.CopyAndShiftBy(-0.5);
-            System.Diagnostics.Debug.WriteLine("Value of " + activity + " = " + prediction.ValueMinusAverage + " at " + when);
-            if (prediction.ValueMinusAverage.Mean > 0.25)
-            {
-                System.Diagnostics.Debug.WriteLine("Unusually good " + activity + " value = " + prediction.ValueMinusAverage + " at " + when);
-            }
+
+            // When there is little data (1-3 participations), we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
+            // When there is a medium amount of data (4-45 participations), we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
+            // When there is a large amount of data (46+ participations), we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
+            // So the weights will be:
+            // (#ratings + #participations)^(1/3) * (7+1/3)
+            // (#participation)^(2/3) * (3+2/3)
+            // (#participations)
+
+            double participationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
+
+            Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
+            double shortWeight = Math.Pow(activity.NumRatings + activity.NumParticipations + 1, 0.3333) * 7.3333;
+            shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
+
+            double mediumWeight = Math.Pow(activity.NumParticipations, 0.6667) * 3.6667;
+            Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
+            Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
+
+            double longWeight = activity.NumConsiderations;
+            Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
+
+            List<Distribution> distributions = new List<Distribution>();
+            distributions.Add(shortTerm_prediction.Distribution);
+            distributions.Add(mediumTerm_distribution);
+            distributions.Add(longTerm_distribution);
+
+            Distribution distribution =  this.CombineRatingDistributions(distributions);
+            Prediction prediction = shortTerm_prediction;
+            prediction.Distribution = distribution;
+
             return prediction;
-        }
-        // returns a list of all predictions that were used to predict the value of suggesting the given activity at the given time
-        private IEnumerable<Prediction> GetAllSuggestionEstimates(Activity activity, DateTime when)
-        {
-            List<Prediction> predictions = this.Get_ShortTerm_RatingEstimates(activity, when);
-            Prediction suggestionPredictions = this.GetSuggestionEstimates(activity, when);
-            predictions.Add(suggestionPredictions);
-            return predictions;
         }
         // suppose there only Activities are A,B,C,D
         // suppose A and B are parents of C
@@ -550,12 +541,12 @@ namespace ActivityRecommendation
         // If it is the only child of each, then its rating should be the average of each parent's rating
         // If one parent has more children, that parent's prediction weight becomes relevant, and its characteristic weight decreases
 
-        public IActivitySuggestionJustification JustifySuggestion(ActivitySuggestion suggestion)
+        /*public IActivitySuggestionJustification JustifySuggestion(ActivitySuggestion suggestion)
         {
             Activity activity = this.activityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             IActivitySuggestionJustification justification = activity.JustifyInterpolation(suggestion);
             return justification;
-        }
+        }*/
         /* // returns a string telling the most important reason that 'activity' was last rated as it was
         public string JustifyRating(Activity activity)
         {
@@ -703,7 +694,7 @@ namespace ActivityRecommendation
         {
             foreach (Activity activity in this.ActivityDatabase.AllActivities)
             {
-                activity.UpdateNext_RatingSummaries(this.weightedRatingSummarizer, numRatingsToUpdate);
+                activity.UpdateNext_RatingSummaries(numRatingsToUpdate);
             }
         }
         // gets called whenever any outside source provides a rating

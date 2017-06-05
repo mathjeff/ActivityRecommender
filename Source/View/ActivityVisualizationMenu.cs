@@ -87,7 +87,7 @@ namespace ActivityRecommendation
         Button okButton;
         GridLayout displayGrid;
         ActivityNameEntryBox yAxisNameBox;
-        ActivityNameEntryBox xAxisNameBox;
+        //ActivityNameEntryBox xAxisNameBox;
         //ProgressionSelectionView xAxisProgressionSelector; // TODO: make this work
     }
 }

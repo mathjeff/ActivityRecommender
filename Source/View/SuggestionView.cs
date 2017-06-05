@@ -49,9 +49,8 @@ namespace ActivityRecommendation
             this.cancelButton.Click += cancelButton_Click;
             this.justifyButton = new Button();
             this.justifyButton.Click += justifyButton_Click;
-            GridLayout buttonsLayout = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(1), LayoutScore.Zero);
-            buttonsLayout.AddLayout(new ButtonLayout(this.justifyButton, "?"));
-            buttonsLayout.AddLayout(new ButtonLayout(this.cancelButton, "X"));
+            GridLayout buttonsLayout = new Vertical_GridLayout_Builder().AddLayout(new ButtonLayout(this.cancelButton, "X")).Build();
+            // .AddLayout(new ButtonLayout(this.justifyButton, "?"));
             this.mainGrid.AddLayout(buttonsLayout);
 
 
@@ -60,7 +59,7 @@ namespace ActivityRecommendation
 
         void justifyButton_Click(object sender, RoutedEventArgs e)
         {
-            this.container.JustifySuggestion(this.suggestion);
+            //this.container.JustifySuggestion(this.suggestion);
         }
 
         void cancelButton_Click(object sender, RoutedEventArgs e)

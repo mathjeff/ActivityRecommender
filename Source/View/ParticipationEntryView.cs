@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Media;
 using VisiPlacement;
 using System.Windows.Media.Imaging;
+using System.Windows.Input;
 
 // the ParticipationEntryView provides a place for the user to describe what they've done recently
 namespace ActivityRecommendation
@@ -21,8 +22,8 @@ namespace ActivityRecommendation
             rowHeights.BindIndices(0, 1);
             rowHeights.BindIndices(0, 2);
             rowHeights.BindIndices(0, 3);
-            rowHeights.SetPropertyScale(0, 2);
-            rowHeights.SetPropertyScale(1, 2);
+            rowHeights.SetPropertyScale(0, 4);
+            rowHeights.SetPropertyScale(1, 4);
             rowHeights.SetPropertyScale(2, 2);
             rowHeights.SetPropertyScale(3, 1);
 
@@ -33,14 +34,31 @@ namespace ActivityRecommendation
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
-            GridLayout grid2 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout ratingGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(1), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
-            grid2.AddLayout(this.ratingBox);
+            ratingGrid.AddLayout(this.ratingBox);
 
             this.predictedRating_block = new TextBlock();
-            grid2.AddLayout(new TextblockLayout(this.predictedRating_block));
+            ratingGrid.AddLayout(new TextblockLayout(this.predictedRating_block));
+
+
+            TextBox commentBox = new TextBox();
+            InputScope inputScope = new InputScope();
+            InputScopeName inputScopeName = new InputScopeName();
+            inputScopeName.NameValue = InputScopeNameValue.Text;
+            inputScope.Names.Add(inputScopeName);
+            commentBox.InputScope = inputScope;
+            this.commentBox = new TitledTextbox("Comment (optional)", commentBox);
+
+
+
+            TextBox box = new TextBox();
+
+            GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            middleGrid.AddLayout(ratingGrid);
+            middleGrid.AddLayout(this.commentBox);
             
-            contents.AddLayout(grid2);
+            contents.AddLayout(middleGrid);
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
@@ -51,14 +69,13 @@ namespace ActivityRecommendation
             this.endDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
             grid3.AddLayout(this.endDateBox);
             this.setStartdateButton = new Button();
-            grid3.AddLayout(new ButtonLayout(this.setStartdateButton, "Set start = now"));
+            grid3.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now"));
             this.setEnddateButton = new Button();
-            grid3.AddLayout(new ButtonLayout(this.setEnddateButton, "Set end = now"));
+            grid3.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now"));
             contents.AddLayout(grid3);
 
 
             this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
-            this.commentBox = new TitledTextbox("Comment (optional)");
 
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.okButton = new Button();
@@ -279,22 +296,16 @@ namespace ActivityRecommendation
                 if (activity != null)
                 {
                     Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
-                    //this.engine.EstimateSuggestionValue(rootActivity, startDate);
                     this.engine.EstimateSuggestionValue(activity, startDate);
 
                     double expectedShortermRating = activity.PredictedScore.Distribution.Mean;
                     double overallAverageRating = rootActivity.Scores.Mean;
                     double shorttermRatio = expectedShortermRating / overallAverageRating;
 
-                    //double expectedLongtermRating = activity.SuggestionValue.Distribution.Mean;
-                    //double overallAverageUtility = rootActivity.SuggestionValue.Distribution.Mean;
-
-                    //double longtermRatio = expectedLongtermRating / overallAverageUtility;
-
-                    this.predictedRating_block.Text = "Predicted rating for " + activity.Name + " at " + startDate.ToString() +
-                        " = " + shorttermRatio.ToString() + " times average";
-                        //. Predicted long-term value = " + longtermRatio.ToString()
-                        //+ " time average.";
+                    //this.predictedRating_block.Text = "Predicted rating for " + activity.Name + " at " + startDate.ToString() +
+                    //    " = " + shorttermRatio.ToString() + " times average";
+                    
+                    this.predictedRating_block.Text = "Predicted rating = " + shorttermRatio.ToString() + " * average";
                 }
             }
         }

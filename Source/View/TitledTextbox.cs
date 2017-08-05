@@ -10,13 +10,19 @@ namespace ActivityRecommendation
     class TitledTextbox : TitledControl
     {
         public TitledTextbox(string startingTitle)
+            : this(startingTitle, new TextBox())
+        {
+        }
+
+        public TitledTextbox(string startingTitle, TextBox textBox)
             : base(startingTitle)
         {
             // create a text field
-            this.textField = new TextBox();
-
+            this.textField = textBox;
             this.SetContent(new TextboxLayout(this.textField));
         }
+
+
         public string Text
         {
             get

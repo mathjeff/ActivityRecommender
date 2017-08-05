@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows;
 using VisiPlacement;
 using System.Windows.Media;
+using System.Windows.Input;
 
 namespace ActivityRecommendation
 {
@@ -17,6 +18,14 @@ namespace ActivityRecommendation
 
             this.scaleBlock = new TextBox();
             this.scaleBlock.TextChanged += this.ScaleBlock_TextChanged;
+
+            InputScope inputScope = new InputScope();
+            InputScopeName inputScopeName = new InputScopeName();
+            inputScopeName.NameValue = InputScopeNameValue.Number;
+            inputScope.Names.Add(inputScopeName);
+            this.scaleBlock.InputScope = inputScope;
+
+
             this.Clear();
             this.mainDisplayGrid.AddLayout(new TextboxLayout(this.scaleBlock));
 

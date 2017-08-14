@@ -106,6 +106,7 @@
     <Compile Include="Source\Correlator.cs" />
     <Compile Include="Source\LinearProgression.cs" />
     <Compile Include="Source\LongtermValuePredictor.cs" />
+    <Compile Include="Source\ParticipationsSummary.cs" />
     <Compile Include="Source\View\ActivityVisualizationView.cs" />
     <Compile Include="Source\BinomialDistribution.cs" />
     <Compile Include="Source\SuggestionDatabase.cs" />

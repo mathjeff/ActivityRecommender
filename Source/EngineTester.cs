@@ -217,7 +217,37 @@ typicalProbabilityError = 0.392650963144817
 equivalentProbability = 0.809556491034266
 weightedProbabilityScore = 0.0968530252359711
 equivalentWeightedProbability = 0.872152190471373
-*/
+ 
+ 
+results (on 2017-08-05) after getting more data (due to the passage of time)
+typical longtermPrediction error = 0.11623802086738
+typicalScoreError = 0.129285744904529
+typicalProbabilityError = 0.340633910429981
+equivalentProbability = 0.866017129469619
+weightedProbabilityScore = 0.293795953009491
+equivalentWeightedProbability = 0.918089807237037
+
+
+results on 2017-08-13 (using data through 2017-08-05) after having modified the algorithm
+The algorithm compares the cumulative time spent against its least-squares-regression-line, for predicting ratings and participation probabilities
+typical longtermPrediction error = 0.104498926030268
+typicalScoreError = 0.133200373078405
+typicalProbabilityError = 0.342376710582286
+equivalentProbability = 0.864387414781101
+weightedProbabilityScore = 0.31189500109831
+equivalentWeightedProbability = 0.921274895962403
+
+updated results on 2017-08-13 (with new data)
+typical longtermPrediction error = 0.104718699486009
+typicalScoreError = 0.133140687667085
+typicalProbabilityError = 0.342444414621633
+equivalentProbability = 0.864323788537679
+weightedProbabilityScore = 0.311459030520166
+equivalentWeightedProbability = 0.921199799038855
+ 
+ 
+ 
+ */
 
 
 namespace ActivityRecommendation
@@ -235,9 +265,9 @@ namespace ActivityRecommendation
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
         {
+            this.Compute_FutureEstimate_Errors();
             this.PrintResults();
 
-            this.Compute_FutureEstimate_Errors();
 
             System.Diagnostics.Debug.WriteLine("Adding rating with date " + ((DateTime)newRating.Date).ToString());
             this.UpdateScoreError(newRating.ActivityDescriptor, (DateTime)newRating.Date, newRating.Score);
@@ -285,12 +315,11 @@ namespace ActivityRecommendation
         // runs the engine on the given activity at the given date, and keeps track of the overall error
         public void UpdateScoreError(ActivityDescriptor descriptor, DateTime when, double correctScore)
         {
-            // update everything
-            this.engine.MakeRecommendation(when);
-            // determine how good it would be to suggest this activity
+            // compute estimated score
+            Activity activity = this.activityDatabase.GetOrCreate(descriptor);
+            this.engine.MakeRecommendation(activity, null, when, null);
 
             // compute the estimated score
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (!activity.Choosable)
             {
                 // if this activity isn't normally one for which we have to make an estimate, then estimate it now too
@@ -324,10 +353,9 @@ namespace ActivityRecommendation
         }
         public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
         {
-            // update everything
-            this.engine.MakeRecommendation(when);
             // compute the estimate participation probability
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Activity activity = this.activityDatabase.GetOrCreate(descriptor);
+            this.engine.MakeRecommendation(activity, null, when, null);
             double predictedProbability = activity.PredictedParticipationProbability.Distribution.Mean;
             double error = predictedProbability - actualIntensity;
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);

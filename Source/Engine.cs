@@ -282,10 +282,10 @@ namespace ActivityRecommendation
                     }
                     if (better)
                     {
-                        if (bestActivity != null)
+                        /*if (bestActivity != null)
                         {
                             System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + bestActivity.SuggestionValue.Distribution.Mean + " as highest-value suggestion");
-                        }
+                        }*/
                         bestActivity = candidate;
                     }
                     if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
@@ -312,7 +312,7 @@ namespace ActivityRecommendation
                 double currentScore = this.GetCombinedValue(bestActivity, candidate);
                 if (currentScore > bestCombinedScore)
                 {
-                    System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
+                    //System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
                     bestActivityToPairWith = candidate;
                     bestCombinedScore = currentScore;
                 }

@@ -14,8 +14,8 @@ namespace ActivityRecommendation
         }
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
-            Participation participation = this.participationProgression.SummarizeParticipationsBetween(new DateTime(), when);
-            ProgressionValue value = new ProgressionValue(when, Distribution.MakeDistribution(participation.TotalIntensity.Mean * participation.TotalIntensity.Weight, 0, 1));
+            ParticipationsSummary participation = this.participationProgression.SummarizeParticipationsBetween(new DateTime(), when);
+            ProgressionValue value = new ProgressionValue(when, Distribution.MakeDistribution(participation.CumulativeIntensity.TotalSeconds, 0, 1));
             return value;
         }
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)

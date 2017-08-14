@@ -404,8 +404,8 @@ namespace ActivityRecommendation
             // figure out how much time you spent on it between these dates
             DateTime startDate = this.queryStartDateDisplay.GetDate();
             DateTime endDate = this.queryEndDateDisplay.GetDate();
-            Participation summary = this.yAxisActivity.SummarizeParticipationsBetween(startDate, endDate);
-            double numHoursSpent = summary.TotalIntensity.Weight / 3600;
+            ParticipationsSummary summary = this.yAxisActivity.SummarizeParticipationsBetween(startDate, endDate);
+            double numHoursSpent = summary.CumulativeIntensity.TotalSeconds / 3600;
             // figure out how much time there was between these dates
             TimeSpan availableDuration = endDate.Subtract(startDate);
             double totalNumHours = availableDuration.TotalHours;
@@ -417,12 +417,12 @@ namespace ActivityRecommendation
             //this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
             this.timeFractionDisplay.Text = "Or " + Environment.NewLine + (participationFraction * 24 * 60).ToString() + " minutes per day";
             Activity bestChild = null;
-            Distribution bestTotal = new Distribution();
+            double bestTotal = 0;
             foreach (Activity child in this.yAxisActivity.Children)
             {
-                Participation participation = child.SummarizeParticipationsBetween(startDate, endDate);
-                Distribution currentTotal = participation.TotalIntensity;
-                if (currentTotal.Weight > bestTotal.Weight)
+                ParticipationsSummary participation = child.SummarizeParticipationsBetween(startDate, endDate);
+                double currentTotal = participation.CumulativeIntensity.TotalSeconds;
+                if (currentTotal > bestTotal)
                 {
                     bestChild = child;
                     bestTotal = currentTotal;
@@ -434,14 +434,14 @@ namespace ActivityRecommendation
                     this.mostPopularChild_View.Text = bestChild.Name;
 
                 bestChild = null;
-                bestTotal = new Distribution();
+                bestTotal = 0;
                 foreach (Activity child in this.yAxisActivity.GetAllSubactivities())
                 {
                     if (child.Children.Count == 0)
                     {
-                        Participation participation = child.SummarizeParticipationsBetween(startDate, endDate);
-                        Distribution currentTotal = participation.TotalIntensity;
-                        if (currentTotal.Weight > bestTotal.Weight)
+                        ParticipationsSummary candidate = child.SummarizeParticipationsBetween(startDate, endDate);
+                        double currentTotal = candidate.CumulativeIntensity.TotalSeconds;
+                        if (currentTotal > bestTotal)
                         {
                             bestChild = child;
                             bestTotal = currentTotal;
@@ -519,8 +519,8 @@ namespace ActivityRecommendation
         private double GetParticipationYCoordinate(DateTime when)
         {
             DateTime startDate = this.queryStartDateDisplay.GetDate();
-            Participation yParticipation = this.yAxisActivity.SummarizeParticipationsBetween(startDate, when);
-            double y = yParticipation.TotalIntensity.Mean * yParticipation.TotalIntensity.Weight;
+            ParticipationsSummary yParticipation = this.yAxisActivity.SummarizeParticipationsBetween(startDate, when);
+            double y = yParticipation.CumulativeIntensity.TotalSeconds;
 
             return y;
         }

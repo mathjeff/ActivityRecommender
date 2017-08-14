@@ -244,10 +244,10 @@ namespace ActivityRecommendation
                 return this.participationProgression;
             }
         }
-        public Participation SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
+        public ParticipationsSummary SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
         {
             this.ApplyPendingParticipations();
-            Participation result = this.participationProgression.SummarizeParticipationsBetween(startDate, endDate);
+            ParticipationsSummary result = this.participationProgression.SummarizeParticipationsBetween(startDate, endDate);
             return result;
         }
 
@@ -981,6 +981,9 @@ namespace ActivityRecommendation
 
             this.participationTrainingProgressions.Add(this.considerationProgression);
             this.participationTestingProgressions.Add(this.considerationProgression);
+
+            this.participationTrainingProgressions.Add(this.participationProgression);
+            this.participationTestingProgressions.Add(this.participationProgression);
 
         }
         private void SetupParticipationProbabilityInterpolator()

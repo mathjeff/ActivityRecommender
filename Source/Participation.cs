@@ -1,5 +1,4 @@
-﻿#define PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,14 +30,11 @@ namespace ActivityRecommendation
             double totalIntensity = this.Duration.TotalSeconds * averageIntensity;
             this.totalIntensity = new Distribution(totalIntensity, totalIntensity * averageIntensity, totalIntensity);
             this.RawRating = null;
-#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
             this.LogIdleTime = new Distribution(0, 0, 0);
             double numSeconds = this.Duration.TotalSeconds;
             if (numSeconds > 0)
                 this.LogActiveTime = Distribution.MakeDistribution(Math.Log(numSeconds), 0, 1);
             else
-                this.LogActiveTime = new Distribution();
-#endif
             this.Suggested = null;
             this.Hypothetical = false;
         }
@@ -67,12 +63,11 @@ namespace ActivityRecommendation
                 return this.EndDate.Subtract(this.StartDate);
             }
         }
-#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
-        public Distribution LogIdleTime { get; set; }   // the log of the time (in seconds) between sub-participations
-        public Distribution LogActiveTime { get; set; } // the log of the duration (in seconds) of each sub-participation
-#endif
         public string Comment { get; set; }
         public bool Hypothetical { get; set; }  // false if it actually happened, true if we are supposing that it might happen
+
+        public Distribution LogIdleTime { get; set; }   // the log of the time (in seconds) between sub-participations
+        public Distribution LogActiveTime { get; set; } // the log of the duration (in seconds) of each sub-participation
 
         // returns the exact rating that was given to this Participation
         public Rating RawRating 

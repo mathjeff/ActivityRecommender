@@ -143,6 +143,10 @@ namespace ActivityRecommendation
             Distribution result = Distribution.MakeDistribution(this.Mean + shift, this.StdDev, this.Weight);
             return result;
         }
+        public Distribution Clone()
+        {
+            return this.CopyAndShiftBy(0);
+        }
         public void Add(double newValue)
         {
             this.Add(newValue, 1);

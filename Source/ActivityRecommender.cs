@@ -305,7 +305,7 @@ namespace ActivityRecommendation
             }
             // after making a recommendation, get the rest of the details of the suggestion
             // (Note that eventually the suggested duration will be calculated in a more intelligent manner than simply taking the average duration)
-            Participation participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
+            ParticipationsSummary participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
             double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
             DateTime endDate = suggestionDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
             ActivitySuggestion suggestion = new ActivitySuggestion(bestActivity.MakeDescriptor());

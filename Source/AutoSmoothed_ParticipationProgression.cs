@@ -1,5 +1,4 @@
-﻿#define PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,14 +9,22 @@ using AdaptiveLinearInterpolation;
 // It is intended to model brain activity and it uses exponential curves to do so
 namespace ActivityRecommendation
 {
-    public class AutoSmoothed_ParticipationProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
+    public class ParticipationAndSummary
+    {
+        public ParticipationAndSummary() { }
+
+        public Participation Participation { get; set; }
+        public ParticipationsSummary Summary { get; set; }
+
+    }
+    public class AutoSmoothed_ParticipationProgression : IComparer<DateTime>, ICombiner<ParticipationAndSummary>, IProgression
     {
         #region Constructor
 
         public AutoSmoothed_ParticipationProgression(Activity owner)
         {
             this.Owner = owner;
-            this.searchHelper = new StatList<DateTime, Participation>(this, this);
+            this.searchHelper = new StatList<DateTime, ParticipationAndSummary>(this, this);
         }
 
         #endregion
@@ -31,7 +38,7 @@ namespace ActivityRecommendation
                 // for now, we add the participation as a single datapoint, where the key knows the start date but not the end date
                 // Eventually, the StatList should be improved to allow intervals as keys
                 DateTime startDate = newParticipation.StartDate;
-                this.searchHelper.Add(startDate, newParticipation);
+                this.searchHelper.Add(startDate, this.Summarize(newParticipation));
             }
         }
         public void RemoveParticipation(Participation participation)
@@ -54,11 +61,11 @@ namespace ActivityRecommendation
         {
             get
             {
-                IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+                IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.AllItems;
                 LinkedList<Participation> results = new LinkedList<Participation>();
-                foreach (ListItemStats<DateTime, Participation> stats in items)
+                foreach (ListItemStats<DateTime, ParticipationAndSummary> stats in items)
                 {
-                    results.AddLast(stats.Value);
+                    results.AddLast(stats.Value.Participation);
                 }
                 return results;
             }
@@ -67,22 +74,32 @@ namespace ActivityRecommendation
         {
             get
             {
-                ListItemStats<DateTime, Participation> stats = this.searchHelper.GetLastValue();
+                ListItemStats<DateTime, ParticipationAndSummary> stats = this.searchHelper.GetLastValue();
                 if (stats != null)
-                    return stats.Value;
+                    return stats.Value.Participation;
                 return null;
             }
         }
-        public Participation SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
+        public ParticipationsSummary SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
         {
-            Participation result = this.searchHelper.CombineBetweenKeys(startDate, true, endDate, false);
-            return result;
+            ParticipationAndSummary result = this.searchHelper.CombineBetweenKeys(startDate, true, endDate, false);
+            if (result == null)
+            {
+                ParticipationsSummary summary = new ParticipationsSummary();
+                summary.Start = startDate;
+                summary.End = endDate;
+                summary.CumulativeIntensity = new TimeSpan();
+                summary.LogActiveTime = Distribution.MakeDistribution(0, 0, 0);
+                summary.Trend = new Correlator();
+                return summary;
+            }
+            return result.Summary;
         }
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
-            IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.ItemsFromIndex(indexInclusive);
+            IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.ItemsFromIndex(indexInclusive);
             List<ProgressionValue> results = new List<ProgressionValue>();
-            foreach (ListItemStats<DateTime, Participation> item in items)
+            foreach (ListItemStats<DateTime, ParticipationAndSummary> item in items)
             {
                 DateTime when = item.Key;
                 ProgressionValue value = this.GetValueAt(when, false);
@@ -94,15 +111,15 @@ namespace ActivityRecommendation
         {
             // make a LinkedList of the cumulative time spent
             DateTime minDate = this.Owner.DiscoveryDate;
-            IEnumerable<ListItemStats<DateTime, Participation>> items = this.searchHelper.AllItems;
+            IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.AllItems;
             LinearProgression cumulatives = new LinearProgression();
             DateTime when = minDate;
             double sum = 0;
-            foreach (ListItemStats<DateTime, Participation> item in items)
+            foreach (ListItemStats<DateTime, ParticipationAndSummary> item in items)
             {
-                cumulatives.Add(item.Value.StartDate, sum);
-                sum += item.Value.Duration.TotalSeconds;
-                cumulatives.Add(item.Value.EndDate, sum);
+                cumulatives.Add(item.Value.Participation.StartDate, sum);
+                sum += item.Value.Participation.Duration.TotalSeconds;
+                cumulatives.Add(item.Value.Participation.EndDate, sum);
             }
             // find what's in the sliding window by subtracting the cumulative from the shifted cumulative
             LinearProgression shiftedCumulatives = cumulatives.Shifted((new TimeSpan()).Subtract(windowSize));
@@ -127,79 +144,61 @@ namespace ActivityRecommendation
 
         #region Functions for ICombiner<Participation>
 
-        public Participation Combine(Participation participation1, Participation participation2)
+        public ParticipationAndSummary Combine(ParticipationAndSummary a, ParticipationAndSummary b)
         {
-            // if one participation is empty, return the other one
-            if (participation1.Duration.TotalSeconds == 0)
+            if (a == null)
+                return b;
+            if (b == null)
+                return a;
+            ParticipationsSummary earlier = a.Summary;
+            ParticipationsSummary later = b.Summary;
+            if (earlier.Start.CompareTo(later.Start) > 0)
             {
-                return participation2;
-            }
-            if (participation2.Duration.TotalSeconds == 0)
-            {
-                return participation1;
-            }
-            // make sure participation1 is the one that starts first
-            if (participation1.StartDate.CompareTo(participation2.StartDate) > 0)
-            {
-                // swap the participations so participation1 is the one that starts before participation2
-                Participation temp = participation1;
-                participation1 = participation2;
-                participation2 = temp;
-            }
-            // set the start date to the earliest of the two start dates
-            DateTime startDate = participation1.StartDate;
-
-            // set the end date to the latest of the two end dates
-            DateTime end1 = participation1.EndDate;
-            DateTime end2 = participation2.EndDate;
-            DateTime endDate;
-            if (end1.CompareTo(end2) > 0)
-            {
-                endDate = end1;
-            }
-            else
-            {
-                endDate = end2;
+                ParticipationsSummary temp = earlier;
+                earlier = later;
+                later = temp;
             }
 
-            // add up the intensities of the two participations
-            Distribution intensity1 = participation1.TotalIntensity;
-            Distribution intensity2 = participation2.TotalIntensity;
-            Distribution combinedIntensity = intensity1.Plus(intensity2);
+            ParticipationsSummary summary = new ParticipationsSummary();
 
-#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
-            // calculate the amount of time between the two participations
-            double numIdleSeconds = 0;
-            if (participation1.EndDate.CompareTo(participation2.StartDate) < 0)
-            {
-                TimeSpan idleTime = participation2.StartDate.Subtract(participation1.EndDate);
-                numIdleSeconds = idleTime.TotalSeconds;
-            }
-            Distribution logIdleTime = new Distribution(0, 0, 0);
-            if (numIdleSeconds > 0)
-            {
-                logIdleTime = Distribution.MakeDistribution(Math.Log(numIdleSeconds), 0, 1);
-            }
-            logIdleTime = participation1.LogIdleTime.Plus(logIdleTime);
-            logIdleTime = logIdleTime.Plus(participation2.LogIdleTime);
-#endif
+            summary.CumulativeIntensity = earlier.CumulativeIntensity.Add(later.CumulativeIntensity);
+            summary.Start = earlier.Start;
+            summary.End = later.End;
+            summary.LogActiveTime = earlier.LogActiveTime.Plus(later.LogActiveTime);
 
-            // create the Participation and fill the data in
-            Participation result = new Participation();
-            result.StartDate = startDate;
-            result.EndDate = endDate;
-            result.TotalIntensity = combinedIntensity;
-#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
-            result.LogIdleTime = logIdleTime;
-            result.LogActiveTime = participation1.LogActiveTime.Plus(participation2.LogActiveTime);
-#endif
+            double earlierSum = this.GetWeight(earlier.CumulativeIntensity);
+            Correlator correlator = earlier.Trend.Clone();
+            TimeSpan idleDuration = later.Start.Subtract(earlier.End);
+            double idleX1 = this.GetWeight(earlier.End.Subtract(earlier.Start));
+            double idleX2 = this.GetWeight(later.Start.Subtract(earlier.Start));
+            if (idleDuration.TotalSeconds > 0)
+            {
+                double idleY = earlierSum;
+                double weight = this.GetWeight(idleDuration);
+                correlator.Add(idleX1, idleY, weight);
+                correlator.Add(idleX2, idleY, weight);
+            }
+
+            Correlator laterShifted = later.Trend.CopyAndShiftUp(earlierSum);
+            laterShifted = laterShifted.CopyAndShiftRight(idleX2);
+            correlator = correlator.Plus(laterShifted);
+            summary.Trend = correlator;
+
+            ParticipationAndSummary result = new ParticipationAndSummary();
+            result.Summary = summary;
+
+            if (summary.Trend.Correlation < 0)
+            {
+                System.Diagnostics.Debug.WriteLine("illegal correlation found: " + summary.Trend.Correlation + " for activity " + this.Owner.Name);
+            }
+            // not bothering to assign a Participation because nothing will need it
 
             return result;
         }
 
-        public Participation Default()
+        public ParticipationAndSummary Default()
         {
-            return new Participation();
+            return null;
         }
 
         #endregion
@@ -210,189 +209,67 @@ namespace ActivityRecommendation
 
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
-            // This linear calculation has shown during testing to be useful to have
-            //return this.GetValueLinearly(when, strictlyEarlier);
-            // The exponential calculation has shown during testing to make the predictions worse
-            return this.GetValueExponentially(when, strictlyEarlier);
+            return this.GetValueViaCorrelation(when, strictlyEarlier);
         }
 
-#if PARTICIPATION_INCLUDES_LOGARITHM_IDLE_TIME
-        // returns basically the fraction of the user's time that was spent performing that activity recently at that date
-        public ProgressionValue GetValueExponentially(DateTime when, bool strictlyEarlier)
+        public ProgressionValue GetValueViaCorrelation(DateTime when, bool strictlyEarlier)
         {
-            // get a summary of all of the data, to estimate the duration of the "recent" past
-            //Participation cumulativeParticipation = this.searchHelper.CombineBeforeKey(when, true);
-            Participation cumulativeParticipation = this.searchHelper.CombineAll();
-            // make sure that we have enough data
-            if (cumulativeParticipation.Duration.TotalSeconds == 0)
-            {
-                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
-                ProgressionValue defaultValue = null;
-                return defaultValue;
-            }
-            Distribution logIdleTime = cumulativeParticipation.LogIdleTime;
-            Distribution logActiveTime = cumulativeParticipation.LogActiveTime;
-            // make sure that we have enough data
-            if (logIdleTime.Mean == 0 || logActiveTime.Mean == 0)
-            {
-                //ProgressionValue defaultValue = new ProgressionValue(when, Distribution.MakeDistribution(0.5, 0.25, 0), -1);
-                ProgressionValue defaultValue = null;
-                return defaultValue;
-            }
-            // now we estimate the value of the exponentially moving average
-            // the half-life is typicalIdleSeconds when decaying toward 0
-            // the half-life is typicalActiveSeconds when decaying toward 1
-            double typicalIdleSeconds = Math.Exp(logIdleTime.Mean);
-            double typicalActiveSeconds = Math.Exp(logActiveTime.Mean);
 
-            // figure out which participations could be most relevant
-            int endingIndexExclusive = this.searchHelper.CountBeforeKey(when, !strictlyEarlier);
-            int startingIndex = Math.Max(0, endingIndexExclusive - 10);
-            double currentValue = 0;
-            int i;
-            DateTime latestDate = new DateTime();
-            TimeSpan idleDuration;
-            double numIdleSeconds;
-            double power;
-            // iterate through the last few participations to calculate the recent participation intensity
-            for (i = startingIndex; i < endingIndexExclusive; i++)
+            double resultNumber = 0.5;
+            DateTime startDate;
+            // The UI for logging data improved at this date. Any earlier data isn't used for computing correlation
+            DateTime changeDate = new DateTime(2015, 9, 20);
+            if (when.CompareTo(changeDate) > 0)
+                startDate = changeDate;
+            else
+                startDate = DateTime.MinValue;
+            
+            ParticipationAndSummary info = this.searchHelper.CombineBetweenKeys(startDate, true, when, !strictlyEarlier);
+
+            if (info != null)
             {
-                ListItemStats<DateTime, Participation> stats = this.searchHelper.GetValueAtIndex(i);
-                Participation participation = stats.Value;
-                // calculate the statistics for the idle duration
-                idleDuration = participation.StartDate.Subtract(latestDate);
-                numIdleSeconds = idleDuration.TotalSeconds;
-                power = -numIdleSeconds / typicalIdleSeconds;
-                // clamp to a reasonable range
-                if (power < 0)
+                ParticipationsSummary summary = info.Summary;
+
+                Correlator correlator = summary.Trend;
+
+                double slope = correlator.Slope;
+                double x = this.GetWeight(when.Subtract(summary.Start));
+                double predictedY = correlator.GetYForX(x);
+                double actualY = this.GetWeight(summary.CumulativeIntensity);
+                double deltaY = actualY - predictedY;
+                // Ideally we'd just return deltaY, but we have to transform it into a predefined range so the interpolator can use it
+                // Although it would be possible to divide by the total time elapsed, that would cause any deviation to decrease over time
+                // So instead we just warp the space from (-infinity, infinity) into (0, 1)
+                bool positive = true;
+                if (deltaY < 0)
                 {
-                    // move towards 0 for the idle duration
-                    currentValue = currentValue * Math.Pow(Math.E, power);
+                    deltaY *= -1;
+                    positive = false;
                 }
 
+                // rescale such that a 32 hour deviation reaches halfway to the end of the space
+                resultNumber = deltaY / this.GetWeight(TimeSpan.FromHours(32));
 
-                // calculate the statistics for the active duration
-                DateTime endDate = participation.EndDate;
-                if (endDate.CompareTo(when) > 0)
-                    endDate = when;
-                TimeSpan activeDuration = endDate.Subtract(participation.StartDate);
-                double numActiveSeconds = activeDuration.TotalSeconds;
-                power = -numActiveSeconds / typicalActiveSeconds;
-                // clamp to a reasonable range
-                if (power < 0)
+                // rescale such that nothing escapes the end of the space
+                resultNumber = 1.0 - 1.0 / (1.0 + Math.Log(1 + resultNumber));
+
+                if (positive)
                 {
-                    // move towards 1 for the active duration
-                    currentValue = 1 - (1 - currentValue) * Math.Pow(Math.E, power);
+                    resultNumber = (resultNumber + 1.0) / 2.0;
                 }
-
-                // advance the current date
-                if (endDate.CompareTo(latestDate) > 0)
-                    latestDate = endDate;
+                else
+                {
+                    resultNumber = (1 - resultNumber) / 2.0;
+                }
             }
-            // add the final idle time
-            idleDuration = when.Subtract(latestDate);
-            numIdleSeconds = idleDuration.TotalSeconds;
-            power = -numIdleSeconds / typicalIdleSeconds;
-            // clamp to a reasonable range
-            if (power < 0)
-            {
-                // move towards 0 for the idle duration
-                currentValue = currentValue * Math.Pow(Math.E, power);
-            }
-
-            Distribution recentIntensity = Distribution.MakeDistribution(currentValue, 0, 1);
-            ProgressionValue result = new ProgressionValue(when, recentIntensity);
-            return result;
-
-
+            return new ProgressionValue(when, Distribution.MakeDistribution(resultNumber, 0, 0));
         }
+
         public IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision)
         {
             throw new NotImplementedException();
         }
 
-#endif
-        public ProgressionValue GetValueLinearly(DateTime when, bool strictlyEarlier)
-        {
-            // find the most recent participation before the given date
-            ListItemStats<DateTime, Participation> latestItem = this.searchHelper.FindPreviousItem(when, true);
-            if (latestItem == null)
-            {
-                return null;
-                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(0, 0, 0));
-                //return defaultValue;
-            }
-            Participation latestParticipation = latestItem.Value;
-            DateTime latestStartDate = latestParticipation.StartDate;
-
-            // compute how long ago that participation began
-            TimeSpan duration = when.Subtract(latestStartDate);
-            // create another date that is twice as far in the past
-            DateTime earlierDate = latestStartDate.Subtract(duration);
-
-            // find the previous participation item that started before that
-            ListItemStats<DateTime, Participation> previousItem = this.searchHelper.FindPreviousItem(earlierDate, true);
-            // get the startDate from the previous item
-            DateTime previousStartDate;
-            if (previousItem != null)
-            {
-                previousStartDate = previousItem.Value.StartDate;
-            }
-            else
-            {
-                ListItemStats<DateTime, Participation> firstItem = this.searchHelper.GetValueAtIndex(0);
-                previousStartDate = firstItem.Value.StartDate;
-            }
-
-            
-            
-            // Ask the searchHelper for the sum of all the participations from earlierDate to latestStartDate
-            Participation sumParticipations = this.searchHelper.CombineBetweenKeys(previousStartDate, true, latestStartDate, false);
-            Distribution totalIntensity = sumParticipations.TotalIntensity;
-            // determine how much time is encompassed by these participations
-            TimeSpan totalDuration = latestStartDate.Subtract(previousStartDate);
-            double totalWeight = this.GetWeight(totalDuration);
-            double activeWeight = sumParticipations.TotalIntensity.Weight;
-            // determine how much time is unaccounted for
-            double idleWeight = totalWeight - activeWeight;
-            if (idleWeight < 0)
-            {
-                idleWeight = 0;
-            }
-            // make another Distribution telling how much idle time took place between earlierDate and latestStartDate and 
-            Distribution primaryIdleTime = new Distribution(0, 0, idleWeight);
-            Distribution totalParticipation = totalIntensity.Plus(primaryIdleTime);
-
-            // figure out how much extra intensity was added by the final participation
-            if (when.CompareTo(latestParticipation.EndDate) < 0)
-            {
-                // if we get here, then 'when' is in the middle of the final participation
-                // Figure out what fraction of the participation was 
-                double fullNumSeconds = latestParticipation.Duration.TotalSeconds;
-                TimeSpan finalDuration = when.Subtract(latestParticipation.StartDate);
-                double actualNumSeconds = finalDuration.TotalSeconds;
-                if (fullNumSeconds == 0)
-                    fullNumSeconds = 1;
-                double scale = actualNumSeconds / fullNumSeconds;
-                Distribution finalDistribution = latestParticipation.TotalIntensity.CopyAndStretchBy(scale);
-                totalParticipation = totalParticipation.Plus(finalDistribution);
-            }
-            else
-            {
-                // if we get here, then 'when' is after the final participation
-                // add the final participation
-                totalParticipation = totalParticipation.Plus(latestParticipation.TotalIntensity);
-                // add the idle time after the final participation
-                TimeSpan finalIdleTime = when.Subtract(latestParticipation.EndDate);
-                Distribution finalIdleDistribution = new Distribution(0, 0, this.GetWeight(finalIdleTime));
-                totalParticipation = totalParticipation.Plus(finalIdleDistribution);
-            }
-
-            // now totalParticipation is a distribution of the intensities of the participations of the activity over the recent past
-            //int previousCount = this.searchHelper.CountBeforeKey(when, true);
-            ProgressionValue result = new ProgressionValue(when, totalParticipation);
-            return result;
-        }
 
         public ProgressionValue GetCurrentValue(DateTime when)
         {
@@ -432,8 +309,39 @@ namespace ActivityRecommendation
             return duration.TotalSeconds;
         }
 
+
+        ParticipationAndSummary Summarize(Participation participation)
+        {
+            ParticipationAndSummary result = new ParticipationAndSummary();
+            result.Participation = participation;
+
+            ParticipationsSummary summary = new ParticipationsSummary();
+
+            Correlator correlator = new Correlator();
+            double x = this.GetWeight(participation.Duration);
+            double weight = x / 2;
+            correlator.Add(0, 0, weight);
+            correlator.Add(x, x, weight);
+
+            summary.Trend = correlator;
+
+            Distribution logActiveTime = Distribution.MakeDistribution(Math.Log(participation.Duration.TotalSeconds), 0, 1);
+            summary.LogActiveTime = logActiveTime;
+
+            summary.Start = participation.StartDate;
+            summary.End = participation.EndDate;
+
+            summary.CumulativeIntensity = participation.Duration;
+
+            result.Summary = summary;
+
+
+            return result;
+
+        }
+
         #endregion
 
-        private StatList<DateTime, Participation> searchHelper; // in the future the StatList may be improved to properly support intervals.
+        private StatList<DateTime, ParticipationAndSummary> searchHelper; // in the future the StatList may be improved to properly support intervals.
     }
 }

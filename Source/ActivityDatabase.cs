@@ -41,6 +41,14 @@ namespace ActivityRecommendation
             // no Activity was created, so we don't return one
             return null;
         }
+
+        public Activity GetOrCreate(ActivityDescriptor descriptor)
+        {
+            Activity activity = this.ResolveDescriptor(descriptor);
+            if (activity == null)
+                activity = this.CreateActivityIfMissing(descriptor);
+            return activity;
+        }
         // puts an Activity in the database
         public void AddActivity(Activity newActivity)
         {

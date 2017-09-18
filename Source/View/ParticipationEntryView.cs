@@ -23,7 +23,7 @@ namespace ActivityRecommendation
             rowHeights.BindIndices(0, 2);
             rowHeights.BindIndices(0, 3);
             rowHeights.SetPropertyScale(0, 4);
-            rowHeights.SetPropertyScale(1, 4);
+            rowHeights.SetPropertyScale(1, 8);
             rowHeights.SetPropertyScale(2, 2);
             rowHeights.SetPropertyScale(3, 1);
 
@@ -60,7 +60,7 @@ namespace ActivityRecommendation
             
             contents.AddLayout(middleGrid);
 
-            GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
             this.startDateBox = new DateEntryView("Start Time");
             this.startDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
@@ -68,16 +68,13 @@ namespace ActivityRecommendation
             this.endDateBox = new DateEntryView("End Time");
             this.endDateBox.Add_TextChanged_Handler(new TextChangedEventHandler(this.DateText_Changed));
             grid3.AddLayout(this.endDateBox);
-            this.setStartdateButton = new Button();
-            grid3.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now"));
-            this.setEnddateButton = new Button();
-            grid3.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now"));
             contents.AddLayout(grid3);
+            this.setStartdateButton = new Button();
+            this.setEnddateButton = new Button();
 
 
             this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
 
-            GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.okButton = new Button();
 
             this.helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record activities you have done.")
@@ -90,12 +87,14 @@ namespace ActivityRecommendation
             Button helpButton = new Button();
             helpButton.Click += helpButton_Click;
 
+            GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
+            grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now"));
             grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));
             grid4.AddLayout(new ButtonLayout(helpButton, new TextblockLayout("Help")));
+            grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now"));
             contents.AddLayout(grid4);
 
             this.SetContent(contents);
-
         }
 
         void helpButton_Click(object sender, RoutedEventArgs e)
@@ -128,7 +127,7 @@ namespace ActivityRecommendation
         void setStartdateButton_Click(object sender, RoutedEventArgs e)
         {
             //this.setEnddateButton.Highlight();
-            this.Update_ExpectedRating_Text();
+            this.Update_FeedbackBlock_Text();
         }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -150,6 +149,10 @@ namespace ActivityRecommendation
             {
                 this.nameBox.Database = value;
                 this.intendedActivity_box.Database = value;
+            }
+            get
+            {
+                return this.engine.ActivityDatabase;
             }
         }
         public Engine Engine
@@ -191,7 +194,7 @@ namespace ActivityRecommendation
         public void SetActivityName(string newName)
         {
             this.nameBox.NameText = newName;
-            this.Update_ExpectedRating_Text();
+            this.Update_FeedbackBlock_Text();
             //if (newName != "" && newName != null)
             //    this.setEnddateButton.Highlight();
         }
@@ -283,11 +286,11 @@ namespace ActivityRecommendation
 
         public void ActivityName_BecameValid(object sender, TextChangedEventArgs e)
         {
-            this.Update_ExpectedRating_Text();
+            this.Update_FeedbackBlock_Text();
         }
 
 
-        private void Update_ExpectedRating_Text()
+        private void Update_FeedbackBlock_Text()
         {
             if (this.startDateBox.IsDateValid() && this.nameBox.ActivityDescriptor != null)
             {
@@ -295,19 +298,75 @@ namespace ActivityRecommendation
                 Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
                 if (activity != null)
                 {
-                    Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
-                    this.engine.EstimateSuggestionValue(activity, startDate);
-
-                    double expectedShortermRating = activity.PredictedScore.Distribution.Mean;
-                    double overallAverageRating = rootActivity.Scores.Mean;
-                    double shorttermRatio = expectedShortermRating / overallAverageRating;
-
-                    //this.predictedRating_block.Text = "Predicted rating for " + activity.Name + " at " + startDate.ToString() +
-                    //    " = " + shorttermRatio.ToString() + " times average";
-                    
-                    this.predictedRating_block.Text = "Predicted rating = " + shorttermRatio.ToString() + " * average";
+                    string text = this.computeFeedback(activity, startDate);
+                    this.predictedRating_block.Text = text;
                 }
             }
+        }
+
+        private string computeFeedback(Activity chosenActivity, DateTime startDate)
+        {
+            //return this.compute_estimatedRating_feedback(chosenActivity, startDate);
+            return this.compute_longtermValue_feedback(chosenActivity, startDate);
+        }
+
+        private string compute_estimatedRating_feedback(Activity chosenActivity, DateTime startDate)
+        {
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
+            this.engine.EstimateSuggestionValue(chosenActivity, startDate);
+
+            double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
+            double overallAverageRating = rootActivity.Scores.Mean;
+            double shorttermRatio = expectedShortermRating / overallAverageRating;
+
+            return "Predicted rating = " + expectedShortermRating.ToString() + " * average";
+        }
+
+        private string compute_longtermValue_feedback(Activity chosenActivity, DateTime startDate)
+        {
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
+
+            // estimate the activity's rating so that its parent activities will have their ratings estimated,
+            // because the parent rating estimates are used as coordinates
+            this.engine.EstimateRating(chosenActivity, startDate);
+            //this.engine.EstimateSuggestionValue(chosenActivity, startDate);
+            double chosenValue = chosenActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
+
+            //DateTime historyStart = new DateTime();
+            //RatingSummary summary = new RatingSummary(historyStart);
+
+            //summary.Update(this.engine.RatingSummarizer, historyStart, startDate);
+            //double usualValue = summary.Item.Mean;
+            double usualValue = rootActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
+
+            double bonusInSeconds = 0;
+            if (usualValue != 0)
+            {
+                // relWeight(x) = 1 * 2^(-x/halfLife)
+                // totalWeight = integral(relWeight) = (log(e)/log(2))*halfLife
+                // absWeight(x) = 2^(-x/halfLife)/((log(e)/log(2))*halfLife)
+                // absWeight(0) = 1/((log(e)/log(2))*halfLife)
+                // absWeight(0) = log(2)/log(e)/halflife
+                // absWeight(0) = log(2)/halflife
+
+                double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
+
+                double overallImprovment = (chosenValue / usualValue) - 1;
+
+                bonusInSeconds = overallImprovment / weightOfThisMoment;
+            }
+            //this.engine.RatingSummarizer.
+            if (bonusInSeconds == 0)
+            {
+                return "";
+            }
+            string message;
+            double bonusInDays = bonusInSeconds / 60 / 60 / 24;
+            if (bonusInDays > 0)
+                message = "Nice! I estimate this worth +" + bonusInDays + " days.";
+            else
+                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days.";
+            return message;
         }
         
 

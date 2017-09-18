@@ -698,7 +698,9 @@ namespace ActivityRecommendation
         // returns the coordinates from which a rating prediction is made
         private double[] Get_Rating_PredictionCoordinates(DateTime when)
         {
+            //this.ApplyPendingParticipations();
             this.ApplyPendingData();
+            this.ApplyPendingSkips(); // TODO: figure out why this line changes the results
 
             double[] coordinates = new double[this.ratingTestingProgressions.Count];
             int i;

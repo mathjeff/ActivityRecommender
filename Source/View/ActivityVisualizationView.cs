@@ -280,13 +280,13 @@ namespace ActivityRecommendation
                     endXs.Add(endX);
                     if (startX > endX)
                         numActiveIntervals++;
-                }
 
-                // update some data about cumulative num suggestions
-                if (participation.Suggested.GetValueOrDefault(false))
-                {
-                    // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
-                    suggestionDates.Add(this.GetParticipationXCoordinate(participation.StartDate));
+                    // update some data about cumulative num suggestions
+                    if (participation.Suggested.GetValueOrDefault(false))
+                    {
+                        // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
+                        suggestionDates.Add(this.GetParticipationXCoordinate(participation.StartDate));
+                    }
                 }
             }
             startXs.Sort();
@@ -354,11 +354,15 @@ namespace ActivityRecommendation
             cumulativeSuggestionCount = 0;
             foreach (ListItemStats<DateTime, WillingnessSummary> item in this.yAxisActivity.ConsiderationProgression.AllItems)
             {
-                double x = this.GetParticipationXCoordinate(item.Key);
-                if (item.Value.NumSkips > 0)
+                // make sure the participation is within the requested window
+                if (item.Key.CompareTo(firstDate) >= 0 && item.Key.CompareTo(lastDate) <= 0)
                 {
-                    // found a skip
-                    suggestionDates.Add(x);
+                    double x = this.GetParticipationXCoordinate(item.Key);
+                    if (item.Value.NumSkips > 0)
+                    {
+                        // found a skip
+                        suggestionDates.Add(x);
+                    }
                 }
             }
             suggestionDates.Sort();

@@ -22418,12 +22418,12 @@
   },
   "project": {
     "restore": {
-      "projectUniqueName": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\ActRec\\ActRec.UWP\\ActRec.UWP.csproj",
+      "projectUniqueName": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\ActRec\\ActRec.UWP\\ActRec.UWP.csproj",
       "projectName": "ActRec.UWP",
-      "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\ActRec\\ActRec.UWP\\ActRec.UWP.csproj",
-      "projectJsonPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\ActRec\\ActRec.UWP\\project.json",
+      "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\ActRec\\ActRec.UWP\\ActRec.UWP.csproj",
+      "projectJsonPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\ActRec\\ActRec.UWP\\project.json",
       "packagesPath": "C:\\Users\\Jeff\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\ActRec\\ActRec.UWP\\obj\\",
+      "outputPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\ActRec\\ActRec.UWP\\obj\\",
       "projectStyle": "ProjectJson",
       "configFilePaths": [
         "C:\\Users\\Jeff\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -22436,17 +22436,17 @@
       "frameworks": {
         "uap10.0.10586": {
           "projectReferences": {
-            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\deps\\AdaptiveInterpolator\\AdaptiveInterpolator.csproj": {
-              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\deps\\AdaptiveInterpolator\\AdaptiveInterpolator.csproj"
+            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\deps\\AdaptiveInterpolator\\AdaptiveInterpolator.csproj": {
+              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\deps\\AdaptiveInterpolator\\AdaptiveInterpolator.csproj"
             },
-            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\deps\\Statlist\\Statlist.csproj": {
-              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\deps\\Statlist\\Statlist.csproj"
+            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\deps\\Statlist\\Statlist.csproj": {
+              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\deps\\Statlist\\Statlist.csproj"
             },
-            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\deps\\VisiPlacer\\VisiPlacer.csproj": {
-              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\deps\\VisiPlacer\\VisiPlacer.csproj"
+            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\deps\\VisiPlacer\\VisiPlacer.csproj": {
+              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\deps\\VisiPlacer\\VisiPlacer.csproj"
             },
-            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\ActRec\\ActRec\\ActRec.csproj": {
-              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec_hist\\ActRec\\ActRec\\ActRec.csproj"
+            "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\ActRec\\ActRec\\ActRec.csproj": {
+              "projectPath": "C:\\Users\\Jeff\\Documents\\Visual Studio 2017\\Projects\\Interesting\\Xam\\ActRec\\ActRec\\ActRec\\ActRec.csproj"
             }
           }
         }

@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using VisiPlacement;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using ActivityRecommendation.View;
 using Xamarin.Forms;
+
+using Plugin.FilePicker;
+using Plugin.FilePicker.Abstractions;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -104,10 +107,15 @@ namespace ActivityRecommendation
             visualizationBuilder.AddLayout("Visualize one Activity", this.statisticsMenu);
 
             LayoutChoice_Set visualizationMenu = visualizationBuilder.Build();
-            
+
+
+            this.dataImportView = new DataImportView();
+            this.dataImportView.Add_ClickHandler(new EventHandler(this.ImportData));
 
             this.dataExportView = new DataExportView();
             this.dataExportView.Add_ClickHandler(new EventHandler(this.ExportData));
+
+            LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack).AddLayout("Import", this.dataImportView).AddLayout("Export", this.dataExportView).Build();
 
 
             //this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);
@@ -118,7 +126,7 @@ namespace ActivityRecommendation
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
-            usageMenu_builder.AddLayout("Export Data", this.dataExportView);
+            usageMenu_builder.AddLayout("Import/Export Data", importExportView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
@@ -145,6 +153,17 @@ namespace ActivityRecommendation
 
             this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
 
+        }
+
+        async public void ImportData(object sender, EventArgs e)
+        {
+            IFilePicker filePicker = CrossFilePicker.Current;
+            FileData fileData = await filePicker.PickFile();
+            if (fileData == null)
+                return; // cancelled
+
+            string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
+            this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName);
         }
 
         public void ExportData(object sender, EventArgs e)
@@ -619,9 +638,7 @@ namespace ActivityRecommendation
         {
             this.recentUserData.Synchronized = true;
             string text = this.textConverter.ConvertToString(this.recentUserData) + Environment.NewLine;
-            StreamWriter writer = this.textConverter.EraseFileAndOpenForWriting(this.tempFileName);
-            writer.Write(text);
-            //writer.Close();
+            this.textConverter.EraseFileAndWriteContent(this.tempFileName, text);
         }
 
 
@@ -720,6 +737,7 @@ namespace ActivityRecommendation
         InheritanceEditingView inheritanceEditingView;
         SuggestionsView suggestionsView;
         DataExportView dataExportView;
+        DataImportView dataImportView;
         ActivityVisualizationMenu statisticsMenu;
         Engine engine;
         //DateTime latestRecommendationDate;

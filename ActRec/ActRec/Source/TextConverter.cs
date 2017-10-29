@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 // The TextConverter class will convert an object into a string or parse a string into a list of objects
 // It only works on the specific types of objects that matter in the ActivityRecommender project
+
+// TODO: split the TextConverter class into two: one class that does conversions between objects and strings and another class that does file I/O
 namespace ActivityRecommendation
 {
     class TextConverter
@@ -220,71 +222,85 @@ namespace ActivityRecommendation
             return new StreamReader(this.OpenFile(fileName, FileAccess.Read));
         }
 
+        public void EraseFileAndWriteContent(string fileName, string content)
+        {
+            StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
+            writer.Write(content);
+            writer.Dispose();
+        }
+
+        private IEnumerable<XmlNode> ParseText(string text)
+        {
+            if (text.Length <= 0)
+                return null;
+            text = "<root>" + text + "</root>";
+            XmlDocument document = new XmlDocument();
+            document.LoadXml(text);
+            XmlNode root = document.FirstChild;
+            if (root == null)
+                return null;
+            return root.ChildNodes;
+        }
+
         // opens the file, converts it into a sequence of objects, and sends them to the Engine
         public void ReadFile(string fileName)
         {
             StreamReader reader = this.OpenFileForReading(fileName);
             String text = "";
             if (reader.BaseStream.Length > 0)
-                text = "<root>" + reader.ReadToEnd() + "</root>";
+                text = reader.ReadToEnd();
             reader.Dispose();
-            if (text.Length <= 0)
+            IEnumerable<XmlNode> nodes = this.ParseText(text);
+            if (nodes == null)
                 return;
-            //reader.Dispose();
-            // System.Diagnostics.Debug.WriteLine(text);
-            XmlDocument document = new XmlDocument();
-            document.LoadXml(text);
-            XmlNode root = document.FirstChild;
-            if (root != null)
+            foreach (XmlNode node in nodes)
             {
-                foreach (XmlNode currentItem in root.ChildNodes)
+                if (node.Name == this.ParticipationTag)
                 {
-                    if (currentItem.Name == this.ParticipationTag)
-                    {
-                        this.ProcessParticipation(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.RatingTag)
-                    {
-                        this.ProcessRating(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.ActivityDescriptorTag)
-                    {
-                        this.ProcessActivityDescriptor(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.InheritanceTag)
-                    {
-                        this.ProcessInheritanceDescriptor(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.DateTag)
-                    {
-                        this.ProcessLatestDate(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.SkipTag)
-                    {
-                        this.ProcessSkip(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.ActivityRequestTag)
-                    {
-                        this.ProcessActivityRequest(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.RecentUserDataTag)
-                    {
-                        this.ProcessRecentUserData(currentItem);
-                        continue;
-                    }
-                    if (currentItem.Name == this.SuggestionTag)
-                    {
-                        this.ProcessSuggestion(currentItem);
-                        continue;
-                    }
+                    this.ProcessParticipation(node);
+                    continue;
                 }
+                if (node.Name == this.RatingTag)
+                {
+                    this.ProcessRating(node);
+                    continue;
+                }
+                if (node.Name == this.ActivityDescriptorTag)
+                {
+                    this.ProcessActivityDescriptor(node);
+                    continue;
+                }
+                if (node.Name == this.InheritanceTag)
+                {
+                    this.ProcessInheritanceDescriptor(node);
+                    continue;
+                }
+                if (node.Name == this.DateTag)
+                {
+                    this.ProcessLatestDate(node);
+                    continue;
+                }
+                if (node.Name == this.SkipTag)
+                {
+                    this.ProcessSkip(node);
+                    continue;
+                }
+                if (node.Name == this.ActivityRequestTag)
+                {
+                    this.ProcessActivityRequest(node);
+                    continue;
+                }
+                if (node.Name == this.RecentUserDataTag)
+                {
+                    this.ProcessRecentUserData(node);
+                    continue;
+                }
+                if (node.Name == this.SuggestionTag)
+                {
+                    this.ProcessSuggestion(node);
+                    continue;
+                }
+                throw new Exception("Unrecognized node: <" + node.Name + ">");
             }
         }
 
@@ -874,7 +890,7 @@ namespace ActivityRecommendation
         }
 
         // saves text to a file where the user can do something with it
-        public void ExportFile(string fileName, string content) //, string content)
+        public void ExportFile(string fileName, string content)
         {
             StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
             writer.Write(content);
@@ -884,6 +900,55 @@ namespace ActivityRecommendation
             //StorageFile storageFile = await storage.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
 
             //await Windows.System.Launcher.LaunchFileAsync(storageFile);
+        }
+
+        public void Import(string contents, string inheritancesFilePath, string historyFilePath)
+        {
+            IEnumerable<XmlNode> nodes = this.ParseText(contents);
+
+            string inheritances = "";
+            string history = "";
+
+
+            foreach (XmlNode node in nodes)
+            {
+                if (node.Name == this.InheritanceTag)
+                {
+                    Inheritance inheritance = this.ReadInheritance(node);
+                    inheritances += this.ConvertToString(inheritance) + "\n";
+                    continue;
+                }
+
+                if (node.Name == this.ParticipationTag)
+                {
+                    Participation participation = this.ReadParticipation(node);
+                    history += this.ConvertToString(participation) + "\n";
+                    continue;
+                }
+                if (node.Name == this.SkipTag)
+                {
+                    ActivitySkip skip = this.ReadSkip(node);
+                    history += this.ConvertToString(skip) + "\n";
+                    continue;
+                }
+                if (node.Name == this.ActivityRequestTag)
+                {
+                    ActivityRequest request = this.ReadActivityRequest(node);
+                    history += this.ConvertToString(request) + "\n";
+                    continue;
+                }
+                if (node.Name == this.SuggestionTag)
+                {
+                    ActivitySuggestion suggestion = this.ReadSuggestion(node);
+                    history += this.ConvertToString(suggestion) + "\n";
+                    continue;
+                }
+                throw new Exception("Unrecognized node: <" + node.Name + ">");
+            }
+
+            this.EraseFileAndWriteContent(inheritancesFilePath, inheritances);
+            this.EraseFileAndWriteContent(historyFilePath, history);
+
         }
 
         // converts the dictionary into a string, without adding the initial <Tag> or final </Tag>

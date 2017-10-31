@@ -12,28 +12,35 @@ namespace ActivityRecommendation
     {
         static SKPaint makeBrush(byte red, byte green, byte blue)
         {
-            return null;
-            //SKPaint paint = new SKPaint();
-            //SKColor color = new SKColor().WithRed(red).WithGreen(green).WithBlue(blue);
-            //paint.Color = color;
-            //return paint;
+            SKColor color = new SKColor().WithRed(red).WithGreen(green).WithBlue(blue).WithAlpha(255);
+            return makeBrush(color);
         }
-        static SKPaint redBrush = makeBrush(255, 0, 0);
-        static SKPaint greenBrush = makeBrush(0, 255, 0);
-        static SKPaint blueBrush = makeBrush(0, 0, 255);
-        static SKPaint cyanBrush = makeBrush(0, 255, 255);
+        static SKPaint makeBrush(SKColor color)
+        {
+            //return null;
+            SKPaint paint = new SKPaint();
+            paint.StrokeWidth = 1;
+            paint.StrokeCap = SKStrokeCap.Round;
+            paint.Color = color;
+            return paint;
+        }
+        static SKPaint redBrush = makeBrush(SKColors.Red);
+        static SKPaint greenBrush = makeBrush(SKColors.DarkGreen);
+        static SKPaint blueBrush = makeBrush(SKColors.Blue);
+        static SKPaint cyanBrush = makeBrush(SKColors.DarkCyan);
 
 
         public PlotView()
         {
             this.canvas = new SKCanvasView();
+            this.canvas.PaintSurface += Canvas_PaintSurface;
             this.Content = this.canvas;
 
-            this.canvas.PaintSurface += Canvas_PaintSurface;
-            
             //this.AddVisualChild(childCanvas);
             this.Connected = true;
             this.canvas.BackgroundColor = Color.LightGray;
+            this.canvas.InvalidateSurface();
+
         }
 
         // assigns some datapoints to the plot
@@ -110,10 +117,11 @@ namespace ActivityRecommendation
         {
             //DateTime start = DateTime.Now;
             //Size availableSize = new Size(widthConstraint, heightConstraint);
-            //this.UpdatePoints(availableSize);
+            //this.UpdatePoints(this.canvas.PaintSurface, availableSize);
             //DateTime end = DateTime.Now;
             //System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " in PlotView.OnMeasure");
-            return base.OnMeasure(widthConstraint, heightConstraint);
+            SizeRequest request = base.OnMeasure(widthConstraint, heightConstraint);
+            return request;
         }
 
         private void Canvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -131,6 +139,9 @@ namespace ActivityRecommendation
                 return;
 
             DateTime start = DateTime.Now;
+            //canvas.Clear(SKColors.White);
+            //canvas.DrawRect(SKRect.Create(new SKSize(400, 400)), greenBrush);
+            //canvas.DrawCircle(0, 0, 1000, cyanBrush);
             //Size availableSize = new Size(widthConstraint, heightConstraint);
             //this.UpdatePoints(availableSize);
 
@@ -266,6 +277,18 @@ namespace ActivityRecommendation
                     canvas.DrawLine((float)((tickX - minimumX) * scaleX), (float)y,(float)((tickX - minimumX) * scaleX), (float)nextY, cyanBrush);
                 }
             }
+
+            // X
+            //canvas.DrawLine(-100, -100, 100, 100, redBrush);
+            //canvas.DrawLine(-100, 100, 100, -100, redBrush);
+
+            // box
+            //canvas.DrawLine(-100, -100, -100, 100, redBrush);
+            //canvas.DrawLine(-100, 100, 100, 100, redBrush);
+            //canvas.DrawLine(100, 100, 100, -100, redBrush);
+            //canvas.DrawLine(100, -100, -100, -100, redBrush);
+
+            //canvas.Flush();
 
             DateTime end = DateTime.Now;
             System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " in PlotView.UpdatPoints");

@@ -1,4 +1,6 @@
 ﻿using PCLStorage;
+using Plugin.FilePicker;
+using Plugin.FilePicker.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -890,16 +892,17 @@ namespace ActivityRecommendation
         }
 
         // saves text to a file where the user can do something with it
-        public void ExportFile(string fileName, string content)
+        public bool ExportFile(string fileName, string content)
         {
-            StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
-            writer.Write(content);
-            writer.Dispose();
+            IFilePicker filePicker = CrossFilePicker.Current;
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(content);
 
-            //StorageFolder storage = Windows.Storage.ApplicationData.Current.LocalFolder;
-            //StorageFile storageFile = await storage.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+            FileData fileData = new FileData();
+            fileData.FileName = fileName;
+            fileData.DataArray = bytes;
+            bool success = filePicker.SaveFile(fileData).Result;
 
-            //await Windows.System.Launcher.LaunchFileAsync(storageFile);
+            return success;
         }
 
         public void Import(string contents, string inheritancesFilePath, string historyFilePath)

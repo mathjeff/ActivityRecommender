@@ -15,7 +15,7 @@ namespace ActivityRecommendation
 {
     class DataExportView : TitledControl
     {
-        public DataExportView()
+        public DataExportView(ActivityRecommender activityRecommender, LayoutStack layoutStack)
         {
             this.SetTitle("Export Data");
             
@@ -25,22 +25,28 @@ namespace ActivityRecommendation
             LayoutChoice_Set help = helper.Build();
 
             this.exportButton = new Button();
+            this.exportButton.Clicked += ExportButton_Clicked;
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
 
             this.lineCount_box = new Editor();
 
             TextblockLayout numLines_label = new TextblockLayout("Max num lines to include (default all)");
+
             LayoutChoice_Set entryLayout = new Horizontal_GridLayout_Builder().AddLayout(numLines_label).AddLayout(new TextboxLayout(this.lineCount_box)).Build();
 
-            //this.lineCount_box.InputScope = InputScopeUtils.Numeric;
+            this.lineCount_box.Keyboard = Keyboard.Numeric;
             this.lineCount_box.TextChanged += lineCount_box_TextChanged;
 
             this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(entryLayout).AddLayout(buttonLayout).Build());
+
+            this.activityRecommender = activityRecommender;
+            this.layoutStack = layoutStack;
         }
 
-        public void Add_ClickHandler(EventHandler handler)
+        private void ExportButton_Clicked(object sender, EventArgs e)
         {
-            this.exportButton.Clicked += handler;
+            string result = this.activityRecommender.ExportData();
+            this.layoutStack.AddLayout(new TextblockLayout(result));
         }
 
         public int Get_NumLines()
@@ -78,5 +84,7 @@ namespace ActivityRecommendation
 
         Button exportButton;
         Editor lineCount_box;
+        ActivityRecommender activityRecommender;
+        LayoutStack layoutStack;
     }
 }

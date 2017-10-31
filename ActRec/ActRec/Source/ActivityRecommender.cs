@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PCLStorage;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -112,8 +113,7 @@ namespace ActivityRecommendation
             this.dataImportView = new DataImportView();
             this.dataImportView.Add_ClickHandler(new EventHandler(this.ImportData));
 
-            this.dataExportView = new DataExportView();
-            this.dataExportView.Add_ClickHandler(new EventHandler(this.ExportData));
+            this.dataExportView = new DataExportView(this, this.layoutStack);
 
             LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack).AddLayout("Import", this.dataImportView).AddLayout("Export", this.dataExportView).Build();
 
@@ -166,7 +166,7 @@ namespace ActivityRecommendation
             this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName);
         }
 
-        public void ExportData(object sender, EventArgs e)
+        public string ExportData()
         {
             string content = "";
             content += this.textConverter.ReadAllText(this.inheritancesFileName);
@@ -186,7 +186,18 @@ namespace ActivityRecommendation
                 }
                 content = content.Substring(startIndex);
             }
-            this.textConverter.ExportFile("ActivityData.txt", content);
+
+            DateTime now = DateTime.Now;
+            string nowText = now.ToString("yyyy-MM-dd-HH-mm-ss");
+            string fileName = "ActivityData-" + nowText + ".txt";
+
+            // TODO make it possible for the user to control the file path
+            bool success = this.textConverter.ExportFile(fileName, content);
+
+            if (success)
+                return "Saved " + fileName;
+            else
+                return "Failed to save " + fileName;
         }
 
         public bool GoBack()

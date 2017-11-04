@@ -14,12 +14,12 @@ using Xamarin.Forms;
 
 
 [assembly: ResolutionGroupName("VisiPlacement")]
-[assembly: ExportEffect(typeof(ActRec.Droid.TextBoxEffect), "TextBoxEffect")]
+[assembly: ExportEffect(typeof(ActRec.Droid.TextItemEffect), "TextItemEffect")]
 namespace ActRec.Droid
 {
-    public class TextBoxEffect : PlatformEffect
+    public class TextItemEffect : PlatformEffect
     {
-        public TextBoxEffect()
+        public TextItemEffect()
         {
             this.Padding = new Thickness();
         }

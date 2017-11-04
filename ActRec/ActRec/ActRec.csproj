@@ -106,7 +106,6 @@
     <Compile Include="Source\View\DataExportView.cs" />
     <Compile Include="Source\View\DataImportView.cs" />
     <Compile Include="Source\View\DateEntryView.cs" />
-    <Compile Include="Source\View\DisplayGrid.cs" />
     <Compile Include="Source\View\DisplayManager.cs" />
     <Compile Include="Source\View\ParticipationCorrelationMenu.cs" />
     <Compile Include="Source\View\ParticipationCorrelationView.cs" />

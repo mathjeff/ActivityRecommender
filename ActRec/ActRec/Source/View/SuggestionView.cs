@@ -5,7 +5,7 @@ using Xamarin.Forms;
 // a SuggestionView displays one suggested Activity and some details of the suggestion
 namespace ActivityRecommendation
 {
-    class SuggestionView : SingleItem_Layout
+    class SuggestionView : ContainerLayout
     {
         public SuggestionView(ActivitySuggestion suggestion, SuggestionsView container)
         {

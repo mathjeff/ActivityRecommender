@@ -8,7 +8,7 @@ using Xamarin.Forms;
 // The PlotControl shows a visual representation of some (x,y) points
 namespace ActivityRecommendation
 {
-    class PlotView : SingleItem_View
+    class PlotView : ContainerView
     {
         static SKPaint makeBrush(byte red, byte green, byte blue)
         {

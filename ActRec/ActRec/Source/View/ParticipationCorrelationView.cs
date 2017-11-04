@@ -9,7 +9,7 @@ using VisiPlacement;
 // A ParticipationCorrelationView shows the activities that generally precede another activity
 namespace ActivityRecommendation.View
 {
-    class ParticipationCorrelationView : SingleItem_Layout
+    class ParticipationCorrelationView : ContainerLayout
     {
         public ParticipationCorrelationView(Engine engine, ActivityDatabase activityDatabase, ActivityDescriptor activityDescriptor, TimeSpan windowSize)
         {

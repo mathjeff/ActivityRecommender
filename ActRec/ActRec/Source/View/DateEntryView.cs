@@ -151,6 +151,7 @@ namespace ActivityRecommendation
             this.dateBlock = new Label();
 
             TextblockLayout dateLayout = new TextblockLayout(this.dateBlock);
+            dateLayout.ScoreIfEmpty = true;
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(dateLayout);
 

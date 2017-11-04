@@ -118,9 +118,6 @@ namespace ActivityRecommendation
             LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack).AddLayout("Import", this.dataImportView).AddLayout("Export", this.dataExportView).Build();
 
 
-            //this.mainWindow.KeyDown += new System.Windows.Input.KeyEventHandler(mainWindow_KeyDown);
-
-
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
@@ -740,9 +737,7 @@ namespace ActivityRecommendation
 
         ContentView mainWindow;
         ViewManager displayManager;
-        //GridLayout mainDisplayGrid;
         LayoutChoice_Set mainLayout;
-        //GridLayou mainDisplay;
 
         ParticipationEntryView participationEntryView;
         InheritanceEditingView inheritanceEditingView;
@@ -751,17 +746,13 @@ namespace ActivityRecommendation
         DataImportView dataImportView;
         ActivityVisualizationMenu statisticsMenu;
         Engine engine;
-        //DateTime latestRecommendationDate;
-        //Activity currentRecommendedActivity;
         TextConverter textConverter;
         string ratingsFileName;         // the name of the file that stores ratings
         string inheritancesFileName;    // the name of the file that stores inheritances
         string tempFileName;
-        //DateTime latestActionDate;
         Participation latestParticipation;
         RatingReplayer ratingReplayer;
         RecentUserData recentUserData;
-        // ActivityDatabase primedActivities; // activities that have already been considered and therefore are fast to consider again
         int numCategoriesToConsiderAtOnce = 3;
         LayoutStack layoutStack;
         SuggestionDatabase suggestionDatabase = new SuggestionDatabase();

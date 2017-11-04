@@ -13,8 +13,6 @@ namespace ActivityRecommendation
             GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
 
             this.nameBox = new Editor();
-            //this.nameBox.TextChanged += new EventHandler<TextChangedEventArgs>(nameBox_TextChanged);
-            //this.nameBox.KeyDown += new System.Windows.Input.KeyEventHandler(nameBox_PreviewKeyDown);
             this.nameBox.TextChanged += NameBox_TextChanged;
             LayoutChoice_Set nameLayout = new TextboxLayout(this.nameBox);
             contentWithSuggestion.AddLayout(nameLayout);

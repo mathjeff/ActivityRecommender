@@ -607,23 +607,12 @@ namespace ActivityRecommendation
                 if (convertedRating != null)
                 {
                     convertedRating.AttemptToMatch(this.latestParticipationRead);
-                    //Rating firstRating = convertedRating.FirstRating;
-                    //if (firstRating != null)
-                    //    firstRating.AttemptToMatch(this.latestParticipationRead);
                 }
             }
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
 
-            /* // Check whether the participation had an embedded rating
-            if (rating != null)
-            {
-                // fill in necessary details
-                //rating.FillInFromParticipation(currentParticipation);
-                // send the rating to the engine
-                //this.recommenderToInform.PutRatingInMemory(rating);
-            }*/
             this.latestParticipationRead = currentParticipation;
             return currentParticipation;
         }
@@ -909,8 +898,8 @@ namespace ActivityRecommendation
         {
             IEnumerable<XmlNode> nodes = this.ParseText(contents);
 
-            string inheritances = "";
-            string history = "";
+            List<string> inheritanceTexts = new List<string>();
+            List<string> historyTexts = new List<string>();
 
 
             foreach (XmlNode node in nodes)
@@ -918,39 +907,41 @@ namespace ActivityRecommendation
                 if (node.Name == this.InheritanceTag)
                 {
                     Inheritance inheritance = this.ReadInheritance(node);
-                    inheritances += this.ConvertToString(inheritance) + "\n";
+                    inheritanceTexts.Add(this.ConvertToString(inheritance));
                     continue;
                 }
 
                 if (node.Name == this.ParticipationTag)
                 {
                     Participation participation = this.ReadParticipation(node);
-                    history += this.ConvertToString(participation) + "\n";
+                    historyTexts.Add(this.ConvertToString(participation));
                     continue;
                 }
                 if (node.Name == this.SkipTag)
                 {
                     ActivitySkip skip = this.ReadSkip(node);
-                    history += this.ConvertToString(skip) + "\n";
+                    historyTexts.Add(this.ConvertToString(skip));
                     continue;
                 }
                 if (node.Name == this.ActivityRequestTag)
                 {
                     ActivityRequest request = this.ReadActivityRequest(node);
-                    history += this.ConvertToString(request) + "\n";
+                    historyTexts.Add(this.ConvertToString(request));
                     continue;
                 }
                 if (node.Name == this.SuggestionTag)
                 {
                     ActivitySuggestion suggestion = this.ReadSuggestion(node);
-                    history += this.ConvertToString(suggestion) + "\n";
+                    historyTexts.Add(this.ConvertToString(suggestion));
                     continue;
                 }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
             }
 
-            this.EraseFileAndWriteContent(inheritancesFilePath, inheritances);
-            this.EraseFileAndWriteContent(historyFilePath, history);
+            string inheritancesText = String.Join("\n", inheritanceTexts);
+            this.EraseFileAndWriteContent(inheritancesFilePath, inheritancesText);
+            string historyText = string.Join("\n", historyTexts);
+            this.EraseFileAndWriteContent(historyFilePath, historyText);
 
         }
 

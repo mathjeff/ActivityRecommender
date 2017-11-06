@@ -9,6 +9,11 @@ namespace ActivityRecommendation
 {
     public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>
     {
+        public event ActivityAddedHandler ActivityAdded;
+        public delegate void ActivityAddedHandler(object sender, EventArgs e);
+
+
+
         #region Constructor
 
         public ActivityDatabase(RatingSummarizer ratingSummarizer)
@@ -77,64 +82,18 @@ namespace ActivityRecommendation
                 activities = this.activitiesByName.CombineAll();
             }
             Activity result = null;
-            /*
-            // get the required prefix for the name of the activity
-            string firstValidName = descriptor.ActivityName;
-            if (firstValidName == null)
-            {
-                firstValidName = "";
-            }
-            // determine the last (in dictionary order) acceptable name for a matching activity
-            string lastValidName;
-            int i;
-            for (i = firstValidName.Length - 1; i >= 0; i--)
-            {
-                //if (firstValidName[i] != Char.MaxValue)
-                if (firstValidName[i] != 'z' && firstValidName[i] != 'Z')
-                {
-                    break;
-                }
-            }
-            if (i < 0)
-            {
-                lastValidName = null;
-            }
-            else
-            {
-                char lastChar = (char)(firstValidName[i] + 1);
-                lastValidName = firstValidName.Substring(0, i) + lastChar;
-                //lastValidName[i] = lastValidName[i] + 1;
-            }
-            // get a list of all activities with names in that range
-            IEnumerable<Activity> activities = null;
-            if (lastValidName == null)
-            {
-                activities = this.activitiesByName.CombineAfterKey(firstValidName, true);
-            }
-            else
-            {
-                activities = this.activitiesByName.CombineBetweenKeys(firstValidName, true, lastValidName, false);
-            }*/
             double bestMatchScore = 0;
-            //int count = 0;
             // figure out which activity matches best
             foreach (Activity activity in activities)
             {
-                //count++;
                 double matchScore = this.MatchQuality(descriptor, activity);
                 if (matchScore > bestMatchScore)
                 {
                     result = activity;
                     bestMatchScore = matchScore;
                 }
-                // if we don't need the best match, then just return once we've found the best from among few matches
-                /* if (count > 20 && result != null && !descriptor.RequiresPerfectMatch)
-                {
-                    break;
-                }*/
             }
             // now we've found the activity that is indicated by that descriptor
-            //descriptor.Activity = result;
             return result;
         }
         // tells whether the given descriptor can match the given activity
@@ -231,6 +190,20 @@ namespace ActivityRecommendation
                 return this.rootActivity;
             }
         }
+        public List<Activity> LeafActivities
+        {
+            get
+            {
+                List<Activity> results = new List<Activity>();
+                foreach (Activity activity in this.allActivities)
+                {
+                    if (activity.Children.Count == 0)
+                        results.Add(activity);
+                }
+                return results;
+            }
+
+        }
         #endregion
 
         // constructs an Activity from the given ActivityDescriptor
@@ -240,6 +213,8 @@ namespace ActivityRecommendation
             if (sourceDescriptor.Choosable != null)
                 result.Choosable = sourceDescriptor.Choosable.Value;
             result.AddParent(this.rootActivity);
+            if (this.ActivityAdded != null)
+                this.ActivityAdded.Invoke(this, new EventArgs());
             return result;
         }
 

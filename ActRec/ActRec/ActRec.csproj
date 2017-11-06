@@ -72,7 +72,7 @@
     <Compile Include="Source\HistoryWriter.cs" />
     <Compile Include="Source\IdlenessProgression.cs" />
     <Compile Include="Source\Inheritance.cs" />
-    <Compile Include="Source\InheritanceEditingView.cs" />
+    <Compile Include="Source\View\InheritanceEditingView.cs" />
     <Compile Include="Source\InterpolatorSuggestionJustification.cs" />
     <Compile Include="Source\IPredictionLink.cs" />
     <Compile Include="Source\IProgression.cs" />
@@ -106,7 +106,7 @@
     <Compile Include="Source\View\DataExportView.cs" />
     <Compile Include="Source\View\DataImportView.cs" />
     <Compile Include="Source\View\DateEntryView.cs" />
-    <Compile Include="Source\View\DisplayManager.cs" />
+    <Compile Include="Source\View\InheritancesVisualizationView.cs" />
     <Compile Include="Source\View\ParticipationCorrelationMenu.cs" />
     <Compile Include="Source\View\ParticipationCorrelationView.cs" />
     <Compile Include="Source\View\ParticipationEntryView.cs" />

@@ -63,39 +63,27 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
 
-            //GridLayout unevenDisplayGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(4), LayoutScore.Get_UnCentered_LayoutScore(4));
-            //GridLayout evenDisplayGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
-            //GridLayout mainGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(3), LayoutScore.Zero);
-            //GridLayout leftGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
-            //mainGrid.AddLayout(leftGrid);
-
             this.inheritanceEditingView = new InheritanceEditingView(this.layoutStack);
             this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
             this.inheritanceEditingView.AddClickHandler(new EventHandler(this.SubmitInheritance));
-            //mainGrid.AddLayout(this.inheritanceEditingView);
-            //leftGrid.AddLayout(this.inheritanceEditingView);
+            LayoutChoice_Set inheritanceInfosView = new MenuLayoutBuilder(this.layoutStack)
+                .AddLayout("View Activities", new InheritancesVisualizationView(this.ActivityDatabase))
+                .AddLayout("Edit Activities", this.inheritanceEditingView)
+                .Build();
+                
 
             // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
-            //this.participationEntryView = new ParticipationEntryView();
             this.participationEntryView.Engine = this.engine;
             this.participationEntryView.ActivityDatabase = this.engine.ActivityDatabase;
             this.participationEntryView.AddOkClickHandler(new EventHandler(this.SubmitParticipation));
             this.participationEntryView.AddSetenddateHandler(new EventHandler(this.MakeEndNow));
             this.participationEntryView.AddSetstartdateHandler(new EventHandler(this.MakeStartNow));
-            //this.participationEntryView.Background = new SolidColorBrush(Color.FromRgb(220, 220, 220));
             this.participationEntryView.LatestParticipation = this.latestParticipation;
-            //evenDisplayGrid.AddLayout(this.participationEntryView);
-            //unevenDisplayGrid.AddLayout(this.participationEntryView);
-            //mainGrid.AddLayout(this.participationEntryView);
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack);
             this.suggestionsView.AddSuggestionClickHandler(new EventHandler(this.MakeRecommendation));
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
-            //this.suggestionsView.Background = new SolidColorBrush(Color.FromRgb(210, 210, 210));
-            //evenDisplayGrid.AddLayout(this.suggestionsView);
-            //unevenDisplayGrid.AddLayout(this.suggestionsView);
-            //mainGrid.AddLayout(this.suggestionsView);
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationCorrelationMenu(this.layoutStack, this.ActivityDatabase, this.engine));
@@ -119,7 +107,7 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("Add New Activities", this.inheritanceEditingView);
+            usageMenu_builder.AddLayout("View/Edit Activities", inheritanceInfosView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
@@ -487,7 +475,6 @@ namespace ActivityRecommendation
             parentDescriptor.ActivityName = this.inheritanceEditingView.ParentName;
             inheritance.ParentDescriptor = parentDescriptor;
 
-            //this.engine.AddInheritance(inheritance);
             this.AddInheritance(inheritance);
 
             this.inheritanceEditingView.ChildName = "";
@@ -495,7 +482,6 @@ namespace ActivityRecommendation
         }
         private void AddInheritance(Inheritance newInheritance)
         {
-            //this.engine.PutInheritanceInMemory(newInheritance);
             this.engine.ApplyInheritance(newInheritance);
             this.WriteInheritance(newInheritance);
         }

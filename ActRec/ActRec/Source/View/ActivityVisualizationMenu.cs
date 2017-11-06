@@ -11,21 +11,22 @@ namespace ActivityRecommendation
         public ActivityVisualizationMenu()
         {
             this.SetTitle("View Statistics");
-            this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(1), LayoutScore.Zero);
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            //this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(1), LayoutScore.Zero);
 
             this.yAxisNameBox = new ActivityNameEntryBox("Y-Axis Activity (required)");
-            this.displayGrid.AddLayout(this.yAxisNameBox);
+            gridBuilder.AddLayout(this.yAxisNameBox);
 
             this.okButton = new Button();
 
-            this.displayGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "Visualize")));
+            gridBuilder.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "Visualize")));
 
             //this.xAxisNameBox = new ActivityNameEntryBox("X-Axis Activity (optional)");
             //this.xAxisProgressionSelector = new ProgressionSelectionView("X-Axis");
             //this.displayGrid.AddItem(this.xAxisProgressionSelector);
 
 
-            this.SetContent(new LayoutCache(this.displayGrid));
+            this.SetContent(new LayoutCache(gridBuilder.Build()));
         }
 
         public void AddOkClickHandler(EventHandler e)

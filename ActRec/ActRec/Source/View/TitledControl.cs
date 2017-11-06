@@ -41,6 +41,10 @@ namespace ActivityRecommendation
         {
             this.gridLayout.PutLayout(layout, 0, 1);
         }
+        public LayoutChoice_Set GetContent()
+        {
+            return this.gridLayout.GetLayout(0, 1);
+        }
         protected Label TitleBlock
         {
             get

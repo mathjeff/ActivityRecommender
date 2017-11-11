@@ -67,7 +67,7 @@ namespace ActivityRecommendation
             this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
             this.inheritanceEditingView.AddClickHandler(new EventHandler(this.SubmitInheritance));
             LayoutChoice_Set inheritanceInfosView = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout("View Activities", new InheritancesVisualizationView(this.ActivityDatabase))
+                .AddLayout("View Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
                 .AddLayout("Edit Activities", this.inheritanceEditingView)
                 .Build();
                 

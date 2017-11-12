@@ -8,23 +8,30 @@ namespace ActivityRecommendation
 {
     class ActivityNameEntryBox : TitledControl
     {
-        public ActivityNameEntryBox(string startingTitle) : base(startingTitle)
+        public ActivityNameEntryBox(string startingTitle, bool matchExisting = true) : base(startingTitle)
         {
-            GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
 
             this.nameBox = new Editor();
             this.nameBox.TextChanged += NameBox_TextChanged;
-            LayoutChoice_Set nameLayout = new TextboxLayout(this.nameBox);
-            contentWithSuggestion.AddLayout(nameLayout);
-
             this.suggestionBlock = new Label();
-            contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
+            LayoutChoice_Set nameLayout = new TextboxLayout(this.nameBox);
+            LayoutChoice_Set content;
 
-            LayoutUnion content = new LayoutUnion(contentWithSuggestion, nameLayout);
+            if (matchExisting)
+            {
+                GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
+                contentWithSuggestion.AddLayout(nameLayout);
+                contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
+                content = new LayoutCache(new LayoutUnion(contentWithSuggestion, nameLayout));
+            }
+            else
+            {
+                content = nameLayout;
+            }
 
             this.UpdateSuggestions();
 
-            base.SetContent(new LayoutCache(content));
+            base.SetContent(content);
 
         }
 
@@ -52,7 +59,6 @@ namespace ActivityRecommendation
             {
                 // automatically fill the suggestion text into the box
                 this.nameBox.Text = this.suggestedActivityName;
-                //this.nameBox.Text = "Entered";
             }
             this.UpdateSuggestions();
 

@@ -63,12 +63,19 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
 
-            this.inheritanceEditingView = new InheritanceEditingView(this.layoutStack);
-            this.inheritanceEditingView.ActivityDatabase = this.engine.ActivityDatabase;
-            this.inheritanceEditingView.AddClickHandler(new EventHandler(this.SubmitInheritance));
-            LayoutChoice_Set inheritanceInfosView = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout("View Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
-                .AddLayout("Edit Activities", this.inheritanceEditingView)
+            InheritanceEditingView activityCreationView = new InheritanceEditingView(this.ActivityDatabase, this.layoutStack, true);
+            activityCreationView.Submit += this.SubmitInheritance;
+            InheritanceEditingView inheritanceCreationView = new InheritanceEditingView(this.ActivityDatabase, this.layoutStack, false);
+            inheritanceCreationView.Submit += this.SubmitInheritance;
+
+            LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
+                .AddLayout("Add New Activity", activityCreationView)
+                .AddLayout("Assign Existing Activity as Child of A Parent Activity", inheritanceCreationView)
+                .Build();
+
+            LayoutChoice_Set inheritanceInfoView = new Vertical_GridLayout_Builder().Uniform()
+                .AddLayout(new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
+                .AddLayout(inheritanceEditingView)
                 .Build();
                 
 
@@ -107,7 +114,7 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("View/Edit Activities", inheritanceInfosView);
+            usageMenu_builder.AddLayout("View/Edit Activities", inheritanceInfoView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
@@ -459,27 +466,10 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(newRequest) + Environment.NewLine;
             this.textConverter.AppendText(text, this.ratingsFileName);
         }
-        private void SubmitInheritance(object sender, EventArgs e)
+        public void SubmitInheritance(object sender, Inheritance inheritance)
         {
-            this.SubmitInheritance();
-        }
-        private void SubmitInheritance()
-        {
-            Inheritance inheritance = new Inheritance();
             inheritance.DiscoveryDate = DateTime.Now;
-
-            ActivityDescriptor childDescriptor = new ActivityDescriptor();
-            childDescriptor.ActivityName = this.inheritanceEditingView.ChildName;
-            inheritance.ChildDescriptor = childDescriptor;
-
-            ActivityDescriptor parentDescriptor = new ActivityDescriptor();
-            parentDescriptor.ActivityName = this.inheritanceEditingView.ParentName;
-            inheritance.ParentDescriptor = parentDescriptor;
-
             this.AddInheritance(inheritance);
-
-            this.inheritanceEditingView.ChildName = "";
-            this.inheritanceEditingView.ParentName = "";
         }
         private void AddInheritance(Inheritance newInheritance)
         {
@@ -706,7 +696,6 @@ namespace ActivityRecommendation
         }
         private void UpdateDefaultParticipationData(DateTime when)
         {
-            //this.participationEntryView.Clear();
             DateTime startDate = this.LatestActionDate;
             DateTime endDate = when;
             if (startDate.Day != endDate.Day)
@@ -716,9 +705,6 @@ namespace ActivityRecommendation
             }
             this.participationEntryView.EndDate = endDate;
             this.participationEntryView.SetStartDate(startDate);
-            //this.participationEntryView.ActivityName = "";
-            //this.participationEntryView.RatingText = "";
-            //this.participationEntryView.CommentText = "";
         }
 
 
@@ -727,7 +713,6 @@ namespace ActivityRecommendation
         LayoutChoice_Set mainLayout;
 
         ParticipationEntryView participationEntryView;
-        InheritanceEditingView inheritanceEditingView;
         SuggestionsView suggestionsView;
         DataExportView dataExportView;
         DataImportView dataImportView;

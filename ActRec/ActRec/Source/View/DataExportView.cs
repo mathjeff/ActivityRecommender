@@ -73,7 +73,7 @@ namespace ActivityRecommendation
             Color backgroundColor;
             if (this.Get_NumLines() >= 0)
             {
-                backgroundColor = Color.White;
+                backgroundColor = Color.LightGray;
             }
             else
             {

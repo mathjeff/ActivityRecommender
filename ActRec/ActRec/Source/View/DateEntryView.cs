@@ -15,7 +15,8 @@ namespace ActivityRecommendation
             this.layoutStack = layoutStack;
             this.chooseDate_button = new Button();
             this.chooseDate_button.Clicked += ChooseDate_button_Clicked;
-            this.SetContent(new ButtonLayout(this.chooseDate_button));
+            this.SetContent(ButtonLayout.WithoutBevel(this.chooseDate_button));
+            this.chooseDate_button.TextColor = Color.Black;
 
             // Use a dateFormat of "yyyy-MM-ddTHH:mm:ss";
             this.dateFormat.Add(new DateCharacter('y', true));
@@ -67,7 +68,7 @@ namespace ActivityRecommendation
         }
         public void appearValid()
         {
-            this.chooseDate_button.BackgroundColor = Color.White;
+            this.chooseDate_button.BackgroundColor = Color.LightGray;
         }
 
         public bool IsDateValid()
@@ -149,8 +150,9 @@ namespace ActivityRecommendation
             this.dateFormat = dateFormat;
 
             this.dateBlock = new Label();
-
             TextblockLayout dateLayout = new TextblockLayout(this.dateBlock);
+            this.dateBlock.TextColor = Color.Black;
+
             dateLayout.ScoreIfEmpty = true;
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(dateLayout);
@@ -308,7 +310,7 @@ namespace ActivityRecommendation
         public void updateValidity()
         {
             if (this.isDateValid())
-                this.dateBlock.BackgroundColor = Color.White;
+                this.dateBlock.BackgroundColor = Color.LightGray;
             else
                 this.dateBlock.BackgroundColor = Color.Red;
         }
@@ -497,7 +499,7 @@ namespace ActivityRecommendation
         // alters the appearance to indicate that the given date is not valid
         public void appearValid()
         {
-            this.dateBox.BackgroundColor = Color.White;
+            this.dateBox.BackgroundColor = Color.LightGray;
         }
 
         // alters the appearance to indicate that the given date is not valid

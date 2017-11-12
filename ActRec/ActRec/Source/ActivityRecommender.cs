@@ -141,7 +141,7 @@ namespace ActivityRecommendation
 
             this.mainLayout = new LayoutCache(this.layoutStack);
 
-            this.mainWindow.BackgroundColor = Color.LightGray;
+            this.mainWindow.BackgroundColor = Color.Black;
 
             this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
 

@@ -38,7 +38,7 @@ namespace ActivityRecommendation
 
             //this.AddVisualChild(childCanvas);
             this.Connected = true;
-            this.canvas.BackgroundColor = Color.LightGray;
+            this.canvas.BackgroundColor = Color.Black;
             this.canvas.InvalidateSurface();
 
         }
@@ -139,11 +139,6 @@ namespace ActivityRecommendation
                 return;
 
             DateTime start = DateTime.Now;
-            //canvas.Clear(SKColors.White);
-            //canvas.DrawRect(SKRect.Create(new SKSize(400, 400)), greenBrush);
-            //canvas.DrawCircle(0, 0, 1000, cyanBrush);
-            //Size availableSize = new Size(widthConstraint, heightConstraint);
-            //this.UpdatePoints(availableSize);
 
             double resolution = 1;
 

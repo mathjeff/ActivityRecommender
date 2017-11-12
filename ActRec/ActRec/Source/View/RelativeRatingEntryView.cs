@@ -71,7 +71,7 @@ namespace ActivityRecommendation
         // alters the appearance to indicate that the given date is not valid
         void AppearValid()
         {
-            this.scaleBlock.BackgroundColor = Color.White;
+            this.scaleBlock.BackgroundColor = Color.LightGray;
         }
 
         // alters the appearance to indicate that the given date is not valid

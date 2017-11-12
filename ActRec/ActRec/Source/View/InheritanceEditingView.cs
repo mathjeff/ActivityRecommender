@@ -22,7 +22,7 @@ namespace ActivityRecommendation
 
             GridLayout content = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            this.childNameBox = new ActivityNameEntryBox("Activity Name", !makeNewChild);
+            this.childNameBox = new ActivityNameEntryBox("Activity Name", makeNewChild);
             this.childNameBox.Database = activityDatabase;
             content.AddLayout(this.childNameBox);
 
@@ -61,6 +61,8 @@ namespace ActivityRecommendation
                     return; // invalid
                 Inheritance inheritance = new Inheritance(parentDescriptor, childDescriptor);
                 this.Submit.Invoke(this, inheritance);
+                this.childNameBox.NameText = "";
+                this.parentNameBox.NameText = "";
             }
         }
 

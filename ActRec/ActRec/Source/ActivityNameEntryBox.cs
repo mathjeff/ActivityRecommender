@@ -8,7 +8,7 @@ namespace ActivityRecommendation
 {
     class ActivityNameEntryBox : TitledControl
     {
-        public ActivityNameEntryBox(string startingTitle, bool matchExisting = true) : base(startingTitle)
+        public ActivityNameEntryBox(string startingTitle, bool createNewActivity = false) : base(startingTitle)
         {
 
             this.nameBox = new Editor();
@@ -16,17 +16,18 @@ namespace ActivityRecommendation
             this.suggestionBlock = new Label();
             LayoutChoice_Set nameLayout = new TextboxLayout(this.nameBox);
             LayoutChoice_Set content;
+            this.createNewActivity = createNewActivity;
 
-            if (matchExisting)
+            if (createNewActivity)
+            {
+                content = nameLayout;
+            }
+            else
             {
                 GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
                 contentWithSuggestion.AddLayout(nameLayout);
                 contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
                 content = new LayoutCache(new LayoutUnion(contentWithSuggestion, nameLayout));
-            }
-            else
-            {
-                content = nameLayout;
             }
 
             this.UpdateSuggestions();
@@ -57,8 +58,16 @@ namespace ActivityRecommendation
             }
             if (addedMarker)
             {
-                // automatically fill the suggestion text into the box
-                this.nameBox.Text = this.suggestedActivityName;
+                if (this.createNewActivity)
+                {
+                    // reject illegal characters
+                    this.nameBox.Text = oldText;
+                }
+                else
+                {
+                    // automatically fill the suggestion text into the box
+                    this.nameBox.Text = this.suggestedActivityName;
+                }
             }
             this.UpdateSuggestions();
 
@@ -150,7 +159,7 @@ namespace ActivityRecommendation
                 ActivityDescriptor descriptor = new ActivityDescriptor();
                 descriptor.ActivityName = text;
                 descriptor.PreferHigherProbability = true;
-                descriptor.RequiresPerfectMatch = false;
+                descriptor.RequiresPerfectMatch = this.createNewActivity;
                 return descriptor;
             }
         }
@@ -170,6 +179,7 @@ namespace ActivityRecommendation
         Label suggestionBlock;
         ActivityDatabase database;
         string suggestedActivityName = "";
+        bool createNewActivity;
     }
 
     // Summary:

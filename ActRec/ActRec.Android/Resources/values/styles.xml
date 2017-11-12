@@ -33,6 +33,7 @@
   <!-- for removing the margins from buttons -->
   <style name="ButtonStyle" parent="android:Widget.Material.Button">
     <item name="android:layout_margin">0dip</item>
+    <item name="textAllCaps">false</item>
     <item name="android:background">@drawable/button_style</item>
   </style>
 

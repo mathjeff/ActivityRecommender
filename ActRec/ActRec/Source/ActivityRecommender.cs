@@ -211,6 +211,7 @@ namespace ActivityRecommendation
             this.textConverter.ReadFile(this.inheritancesFileName);
             this.textConverter.ReadFile(this.ratingsFileName);
             this.textConverter.ReadFile(this.tempFileName);
+            this.ActivityDatabase.AssignDefaultParent();
             System.Diagnostics.Debug.WriteLine("Done parsing files");
         }
 

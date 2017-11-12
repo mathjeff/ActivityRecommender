@@ -12,8 +12,6 @@ namespace ActivityRecommendation
         public event ActivityAddedHandler ActivityAdded;
         public delegate void ActivityAddedHandler(object sender, EventArgs e);
 
-
-
         #region Constructor
 
         public ActivityDatabase(RatingSummarizer ratingSummarizer)
@@ -212,10 +210,19 @@ namespace ActivityRecommendation
             Activity result = new Activity(sourceDescriptor.ActivityName, this.ratingSummarizer);
             if (sourceDescriptor.Choosable != null)
                 result.Choosable = sourceDescriptor.Choosable.Value;
-            result.AddParent(this.rootActivity);
+            //result.AddParent(this.rootActivity);
             if (this.ActivityAdded != null)
                 this.ActivityAdded.Invoke(this, new EventArgs());
             return result;
+        }
+
+        public void AssignDefaultParent()
+        {
+            foreach (Activity activity in this.allActivities)
+            {
+                if (activity.Parents.Count < 1 && activity != this.rootActivity)
+                    activity.Parents.Add(this.rootActivity);
+            }
         }
 
         #region Functions for ICombiner<List<Activity>>

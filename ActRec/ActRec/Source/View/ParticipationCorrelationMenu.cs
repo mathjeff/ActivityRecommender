@@ -45,7 +45,8 @@ namespace ActivityRecommendation.View
         }
         private void Enter()
         {
-            this.layoutStack.AddLayout(new ParticipationCorrelationView(this.engine, this.activityDatabase, this.activityName_box.ActivityDescriptor, this.durationBox.GetDuration()));
+            if (this.durationBox.IsDurationValid())
+                this.layoutStack.AddLayout(new ParticipationCorrelationView(this.engine, this.activityDatabase, this.activityName_box.ActivityDescriptor, this.durationBox.GetDuration()));
         }
 
         private ActivityNameEntryBox activityName_box;

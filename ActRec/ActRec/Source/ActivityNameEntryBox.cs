@@ -159,6 +159,8 @@ namespace ActivityRecommendation
             get
             {
                 ActivityDescriptor descriptor = this.ActivityDescriptor;
+                if (descriptor == null)
+                    return null;
                 return this.database.ResolveDescriptor(descriptor);
             }
         }

@@ -131,7 +131,9 @@ namespace ActivityRecommendation.View
         {
             if (this.ActivityChosen != null)
             {
-                this.ActivityChosen.Invoke(this, this.nameBox.Activity);
+                Activity activity = this.nameBox.Activity;
+                if (activity != null)
+                    this.ActivityChosen.Invoke(this, activity);
             }
         }
 

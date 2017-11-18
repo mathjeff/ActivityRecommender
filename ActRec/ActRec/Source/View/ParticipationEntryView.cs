@@ -104,14 +104,14 @@ namespace ActivityRecommendation
                     this.endDateBox.appearInvalid();
                 }
             }
-            this.Update_FeedbackBlock_Text();
+            this.Clear_FeedbackBlock_Text();
         }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             //this.setEnddateButton.Highlight();
         }
 
-        public void Clear()
+        public void Submit()
         {
             this.ratingBox.Clear();
             this.nameBox.NameText = "";
@@ -171,7 +171,7 @@ namespace ActivityRecommendation
         public void SetActivityName(string newName)
         {
             this.nameBox.NameText = newName;
-            this.Update_FeedbackBlock_Text();
+            this.Clear_FeedbackBlock_Text();
             //if (newName != "" && newName != null)
             //    this.setEnddateButton.Highlight();
         }
@@ -263,11 +263,11 @@ namespace ActivityRecommendation
 
         public void ActivityName_BecameValid(object sender, TextChangedEventArgs e)
         {
-            this.Update_FeedbackBlock_Text();
+            this.Clear_FeedbackBlock_Text();
         }
 
 
-        private void Update_FeedbackBlock_Text()
+        public string Compute_FeedbackBlock_Text()
         {
             if (this.startDateBox.IsDateValid() && this.nameBox.ActivityDescriptor != null)
             {
@@ -275,10 +275,20 @@ namespace ActivityRecommendation
                 Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
                 if (activity != null)
                 {
-                    string text = this.computeFeedback(activity, startDate);
-                    this.predictedRating_block.Text = text;
+                    return this.computeFeedback(activity, startDate);
                 }
             }
+            return "";
+        }
+
+        public void Set_FeedbackText(string text)
+        {
+            this.predictedRating_block.Text = text;
+        }
+
+        private void Clear_FeedbackBlock_Text()
+        {
+            this.predictedRating_block.Text = "";
         }
 
         private string computeFeedback(Activity chosenActivity, DateTime startDate)

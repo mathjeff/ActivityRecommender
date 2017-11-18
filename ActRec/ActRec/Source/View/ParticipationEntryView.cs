@@ -104,6 +104,7 @@ namespace ActivityRecommendation
                     this.endDateBox.appearInvalid();
                 }
             }
+            this.Update_FeedbackBlock_Text();
         }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -307,14 +308,12 @@ namespace ActivityRecommendation
             this.engine.EstimateRating(chosenActivity, startDate);
             double chosenValue = chosenActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
 
-            //DateTime historyStart = new DateTime();
-            //RatingSummary summary = new RatingSummary(historyStart);
-
-            //summary.Update(this.engine.RatingSummarizer, historyStart, startDate);
-            //double usualValue = summary.Item.Mean;
             double usualValue = rootActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
 
             double bonusInSeconds = 0;
+
+            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
+
             if (usualValue != 0)
             {
                 // relWeight(x) = 1 * 2^(-x/halfLife)
@@ -324,7 +323,6 @@ namespace ActivityRecommendation
                 // absWeight(0) = log(2)/log(e)/halflife
                 // absWeight(0) = log(2)/halflife
 
-                double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
 
                 double overallImprovment = (chosenValue / usualValue) - 1;
 
@@ -337,10 +335,15 @@ namespace ActivityRecommendation
             }
             string message;
             double bonusInDays = bonusInSeconds / 60 / 60 / 24;
+            double baselineDays = usualValue / weightOfThisMoment / 60 / 60 / 24;
+            double roundedBonus = Math.Round(bonusInDays, 3);
+            double roundedBaseline = Math.Round(baselineDays, 3);
+            double averageValue = this.engine.UnweightedSummarizer.GetValueDistributionForDates(new DateTime(), startDate).Mean / weightOfThisMoment / 60 / 60 / 24;
+            double roundedAverage = Math.Round(averageValue, 3);
             if (bonusInDays > 0)
-                message = "Nice! I estimate this worth +" + bonusInDays + " days.";
+                message = "Nice! I estimate this worth +" + roundedBonus + " days (up from baseline = " + roundedBaseline + ", average = " + roundedAverage + ").";
             else
-                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days.";
+                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days (down from baseline = " + roundedBaseline + ", average = " + roundedAverage + ").";
             return message;
         }
         

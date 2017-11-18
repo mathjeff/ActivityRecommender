@@ -714,6 +714,7 @@ namespace ActivityRecommendation
                     coordinates[i] = value.Value.Mean;
                 else
                     coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
+
             }
             return coordinates;
         }

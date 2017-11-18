@@ -995,6 +995,13 @@ namespace ActivityRecommendation
                 return this.weightedRatingSummarizer;
             }
         }
+        public RatingSummarizer UnweightedSummarizer
+        {
+            get
+            {
+                return this.unweightedRatingSummarizer;
+            }
+        }
         private UserPreferences Get_UserPreferences()
         {
             return UserPreferences.DefaultPreferences;

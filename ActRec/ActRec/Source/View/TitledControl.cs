@@ -21,6 +21,12 @@ namespace ActivityRecommendation
             this.Initialize();
             this.titleBlock.Text = startingTitle;
         }
+        public TitledControl(string startingTitle, LayoutChoice_Set content)
+            : this(startingTitle)
+        {
+            this.SetContent(content);
+        }
+
         private void Initialize()
         {
             this.titleBlock = new Label();

@@ -34,43 +34,32 @@ namespace ActivityRecommendation
             }
 
             this.xAxisProgression = participationXAxis;
-            //this.xAxisActivity = null;
             this.yAxisActivity = yAxisActivity;
             this.smoothingDuration = smoothingWindow;
 
             // setup the title
             this.SetTitle(this.YAxisLabel + " vs. " + this.XAxisLabel);
-            //this.KeyDown += new System.Windows.Input.KeyEventHandler(ActivityVisualizationView_KeyDown);
 
-            // explicitly call out an even split as a possibility, to improve the runtime performance of finding the best the layout
-            //GridLayout flexibleGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
             GridLayout fixedGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-            //this.SetContent(new LayoutUnion(fixedGrid, flexibleGrid));
             this.SetContent(fixedGrid);
 
             GridLayout graphGrid = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
             // setup a graph of the ratings
-            this.ratingsView = new TitledControl("This is a graph of the ratings of " + this.YAxisLabel + " vs. Time");
+            this.ratingsView = new TitledControl("Ratings vs. Time");
             graphGrid.AddLayout(this.ratingsView);
 
             // setup a graph of the participations
-            this.participationsView = new TitledControl("This is a graph of the participations in " + this.YAxisLabel + " vs. " + this.XAxisLabel);
+            this.participationsView = new TitledControl("Participations vs. " + this.XAxisLabel);
             graphGrid.AddLayout(this.participationsView);
 
             //flexibleGrid.AddLayout(graphGrid);
             fixedGrid.AddLayout(graphGrid);
 
-            // put the stats view into the main view
-            //flexibleGrid.AddLayout(this.Make_StatsView());
             fixedGrid.AddLayout(this.Make_StatsView());
-            //this.Make_StatsView();
-            //fixedGrid.AddLayout(new TextblockLayout("stats here"));
 
 
             this.UpdateParticipationStatsView();
             this.UpdateDrawing();
-
-            //CalculateExtraStats();
         }
         private LayoutChoice_Set Make_StatsView()
         {
@@ -125,14 +114,54 @@ namespace ActivityRecommendation
 
             // display rating statistics
             this.ratingWhenSuggested_Display = new TitledTextblock("Mean rating when suggested:");
-            this.ratingWhenSuggested_Display.Text = this.yAxisActivity.ScoresWhenSuggested.Mean.ToString();
+            this.ratingWhenSuggested_Display.Text = Math.Round(this.yAxisActivity.ScoresWhenSuggested.Mean, 5).ToString();
             builder.AddLayout(this.ratingWhenSuggested_Display);
 
             this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating when not suggested:");
-            this.ratingWhenNotSuggested_Display.Text = this.yAxisActivity.ScoresWhenNotSuggested.Mean.ToString();
+            this.ratingWhenNotSuggested_Display.Text = Math.Round(this.yAxisActivity.ScoresWhenNotSuggested.Mean, 5).ToString();
             builder.AddLayout(this.ratingWhenNotSuggested_Display);
+
+            builder.AddLayout(this.make_helpLayout());
             
             return builder.Build();
+        }
+
+        private LayoutChoice_Set make_helpLayout()
+        {
+            LayoutChoice_Set ratingsHelpLayout = new HelpWindowBuilder()
+                .AddMessage("The Ratings graph shows three values over time.")
+                .AddMessage("The green plot indicates how you have rated this activity during this time.")
+                .AddMessage("The red plot is a straight line showing the trend of the green plot.")
+                .AddMessage("The blue plot essentially estimates how happy you have been overall"
+                +" (technically, for each point in time, the blue plot shows the net present value (an economics term) of all ratings after that point).")
+                .Build();
+            LayoutChoice_Set participationsHelpLayout = new HelpWindowBuilder()
+                .AddMessage("The Participations graph shows three values over time.")
+                .AddMessage("The green plot shows the cumulative amount of time you've spent on this particular activity during this time.")
+                .AddMessage("The red plot is a straight line showing the trend of the green plot.")
+                .AddMessage("The blue plot shows the cumulative number of times that ActivityRecommender has recommended this activity to you.")
+                .AddMessage("You'll also notice some short vertical lines near the bottom, denoting days or months based on how much time the graph encompasses.")
+                .Build();
+            LayoutChoice_Set dateHelpLayout = new HelpWindowBuilder()
+                .AddMessage("Notice the two date boxes in the top-right corner of the screen.")
+                .AddMessage("If you enter new dates into them, then the rest of the screen will update accordingly.")
+                .AddMessage("By default, the start-date box will be set to the earliest date for which there is any data for this activity.")
+                .AddMessage("By default, the end-date box will be set to tomorrow at midnight (the beginning of the day).")
+                .Build();
+            LayoutChoice_Set statsHelpLayout = new HelpWindowBuilder()
+                .AddMessage("The Stats description will show assorted statistics about these activities.")
+                .AddMessage("The statistics will only refer to data that falls within the duration specified by the date boxes above.")
+                .Build();
+
+            GridLayout helpGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            helpGrid.AddLayout(new HelpButtonLayout("Ratings graph", ratingsHelpLayout, this.layoutStack));
+            helpGrid.AddLayout(new HelpButtonLayout("Date selection", dateHelpLayout, this.layoutStack));
+            helpGrid.AddLayout(new HelpButtonLayout("Participations graph", participationsHelpLayout, this.layoutStack));
+            helpGrid.AddLayout(new HelpButtonLayout("Text stats", statsHelpLayout, this.layoutStack));
+
+            LayoutChoice_Set helpButton = new HelpButtonLayout("Explain",
+                new TitledControl("Choose a View to Explain", helpGrid), this.layoutStack);
+            return helpButton;
         }
 
 
@@ -414,9 +443,9 @@ namespace ActivityRecommendation
 
             // now update the text blocks
             //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
-            this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + numHoursSpent + " hours on " + this.YAxisLabel;
+            this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + Math.Round(numHoursSpent, 3) + " hours on " + this.YAxisLabel;
             //this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
-            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + (participationFraction * 24 * 60).ToString() + " minutes per day";
+            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + Math.Round(participationFraction * 24 * 60, 3).ToString() + " minutes per day";
             Activity bestChild = null;
             double bestTotal = 0;
             foreach (Activity child in this.yAxisActivity.Children)

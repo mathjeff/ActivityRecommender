@@ -44,7 +44,13 @@ namespace ActivityRecommendation
         private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             string oldText = e.OldTextValue;
+            if (oldText == null)
+                oldText = "";
             string newText = this.nameBox.Text;
+
+            // ignore programatically generated changes
+            if (newText == this.nameText)
+                return;
 
             List<String> markers = new List<string> { "\n", "\t" };
             bool addedMarker = false;
@@ -61,15 +67,31 @@ namespace ActivityRecommendation
                 if (this.createNewActivity)
                 {
                     // reject illegal characters
-                    this.nameBox.Text = oldText;
+                    this.NameText = oldText;
                 }
                 else
                 {
                     // automatically fill the suggestion text into the box
-                    this.nameBox.Text = this.suggestedActivityName;
+                    this.NameText = this.suggestedActivityName;
                 }
             }
-            this.UpdateSuggestions();
+            else
+            {
+                if (newText.Length > oldText.Length)
+                {
+                    if (!this.createNewActivity)
+                        this.NameText = this.autocomplete(newText);
+                    else
+                        this.NameText = newText;
+                }
+                else
+                {
+                    if (newText.Length < oldText.Length)
+                        this.NameText = this.doBackspace(oldText);
+                    else
+                        this.NameText = newText;
+                }
+            }
 
             if (this.NameMatchesSuggestion)
             {
@@ -81,10 +103,11 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.nameBox.Text;
+                return this.nameText;
             }
             set
             {
+                this.nameText = value;
                 this.nameBox.Text = value;
                 this.UpdateSuggestions();
             }
@@ -103,11 +126,78 @@ namespace ActivityRecommendation
                 return (this.NameText == this.suggestedActivityName);
             }
         }
-        // this function gets called right after the text changes
-        void nameBox_TextChanged(object sender, TextChangedEventArgs e)
+
+        string doBackspace(string oldText)
         {
-            this.UpdateSuggestions();
+            string newText = "";
+            // look for the activity with the longest common substring that is strictly shorter than the current text
+            foreach (Activity activity in this.database.AllActivities)
+            {
+                string prefix = commonPrefix(activity.Name, oldText);
+                if (prefix.Length > newText.Length && prefix.Length < oldText.Length)
+                    newText = prefix;
+            }
+            // if no activity had an characters in common, then we couldn't have gotten to this string via autocomplete, so only remove one character
+            if (newText.Length < 1 && oldText.Length > 1)
+                newText = oldText.Substring(0, oldText.Length - 1);
+            return newText;
         }
+
+        // fill in more text based on the valid choices
+        string autocomplete(string currentText)
+        {
+            // find the common prefix of all matching activities
+            List<String> matchTexts = new List<string>();
+            foreach (Activity activity in this.database.AllActivities)
+            {
+                if (activity.Name.StartsWith(currentText))
+                    matchTexts.Add(activity.Name);
+            }
+            string prefix = this.commonPrefix(matchTexts);
+            if (prefix.Length < 1)
+            {
+                // there was no case-sensitive match; try a case-insensitive match
+                matchTexts = new List<string>();
+                foreach (Activity activity in this.database.AllActivities)
+                {
+                    if (activity.Name.ToLower().StartsWith(currentText.ToLower()))
+                        matchTexts.Add(activity.Name);
+                }
+                prefix = this.commonPrefix(matchTexts);
+            }
+
+            if (prefix.Length > currentText.Length)
+            {
+                return prefix;
+            }
+            return currentText;
+        }
+
+        string commonPrefix(string a, string b)
+        {
+            int i;
+            int max = Math.Min(a.Length, b.Length);
+            for (i = 0; i < max; i++)
+            {
+                if (a[i] != b[i])
+                    break;
+            }
+            string prefix = a.Substring(0, i);
+            return prefix;
+        }
+
+        string commonPrefix(List<string> texts)
+        {
+            if (texts.Count < 1)
+                return "";
+            string prefix = texts[0];
+            foreach (string text in texts)
+            {
+                prefix = commonPrefix(prefix, text);
+            }
+            return prefix;
+        }
+
         // update the UI based on a change in the text that the user has typed
         void UpdateSuggestions()
         {
@@ -151,7 +241,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                string text = this.nameBox.Text;
+                string text = this.NameText;
                 if (text == null || text == "")
                 {
                     return null;
@@ -174,7 +264,8 @@ namespace ActivityRecommendation
             }
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
-        
+
+        string nameText;
         Editor nameBox;
         Label suggestionBlock;
         ActivityDatabase database;

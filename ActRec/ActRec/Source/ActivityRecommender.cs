@@ -20,7 +20,13 @@ namespace ActivityRecommendation
         {
             this.mainWindow = newMainWindow;
 
+            this.Initialize();
+        }
+
+        public void Initialize()
+        {
             this.layoutStack = new LayoutStack();
+            this.suggestionDatabase = new SuggestionDatabase();
 
             this.InitializeSettings();
 
@@ -45,6 +51,12 @@ namespace ActivityRecommendation
                 this.WriteRecentUserData();
         }
 
+        public void Reset()
+        {
+            this.ShutDown();
+            this.Initialize();
+        }
+
         private void InitializeSettings()
         {
             this.ratingsFileName = "ActivityRatings.txt";
@@ -54,6 +66,7 @@ namespace ActivityRecommendation
             //this.ratingReplayer = new EngineTester();
             //this.ratingReplayer = new RatingRenormalizer(this.textConverter);
             //this.ratingReplayer = new HistoryWriter(this.textConverter);
+            this.numCategoriesToConsiderAtOnce = 3;
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
             this.participationEntryView = new ParticipationEntryView(this.layoutStack);
@@ -105,8 +118,9 @@ namespace ActivityRecommendation
             LayoutChoice_Set visualizationMenu = visualizationBuilder.Build();
 
 
-            this.dataImportView = new DataImportView();
-            this.dataImportView.Add_ClickHandler(new EventHandler(this.ImportData));
+            this.dataImportView = new DataImportView(this.layoutStack);
+            this.dataImportView.RequestImport += this.ImportData;
+            
 
             this.dataExportView = new DataExportView(this, this.layoutStack);
 
@@ -147,15 +161,11 @@ namespace ActivityRecommendation
 
         }
 
-        async public void ImportData(object sender, EventArgs e)
+        public void ImportData(object sender, FileData fileData)
         {
-            IFilePicker filePicker = CrossFilePicker.Current;
-            FileData fileData = await filePicker.PickFile();
-            if (fileData == null)
-                return; // cancelled
-
             string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
             this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName);
+            this.Reset();
         }
 
         public string ExportData()
@@ -728,9 +738,9 @@ namespace ActivityRecommendation
         Participation latestParticipation;
         RatingReplayer ratingReplayer;
         RecentUserData recentUserData;
-        int numCategoriesToConsiderAtOnce = 3;
+        int numCategoriesToConsiderAtOnce;
         LayoutStack layoutStack;
-        SuggestionDatabase suggestionDatabase = new SuggestionDatabase();
+        SuggestionDatabase suggestionDatabase;
 
     }
 }

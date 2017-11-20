@@ -308,7 +308,7 @@ namespace ActivityRecommendation
             this.engine.EstimateRating(chosenActivity, startDate);
             double chosenValue = chosenActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
 
-            double usualValue = rootActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
+            double usualValue = rootActivity.GetAverageLongtermValueWhenParticipated().Mean;
 
             double bonusInSeconds = 0;
 

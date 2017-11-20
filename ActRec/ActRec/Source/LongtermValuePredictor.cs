@@ -59,6 +59,10 @@ namespace ActivityRecommendation
                 this.ratingSummariesToUpdate.Enqueue(summary);
             }
         }
+        public AdaptiveLinearInterpolation.Distribution GetAverage()
+        {
+            return this.interpolator.GetAverage();
+        }
         Queue<RatingSummary> ratingSummariesToUpdate;
         AdaptiveLinearInterpolator<Distribution> interpolator;
         RatingSummarizer ratingSummarizer;

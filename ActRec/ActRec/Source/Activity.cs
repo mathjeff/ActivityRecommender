@@ -658,6 +658,12 @@ namespace ActivityRecommendation
             Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates));
             return estimate;
         }
+        public Distribution GetAverageLongtermValueWhenParticipated()
+        {
+            this.ApplyPendingParticipations();
+            Distribution average = new Distribution(this.longTerm_participationValue_interpolator.GetAverage());
+            return average;
+        }
 
         /*public ActivitySuggestionJustification JustifyInterpolation(ActivitySuggestion suggestion)
         {

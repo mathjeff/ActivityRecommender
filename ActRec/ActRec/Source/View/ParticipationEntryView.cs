@@ -338,12 +338,10 @@ namespace ActivityRecommendation
             double baselineDays = usualValue / weightOfThisMoment / 60 / 60 / 24;
             double roundedBonus = Math.Round(bonusInDays, 3);
             double roundedBaseline = Math.Round(baselineDays, 3);
-            double averageValue = this.engine.UnweightedSummarizer.GetValueDistributionForDates(new DateTime(), startDate).Mean / weightOfThisMoment / 60 / 60 / 24;
-            double roundedAverage = Math.Round(averageValue, 3);
             if (bonusInDays > 0)
-                message = "Nice! I estimate this worth +" + roundedBonus + " days (up from baseline = " + roundedBaseline + ", average = " + roundedAverage + ").";
+                message = "Nice! I estimate this worth +" + roundedBonus + " days.";
             else
-                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days (down from baseline = " + roundedBaseline + ", average = " + roundedAverage + ").";
+                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days.";
             return message;
         }
         

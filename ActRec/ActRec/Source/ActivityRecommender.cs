@@ -410,16 +410,13 @@ namespace ActivityRecommendation
             }
             this.AddParticipation(participation);
             // fill in some default data for the ParticipationEntryView
-            string feedbackText = this.participationEntryView.Compute_FeedbackBlock_Text();
-            this.participationEntryView.Submit();
+            this.participationEntryView.Clear();
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             if (existingSuggestions.Count() > 0 && existingSuggestions.First().ActivityDescriptor.CanMatch(participation.ActivityDescriptor))
                 this.suggestionsView.RemoveSuggestion(existingSuggestions.First());
 
             this.UpdateDefaultParticipationData();
-
-            this.participationEntryView.Set_FeedbackText(feedbackText);
 
             // give the information to the appropriate activities
             this.engine.ApplyParticipationsAndRatings();

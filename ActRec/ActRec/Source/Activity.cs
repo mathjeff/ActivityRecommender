@@ -122,7 +122,8 @@ namespace ActivityRecommendation
         }
 
         public LinkedList<AbsoluteRating> PendingRatings = new LinkedList<AbsoluteRating>();
-        public LinkedList<Participation> PendingParticipations = new LinkedList<Participation>();
+        public LinkedList<Participation> PendingParticipationsForShorttermAnalysis = new LinkedList<Participation>();
+        public LinkedList<Participation> PendingParticipationsForLongtermAnalysis = new LinkedList<Participation>();
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
         public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
@@ -375,7 +376,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.considerationProgression.NumItems + this.PendingParticipations.Count + this.PendingSkips.Count;
+                return this.considerationProgression.NumItems + this.PendingParticipationsForShorttermAnalysis.Count + this.PendingSkips.Count;
             }
         }
         public Distribution ScoresWhenSuggested     // the scores assigned to it at times when it was executed after being suggested
@@ -518,32 +519,43 @@ namespace ActivityRecommendation
                 //this.AddNew_RatingSummary(newParticipation.StartDate, this.overallRatings_summarizer);
             }
 
-            this.PendingParticipations.AddLast(newParticipation);
+            this.PendingParticipationsForLongtermAnalysis.AddLast(newParticipation);
+            this.PendingParticipationsForShorttermAnalysis.AddLast(newParticipation);
         }
         private void ApplyPendingParticipations()
         {
-            foreach (Participation newParticipation in this.PendingParticipations)
+            this.ApplyPendingParticipationsForLongtermAnalysis();
+            this.ApplyPendingParticipationsForShorttermAnalysis();
+        }
+        private void ApplyPendingParticipationsForLongtermAnalysis()
+        {
+            foreach (Participation newParticipation in this.PendingParticipationsForLongtermAnalysis)
             {
-                if (!newParticipation.Hypothetical)
-                {
-                    // get the coordinates at that time and save them
-                    WillingnessSummary willingness = new WillingnessSummary();
-                    if (newParticipation.Suggested == null || newParticipation.Suggested == true)
-                        willingness.NumPromptedParticipations = 1;
-                    else
-                        willingness.NumUnpromptedParticipations = 1;
-                    this.AddParticipationDatapoint(newParticipation.StartDate, willingness);
+                // make a note to use this date for predicting longterm happiness from participations
+                this.AddNew_LongTerm_Participation_Summary_At(newParticipation.StartDate);
+            }
+            this.UpdateNext_RatingSummaries(this.PendingParticipationsForShorttermAnalysis.Count);
+            this.PendingParticipationsForLongtermAnalysis.Clear();
+        }
+        private void ApplyPendingParticipationsForShorttermAnalysis()
+        {
+            foreach (Participation newParticipation in this.PendingParticipationsForShorttermAnalysis)
+            {
+                // get the coordinates at that time and save them
+                WillingnessSummary willingness = new WillingnessSummary();
+                if (newParticipation.Suggested == null || newParticipation.Suggested == true)
+                    willingness.NumPromptedParticipations = 1;
+                else
+                    willingness.NumUnpromptedParticipations = 1;
 
-                    // make a note to use this date for predicting longterm happiness from participations
-                    this.AddNew_LongTerm_Participation_Summary_At(newParticipation.StartDate);
-                }
+                this.AddParticipationDatapoint(newParticipation.StartDate, willingness);
 
                 // keep track of the participation itself in the list
                 this.participationProgression.AddParticipation(newParticipation);
                 this.idlenessProgression.AddParticipation(newParticipation);
                 this.considerationProgression.AddParticipation(newParticipation);
             }
-            this.PendingParticipations.Clear();
+            this.PendingParticipationsForShorttermAnalysis.Clear();
         }
         public void RemoveParticipation(Participation unwantedParticipation)
         {
@@ -660,7 +672,7 @@ namespace ActivityRecommendation
         }
         public Distribution GetAverageLongtermValueWhenParticipated()
         {
-            this.ApplyPendingParticipations();
+            this.ApplyPendingParticipationsForLongtermAnalysis();
             Distribution average = new Distribution(this.longTerm_participationValue_interpolator.GetAverage());
             return average;
         }

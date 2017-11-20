@@ -318,13 +318,13 @@ namespace ActivityRecommendation
             this.engine.EstimateRating(chosenActivity, startDate);
             double chosenValue = chosenActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
 
-            double usualValue = rootActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
+            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
+
+            double averageValue = this.engine.UnweightedSummarizer.GetValueDistributionForDates(new DateTime(), startDate).Mean;
 
             double bonusInSeconds = 0;
 
-            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
-
-            if (usualValue != 0)
+            if (averageValue != 0)
             {
                 // relWeight(x) = 1 * 2^(-x/halfLife)
                 // totalWeight = integral(relWeight) = (log(e)/log(2))*halfLife
@@ -333,27 +333,21 @@ namespace ActivityRecommendation
                 // absWeight(0) = log(2)/log(e)/halflife
                 // absWeight(0) = log(2)/halflife
 
-
-                double overallImprovment = (chosenValue / usualValue) - 1;
+                double overallImprovment = (chosenValue / averageValue) - 1;
 
                 bonusInSeconds = overallImprovment / weightOfThisMoment;
             }
-            //this.engine.RatingSummarizer.
             if (bonusInSeconds == 0)
-            {
                 return "";
-            }
             string message;
             double bonusInDays = bonusInSeconds / 60 / 60 / 24;
-            double baselineDays = usualValue / weightOfThisMoment / 60 / 60 / 24;
             double roundedBonus = Math.Round(bonusInDays, 3);
-            double roundedBaseline = Math.Round(baselineDays, 3);
-            double averageValue = this.engine.UnweightedSummarizer.GetValueDistributionForDates(new DateTime(), startDate).Mean / weightOfThisMoment / 60 / 60 / 24;
+            
             double roundedAverage = Math.Round(averageValue, 3);
             if (bonusInDays > 0)
-                message = "Nice! I estimate this worth +" + roundedBonus + " days (up from baseline = " + roundedBaseline + ", average = " + roundedAverage + ").";
+                message = "Nice! I estimate this worth +" + roundedBonus + " days.";
             else
-                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days (down from baseline = " + roundedBaseline + ", average = " + roundedAverage + ").";
+                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days.";
             return message;
         }
         

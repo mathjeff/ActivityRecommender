@@ -77,6 +77,8 @@ namespace ActivityRecommendation
             }
             else
             {
+                this.NameText = newText;
+                /*
                 if (newText.Length > oldText.Length)
                 {
                     if (!this.createNewActivity)
@@ -90,7 +92,7 @@ namespace ActivityRecommendation
                         this.NameText = this.doBackspace(oldText);
                     else
                         this.NameText = newText;
-                }
+                }*/
             }
 
             if (this.NameMatchesSuggestion)

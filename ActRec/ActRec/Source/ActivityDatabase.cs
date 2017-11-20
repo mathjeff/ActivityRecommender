@@ -116,38 +116,20 @@ namespace ActivityRecommendation
                 // require that the 'Choosable' property matches
                 if (descriptor.Choosable != null && descriptor.Choosable.Value != activity.Choosable)
                     return 0;
+                return 1;
             }
             else
             {
-                // up to 0.5 extra points based on the string similarity
+                // a bunch of points based on string similarity
                 string desiredName = descriptor.ActivityName;
                 // if the user enters a string that it rediculously long, then we don't bother comparing it
                 if (desiredName.Length < 2 * activity.Name.Length)
                 {
-                    matchScore += 0.5 * this.EditScore(desiredName, activity.Name);
+                    //matchScore += 0.5 * this.EditScore(desiredName, activity.Name);
+                    matchScore = this.stringScore(activity.Name, desiredName);
                 }
             }
             // now that we've verified that this activity is allowed to be a match, we calculate its score
-
-            // +1 point if the descriptor's text is a prefix for the actual name
-            if (activity.Name.StartsWith(descriptor.ActivityName, StringComparison.CurrentCultureIgnoreCase))
-            {
-                matchScore += 1;
-
-
-                // +1 point if the name matches without case
-                if (descriptor.ActivityName.Equals(activity.Name, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    matchScore += 1;
-
-
-                    // +1 point if the name matches with case
-                    if (descriptor.ActivityName.Equals(activity.Name))
-                    {
-                        matchScore += 1;
-                    }
-                }
-            }
 
             // +1 point if the 'Choosable' property matches
             if (descriptor.Choosable != null && descriptor.Choosable.Value == activity.Choosable)
@@ -300,6 +282,58 @@ namespace ActivityRecommendation
             // now we rescale it to the range [0,1]
             double scaledScore = bestScore / (Math.Min(string1.Length, string2.Length) + startingScore);
             return bestScore;
+        }
+
+        
+
+        /*double stringMatchScore(string item, string query)
+        {
+            double caseSensitiveScore = this.numWordPrefixMatches(item, query);
+            double caseInsensitiveScore = this.numWordPrefixMatches(item, query);
+
+            return caseSensitiveScore + caseInsensitiveScore;
+        }*/
+
+        int stringScore(string item, string query)
+        {
+            int totalScore = 0;
+            if (item == query)
+                totalScore++;
+            char separator = ' ';
+            List<string> itemWords = new List<string>(item.Split(separator));
+            string[] queryWords = query.Split(separator);
+
+            foreach (string queryWord in queryWords)
+            {
+                if (queryWord.Length < 1)
+                    continue;
+                string queryWordLower = queryWord.ToLower();
+                for (int i = 0; i < itemWords.Count; i++)
+                {
+                    string itemWord = itemWords[i];
+                    string itemWordLower = itemWord.ToLower();
+
+                    int matchScore = 0;
+                    if (itemWordLower.StartsWith(queryWordLower))
+                        matchScore += 2;
+                    if (itemWord.StartsWith(queryWord))
+                        matchScore++;
+                    if (itemWordLower == queryWordLower)
+                        matchScore++;
+                    if (itemWord == queryWord)
+                        matchScore++;
+                    if (matchScore > 0)
+                    {
+                        if (i == 0)
+                            matchScore++;
+                        totalScore += matchScore * queryWord.Length;
+                        itemWords.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            return totalScore;
         }
         #endregion
 

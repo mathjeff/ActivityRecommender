@@ -18,6 +18,7 @@ namespace ActivityRecommendation
             this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
             this.scaleBlock = new Editor();
+            this.scaleBlock.Keyboard = Keyboard.Numeric;
             this.scaleBlock.TextChanged += this.ScaleBlock_TextChanged;
 
             //InputScope inputScope = new InputScope();

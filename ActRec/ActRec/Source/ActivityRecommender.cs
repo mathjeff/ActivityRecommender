@@ -158,6 +158,7 @@ namespace ActivityRecommendation
             this.mainWindow.BackgroundColor = Color.Black;
 
             this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
+            //this.displayManager = new ViewManager(this.mainWindow, TextDiagnosticLayout.New());            
 
         }
 

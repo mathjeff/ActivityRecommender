@@ -219,8 +219,9 @@ namespace ActivityRecommendation
                     this.suggestedActivityName = activity.Name;
                     if (activity.Name == descriptor.ActivityName)
                     {
-                        // perfect match, so just display the activity
-                        this.suggestionBlock.Text = this.suggestedActivityName;
+                        // perfect match, so display nothing
+                        this.suggestionBlock.Text = "";
+                        //this.suggestionBlock.Text = this.suggestedActivityName;
                     }
                     else
                     {

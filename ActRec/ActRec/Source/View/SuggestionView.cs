@@ -36,7 +36,7 @@ namespace ActivityRecommendation
             // Add the remaining fields
             this.contentGrid.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
             this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 3).ToString()));
-            this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScore.Mean, 3).ToString()));
+            this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScoreDividedByAverage, 3).ToString() + " x avg"));
 
             // Add buttons
             this.mainGrid.AddLayout(this.contentGrid);

@@ -922,6 +922,16 @@ namespace ActivityRecommendation
                 this.SetupRatingPredictors();
         }
 
+        public Distribution Ratings
+        {
+            get
+            {
+                this.ApplyPendingRatings();
+                return this.ratingProgression.Distribution;
+
+            }
+        }
+
 
         #endregion
 

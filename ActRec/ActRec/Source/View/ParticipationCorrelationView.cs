@@ -36,9 +36,6 @@ namespace ActivityRecommendation.View
                 // even if activity == activityToPredict, do the prediction anyway, because it's still meaningful to find that past participations in an activity predict future participations
                 StatList<DateTime, bool> union = new StatList<DateTime, bool>(new DateComparer(), new NoopCombiner<bool>());
 
-
-
-
                 // find all the keys that either one contains
                 foreach (DateTime date in progressionToPredict.Keys)
                 {
@@ -69,21 +66,25 @@ namespace ActivityRecommendation.View
                     double y2 = progressionToPredict.GetValueAt(nextDate, false).Value.Mean;
                     correlator.Add(x2, y2, weight);
                 }
-                double correlation = correlator.Correlation;
-                if (!double.IsNaN(correlation))
+                //double correlation = correlator.Correlation;
+
+                double bonusSecondsPerWindow = correlator.Slope;
+                if (!double.IsNaN(bonusSecondsPerWindow))
                 {
-                    results.Add(correlation, activity);
+                    double bonusSecondsPerDay = bonusSecondsPerWindow / windowSize.TotalDays;
+                    results.Add(bonusSecondsPerDay / 60, activity);
                 }
             }
 
             IEnumerable<ListItemStats<double, Activity>> resultList = results.AllItems;
 
-            Vertical_GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder();
-            LinkedList<ListItemStats<double, Activity>> itemsToShow = new LinkedList<ListItemStats<double, Activity>>();
+            Vertical_GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
+            LinkedList<ListItemStats<double, Activity>> mostPositivelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
+            LinkedList<ListItemStats<double, Activity>> mostNegativelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
             int i = 0;
             foreach (ListItemStats<double, Activity> result in resultList.Reverse())
             {
-                itemsToShow.AddLast(result);
+                mostPositivelyCorrelated.AddLast(result);
                 i++;
                 if (i > 4)
                     break;
@@ -91,27 +92,42 @@ namespace ActivityRecommendation.View
             i = 0;
             foreach (ListItemStats<double, Activity> result in resultList)
             {
-                itemsToShow.AddLast(result);
+                mostNegativelyCorrelated.AddLast(result);
                 i++;
                 if (i > 4)
                     break;
             }
 
-            if (itemsToShow.Count <= 0)
+            if (resultList.Count() <= 0)
             {
                 // This shouldn't be able to happen unless we disallow predicting the activity from itself
                 this.SubLayout = new TextblockLayout("No activities found!");
             }
             else
             {
-                layoutBuilder.AddLayout(new TextblockLayout("Activities whose participations predict future participations in " + activityToPredict.Name));
-                foreach (ListItemStats<double, Activity> result in itemsToShow)
+                string title = "Activities whose participations are strongly correlated with participations in " + activityToPredict.Name + " over the next " +
+                    Math.Round(windowSize.TotalDays, 0) + " days";
+                layoutBuilder.AddLayout(new TextblockLayout(title));
+
+                layoutBuilder.AddLayout(new TextblockLayout("These activities add to the number of minutes spent per day:"));
+                foreach (ListItemStats<double, Activity> result in mostPositivelyCorrelated)
                 {
                     double correlation = result.Key;
                     Activity activity = result.Value;
-                    String message = activity.ToString() + ": " + correlation.ToString();
+                    String message = activity.ToString() + ": " + Math.Round(correlation, 5);
                     layoutBuilder.AddLayout(new TextblockLayout(message));
                 }
+
+                layoutBuilder.AddLayout(new TextblockLayout("These activities subtract from the number of minutes per day:"));
+                foreach (ListItemStats<double, Activity> result in mostNegativelyCorrelated)
+                {
+                    double correlation = result.Key;
+                    Activity activity = result.Value;
+                    String message = activity.ToString() + ": " + Math.Round(correlation, 5);
+                    layoutBuilder.AddLayout(new TextblockLayout(message));
+                }
+
+
 
                 this.SubLayout = layoutBuilder.Build();
             }

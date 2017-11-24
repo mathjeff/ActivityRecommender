@@ -11,14 +11,16 @@ namespace ActivityRecommendation
         {
             this.layoutStack = layoutStack;
 
-            BoundProperty_List rowHeights = new BoundProperty_List(4);
+            BoundProperty_List rowHeights = new BoundProperty_List(5);
             rowHeights.BindIndices(0, 1);
             rowHeights.BindIndices(0, 2);
             rowHeights.BindIndices(0, 3);
+            rowHeights.BindIndices(0, 4);
             rowHeights.SetPropertyScale(0, 2);
-            rowHeights.SetPropertyScale(1, 4);
+            rowHeights.SetPropertyScale(1, 1);
             rowHeights.SetPropertyScale(2, 2);
-            rowHeights.SetPropertyScale(3, 1);
+            rowHeights.SetPropertyScale(3, 1.5);
+            rowHeights.SetPropertyScale(4, 1);
 
             GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
@@ -27,28 +29,14 @@ namespace ActivityRecommendation
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
-            GridLayout ratingGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(1), LayoutScore.Zero);
-            this.ratingBox = new RelativeRatingEntryView();
-            ratingGrid.AddLayout(this.ratingBox);
-
             this.predictedRating_block = new Label();
-            ratingGrid.AddLayout(new TextblockLayout(this.predictedRating_block));
-
-
-            Editor commentBox = new Editor();
-            //InputScope inputScope = new InputScope();
-            //InputScopeName inputScopeName = new InputScopeName();
-            //inputScopeName.NameValue = InputScopeNameValue.Text;
-            //inputScope.Names.Add(inputScopeName);
-            //commentBox.InputScope = inputScope;
-            this.commentBox = new TitledTextbox("Comment (optional)", commentBox);
-
-
-
-            Editor box = new Editor();
-
+            contents.AddLayout(new TextblockLayout(this.predictedRating_block));
+            
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-            middleGrid.AddLayout(ratingGrid);
+            this.ratingBox = new RelativeRatingEntryView();
+            middleGrid.AddLayout(this.ratingBox);
+            Editor commentBox = new Editor();
+            this.commentBox = new TitledTextbox("Comment (optional)", commentBox);
             middleGrid.AddLayout(this.commentBox);
             
             contents.AddLayout(middleGrid);
@@ -57,6 +45,7 @@ namespace ActivityRecommendation
 
             this.startDateBox = new DateEntryView("Start Time", this.layoutStack);
             this.startDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.DateText_Changed));
+            this.startDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.StartDateText_Changed));
             grid3.AddLayout(this.startDateBox);
             this.endDateBox = new DateEntryView("End Time", this.layoutStack);
             this.endDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.DateText_Changed));
@@ -104,6 +93,10 @@ namespace ActivityRecommendation
                     this.endDateBox.appearInvalid();
                 }
             }
+        }
+
+        public void StartDateText_Changed(object sender, TextChangedEventArgs e)
+        {
             this.Update_FeedbackBlock_Text();
         }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)

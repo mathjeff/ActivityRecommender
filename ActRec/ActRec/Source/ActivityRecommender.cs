@@ -340,7 +340,11 @@ namespace ActivityRecommendation
             suggestion.StartDate = suggestionDate;
             suggestion.EndDate = endDate;
             suggestion.ParticipationProbability = bestActivity.PredictedParticipationProbability.Distribution.Mean;
-            suggestion.PredictedScore = bestActivity.PredictedScore.Distribution;
+
+            double average = this.ActivityDatabase.RootActivity.Ratings.Mean;
+            if (average == 0)
+                average = 1;
+            suggestion.PredictedScoreDividedByAverage = bestActivity.PredictedScore.Distribution.Mean / average;
 
 
             // autofill the participationEntryView with a convenient value

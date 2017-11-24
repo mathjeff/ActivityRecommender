@@ -74,7 +74,7 @@ namespace ActivityRecommendation
         #endregion
 
         // for binary searches
-        #region IComparerer<AbsoluteRating>
+        #region IComparer<AbsoluteRating>
 
         public int Compare(AbsoluteRating rating1, AbsoluteRating rating2)
         {
@@ -147,6 +147,14 @@ namespace ActivityRecommendation
             get
             {
                 return "How you've rated this recently";
+            }
+        }
+
+        public Distribution Distribution
+        {
+            get
+            {
+                return this.searchHelper.CombineAll();
             }
         }
 

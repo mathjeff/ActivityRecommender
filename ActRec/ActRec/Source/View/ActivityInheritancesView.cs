@@ -5,28 +5,35 @@ namespace ActivityRecommendation.View
 {
     class ActivityInheritancesView : TitledControl
     {
-        public ActivityInheritancesView(Activity activity)
+        public ActivityInheritancesView(Activity activity, ActivityDatabase activityDatabase)
         {
             List<Activity> children = activity.Children;
             List<Activity> parents = activity.Parents;
             string title;
-            if (children.Count < 1)
+            if (activity == activityDatabase.RootActivity)
             {
-                title = activity.Name + " is an activity";
+                title = activity.Name + " is the built-in root activity.";
             }
             else
             {
-                title = activity.Name + " is a category";
+                if (children.Count < 1)
+                {
+                    title = activity.Name;
+                }
+                else
+                {
+                    title = activity.Name;
+                }
             }
             this.SetTitle(title);
             this.TitleBlock.HorizontalTextAlignment = Xamarin.Forms.TextAlignment.Start;
 
 
-            Horizontal_GridLayout_Builder gridBuilder = new Horizontal_GridLayout_Builder().Uniform();
-            if (children.Count > 0)
-                gridBuilder.AddLayout(new ActivityListView("Children:", children));
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             if (parents.Count > 0)
-                gridBuilder.AddLayout(new ActivityListView("Parents:", parents));
+                gridBuilder.AddLayout(new ActivityListView(parents.Count.ToString() + " Parents:", parents));
+            if (children.Count > 0)
+                gridBuilder.AddLayout(new ActivityListView(children.Count.ToString() + " Children:", children));
 
             this.SetContent(gridBuilder.Build());
         }

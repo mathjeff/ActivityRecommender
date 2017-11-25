@@ -21,11 +21,12 @@ namespace ActivityRecommendation.View
 
             this.SubLayout = this.menuLayout;
             this.layoutStack = layoutStack;
+            this.activityDatabase = activityDatabase;
         }
 
         private void activityChosen(object sender, Activity activity)
         {
-            this.layoutStack.AddLayout(new ActivityInheritancesView(activity));
+            this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase));
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -35,6 +36,7 @@ namespace ActivityRecommendation.View
 
         LayoutChoice_Set menuLayout;
         LayoutStack layoutStack;
+        ActivityDatabase activityDatabase;
 
     }
 

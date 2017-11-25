@@ -149,7 +149,7 @@ namespace ActivityRecommendation
             helpMenu_builder.AddLayout("Explain the usage", InstructionsLayout.New(this.layoutStack));
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            introMenu_builder.AddLayout("Help", helpMenu_builder.Build());
+            introMenu_builder.AddLayout("Intro", helpMenu_builder.Build());
             introMenu_builder.AddLayout("Start", usageMenu);
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 

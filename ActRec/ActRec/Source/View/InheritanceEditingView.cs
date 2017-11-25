@@ -38,7 +38,9 @@ namespace ActivityRecommendation
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions.")
                 .AddMessage("The text box on the left is where you type the activity name.")
                 .AddMessage("The text box on the right is where you type another activity that you want to make be a parent of the given activity.")
-                .AddMessage("For example, you might specify that Exercise is a subcategory of Useful")
+                .AddMessage("For example, you might specify that Gaming is a child activity of the Fun activity. Grouping activities like this is helpful for two reasons. It gives " +
+                "ActivityRecommender more understanding about the relationships between activities and can help it to notice trends. It also means that you can later request a suggestion " +
+                "from within Activity \"Fun\" and ActivityRecommender will know what you mean, and might suggest \"Gaming\".")
                 .AddMessage("If you haven't created the parent activity yet, you'll have to create it first. The only activity that exists at the beginning is the built-in activity " +
                 "named \"Activity\".")
                 .AddMessage("While typing you can press Enter to fill in the autocomplete suggestion.")

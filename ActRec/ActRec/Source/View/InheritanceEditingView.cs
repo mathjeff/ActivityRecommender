@@ -35,10 +35,12 @@ namespace ActivityRecommendation
             content.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
 
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions.")
                 .AddMessage("The text box on the left is where you type the activity name.")
-                .AddMessage("The text box on the right is where you type another activity that you want to make a supercategory of the activity.")
+                .AddMessage("The text box on the right is where you type another activity that you want to make be a parent of the given activity.")
                 .AddMessage("For example, you might specify that Exercise is a subcategory of Useful")
+                .AddMessage("If you haven't created the parent activity yet, you'll have to create it first. The only activity that exists at the beginning is the built-in activity " +
+                "named \"Activity\".")
                 .AddMessage("While typing you can press Enter to fill in the autocomplete suggestion.")
                 .Build();
 

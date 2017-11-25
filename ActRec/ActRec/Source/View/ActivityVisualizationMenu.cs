@@ -14,7 +14,7 @@ namespace ActivityRecommendation
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             //this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(1), LayoutScore.Zero);
 
-            this.yAxisNameBox = new ActivityNameEntryBox("Y-Axis Activity (required)");
+            this.yAxisNameBox = new ActivityNameEntryBox("Activity");
             gridBuilder.AddLayout(this.yAxisNameBox);
 
             this.okButton = new Button();

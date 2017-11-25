@@ -84,13 +84,21 @@ namespace ActivityRecommendation
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Add New Activity", activityCreationView)
                 .AddLayout("Assign Existing Activity as Child of A Parent Activity", inheritanceCreationView)
+                .AddLayout("Undo/Change", (new HelpWindowBuilder()
+                    .AddMessage("To undo, remove, or modify an entry, you have to edit the data file directly. Go back to the Export screen and export all of your data as a .txt file. " +
+                    "Then make some changes, and go to the Import screen to load your changed file.")
+                    .Build()))
                 .Build();
 
-            LayoutChoice_Set inheritanceInfoView = new Vertical_GridLayout_Builder().Uniform()
-                .AddLayout(new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
-                .AddLayout(inheritanceEditingView)
-                .Build();
-                
+            BoundProperty_List rowHeights = new BoundProperty_List(2);
+            rowHeights.BindIndices(0, 1);
+            rowHeights.SetPropertyScale(0, 2);
+            rowHeights.SetPropertyScale(1, 3);
+
+            GridLayout inheritanceInfoView = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
+            inheritanceInfoView.AddLayout(new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack));
+            inheritanceInfoView.AddLayout(inheritanceEditingView);
+               
 
             // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
             this.participationEntryView.Engine = this.engine;

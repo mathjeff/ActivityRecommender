@@ -37,12 +37,24 @@ namespace ActivityRecommendation
             this.selectorLayout = selectionLayout;
 
 
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a suggested activity")
-                .AddMessage("If you want something fun, you can enter the activity that you're considering doing, "
-            + "and your suggestion will be one that is expected to provide at least as much short-term value as the one that you entered.")
-                .AddMessage("Then, push Suggest to see the activity that is expected to maximize the overall long-term value to you.")
-                .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, and"
-            + " an estimate of the rating that you'd be expected to give to that activity.")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a activity recommendations.")
+                .AddMessage("By default, the recommendation will attempt to maximize your long-term happiness.")
+                .AddMessage("The recommendation may be slightly randomized if ActivityRecommender doesn't have enough time to consider every activity within a couple seconds.")
+                .AddMessage("If you are sure that you want an activity from a certain category, then you can enter its name into the category box, and ActivityRecommender will make sure " +
+                "that your suggestion will be an instance of that activity. For example, if you have previously entered an activity named Checkers and listed it as a child activity " +
+                "of Game, then when you ask for a Game, one possible suggestion will be Checkers.")
+                .AddMessage("If you're looking for an activity to have a high amount of enjoyability right now, then think of what you would do if you couldn't ask ActivityRecommender for " +
+                "help, and type the name of that activity into the second box. If you do, then ActivityRecommender will make sure to provide a suggestion that it thinks you will like as " +
+                "much as it thinks you will like as much as the one you entered.")
+                .AddMessage("Then, push Suggest to see the activity that is expected to maximize the overall long-term value to you, among the availabile choices.")
+                .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, " +
+                "and an estimate of the rating that you'd be expected to give to that activity.")
+                .AddMessage("If you don't like a suggestion, press the X button next to it. The duration between when you ask for a suggestion and when you press the X is considered to " +
+                "be worth 0 happiness to you, so ActivityRecommender tries to avoid giving you too many suggestions that you don't take. However, if there's a certain activity that " +
+                "ActivityRecommender thinks would be awesome for you despite your current disinterest, then ActivityRecommender may repeat its suggestions a few times, in an effort to " +
+                "get you to reconsider.")
+                .AddMessage("You can also plan out several participations in a row by pressing the Suggest button multiple times in a row.")
+                .AddMessage("Whenever you record a participation matching the first suggestion in the list, then that suggestion will be removed.")
                 .AddMessage("Enjoy!")
                 .Build();
 

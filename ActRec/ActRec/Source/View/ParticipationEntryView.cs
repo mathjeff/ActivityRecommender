@@ -59,11 +59,18 @@ namespace ActivityRecommendation
 
             this.okButton = new Button();
 
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record activities you have done.")
-                .AddMessage("Type the name of the activity, and press Enter if you want to take the autocomplete suggestion")
-                .AddMessage("Enter a rating if you like")
-                .AddMessage("Enter a start date and an end date")
-                .AddMessage("Lastly, click OK!")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record participations.")
+                .AddMessage("Type the name of the activity that you participated in, and press Enter if you want to take the autocomplete suggestion.")
+                .AddMessage("You must have entered some activities in the activity name entry screen in order to enter them here.")
+                .AddMessage("Notice that once you enter an activity name, ActivityRecommender will tell you how it estimates this will affect your longterm happiness.")
+                .AddMessage("If you like, then you can enter a rating. The rating is a measurement of how much happiness you received per unit time for doing this activity divided by " +
+                "the amount of happiness you received per unit time for doing the previous activity.")
+                .AddMessage("Enter a start date and an end date. If you use the \"End = Now\" button right when the activity completes, you don't even need to type the date in. If you " +
+                "do have to type the date in, press the white box.")
+                .AddMessage("Enter a comment if you like. For the moment, the comments are just stored but don't do anything. That might change in the future.")
+                .AddMessage("Lastly, press OK.")
+                .AddMessage("It's up to you how many participations you log, how often you rate them, and how accurate the start and end dates are. ActivityRecommender will be able to " +
+                "provide more useful help to you if you provide more accurate data, but even just a few participations per day should still be enough for meaningful feedback.")
                 .Build();
 
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);

@@ -3537,6 +3537,9 @@ namespace ActRec.Droid
 			// aapt resource value: 0x7f0a001a
 			public const int CardView_Light = 2131361818;
 			
+			// aapt resource value: 0x7f0a0176
+			public const int EditTextStyle = 2131362166;
+			
 			// aapt resource value: 0x7f0a0172
 			public const int MainTheme = 2131362162;
 			

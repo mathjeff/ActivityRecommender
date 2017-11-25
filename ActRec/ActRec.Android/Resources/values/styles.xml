@@ -22,8 +22,9 @@
     <item name="windowActionModeOverlay">true</item>
 
     <item name="android:datePickerDialogTheme">@style/AppCompatDialogStyle</item>
-  
+
     <item name="android:buttonStyle">@style/ButtonStyle</item>
+    <item name="android:editTextStyle">@style/EditTextStyle</item>
   </style>
 
   <style name="AppCompatDialogStyle" parent="Theme.AppCompat.Light.Dialog">
@@ -35,6 +36,10 @@
     <item name="android:layout_margin">0dip</item>
     <item name="textAllCaps">false</item>
     <item name="android:background">@drawable/button_style</item>
+  </style>
+
+  <style name="EditTextStyle" parent="android:Widget.EditText">
+    <item name="android:imeOptions">flagNoExtractUi</item>
   </style>
 
 </resources>

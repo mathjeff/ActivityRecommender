@@ -136,16 +136,12 @@ namespace ActivityRecommendation
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
+            MenuLayoutBuilder helpMenu_builder = new MenuLayoutBuilder(this.layoutStack);
+            helpMenu_builder.AddLayout("List the exciting features", FeatureOverviewLayout.New(this.layoutStack));
+            helpMenu_builder.AddLayout("Explain the usage", InstructionsLayout.New(this.layoutStack));
+
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            LayoutChoice_Set helpLayout = (new HelpWindowBuilder()).AddMessage("Press your device's Back button when finished.")
-                .AddMessage("This ActivityRecommender can give you suggestions for what to do now, based on time-stamped data from you about what you've done recently and how much you liked it.")
-                .AddMessage("Create some activities, log some participations, and ask for suggestions!")
-                .AddMessage("This version of this application does not use the internet and does not report your entries to anyone.")
-                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender for more information and to contribute. Thanks!")
-                .Build();
-
-
-            introMenu_builder.AddLayout("Help", helpLayout);
+            introMenu_builder.AddLayout("Help", helpMenu_builder.Build());
             introMenu_builder.AddLayout("Start", usageMenu);
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 

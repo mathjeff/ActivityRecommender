@@ -16,7 +16,7 @@ namespace ActivityRecommendation
 
             menuBuilder.AddLayout("Personalized", (new HelpWindowBuilder())
                 .AddMessage("You decide which activities exist in your world and what their relationships are.")
-                .AddMessage("If your icecream store is far away and you want to declare that \"Buying Ice Cream\" is \"Exercise\", that's your prerogitive.")
+                .AddMessage("If your icecream store is far away and you want to declare that \"Buying Ice Cream\" is \"Exercise\", that's your prerogative.")
                 .Build());
 
             menuBuilder.AddLayout("Maximizes longterm happiness", (new HelpWindowBuilder())
@@ -24,8 +24,11 @@ namespace ActivityRecommendation
                 .AddMessage("Among other things, this means that it should encourage you towards entertainment that recharges rather than frustrates you.")
                 .AddMessage("The way that this works is you gradually enter more and more data about things you've done and how happy they have made you.")
                 .AddMessage("In the meanwhile, ActivityRecommender builds an increasingly accurate model of your happiness.")
-                .AddMessage("At any given time, it uses this model to predict and attempt to maximize how much happiness you'll experience over the next " +
+
+                .AddMessage("At any given time, it uses this model to predict and attempt to maximize the net present value (in the economic sense) of how much happiness you'll experience " +
+                "in the future. This is approximately equivalent to maximizing the amount of happiness that you'll experience over the next " +
                 (UserPreferences.DefaultPreferences.HalfLife.TotalDays / 365) + " years.")
+
                 .AddMessage("So even if you don't like doing chores, if ActivityRecommender notices that doing chores from time to time enables you to have more time to do other fun " +
                 "things, it will recommend chores from time to time anyway.")
                 .Build());
@@ -59,7 +62,7 @@ namespace ActivityRecommendation
 
             menuBuilder.AddLayout("Provides suggestions", (new HelpWindowBuilder())
                 .AddMessage("The feature that ActivityRecommender is named for, of course, is that you can ask it for suggestions of what to do.")
-                .AddMessage("ActivityRecommender doesn't make any hard promises regarding its suggestions. Actually in a few places it uses randomness if it doesn't have enough time to" +
+                .AddMessage("ActivityRecommender doesn't make any hard promises regarding its suggestions. Actually in a few places it uses randomness if it doesn't have enough time to " +
                 "consider all options in a short time. It also doesn't promise to remind you about some deadline that's coming up.")
                 .AddMessage("ActivityRecommender also will never interrupt you; it only gives you a suggestion when you're in the mood for one and ask for it.")
                 .AddMessage("Each suggestion comes with an estimate of how likely ActivityRecommender thinks that it is that you will actually do the activity, along with how much fun " +
@@ -70,16 +73,17 @@ namespace ActivityRecommendation
                 .Build());
 
             menuBuilder.AddLayout("Graphs", (new HelpWindowBuilder())
-                .AddMessage("You can see how much time you recorded on various activies over time, to figure out how they are affected by other activities.")
-                .AddMessage("You can see your estimated happiness over time and observe its reaction to various events.")
-                .AddMessage("This enables you to, for example, do some important work and then observe its impact on the graphs.")
+                .AddMessage("As soon as you record a participation or a rating, the time spent or rating assigned will immediately show up in the respective graph for that activity, " +
+                "acknowledging and visualizing the time that you spent or enjoyment you received.")
+                .AddMessage("You can inspect graphs to look for patterns.")
                 .Build());
 
             menuBuilder.AddLayout("Doesn't try to maximize its own usage", (new HelpWindowBuilder())
                 .AddMessage("Because you explicitly tell ActivityRecommender how happy you are to have done various activities, that's what it optimizes. Its goal is not to maximize the " +
                 "amount of time you spend using ActivityRecommender.")
                 .AddMessage("In fact, any time you spend using ActivityRecommender is time that you don't spend doing something else.")
-                .AddMessage("So, the amount of time that elapses after you push the \"Suggest\" button but before you push the \"X\" button is considered to be worth 0 happiness to you.")
+                .AddMessage("So, on the Suggestions screen, if you ever push the X button, then ActivityRecommender assumes that while that activity was onscreen, that you were spending all" +
+                "of your brainpower contemplating whethre to do that activity, and that that time was worth 0 happiness to you.")
                 .AddMessage("ActivityRecommender will only attempt to use more of your time when it estimates that your resultant increase in happiness will be enough to compensate.")
                 .Build());
 
@@ -89,7 +93,9 @@ namespace ActivityRecommendation
                 .AddMessage("The important part is that ActivityRecommender interprets these as values per unit time.")
                 .AddMessage("For example, if you want to maximize your total distance traveled, then you should record that 1 mile in 8 minutes is just as good as 2 miles in 16 minutes. " +
                 "ActivityRecommender will know that the activity with longer duration had larger absolute impact.")
-                .AddMessage("ActivityRecommender doesn't properly support negative values at the moment; it is assumed that all values are measurements of happiness and are between 0 and 1.")
+                .AddMessage("ActivityRecommender doesn't support negative values at the moment.")
+                .AddMessage("Additionally, although the ratios between individual ratings can be unbounded, ActivityRecommender assumes that the ratings themselves (which you as a user " +
+                "don't directly enter) are numbers from 0 to 1.")
                 .Build());
 
             menuBuilder.AddLayout("All runs on the device", (new HelpWindowBuilder())

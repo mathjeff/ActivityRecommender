@@ -145,8 +145,8 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder helpMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            helpMenu_builder.AddLayout("List the exciting features", FeatureOverviewLayout.New(this.layoutStack));
-            helpMenu_builder.AddLayout("Explain the usage", InstructionsLayout.New(this.layoutStack));
+            helpMenu_builder.AddLayout("List exciting features", FeatureOverviewLayout.New(this.layoutStack));
+            helpMenu_builder.AddLayout("Explain usage", InstructionsLayout.New(this.layoutStack));
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu_builder.Build());

@@ -13,10 +13,19 @@ namespace ActivityRecommendation
 
             this.nameBox = new Editor();
             this.nameBox.TextChanged += NameBox_TextChanged;
+            this.nameBox_layout = new TextboxLayout(this.nameBox);
+
+            Button xButton = new Button();
+            xButton.Text = "X";
+            xButton.Clicked += XButton_Clicked;
+            this.nameBoxWithX = new Horizontal_GridLayout_Builder().AddLayout(this.nameBox_layout).AddLayout(new ButtonLayout(xButton)).Build();
+
+            this.nameLayout = new ContainerLayout();
+
             this.suggestionBlock = new Label();
-            LayoutChoice_Set nameLayout = new TextboxLayout(this.nameBox);
             LayoutChoice_Set content;
             this.createNewActivity = createNewActivity;
+
 
             if (createNewActivity)
             {
@@ -31,10 +40,16 @@ namespace ActivityRecommendation
                 content = new LayoutCache(contentWithSuggestion);
             }
 
+            this.updateXButton();
             this.UpdateSuggestions();
 
             base.SetContent(content);
 
+        }
+
+        private void XButton_Clicked(object sender, EventArgs e)
+        {
+            this.NameText = "";
         }
 
         public void AddTextChangedHandler(EventHandler<TextChangedEventArgs> h)
@@ -49,10 +64,22 @@ namespace ActivityRecommendation
                 oldText = "";
             string newText = this.nameBox.Text;
 
-            // ignore programatically generated changes
-            if (newText == this.nameText)
-                return;
+            if (newText != this.nameText)
+                this.userEnteredText(oldText, newText);
 
+            this.updateXButton();
+        }
+
+        private void updateXButton()
+        {
+            if (this.NameText != "" && this.NameText != null)
+                this.nameLayout.SubLayout = this.nameBoxWithX;
+            else
+                this.nameLayout.SubLayout = this.nameBox_layout;
+        }
+
+        private void userEnteredText(string oldText, string newText)
+        {
             List<String> markers = new List<string> { "\n", "\t" };
             bool addedMarker = false;
             foreach (String marker in markers)
@@ -79,27 +106,12 @@ namespace ActivityRecommendation
             else
             {
                 this.NameText = newText;
-                /*
-                if (newText.Length > oldText.Length)
-                {
-                    if (!this.createNewActivity)
-                        this.NameText = this.autocomplete(newText);
-                    else
-                        this.NameText = newText;
-                }
-                else
-                {
-                    if (newText.Length < oldText.Length)
-                        this.NameText = this.doBackspace(oldText);
-                    else
-                        this.NameText = newText;
-                }*/
             }
 
             if (this.NameMatchesSuggestion)
             {
                 if (this.NameMatchedSuggestion != null)
-                    this.NameMatchedSuggestion.Invoke(sender, e);
+                    this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, newText));
             }
         }
         public string NameText
@@ -222,7 +234,6 @@ namespace ActivityRecommendation
                     {
                         // perfect match, so display nothing
                         this.suggestionBlock.Text = "";
-                        //this.suggestionBlock.Text = this.suggestedActivityName;
                     }
                     else
                     {
@@ -269,6 +280,9 @@ namespace ActivityRecommendation
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
 
+        ContainerLayout nameLayout;
+        GridLayout nameBoxWithX;
+        TextboxLayout nameBox_layout;
         string nameText;
         Editor nameBox;
         Label suggestionBlock;

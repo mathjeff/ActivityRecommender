@@ -299,6 +299,8 @@ namespace ActivityRecommendation
             int totalScore = 0;
             if (item == query)
                 totalScore++;
+            if (item.ToLower() == query.ToLower())
+                totalScore++;
             char separator = ' ';
             List<string> itemWords = new List<string>(item.Split(separator));
             string[] queryWords = query.Split(separator);
@@ -339,7 +341,6 @@ namespace ActivityRecommendation
 
         #region Private Variables
 
-        //private Dictionary<string, List<Activity> > activitiesByName;
         private List<Activity> allActivities;
         private StatList<string, IEnumerable<Activity>> activitiesByName;
         private RatingSummarizer ratingSummarizer;

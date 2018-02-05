@@ -10,25 +10,25 @@ namespace ActivityRecommendation
     {
         public static RatingSource FromParticipation(Participation source)
         {
-            RatingSource cause = new RatingSource("Participation", true, false, true);
+            RatingSource cause = new RatingSource("Participation");
             cause.Converted = source;
             return cause;
         }
         public static RatingSource FromSkip(ActivitySkip source)
         {
-            RatingSource cause = new RatingSource("Skip", false, true, false);
+            RatingSource cause = new RatingSource("Skip");
             cause.Converted = source;
             return cause;
         }
         public static RatingSource FromRequest(ActivityRequest source)
         {
-            RatingSource cause = new RatingSource("Request", false, true, false);
+            RatingSource cause = new RatingSource("Request");
             cause.Converted = source;
             return cause;
         }
         public static RatingSource DirectRating(AbsoluteRating source)
         {
-            RatingSource cause = new RatingSource("Direct", false, true, true);
+            RatingSource cause = new RatingSource("Direct");
             cause.Converted = source;
             return cause;
         }
@@ -44,7 +44,7 @@ namespace ActivityRecommendation
                 return sources;
             }
         }
-        public static RatingSource GetSourceWithDescription(string description)
+        /*public static RatingSource GetSourceWithDescription(string description)
         {
             foreach (RatingSource source in RatingSource.AllSources)
             {
@@ -52,49 +52,13 @@ namespace ActivityRecommendation
                     return source;
             }
             return null;
-        }
+        }*/
 
-        public RatingSource(string sourceDescription, bool basedOnPastEvent, bool dateExact, bool scoreExact)
+        public RatingSource(string sourceDescription)
         {
             this.description = sourceDescription;
-            this.isBasedOnPastEvent = basedOnPastEvent;
-            this.isDateExact = dateExact;
-            this.isScoreExact = scoreExact;
-        }
-        // Returns true if it comes from the user's evaluation of a future event. This would be something like "I think I would like to listen to music."
-        public bool IsBasedOnFutureEvent()
-        {
-            return !this.isBasedOnPastEvent;
-        }
-
-        // Returns true if it comes from the user's evaluation of a past event. This would be something like "I watched TV and it was horrible."
-        public bool IsBasedOnPastEvent()
-        {
-            return this.isBasedOnPastEvent;
         }
         
-        // returns true if all of the information stored in the rating was directly provided by the user
-        // If, for example, the user skipped an activity and we had to create a fake rating for it, then WasCreatedDirectlyByUser() returns false
-        public bool WasCreatedDirectlyByUser()
-        {
-            if (!isDateExact)
-                return false;
-            if (!isScoreExact)
-                return false;
-            return true;
-        }
-        
-        // Returns true if the date was directly provided by the user. Returns false if we had to make a reasonable estimate for the date
-        public bool IsDateExact()
-        {
-            return this.isDateExact;
-        }
-        
-        // Returns true if the rating is numerically equal to the value provided by the user. Returns false if we had to calculate a value arbitrarily
-        public bool IsScoreExact()
-        {
-            return this.isScoreExact;
-        }
         
         // a string describing the rating source
         public string Description

@@ -245,14 +245,21 @@ equivalentProbability = 0.864323788537679
 weightedProbabilityScore = 0.311459030520166
 equivalentWeightedProbability = 0.921199799038855
  
- 
+updated results on 2018-02-04 with new data
+typical longtermPrediction error = 0.0995526585842484
+typicalScoreError = 0.142199611173665
+typicalProbabilityError = 0.342892978994635
+equivalentProbability = 0.863901641870691
+weightedProbabilityScore = 0.293463192543033
+equivalentWeightedProbability = 0.918029930119905
+
  
  */
 
 
 namespace ActivityRecommendation
 {
-    class EngineTester : RatingReplayer
+    class EngineTester : HistoryReplayer
     {
         public EngineTester()
         {
@@ -401,10 +408,11 @@ namespace ActivityRecommendation
                 this.participationPrediction_score = this.participationPrediction_score.Plus(Distribution.MakeDistribution(scoreComponent, 0, 1));
             }
         }
-        public override void Finish()
+        public override Engine Finish()
         {
             this.Compute_FutureEstimate_Errors();
             this.PrintResults();
+            return null;
         }
 
         // computes the error for each prediction that was made about the future

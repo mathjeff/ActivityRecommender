@@ -5,9 +5,9 @@ using System.Text;
 
 namespace ActivityRecommendation
 {
-    abstract class RatingReplayer
+    abstract class HistoryReplayer
     {
-        public RatingReplayer()
+        public HistoryReplayer()
         {
             this.engine = new Engine();
             this.activityDatabase = this.engine.ActivityDatabase;
@@ -16,7 +16,11 @@ namespace ActivityRecommendation
         public void AddInheritance(Inheritance newInheritance)
         {
             this.engine.PutInheritanceInMemory(newInheritance);
+            this.updatedAfterInheritances = false;
+            this.PostInheritance(newInheritance);
         }
+        public virtual void PostInheritance(Inheritance newInheritance) { }
+
         public void AddRequest(ActivityRequest newRequest)
         {
             this.PreviewRequest(newRequest);
@@ -33,11 +37,16 @@ namespace ActivityRecommendation
 
         public void AddParticipation(Participation newParticipation)
         {
-            this.PreviewParticipation(newParticipation);
-            Rating rating = newParticipation.GetCompleteRating();
-            if (rating != null)
+            if (!this.updatedAfterInheritances)
             {
-               RelativeRating newRating = this.AddRating(rating) as RelativeRating;
+                this.engine.FullUpdate();
+                this.updatedAfterInheritances = true;
+            }
+            this.PreviewParticipation(newParticipation);
+            RelativeRating newRelativeRating = newParticipation.GetCompleteRating() as RelativeRating;
+            if (newRelativeRating != null)
+            {
+               RelativeRating newRating = this.AddRating(newRelativeRating);
                newParticipation.PutAndCompressRating(newRating);
             }
 
@@ -75,11 +84,16 @@ namespace ActivityRecommendation
             this.engine.PutSuggestionInMemory(suggestion);
         }
         public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
-        public virtual void Finish() { }
+        
+        // Does cleanup
+        // Also can return a new Engine for ActivityRecommender to use
+        public virtual Engine Finish() { return null; }
 
 
         protected Engine engine;
         protected ActivityDatabase activityDatabase;
+
+        private bool updatedAfterInheritances;
 
     }
 }

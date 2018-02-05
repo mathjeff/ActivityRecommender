@@ -36,10 +36,12 @@ namespace ActivityRecommendation
 
             this.SetupDrawing();
 
-            if (this.ratingReplayer != null)
+            if (this.historyReplayer != null)
             {
-                this.ratingReplayer.Finish(); // do any cleanup calculations and print results
-                System.Diagnostics.Debug.WriteLine("");
+                // do any cleanup calculations and print results
+                Engine replayerEngine = this.historyReplayer.Finish();
+                if (replayerEngine != null)
+                    this.engine = replayerEngine;
             }
         }
 
@@ -63,9 +65,9 @@ namespace ActivityRecommendation
             this.inheritancesFileName = "ActivityInheritances.txt";
             this.tempFileName = "TemporaryData.txt";
             this.textConverter = new TextConverter(this);
-            //this.ratingReplayer = new EngineTester();
-            //this.ratingReplayer = new RatingRenormalizer(this.textConverter);
-            //this.ratingReplayer = new HistoryWriter(this.textConverter);
+            //this.historyReplayer = new EngineTester();
+            //this.historyReplayer = new RatingRenormalizer(this.textConverter);
+            //this.historyReplayer = new HistoryWriter(this.textConverter);
             this.numCategoriesToConsiderAtOnce = 3;
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
@@ -527,14 +529,14 @@ namespace ActivityRecommendation
                     this.participationEntryView.LatestParticipation = this.latestParticipation;
             }
             this.engine.PutParticipationInMemory(newParticipation);
-            if (this.ratingReplayer != null)
-                this.ratingReplayer.AddParticipation(newParticipation);
+            if (this.historyReplayer != null)
+                this.historyReplayer.AddParticipation(newParticipation);
         }
         public void PutRatingInMemory(Rating newRating)
         {
             this.engine.PutRatingInMemory(newRating);
-            if (this.ratingReplayer != null)
-                this.ratingReplayer.AddRating(newRating);
+            if (this.historyReplayer != null)
+                this.historyReplayer.AddRating(newRating);
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
@@ -548,14 +550,14 @@ namespace ActivityRecommendation
             }
             // save the skip
             this.engine.PutSkipInMemory(newSkip);
-            if (this.ratingReplayer != null)
-                this.ratingReplayer.AddSkip(newSkip);
+            if (this.historyReplayer != null)
+                this.historyReplayer.AddSkip(newSkip);
         }
         public void PutActivityRequestInMemory(ActivityRequest newRequest)
         {
             this.engine.PutActivityRequestInMemory(newRequest);
-            if (this.ratingReplayer != null)
-                this.ratingReplayer.AddRequest(newRequest);
+            if (this.historyReplayer != null)
+                this.historyReplayer.AddRequest(newRequest);
         }
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
         {
@@ -564,8 +566,8 @@ namespace ActivityRecommendation
         public void PutInheritanceInMemory(Inheritance newInheritance)
         {
             this.engine.PutInheritanceInMemory(newInheritance);
-            if (this.ratingReplayer != null)
-                this.ratingReplayer.AddInheritance(newInheritance);
+            if (this.historyReplayer != null)
+                this.historyReplayer.AddInheritance(newInheritance);
         }
         // updates the ParticipationEntryView so that the start date is DateTime.Now
         public void MakeStartNow(object sender, EventArgs e)
@@ -589,8 +591,8 @@ namespace ActivityRecommendation
         {
             this.suggestionDatabase.AddSuggestion(suggestion);
             this.engine.PutSuggestionInMemory(suggestion);
-            if (this.ratingReplayer != null)
-                this.ratingReplayer.AddSuggestion(suggestion);
+            if (this.historyReplayer != null)
+                this.historyReplayer.AddSuggestion(suggestion);
         }
         public DateTime LatestActionDate
         {
@@ -742,7 +744,7 @@ namespace ActivityRecommendation
         string inheritancesFileName;    // the name of the file that stores inheritances
         string tempFileName;
         Participation latestParticipation;
-        RatingReplayer ratingReplayer;
+        HistoryReplayer historyReplayer;
         RecentUserData recentUserData;
         int numCategoriesToConsiderAtOnce;
         LayoutStack layoutStack;

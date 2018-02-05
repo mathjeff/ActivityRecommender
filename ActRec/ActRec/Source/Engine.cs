@@ -668,12 +668,14 @@ namespace ActivityRecommendation
         // tells the Engine about a rating that wasn't already in memory (but may have been stored on disk)
         public void PutRatingInMemory(AbsoluteRating newRating)
         {
-
-            // keep track of the first and last date at which anything happened
-            this.DiscoveredRating(newRating);
             // keep track of any unapplied ratings
-            this.unappliedRatings.Add(newRating);
-            this.PutActivityDescriptorInMemory(newRating.ActivityDescriptor);
+            if (newRating.FromUser)
+            {
+                // keep track of the first and last date at which anything happened
+                this.DiscoveredRating(newRating);
+                this.unappliedRatings.Add(newRating);
+                this.PutActivityDescriptorInMemory(newRating.ActivityDescriptor);
+            }
             // keep track of how well the user has been spending time
             if (newRating.Source != null)
             {
@@ -682,10 +684,13 @@ namespace ActivityRecommendation
                 {
                     // exponential moving average with all necessary history
                     this.weightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
-                    this.unweightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
-                    // usual average of the activities that were not suggested
-                    if (participation.Suggested != null && participation.Suggested.Value == false)
-                        this.ratingsOfUnpromptedActivities = this.ratingsOfUnpromptedActivities.Plus(newRating.Score);
+                    if (newRating.FromUser)
+                    {
+                        this.unweightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
+                        // usual average of the activities that were not suggested
+                        if (participation.Suggested != null && participation.Suggested.Value == false)
+                            this.ratingsOfUnpromptedActivities = this.ratingsOfUnpromptedActivities.Plus(newRating.Score);
+                    }
                 }
             }
         }
@@ -972,7 +977,20 @@ namespace ActivityRecommendation
             }
             rating.RawScoreScale = scale;
             return rating;
+        }
 
+        public Rating MakeEstimatedRating(Participation sourceParticipation)
+        {
+            Activity activity = this.activityDatabase.ResolveDescriptor(sourceParticipation.ActivityDescriptor);
+            if (activity.NumRatings < 1)
+            {
+                // skip activities for which we don't have much data
+                return null;
+            }
+            this.EstimateRating(activity, sourceParticipation.StartDate);
+            AbsoluteRating rating = new AbsoluteRating(activity.PredictedScore.Distribution.Mean, sourceParticipation.StartDate, sourceParticipation.ActivityDescriptor, RatingSource.FromParticipation(sourceParticipation));
+            rating.FromUser = false;
+            return rating;
         }
         public DateTime LatestInteractionDate
         {

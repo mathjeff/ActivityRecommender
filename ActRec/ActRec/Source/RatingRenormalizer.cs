@@ -1,15 +1,29 @@
 ﻿using System;
 using System.IO;
 
-// The RatingRenormalizer will scan the user's history of ratings and recompute the absolute portion of the RelativeRating
+// The RatingRenormalizer will scan the user's history of ratings and recompute the Rating for each Participation.
+//  It will recompute the scores for each RelativeRating, and will also generate an absoluteRating if no rating was given
 // It uses the current version of the Engine to do the computations
 // Most importantly, this means that it ignores any user-entered AbsoluteRating in the rating calculations
+
+// TODOS:
+// IS string concatenation slow?
+// Have to make the Participation serialization include FromUser
+// Should make the Participation serialization include the newlines
+// Should double-check that the data gets saved successfully
 namespace ActivityRecommendation
 {
     class RatingRenormalizer : HistoryWriter
     {
         public RatingRenormalizer(TextConverter textConverter) : base(textConverter)
         {
+        }
+        public override void PreviewParticipation(Participation newParticipation)
+        {
+            if (newParticipation.RawRating == null)
+            {
+                newParticipation.RawRating = this.engine.MakeEstimatedRating(newParticipation);
+            }
         }
         public override RelativeRating ProcessRating(RelativeRating newRating)
         {
@@ -74,6 +88,11 @@ namespace ActivityRecommendation
             }
             return newRating;
         }
-
+        public override Engine Finish()
+        {
+            base.Finish();
+            return this.engine;
+        }
     }
+
 }

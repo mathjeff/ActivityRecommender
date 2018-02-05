@@ -33,6 +33,7 @@ namespace ActivityRecommendation
         private void Initialize()
         {
             this.Weight = 1;
+            this.FromUser = true;
         }
 
         public override Rating MakeCopy()
@@ -46,6 +47,7 @@ namespace ActivityRecommendation
             this.Score = original.Score;
             this.Date = original.Date;
             this.ActivityDescriptor = original.ActivityDescriptor;
+            this.FromUser = original.FromUser;
             base.CopyFrom(original);
         }
 
@@ -75,6 +77,7 @@ namespace ActivityRecommendation
         public double Score { get; set; }
         public DateTime? Date { get; set; }
         public double Weight { get; set; }
+        public bool FromUser { get; set; } // If true, the user entered this rating. If false, this was inferred by the engine
         // returns true if this Rating has all the necessary data; returns false if this rating is missing some important information
         public bool IsComplete()
         {
@@ -118,50 +121,5 @@ namespace ActivityRecommendation
         }
         #endregion
 
-        /*
-        public void SetActivityDescriptor(ActivityDescriptor descriptor)
-        {
-            this.activityDescriptor = descriptor;
-        }
-        public ActivityDescriptor GetActivityDescriptor()
-        {
-            return this.activityDescriptor;
-        }
-        public void SetScore(double score)
-        {
-            this.value = score;
-        }
-        public double GetScore()
-        {
-            return this.value;
-        }
-        public void SetDate(DateTime when)
-        {
-            this.date = when;
-        }
-        public DateTime GetDate()
-        {
-            return this.date;
-        }
-        public void SetRatingSource(RatingSource source)
-        {
-            this.ratingSource = source;
-        }
-        public RatingSource GetRatingSource()
-        {
-            return this.ratingSource;
-        }
-
-        #endregion
-
-        #region Private Member Variables
-
-        private ActivityDescriptor activityDescriptor;
-        private double value;
-        private DateTime date;
-        private RatingSource ratingSource;
-
-        #endregion
-        */
     }
 }

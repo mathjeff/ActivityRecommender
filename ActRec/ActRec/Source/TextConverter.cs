@@ -581,9 +581,13 @@ namespace ActivityRecommendation
                 if (currentChild.Name == this.RatingTag)
                 {
                     rating = this.ReadRating(currentChild);
-                    // because the RelativeRatings are more accurate (avoiding grade-inflation), we currently ignore each AbsoluteRating
-                    if (rating is AbsoluteRating)
-                        rating = null;
+                    // because the RelativeRatings are more accurate (avoiding grade-inflation), we currently ignore each AbsoluteRating provided by the user
+                    AbsoluteRating absolute = rating as AbsoluteRating;
+                    if (absolute != null)
+                    {
+                        if (absolute.FromUser)
+                            rating = null;
+                    }
                     continue;
                 }
                 if (currentChild.Name == this.CommentTag)
@@ -755,11 +759,16 @@ namespace ActivityRecommendation
                     rating.Score = this.ReadDouble(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.RatingSourceTag)
+                if (currentChild.Name == this.RatingFromUserTag)
+                {
+                    rating.FromUser = this.ReadBool(currentChild);
+                    continue;
+                }
+                /*if (currentChild.Name == this.RatingSourceTag)
                 {
                     rating.Source = this.ReadRatingSource(currentChild);
                     continue;
-                }
+                }*/
             }
             return rating;
         }
@@ -804,12 +813,12 @@ namespace ActivityRecommendation
             }
             return descriptor;
         }
-        private RatingSource ReadRatingSource(XmlNode nodeRepresentation)
+        /*private RatingSource ReadRatingSource(XmlNode nodeRepresentation)
         {
             string text = this.ReadText(nodeRepresentation);
             RatingSource source = RatingSource.GetSourceWithDescription(text);
             return source;
-        }
+        }*/
         private double ReadDouble(XmlNode nodeRepresentation)
         {
             string text = this.ReadText(nodeRepresentation);
@@ -1022,6 +1031,8 @@ namespace ActivityRecommendation
             if (rating.Date != null)
                 properties[this.RatingDateTag] = this.ConvertToStringBody(rating.Date);
             properties[this.RatingScoreTag] = this.ConvertToStringBody(rating.Score);
+            if (!rating.FromUser)
+                properties[this.RatingFromUserTag] = this.ConvertToStringBody(rating.FromUser);
 
             return this.ConvertToStringBody(properties);
         }
@@ -1110,6 +1121,14 @@ namespace ActivityRecommendation
             get
             {
                 return "Score";
+            }
+        }
+        public string RatingFromUserTag
+        {
+            get
+            {
+                // tells whether the user entered this rating (rather than it being an estimate created by the engine)
+                return "FromUser";
             }
         }
         public string RatingSourceTag

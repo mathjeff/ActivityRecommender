@@ -89,7 +89,7 @@
     <Compile Include="Source\Rating.cs" />
     <Compile Include="Source\RatingProgression.cs" />
     <Compile Include="Source\RatingRenormalizer.cs" />
-    <Compile Include="Source\RatingReplayer.cs" />
+    <Compile Include="Source\HistoryReplayer.cs" />
     <Compile Include="Source\RatingSource.cs" />
     <Compile Include="Source\RatingSummarizer.cs" />
     <Compile Include="Source\RatingSummary.cs" />

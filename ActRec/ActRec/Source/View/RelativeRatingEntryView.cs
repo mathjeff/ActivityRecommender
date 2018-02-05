@@ -110,7 +110,7 @@ namespace ActivityRecommendation
             // abort if null input
             double? maybeScale = this.GetRatio();
             if (maybeScale == null)
-                return null;
+                return engine.MakeEstimatedRating(participation);
             double scale = maybeScale.Value;
             if (this.latestParticipation == null)
                 return null;

@@ -306,6 +306,9 @@ namespace ActivityRecommendation
             // estimate the activity's rating so that its parent activities will have their ratings estimated,
             // because the parent rating estimates are used as coordinates
             this.engine.EstimateRating(chosenActivity, startDate);
+            Distribution chosenEstimatedDistribution = chosenActivity.Predict_LongtermValue_If_Participated(startDate);
+            if (chosenEstimatedDistribution.Weight <= 0)
+                return "";
             double chosenValue = chosenActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
 
             double usualValue = rootActivity.GetAverageLongtermValueWhenParticipated().Mean;

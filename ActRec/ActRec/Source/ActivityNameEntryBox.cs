@@ -101,6 +101,7 @@ namespace ActivityRecommendation
                 {
                     // automatically fill the suggestion text into the box
                     this.NameText = this.suggestedActivityName;
+                    this.nameBox.Unfocus();
                 }
             }
             else

@@ -118,11 +118,9 @@ namespace ActivityRecommendation
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(skip.ActivityDescriptor);
             properties[this.DateTag] = this.ConvertToStringBody(skip.CreationDate);
-            if (skip.SuggestionCreationDate != null)
-                properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionCreationDate);
-            if (skip.ApplicableDate != null)
-                properties[SuggestionStartDateTag] = this.ConvertToStringBody(skip.ApplicableDate);
-            //properties[this.RatingTag] = this.ConvertToStringBody(skip.RawRating);
+            properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionCreationDate);
+            if (skip.SuggestionStartDate != skip.SuggestionCreationDate)
+                properties[SuggestionStartDateTag] = this.ConvertToStringBody(skip.SuggestionStartDate);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -380,18 +378,6 @@ namespace ActivityRecommendation
                             outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
                             latestParticipation = null;
                         }
-                        // Maybe it's a skip
-                        if (absolute != null && absolute.Score.ToString().Length > 6 || absolute.Score == 0)
-                        {
-                            // if it is an absolute rating with lots of digits, then it's a Skip
-                            ActivitySkip skip = new ActivitySkip((DateTime)absolute.Date, absolute.ActivityDescriptor);
-                            skip.RawRating = absolute;
-                            // remove some redundant data
-                            skip.RawRating.ActivityDescriptor = null;
-                            skip.RawRating.Date = null;
-                            outputText += this.ConvertToString(skip) + Environment.NewLine;
-                            continue;
-                        }
                         // maybe it's an ActivityRequest
                         if (absolute != null && absolute.Score == 1)
                         {
@@ -624,54 +610,45 @@ namespace ActivityRecommendation
         // returns an object of type "Skip" that this XmlNode represents
         private ActivitySkip ReadSkip(XmlNode nodeRepresentation)
         {
-            ActivitySkip skip = new ActivitySkip();
+            ActivityDescriptor activityDescriptor = null;
+            DateTime? suggestionCreationDate = null;
+            DateTime? suggestionStartDate = null;
+            DateTime? skipCreationDate = null;
+            AbsoluteRating rawRating = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
                 {
-                    skip.ActivityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    activityDescriptor = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.DateTag)
                 {
-                    skip.CreationDate = this.ReadDate(currentChild);
+                    skipCreationDate = this.ReadDate(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.SuggestionDateTag)
                 {
-                    skip.SuggestionCreationDate = this.ReadDate(currentChild);
+                    suggestionCreationDate = this.ReadDate(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.SuggestionStartDateTag)
                 {
-                    skip.ApplicableDate = this.ReadDate(currentChild);
+                    suggestionStartDate = this.ReadDate(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.RatingTag)
                 {
-                    skip.RawRating = this.ReadAbsoluteRating(currentChild);
+                    rawRating = this.ReadAbsoluteRating(currentChild);
                     continue;
                 }
             }
-            // check that the values all make sense, and if not then compensate for legacy behavior
-            if (skip.SuggestionCreationDate == null)
+            if (suggestionStartDate == null)
             {
-                // This skip was created long enough ago that it's missing a SuggestionCreationDate, so its CreationDate is also wrong
-                skip.ApplicableDate = skip.CreationDate;
-                skip.SuggestionCreationDate = skip.ApplicableDate;
-                this.setPendingSkip(skip, skip.ApplicableDate.Value);
-                return null;
+                // Fill in default value for suggestionStartDate
+                suggestionStartDate = suggestionCreationDate;
             }
-            else
-            {
-                if (skip.ApplicableDate == null)
-                {
-                    // The values in the skip are correct, and it says when it was created and when the skip was created,
-                    // but it doesn't say which date the suggestion recommended (so the suggestion suggested doing the activity immediately)
-                    skip.ApplicableDate = skip.SuggestionCreationDate;
-                }
-            }
-            return skip;
+            return new ActivitySkip(activityDescriptor, suggestionCreationDate.Value, skipCreationDate.Value, suggestionStartDate.Value);
         }
 
         // sets the pending skip at the given time (and submits the previous pending skip if it exists)

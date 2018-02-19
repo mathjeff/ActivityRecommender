@@ -615,7 +615,7 @@ namespace ActivityRecommendation
             {
                 // get the coordinates at that time and save them
                 WillingnessSummary willingness = new WillingnessSummary(0, 0, 1);
-                this.AddParticipationDatapoint(newSkip.ApplicableDate.Value, willingness);
+                this.AddParticipationDatapoint(newSkip.SuggestionStartDate, willingness);
 
 
                 this.skipProgression.AddSkip(newSkip);

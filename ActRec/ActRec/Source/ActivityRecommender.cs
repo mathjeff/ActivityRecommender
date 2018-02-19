@@ -248,11 +248,7 @@ namespace ActivityRecommendation
             if (estimatedScore < 0)
                 estimatedScore = 0;
             // make a Skip object holding the needed data
-            ActivitySkip skip = new ActivitySkip();
-            skip.ApplicableDate = suggestion.StartDate;
-            skip.CreationDate = DateTime.Now;
-            skip.SuggestionCreationDate = suggestion.GuessCreationDate();
-            skip.ActivityDescriptor = suggestion.ActivityDescriptor;
+            ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptor, DateTime.Now, suggestion.GuessCreationDate(), suggestion.StartDate);
 
             AbsoluteRating rating = new AbsoluteRating();
             rating.Score = estimatedScore;

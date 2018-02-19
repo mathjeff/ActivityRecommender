@@ -848,8 +848,8 @@ namespace ActivityRecommendation
                 // update our estimate of how longer the user spends thinking about what to do
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
                 // record the fact that the user wasn't doing anything directly productive at this time
-                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate.Value, newSkip.CreationDate, 0);
-                this.unweightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate.Value, newSkip.CreationDate, 0);
+                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
+                this.unweightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
             }
 
 #if false

@@ -22,7 +22,7 @@ namespace ActivityRecommendation
             this.valuesInDiscoveryOrder.Add(newSkip);
 
             // keep track of the skips in chronological order
-            this.searchHelper.Add(newSkip.ApplicableDate.Value, newSkip);
+            this.searchHelper.Add(newSkip.SuggestionStartDate, newSkip);
         }
         #region Functions for IProgression
 
@@ -84,7 +84,7 @@ namespace ActivityRecommendation
         }
         public ActivitySkip Default()
         {
-            return new ActivitySkip();
+            return null;
         }
 
         #endregion

@@ -303,16 +303,10 @@ namespace ActivityRecommendation
             // now determine which category to predict from
             Activity bestActivity = null;
             TimeSpan processingTime = TimeSpan.FromSeconds(2);
-            if (requestCategory != null)
-            {
-                // now we get a recommendation, from among all activities within this category
-                bestActivity = this.engine.MakeRecommendation(requestCategory, desiredActivity, suggestionDate, processingTime);
-            }
-            else
-            {
-                // now we get a recommendation
-                bestActivity = this.engine.MakeRecommendation(suggestionDate, processingTime);
-            }
+            
+            // now we get a recommendation, from among all activities within this category
+            bestActivity = this.engine.MakeRecommendation(requestCategory, desiredActivity, suggestionDate, processingTime);
+
             // if there are no matching activities, then give up
             if (bestActivity == null)
             {

@@ -36,7 +36,8 @@ namespace ActivityRecommendation
         public void AddParticipationIntensity(DateTime startDate, DateTime endDate, double intensity)
         {
             if (this.valuesByDate.NumItems == 0)
-                this.firstDate = startDate;
+                return; // any Skip or Participation before the first Rating is ignored (because the weight of each Skip is so small, and we don't want it to accidentally dominate)
+
             // the integral through startDate
             double startingWeight = this.GetWeightThroughDate(startDate);
             // the integral through endDate

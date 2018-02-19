@@ -63,17 +63,6 @@ namespace ActivityRecommendation
                 //return this.xAxisProgressionSelector.Progression;
             }
         }
-        public string YAxisActivtyName
-        {
-            get
-            {
-                return this.yAxisNameBox.NameText;
-            }
-            set
-            {
-                this.yAxisNameBox.NameText = value;
-            }
-        }
         public ActivityDescriptor YAxisActivityDescriptor
         {
             get

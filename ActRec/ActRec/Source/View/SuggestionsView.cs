@@ -67,18 +67,18 @@ namespace ActivityRecommendation
         {
             this.suggestionButton.Clicked += e;
         }
-        public string DesiredActivity_Text
+        public Activity DesiredActivity
         {
             get
             {
-                return this.desiredActivity_box.NameText;
+                return this.desiredActivity_box.Activity;
             }
         }
-        public string CategoryText
+        public Activity Category
         {
             get
             {
-                return this.categoryBox.NameText;
+                return this.categoryBox.Activity;
             }
         }
 

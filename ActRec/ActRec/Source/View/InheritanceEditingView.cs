@@ -24,10 +24,12 @@ namespace ActivityRecommendation
 
             this.childNameBox = new ActivityNameEntryBox("Activity Name", makeNewChild);
             this.childNameBox.Database = activityDatabase;
+            this.childNameBox.AutoAcceptAutocomplete = false;
             content.AddLayout(this.childNameBox);
 
             this.parentNameBox = new ActivityNameEntryBox("Parent Name");
             this.parentNameBox.Database = activityDatabase;
+            this.parentNameBox.AutoAcceptAutocomplete = false;
             content.AddLayout(this.parentNameBox);
 
             this.okButton = new Button();
@@ -65,33 +67,11 @@ namespace ActivityRecommendation
                     return; // invalid
                 Inheritance inheritance = new Inheritance(parentDescriptor, childDescriptor);
                 this.Submit.Invoke(this, inheritance);
-                this.childNameBox.NameText = "";
-                this.parentNameBox.NameText = "";
+                this.childNameBox.Clear();
+                this.parentNameBox.Clear();
             }
         }
 
-        public string ChildName
-        {
-            get
-            {
-                return this.childNameBox.NameText;
-            }
-            set
-            {
-                this.childNameBox.NameText = value;
-            }
-        }
-        public string ParentName
-        {
-            get
-            {
-                return this.parentNameBox.NameText;
-            }
-            set
-            {
-                this.parentNameBox.NameText = value;
-            }
-        }
         private ActivityNameEntryBox childNameBox;
         private ActivityNameEntryBox parentNameBox;
         private Button okButton;

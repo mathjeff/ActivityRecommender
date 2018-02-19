@@ -273,32 +273,15 @@ namespace ActivityRecommendation
 
             
             // If the user requested that the first suggestion be from a certain category, find that category
-            Activity requestCategory = null;
-            string categoryText = this.suggestionsView.CategoryText;
-            if (categoryText != null && categoryText != "")
+            Activity requestCategory = this.suggestionsView.Category;
+            if (requestCategory != null)
             {
-                ActivityDescriptor categoryDescriptor = new ActivityDescriptor();
-                categoryDescriptor.ActivityName = categoryText;
-                categoryDescriptor.PreferHigherProbability = true;
-                requestCategory = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
-
-                if (requestCategory != null)
-                {
-                    ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
-                    this.AddActivityRequest(request);
-                }
+                ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
+                this.AddActivityRequest(request);
             }
 
             // If the user requested that the suggestion be at least as good as a certain activity, then find that activity
-            Activity desiredActivity = null;
-            string desiredActivity_text = this.suggestionsView.DesiredActivity_Text;
-            if (desiredActivity_text != null && desiredActivity_text != "")
-            {
-                ActivityDescriptor categoryDescriptor = new ActivityDescriptor();
-                categoryDescriptor.ActivityName = desiredActivity_text;
-                categoryDescriptor.PreferHigherProbability = true;
-                desiredActivity = this.engine.ActivityDatabase.ResolveDescriptor(categoryDescriptor);
-            }
+            Activity desiredActivity = this.suggestionsView.DesiredActivity;
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();

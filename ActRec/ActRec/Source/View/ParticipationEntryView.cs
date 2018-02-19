@@ -25,6 +25,7 @@ namespace ActivityRecommendation
             GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
             this.nameBox = new ActivityNameEntryBox("Activity Name");
+            this.nameBox.AutoAcceptAutocomplete = false;
             this.nameBox.AddTextChangedHandler(new EventHandler<TextChangedEventArgs>(this.nameBox_TextChanged));
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
@@ -114,8 +115,8 @@ namespace ActivityRecommendation
         public void Clear()
         {
             this.ratingBox.Clear();
-            this.nameBox.NameText = "";
-            this.intendedActivity_box.NameText = "";
+            this.nameBox.Clear();
+            this.intendedActivity_box.Clear();
             this.CommentText = "";
             //this.setEnddateButton.SetDefaultBackground();
             this.predictedRating_block.Text = "";
@@ -170,7 +171,7 @@ namespace ActivityRecommendation
         }
         public void SetActivityName(string newName)
         {
-            this.nameBox.NameText = newName;
+            this.nameBox.Set_NameText(newName);
             this.Update_FeedbackBlock_Text();
             //if (newName != "" && newName != null)
             //    this.setEnddateButton.Highlight();
@@ -179,7 +180,10 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.nameBox.NameText;
+                Activity activity = this.nameBox.Activity;
+                if (activity == null)
+                    return null;
+                return activity.Name;
             }
         }
         public string RatingText
@@ -221,9 +225,10 @@ namespace ActivityRecommendation
         }
         public Participation GetParticipation(ActivityDatabase activities, Engine engine)
         {
-            // Fill in the necessary properties
-            ActivityDescriptor descriptor = new ActivityDescriptor();
-            descriptor.ActivityName = this.ActivityName;
+            Activity activity = this.nameBox.Activity;
+            if (activity == null)
+                return null;
+            ActivityDescriptor descriptor = activity.MakeDescriptor();
             if (descriptor.ActivityName == null || descriptor.ActivityName.Length == 0)
                 return null;
 

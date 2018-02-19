@@ -15,6 +15,8 @@ namespace ActivityRecommendation
             this.nameBox.TextChanged += NameBox_TextChanged;
             this.nameBox_layout = new TextboxLayout(this.nameBox);
 
+            this.AutoAcceptAutocomplete = true;
+
             Button xButton = new Button();
             xButton.Text = "X";
             xButton.Clicked += XButton_Clicked;
@@ -44,7 +46,6 @@ namespace ActivityRecommendation
             this.UpdateSuggestions();
 
             base.SetContent(content);
-
         }
 
         private void XButton_Clicked(object sender, EventArgs e)
@@ -115,7 +116,7 @@ namespace ActivityRecommendation
                     this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, newText));
             }
         }
-        public string NameText
+        string NameText
         {
             get
             {
@@ -128,6 +129,14 @@ namespace ActivityRecommendation
                 this.UpdateSuggestions();
             }
         }
+        public void Clear()
+        {
+            this.Set_NameText(null);
+        }
+        public void Set_NameText(string text)
+        {
+            this.NameText = text;
+        }
         public ActivityDatabase Database
         {
             set
@@ -135,7 +144,7 @@ namespace ActivityRecommendation
                 this.database = value;
             }
         }
-        public bool NameMatchesSuggestion
+        bool NameMatchesSuggestion
         {
             get
             {
@@ -217,7 +226,7 @@ namespace ActivityRecommendation
         // update the UI based on a change in the text that the user has typed
         void UpdateSuggestions()
         {
-            ActivityDescriptor descriptor = this.ActivityDescriptor;
+            ActivityDescriptor descriptor = this.WorkInProgressActivityDescriptor;
             string oldText = this.suggestedActivityName;
             if (descriptor == null)
             {
@@ -238,8 +247,13 @@ namespace ActivityRecommendation
                     }
                     else
                     {
-                        // Remind the user that they have to accept the suggestion
-                        this.suggestionBlock.Text = this.suggestedActivityName + "?";
+                        // Update suggestion
+                        string suggestionText;
+                        if (this.AutoAcceptAutocomplete)
+                            suggestionText = this.suggestedActivityName;
+                        else
+                            suggestionText = this.suggestedActivityName + "?";
+                        this.suggestionBlock.Text = suggestionText;
                     }
                 }
                 else
@@ -253,7 +267,25 @@ namespace ActivityRecommendation
                 this.AnnounceChange(true);
             }
         }
+
+        public bool AutoAcceptAutocomplete { get; set; } // Whether to treat a partially entered activity as equivalent to the one recommended by autocomplete
+
+        // this is the ActivityDescriptor to be returned to outside callers, which represents the selection that the user made
         public ActivityDescriptor ActivityDescriptor
+        {
+            get
+            {
+                ActivityDescriptor activityDescriptor = this.WorkInProgressActivityDescriptor;
+                if (activityDescriptor == null)
+                    return null;
+                if (!this.AutoAcceptAutocomplete)
+                    activityDescriptor.RequiresPerfectMatch = true;
+                return activityDescriptor;
+            }
+        }
+
+        // this is the ActivityDescriptor that models what the user is in the middle of typing
+        private ActivityDescriptor WorkInProgressActivityDescriptor
         {
             get
             {

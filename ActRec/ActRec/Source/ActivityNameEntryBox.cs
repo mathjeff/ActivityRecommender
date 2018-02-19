@@ -34,8 +34,8 @@ namespace ActivityRecommendation
             else
             {
                 GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
-                contentWithSuggestion.AddLayout(nameLayout);
                 contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
+                contentWithSuggestion.AddLayout(nameLayout);
 
                 content = new LayoutCache(contentWithSuggestion);
             }

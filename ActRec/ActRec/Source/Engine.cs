@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
 
 namespace ActivityRecommendation
 {
@@ -11,7 +8,6 @@ namespace ActivityRecommendation
         public Engine()
         {
             this.weightedRatingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
-            this.unweightedRatingSummarizer = new LinearRatingSummarizer();
             this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer);
             this.unappliedRatings = new List<AbsoluteRating>();
             this.unappliedParticipations = new List<Participation>();
@@ -686,7 +682,6 @@ namespace ActivityRecommendation
                     this.weightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
                     if (newRating.FromUser)
                     {
-                        this.unweightedRatingSummarizer.AddRating(participation.StartDate, participation.EndDate, newRating.Score);
                         // usual average of the activities that were not suggested
                         if (participation.Suggested != null && participation.Suggested.Value == false)
                             this.ratingsOfUnpromptedActivities = this.ratingsOfUnpromptedActivities.Plus(newRating.Score);
@@ -758,7 +753,6 @@ namespace ActivityRecommendation
             this.PutActivityDescriptorInMemory(newParticipation.ActivityDescriptor);
 
             this.weightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
-            this.unweightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
 
             
             Rating rating = newParticipation.GetCompleteRating();
@@ -849,7 +843,6 @@ namespace ActivityRecommendation
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
                 // record the fact that the user wasn't doing anything directly productive at this time
                 this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
-                this.unweightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
             }
 
 #if false
@@ -894,7 +887,6 @@ namespace ActivityRecommendation
                 }
             }
             this.weightedRatingSummarizer.RemoveParticipation(participationToRemove.StartDate);
-            this.unweightedRatingSummarizer.RemoveParticipation(participationToRemove.StartDate);
         }
         public RelativeRating MakeRelativeRating(Participation mainParticipation, double scale, Participation otherParticipation)
         {
@@ -1013,13 +1005,6 @@ namespace ActivityRecommendation
                 return this.weightedRatingSummarizer;
             }
         }
-        public RatingSummarizer UnweightedSummarizer
-        {
-            get
-            {
-                return this.unweightedRatingSummarizer;
-            }
-        }
         private UserPreferences Get_UserPreferences()
         {
             return UserPreferences.DefaultPreferences;
@@ -1047,7 +1032,7 @@ namespace ActivityRecommendation
         //Distribution ratingsForSuggestedActivities;     // the ratings that the user gives to activities that were suggested by the engine
         //Distribution ratingsForUnsuggestedActivities;   // the ratings that the user gives to activities that were not suggestd by the engine
         RatingSummarizer weightedRatingSummarizer;
-        RatingSummarizer unweightedRatingSummarizer;
+        
         
         Distribution ratingsOfUnpromptedActivities;
         int numSkips;

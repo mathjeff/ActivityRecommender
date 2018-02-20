@@ -338,11 +338,8 @@ namespace ActivityRecommendation
         {
             // update the error rate for the participation probability predictor
             this.UpdateParticipationProbabilityError(newSkip.ActivityDescriptor, newSkip.CreationDate, 0);
-            if (newSkip.SuggestionCreationDate != null)
-            {
-                // inform the ratingSummarizer that the user wasn't doing anything during this time
-                this.ratingSummarizer.AddParticipationIntensity((DateTime)newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
-            }
+            // inform the ratingSummarizer that the user wasn't doing anything during this time
+            this.ratingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.CreationDate, 0);
         }
 
         // runs the engine on the given activity at the given date, and keeps track of the overall error

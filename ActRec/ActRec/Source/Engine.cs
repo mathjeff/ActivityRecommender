@@ -834,23 +834,16 @@ namespace ActivityRecommendation
 
             this.DiscoveredActionDate(newSkip.CreationDate);
 
-            if (newSkip.SuggestionCreationDate != null)
+            if (newSkip.ConsideredSinceDate != null)
             {
-                TimeSpan duration = newSkip.CreationDate.Subtract((DateTime)newSkip.SuggestionCreationDate);
+                TimeSpan duration = newSkip.CreationDate.Subtract(newSkip.ConsideredSinceDate);
                 if (duration.TotalDays > 1)
                     System.Diagnostics.Debug.WriteLine("skip duration > 1 day, this is probably a mistake");
                 // update our estimate of how longer the user spends thinking about what to do
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
                 // record the fact that the user wasn't doing anything directly productive at this time
-                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.SuggestionCreationDate, newSkip.CreationDate, 0);
+                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.CreationDate, 0);
             }
-
-#if false
-            Rating newRating = newSkip.GetCompleteRating();
-            AbsoluteRating convertedRating = newRating as AbsoluteRating;
-            if (convertedRating != null)
-                this.PutRatingInMemory(convertedRating);
-#endif
         }
         public void PutActivityRequestInMemory(ActivityRequest newRequest)
         {

@@ -48,7 +48,6 @@ namespace ActivityRecommendation
         // call this to do cleanup immediately before this object gets destroyed
         public void ShutDown()
         {
-            //this.SuspectLatestActionDate(DateTime.Now);
             if (!this.recentUserData.Synchronized)
                 this.WriteRecentUserData();
         }
@@ -244,15 +243,11 @@ namespace ActivityRecommendation
             // Calculate the score to generate for this Activity as a result of that statement
             Activity activity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             Distribution previousDistribution = activity.PredictedScore.Distribution;
-            double estimatedScore = previousDistribution.Mean - previousDistribution.StdDev;
-            if (estimatedScore < 0)
-                estimatedScore = 0;
             // make a Skip object holding the needed data
-            ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptor, DateTime.Now, suggestion.GuessCreationDate(), suggestion.StartDate);
+            DateTime considerationDate = this.LatestActionDate;
+            DateTime suggestionCreationDate = suggestion.GuessCreationDate();
+            ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptor, suggestionCreationDate, considerationDate, DateTime.Now, suggestion.StartDate);
 
-            AbsoluteRating rating = new AbsoluteRating();
-            rating.Score = estimatedScore;
-            skip.RawRating = rating;
             this.AddSkip(skip);
         }
         /*public void JustifySuggestion(ActivitySuggestion suggestion)
@@ -429,6 +424,7 @@ namespace ActivityRecommendation
         private void AddParticipation(Participation newParticipation)
         {
             this.PutParticipationInMemory(newParticipation);
+            this.SuspectLatestActionDate(newParticipation.EndDate);
             this.WriteParticipation(newParticipation);
             this.ActivityDatabase.CreateActivityIfMissing(newParticipation.ActivityDescriptor);
         }
@@ -440,6 +436,7 @@ namespace ActivityRecommendation
         // declares that the user didn't want to do something that was suggested
         private void AddSkip(ActivitySkip newSkip)
         {
+            this.SuspectLatestActionDate(newSkip.CreationDate);
             this.PutSkipInMemory(newSkip);
             this.WriteSkip(newSkip);
         }
@@ -514,13 +511,10 @@ namespace ActivityRecommendation
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
             // link the skip to its suggestion
-            DateTime? suggestionCreationDate = newSkip.SuggestionCreationDate;
-            if (suggestionCreationDate != null)
-            {
-                ActivitySuggestion suggestion = this.suggestionDatabase.GetSuggestion(newSkip.ActivityDescriptor, suggestionCreationDate.Value);
-                if (suggestion != null)
-                    suggestion.Skip = newSkip;
-            }
+            DateTime suggestionCreationDate = newSkip.SuggestionCreationDate;
+            ActivitySuggestion suggestion = this.suggestionDatabase.GetSuggestion(newSkip.ActivityDescriptor, suggestionCreationDate);
+            if (suggestion != null)
+                suggestion.Skip = newSkip;
             // save the skip
             this.engine.PutSkipInMemory(newSkip);
             if (this.historyReplayer != null)
@@ -551,9 +545,12 @@ namespace ActivityRecommendation
         // updates the ParticipationEntryView so that the start date is 'when'
         public void SuspectLatestActionDate(DateTime when)
         {
-            this.LatestActionDate = when;
-            //this.WriteInteractionDate(when);
-            this.UpdateDefaultParticipationData(when);
+            if (when.CompareTo(DateTime.Now) <= 0 && when.CompareTo(this.LatestActionDate) > 0)
+            {
+                this.LatestActionDate = when;
+                //this.WriteInteractionDate(when);
+                this.UpdateDefaultParticipationData(when);
+            }
         }
         // sets the given RecentUserData
         public void SetRecentUserData(RecentUserData data)

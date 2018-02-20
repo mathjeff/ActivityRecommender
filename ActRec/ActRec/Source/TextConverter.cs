@@ -120,7 +120,9 @@ namespace ActivityRecommendation
             properties[this.DateTag] = this.ConvertToStringBody(skip.CreationDate);
             properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionCreationDate);
             if (skip.SuggestionStartDate != skip.SuggestionCreationDate)
-                properties[SuggestionStartDateTag] = this.ConvertToStringBody(skip.SuggestionStartDate);
+                properties[this.SuggestionStartDateTag] = this.ConvertToStringBody(skip.SuggestionStartDate);
+            if (skip.ConsideredSinceDate != skip.SuggestionCreationDate)
+                properties[this.SkipConsideredSinceDate] = this.ConvertToStringBody(skip.ConsideredSinceDate);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -612,6 +614,7 @@ namespace ActivityRecommendation
         {
             ActivityDescriptor activityDescriptor = null;
             DateTime? suggestionCreationDate = null;
+            DateTime? consideredSinceDate = null;
             DateTime? suggestionStartDate = null;
             DateTime? skipCreationDate = null;
             AbsoluteRating rawRating = null;
@@ -622,14 +625,19 @@ namespace ActivityRecommendation
                     activityDescriptor = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.DateTag)
-                {
-                    skipCreationDate = this.ReadDate(currentChild);
-                    continue;
-                }
                 if (currentChild.Name == this.SuggestionDateTag)
                 {
                     suggestionCreationDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SkipConsideredSinceDate)
+                {
+                    consideredSinceDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.DateTag)
+                {
+                    skipCreationDate = this.ReadDate(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.SuggestionStartDateTag)
@@ -648,7 +656,12 @@ namespace ActivityRecommendation
                 // Fill in default value for suggestionStartDate
                 suggestionStartDate = suggestionCreationDate;
             }
-            return new ActivitySkip(activityDescriptor, suggestionCreationDate.Value, skipCreationDate.Value, suggestionStartDate.Value);
+            if (consideredSinceDate == null)
+            {
+                // fill in default value for suggestionCreationDate
+                consideredSinceDate = suggestionCreationDate;
+            }
+            return new ActivitySkip(activityDescriptor, suggestionCreationDate.Value, consideredSinceDate.Value, skipCreationDate.Value, suggestionStartDate.Value);
         }
 
         // sets the pending skip at the given time (and submits the previous pending skip if it exists)
@@ -1202,6 +1215,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Skip";
+            }
+        }
+        private string SkipConsideredSinceDate
+        {
+            get
+            {
+                return "Since";
             }
         }
         private string SuggestionDateTag

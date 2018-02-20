@@ -695,6 +695,7 @@ namespace ActivityRecommendation
                 endDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, startDate.Hour, startDate.Minute, startDate.Second);
             }
             this.participationEntryView.EndDate = endDate;
+            // updating the StartDate while a suggestion is onscreen takes a while (because of updating the feedback block text), so in those cases, skip it
             this.participationEntryView.SetStartDate(startDate);
         }
 

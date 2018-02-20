@@ -84,6 +84,13 @@ namespace ActivityRecommendation
             this.SetContent(contents);
         }
 
+        public override SpecificLayout GetBestLayout(LayoutQuery query)
+        {
+            if (!this.feedbackIsUpToDate)
+                this.Update_FeedbackBlock_Text();
+            return base.GetBestLayout(query);
+        }
+
         public void DateText_Changed(object sender, TextChangedEventArgs e)
         {
             if (this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid())
@@ -105,7 +112,7 @@ namespace ActivityRecommendation
 
         public void StartDateText_Changed(object sender, TextChangedEventArgs e)
         {
-            this.Update_FeedbackBlock_Text();
+            this.Invalidate_FeedbackBlock_Text();
         }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -171,10 +178,13 @@ namespace ActivityRecommendation
         }
         public void SetActivityName(string newName)
         {
-            this.nameBox.Set_NameText(newName);
-            this.Update_FeedbackBlock_Text();
-            //if (newName != "" && newName != null)
-            //    this.setEnddateButton.Highlight();
+            if (newName != this.ActivityName)
+            {
+                this.nameBox.Set_NameText(newName);
+                this.Invalidate_FeedbackBlock_Text();
+                //if (newName != "" && newName != null)
+                //    this.setEnddateButton.Highlight();
+            }
         }
         public string ActivityName
         {
@@ -268,9 +278,14 @@ namespace ActivityRecommendation
 
         public void ActivityName_BecameValid(object sender, TextChangedEventArgs e)
         {
-            this.Update_FeedbackBlock_Text();
+            this.Invalidate_FeedbackBlock_Text();
         }
 
+        private void Invalidate_FeedbackBlock_Text()
+        {
+            this.feedbackIsUpToDate = false;
+            this.AnnounceChange(true);
+        }
 
         private void Update_FeedbackBlock_Text()
         {
@@ -284,6 +299,7 @@ namespace ActivityRecommendation
                     this.predictedRating_block.Text = text;
                 }
             }
+            this.feedbackIsUpToDate = true;
         }
 
         private string computeFeedback(Activity chosenActivity, DateTime startDate)
@@ -367,5 +383,6 @@ namespace ActivityRecommendation
         Label predictedRating_block;
         Engine engine;
         LayoutStack layoutStack;
+        bool feedbackIsUpToDate;
     }
 }

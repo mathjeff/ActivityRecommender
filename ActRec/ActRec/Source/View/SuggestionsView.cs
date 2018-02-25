@@ -118,6 +118,14 @@ namespace ActivityRecommendation
             this.suggestions.Add(suggestion);
             this.UpdateSuggestions();
         }
+        public void AddSuggestions(IEnumerable<ActivitySuggestion> suggestions)
+        {
+            foreach (ActivitySuggestion suggestion in suggestions)
+            {
+                this.suggestions.Add(suggestion);
+                this.UpdateSuggestions();
+            }
+        }
         public IEnumerable<ActivitySuggestion> GetSuggestions()
         {
             this.Update_Suggestion_StartTimes();

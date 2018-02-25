@@ -62,7 +62,7 @@ namespace ActivityRecommendation
         {
             this.ratingsFileName = "ActivityRatings.txt";
             this.inheritancesFileName = "ActivityInheritances.txt";
-            this.tempFileName = "TemporaryData.txt";
+            this.recentUserData_fileName = "TemporaryData.txt";
             this.textConverter = new TextConverter(this);
             //this.historyReplayer = new EngineTester();
             //this.historyReplayer = new RatingRenormalizer(this.textConverter);
@@ -113,6 +113,7 @@ namespace ActivityRecommendation
             this.suggestionsView = new SuggestionsView(this, this.layoutStack);
             this.suggestionsView.AddSuggestionClickHandler(new EventHandler(this.MakeRecommendation));
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
+            this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationCorrelationMenu(this.layoutStack, this.ActivityDatabase, this.engine));
@@ -170,13 +171,14 @@ namespace ActivityRecommendation
         public void ImportData(object sender, FileData fileData)
         {
             string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
-            this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName);
+            this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
             this.Reset();
         }
 
         public string ExportData()
         {
             string content = "";
+            content += this.textConverter.ReadAllText(this.recentUserData_fileName);
             content += this.textConverter.ReadAllText(this.inheritancesFileName);
             content += this.textConverter.ReadAllText(this.ratingsFileName);
             int maxNumLines = this.dataExportView.Get_NumLines();
@@ -233,7 +235,7 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("Starting to read files");
             this.textConverter.ReadFile(this.inheritancesFileName);
             this.textConverter.ReadFile(this.ratingsFileName);
-            this.textConverter.ReadFile(this.tempFileName);
+            this.textConverter.ReadFile(this.recentUserData_fileName);
             this.ActivityDatabase.AssignDefaultParent();
             System.Diagnostics.Debug.WriteLine("Done parsing files");
         }
@@ -607,14 +609,20 @@ namespace ActivityRecommendation
             {
                 this.recentUserData.Suggestions = value;
 
-                this.WriteRecentUserData();
+                this.writeRecentUserData_if_needed();
             }
         }
-        public void WriteRecentUserData()
+        
+        private void writeRecentUserData_if_needed()
+        {
+            if (!this.recentUserData.Synchronized)
+                this.WriteRecentUserData();
+        }
+        private void WriteRecentUserData()
         {
             this.recentUserData.Synchronized = true;
             string text = this.textConverter.ConvertToString(this.recentUserData) + Environment.NewLine;
-            this.textConverter.EraseFileAndWriteContent(this.tempFileName, text);
+            this.textConverter.EraseFileAndWriteContent(this.recentUserData_fileName, text);
         }
 
 
@@ -713,7 +721,7 @@ namespace ActivityRecommendation
         TextConverter textConverter;
         string ratingsFileName;         // the name of the file that stores ratings
         string inheritancesFileName;    // the name of the file that stores inheritances
-        string tempFileName;
+        string recentUserData_fileName;
         Participation latestParticipation;
         HistoryReplayer historyReplayer;
         RecentUserData recentUserData;

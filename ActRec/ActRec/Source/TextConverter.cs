@@ -893,16 +893,23 @@ namespace ActivityRecommendation
             return success;
         }
 
-        public void Import(string contents, string inheritancesFilePath, string historyFilePath)
+        public void Import(string contents, string inheritancesFilePath, string historyFilePath, string recentUserDataPath)
         {
             IEnumerable<XmlNode> nodes = this.ParseText(contents);
 
             List<string> inheritanceTexts = new List<string>();
             List<string> historyTexts = new List<string>();
+            string recentUserDataText = "";
 
 
             foreach (XmlNode node in nodes)
             {
+                if (node.Name == this.RecentUserDataTag)
+                {
+                    RecentUserData recentUserData = this.ReadRecentUserData(node);
+                    recentUserDataText = this.ConvertToString(recentUserData);
+                    continue;
+                }
                 if (node.Name == this.InheritanceTag)
                 {
                     Inheritance inheritance = this.ReadInheritance(node);
@@ -941,6 +948,8 @@ namespace ActivityRecommendation
             this.EraseFileAndWriteContent(inheritancesFilePath, inheritancesText);
             string historyText = string.Join("\n", historyTexts);
             this.EraseFileAndWriteContent(historyFilePath, historyText);
+
+            this.EraseFileAndWriteContent(recentUserDataPath, recentUserDataText);
 
         }
 
@@ -1023,14 +1032,6 @@ namespace ActivityRecommendation
             properties[this.RatingScoreTag] = this.ConvertToStringBody(rating.Score);
             if (!rating.FromUser)
                 properties[this.RatingFromUserTag] = this.ConvertToStringBody(rating.FromUser);
-
-            return this.ConvertToStringBody(properties);
-        }
-        // converts the ActivitySuggestion into a string, and doesn't add the inital <Tag> or ending </Tag>
-        private string ConvertToStringBody(ActivitySuggestion suggestion)
-        {
-            Dictionary<string, string> properties = new Dictionary<string, string>();
-            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(suggestion.ActivityDescriptor);
 
             return this.ConvertToStringBody(properties);
         }

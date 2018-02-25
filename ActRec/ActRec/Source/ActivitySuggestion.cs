@@ -32,8 +32,8 @@ namespace ActivityRecommendation
                 return null;
             }
         }
-        public double ParticipationProbability { get; set; }
-        public double PredictedScoreDividedByAverage { get; set; }
+        public double? ParticipationProbability { get; set; }
+        public double? PredictedScoreDividedByAverage { get; set; }
         //public Distribution PredictedScore { get; set; }
         public string Comment { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all

@@ -19,8 +19,8 @@ namespace ActivityRecommendation
             widths.SetPropertyScale(1, 1);
             widths.BindIndices(0, 1);
             this.mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
-            this.contentGrid = GridLayout.New(BoundProperty_List.Uniform(4), new BoundProperty_List(1), LayoutScore.Zero);
-
+            Vertical_GridLayout_Builder contentBuilder = new Vertical_GridLayout_Builder().Uniform();
+            
             // Attempt to center the activity name, but allow it to be off-center if necessary
             TextblockLayout titleLayout = new TextblockLayout(suggestion.ActivityDescriptor.ActivityName, TextAlignment.Center);
             BoundProperty_List titleComponentWidths = new BoundProperty_List(2);
@@ -31,12 +31,15 @@ namespace ActivityRecommendation
             centeredTitle.PutLayout(titleLayout, 1, 0);
             GridLayout offsetTitle = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(1), LayoutScore.Get_UnCentered_LayoutScore(1));
             offsetTitle.PutLayout(titleLayout, 0, 0);
-            this.contentGrid.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
+            contentBuilder.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
 
             // Add the remaining fields
-            this.contentGrid.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
-            this.contentGrid.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability, 3).ToString()));
-            this.contentGrid.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScoreDividedByAverage, 3).ToString() + " x avg"));
+            contentBuilder.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
+            if (suggestion.ParticipationProbability != null)
+                contentBuilder.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability.Value, 3).ToString()));
+            if (suggestion.PredictedScoreDividedByAverage != null)
+                contentBuilder.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScoreDividedByAverage.Value, 3).ToString() + " x avg"));
+            this.contentGrid = contentBuilder.Build();
 
             // Add buttons
             this.mainGrid.AddLayout(this.contentGrid);

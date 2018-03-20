@@ -4,6 +4,7 @@ using Plugin.FilePicker.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 // The TextConverter class will convert an object into a string or parse a string into a list of objects
@@ -165,11 +166,11 @@ namespace ActivityRecommendation
             {
                 return null;
             }
-            Task<Stream> streamTask = file.OpenAsync(fileAccess);
             Stream stream;
             try
             {
-                 stream = streamTask.Result;
+                Task<Stream> streamTask = Task.Run(async () => await file.OpenAsync(fileAccess));
+                stream = streamTask.Result;
             }
             catch (Exception e)
             {
@@ -183,16 +184,20 @@ namespace ActivityRecommendation
         {
             IFileSystem fs = FileSystem.Current;
             IFile file = null;
-            ExistenceCheckResult result = fs.LocalStorage.CheckExistsAsync(fileName).Result;
+            // TODO: instead of ConfigureAwait here, should we make everything function async?
+            Task<ExistenceCheckResult> existenceTask = Task.Run(async () => await fs.LocalStorage.CheckExistsAsync(fileName));
+            ExistenceCheckResult result = existenceTask.Result;
             if (result == ExistenceCheckResult.FileExists)
             {
-                file = fs.LocalStorage.GetFileAsync(fileName).Result;
+                Task<IFile> contentTask = Task.Run(async () => await fs.LocalStorage.GetFileAsync(fileName));
+                file = contentTask.Result;
             }
             else
             {
                 if (createIfMissing)
                 {
-                    file = fs.LocalStorage.CreateFileAsync(fileName, CreationCollisionOption.FailIfExists).Result;
+                    Task<IFile> creationTask = Task.Run(async () => await fs.LocalStorage.CreateFileAsync(fileName, CreationCollisionOption.FailIfExists));
+                    file = creationTask.Result;
                 }
 
             }
@@ -888,7 +893,8 @@ namespace ActivityRecommendation
             FileData fileData = new FileData();
             fileData.FileName = fileName;
             fileData.DataArray = bytes;
-            bool success = filePicker.SaveFile(fileData).Result;
+            Task<bool> task = Task.Run(async () => await filePicker.SaveFile(fileData));
+            bool success = task.Result;
 
             return success;
         }

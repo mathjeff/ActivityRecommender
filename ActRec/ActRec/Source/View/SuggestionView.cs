@@ -34,7 +34,7 @@ namespace ActivityRecommendation
             contentBuilder.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
 
             // Add the remaining fields
-            contentBuilder.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("hh:mm:ss")));
+            contentBuilder.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("HH:mm:ss")));
             if (suggestion.ParticipationProbability != null)
                 contentBuilder.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability.Value, 3).ToString()));
             if (suggestion.PredictedScoreDividedByAverage != null)

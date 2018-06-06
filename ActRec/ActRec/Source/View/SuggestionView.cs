@@ -7,18 +7,19 @@ namespace ActivityRecommendation
 {
     class SuggestionView : ContainerLayout
     {
-        public SuggestionView(ActivitySuggestion suggestion, SuggestionsView container)
+        public SuggestionView(ActivitySuggestion suggestion, SuggestionsView container, bool experimentationEnabled)
         {
             this.container = container;
             this.suggestion = suggestion;
 
             // have the X button use a certain amount of space on the right
             BoundProperty_List widths = new BoundProperty_List(2);
+
             int titleWidthWeight = 6;
             widths.SetPropertyScale(0, titleWidthWeight + 1);
             widths.SetPropertyScale(1, 1);
             widths.BindIndices(0, 1);
-            this.mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
             Vertical_GridLayout_Builder contentBuilder = new Vertical_GridLayout_Builder().Uniform();
             
             // Attempt to center the activity name, but allow it to be off-center if necessary
@@ -42,17 +43,24 @@ namespace ActivityRecommendation
             this.contentGrid = contentBuilder.Build();
 
             // Add buttons
-            this.mainGrid.AddLayout(this.contentGrid);
+            mainGrid.AddLayout(this.contentGrid);
             this.cancelButton = new Button();
             this.cancelButton.Clicked += cancelButton_Click;
             this.justifyButton = new Button();
             this.justifyButton.Clicked += justifyButton_Click;
-            GridLayout buttonsLayout = new Vertical_GridLayout_Builder().AddLayout(new ButtonLayout(this.cancelButton, "X")).Build();
-            // .AddLayout(new ButtonLayout(this.justifyButton, "?"));
-            this.mainGrid.AddLayout(buttonsLayout);
+            this.experimentButton = new Button();
+            this.experimentButton.Clicked += ExperimentButton_Clicked;
+            Vertical_GridLayout_Builder buttonsLayoutBuilder = new Vertical_GridLayout_Builder().Uniform().AddLayout(new ButtonLayout(this.cancelButton, "x"));
+            if (experimentationEnabled)
+                buttonsLayoutBuilder.AddLayout(new ButtonLayout(this.experimentButton, "Exp."));
+            mainGrid.AddLayout(buttonsLayoutBuilder.Build());
+            this.SubLayout = mainGrid;
 
+        }
 
-            this.SubLayout = this.mainGrid;
+        private void ExperimentButton_Clicked(object sender, EventArgs e)
+        {
+            this.container.RequestExperiment(this.suggestion);
         }
 
         void justifyButton_Click(object sender, EventArgs e)
@@ -97,9 +105,9 @@ namespace ActivityRecommendation
         }
         
         GridLayout contentGrid;
-        GridLayout mainGrid;
         Button cancelButton;
         Button justifyButton;
+        Button experimentButton;
         SuggestionsView container;
         ActivitySuggestion suggestion;
         

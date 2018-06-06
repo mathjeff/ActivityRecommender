@@ -94,7 +94,6 @@ namespace ActivityRecommendation
         public void RemoveSuggestion(ActivitySuggestion suggestion)
         {
             this.suggestions.Remove(suggestion);
-            this.suggestionLayouts.Remove(suggestion);
             this.UpdateSuggestions();
         }
 
@@ -110,7 +109,6 @@ namespace ActivityRecommendation
         public void ClearSuggestions()
         {
             this.suggestions.Clear();
-            this.suggestionLayouts.Clear();
             this.UpdateSuggestions();
         }
         public void AddSuggestion(ActivitySuggestion suggestion)
@@ -135,6 +133,12 @@ namespace ActivityRecommendation
         {
             this.errorLayout = new TextblockLayout(errorMessage);
             this.UpdateLayout();
+        }
+        
+        // Called when the user clicks on an ActivitySuggestion and requests to start an experiment based on it
+        public void RequestExperiment(ActivitySuggestion prompt)
+        {
+            this.layoutStack.AddLayout(new TextblockLayout("Sorry, experimentation isn't supported yet. Check back later!"));
         }
 
         private void UpdateSuggestions()
@@ -161,9 +165,11 @@ namespace ActivityRecommendation
                 layouts.AddLast(this.helpButton_layout);
             if (this.errorLayout != null)
                 layouts.AddLast(errorLayout);
+            bool isFirst = true;
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
-                layouts.AddLast(this.getLayout(suggestion));
+                layouts.AddLast(this.makeLayout(suggestion, isFirst));
+                isFirst = false;
             }
             if (this.suggestions.Count < this.maxNumSuggestions)
                 layouts.AddLast(this.selectorLayout);
@@ -177,18 +183,9 @@ namespace ActivityRecommendation
             this.SetContent(grid);
         }
 
-        private LayoutChoice_Set getLayout(ActivitySuggestion suggestion)
+        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool experimentationEnabled)
         {
-            if (this.suggestionLayouts.ContainsKey(suggestion))
-            {
-                return this.suggestionLayouts[suggestion];
-            }
-            return this.makeLayout(suggestion);
-        }
-
-        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion)
-        {
-            return new LayoutCache(new SuggestionView(suggestion, this));
+            return new LayoutCache(new SuggestionView(suggestion, this, experimentationEnabled));
         }
 
 
@@ -199,7 +196,6 @@ namespace ActivityRecommendation
         LayoutChoice_Set helpButton_layout;
         LayoutStack layoutStack;
         List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
-        Dictionary<ActivitySuggestion, LayoutChoice_Set> suggestionLayouts = new Dictionary<ActivitySuggestion, LayoutChoice_Set>();
         int maxNumSuggestions = 4;
         ActivityRecommender recommender;
         LayoutChoice_Set errorLayout;

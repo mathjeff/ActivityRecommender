@@ -137,11 +137,13 @@ namespace ActivityRecommendation
 
 
             // up to 0.5 extra points based on the likelihood that the user did this activity
-            if (descriptor.PreferHigherProbability)
+            if (descriptor.PreferMorePopular)
             {
-                // give better scores to activities that the user will probably rate higher
-                if (activity.PredictedParticipationProbability.Distribution != null)
-                    matchScore += 0.5 * activity.PredictedParticipationProbability.Distribution.Mean;
+                // Give better scores to activities that the user has logged more often
+                // Ideally, we would actually only count participations that were directly assigned to this activity to begin with
+                // but that's not information that we often need and this probably isn't enough of a reason to track it for this case
+                if (activity.Choosable)
+                    matchScore += (1.0 - 1.0 / ((double)activity.NumParticipations + 1.0));
             }
             return matchScore;
         }

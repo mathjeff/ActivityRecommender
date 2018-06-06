@@ -296,7 +296,7 @@ namespace ActivityRecommendation
                 }
                 ActivityDescriptor descriptor = new ActivityDescriptor();
                 descriptor.ActivityName = text;
-                descriptor.PreferHigherProbability = true;
+                descriptor.PreferMorePopular = true;
                 descriptor.RequiresPerfectMatch = this.createNewActivity;
                 return descriptor;
             }

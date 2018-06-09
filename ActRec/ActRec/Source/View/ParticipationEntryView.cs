@@ -305,7 +305,43 @@ namespace ActivityRecommendation
         private string computeFeedback(Activity chosenActivity, DateTime startDate)
         {
             //return this.compute_estimatedRating_feedback(chosenActivity, startDate);
-            return this.compute_longtermValue_feedback(chosenActivity, startDate);
+            //return this.compute_longtermValue_feedback(chosenActivity, startDate);
+            return compute_longtermAndShortterm_feedback(chosenActivity, startDate);
+        }
+
+        private string compute_longtermAndShortterm_feedback(Activity chosenActivity, DateTime startDate)
+        {
+            double longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
+            if (longtermBonusInDays == -1)
+            {
+                // no data
+                return "";
+            }
+            double shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
+
+            double roundedLongtermBonus = Math.Round(longtermBonusInDays, 3);
+            double roundedShorttermRatio = Math.Round(shorttermValueRatio, 3);
+
+            bool fun = (shorttermValueRatio > 1);
+            bool productive = (longtermBonusInDays > 0);
+
+
+            string message;
+            if (fun)
+            {
+                if (productive)
+                    message = "Nice! I bet that was fun (" + roundedShorttermRatio + " x avg) and productive (+" + roundedLongtermBonus + " days)";
+                else
+                    message = "Indulgent: I estimate that was fun (" + roundedShorttermRatio + " x avg) but unproductive (" + roundedLongtermBonus + " days)";
+            }
+            else
+            {
+                if (productive)
+                    message = "Good work! That must've been difficult (fun = " + roundedShorttermRatio + " x avg) but productive (+" + roundedLongtermBonus + " days)";
+                else
+                    message = "Oops! Probably not fun (" + roundedShorttermRatio + " x avg) or productive (" + roundedLongtermBonus + " days)";
+            }
+            return message;
         }
 
         private string compute_estimatedRating_feedback(Activity chosenActivity, DateTime startDate)
@@ -320,7 +356,19 @@ namespace ActivityRecommendation
             return "Predicted rating = " + expectedShortermRating.ToString() + " * average";
         }
 
-        private string compute_longtermValue_feedback(Activity chosenActivity, DateTime startDate)
+        private double compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
+        {
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
+            this.engine.EstimateSuggestionValue(chosenActivity, startDate);
+
+            double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
+            double overallAverageRating = rootActivity.Scores.Mean;
+            double shorttermRatio = expectedShortermRating / overallAverageRating;
+
+            return shorttermRatio;
+        }
+
+        private double compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
             Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
 
@@ -329,7 +377,7 @@ namespace ActivityRecommendation
             this.engine.EstimateRating(chosenActivity, startDate);
             Distribution chosenEstimatedDistribution = chosenActivity.Predict_LongtermValue_If_Participated(startDate);
             if (chosenEstimatedDistribution.Weight <= 0)
-                return "";
+                return -1;
             double chosenValue = chosenActivity.Predict_LongtermValue_If_Participated(startDate).Mean;
 
             double usualValue = rootActivity.GetAverageLongtermValueWhenParticipated().Mean;
@@ -355,20 +403,34 @@ namespace ActivityRecommendation
             //this.engine.RatingSummarizer.
             if (bonusInSeconds == 0)
             {
-                return "";
+                return 0;
             }
-            string message;
             double bonusInDays = bonusInSeconds / 60 / 60 / 24;
             double baselineDays = usualValue / weightOfThisMoment / 60 / 60 / 24;
+
+            return bonusInDays;
+        }
+
+        private string compute_longtermValue_feedback(Activity chosenActivity, DateTime startDate)
+        {
+            double bonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
+            if (bonusInDays == -1)
+            {
+                // no data
+                return "";
+            }
+
             double roundedBonus = Math.Round(bonusInDays, 3);
-            double roundedBaseline = Math.Round(baselineDays, 3);
+
+            string message;
             if (bonusInDays > 0)
                 message = "Nice! I estimate this worth +" + roundedBonus + " days.";
             else
                 message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days.";
             return message;
+
         }
-        
+
 
         // private member variables
         ActivityNameEntryBox nameBox;

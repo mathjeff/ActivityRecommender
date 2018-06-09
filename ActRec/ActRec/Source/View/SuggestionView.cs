@@ -35,7 +35,15 @@ namespace ActivityRecommendation
             contentBuilder.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
 
             // Add the remaining fields
-            contentBuilder.AddLayout(this.make_displayField("When:", suggestion.StartDate.ToString("HH:mm:ss")));
+            
+            // Include the seconds field only for participations shorter than 1 minute
+            string timeFormat = "HH:mm:ss";
+            if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMilliseconds(1)) >= 0)
+                timeFormat = "HH:mm";
+            string whenText = suggestion.StartDate.ToString(timeFormat);
+            if (suggestion.EndDate.HasValue)
+                whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
+            contentBuilder.AddLayout(this.make_displayField("When:", whenText));
             if (suggestion.ParticipationProbability != null)
                 contentBuilder.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability.Value, 3).ToString()));
             if (suggestion.PredictedScoreDividedByAverage != null)

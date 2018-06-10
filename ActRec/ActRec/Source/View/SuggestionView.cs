@@ -7,9 +7,14 @@ namespace ActivityRecommendation
 {
     class SuggestionView : ContainerLayout
     {
-        public SuggestionView(ActivitySuggestion suggestion, SuggestionsView container, bool experimentationEnabled)
+        public event SuggestionDismissed Dismissed;
+        public delegate void SuggestionDismissed(ActivitySuggestion suggestion);
+
+        public event RequestedExperiment ExperimentRequested;
+        public delegate void RequestedExperiment(ActivitySuggestion suggestion);
+
+        public SuggestionView(ActivitySuggestion suggestion, bool experimentationEnabled = false)
         {
-            this.container = container;
             this.suggestion = suggestion;
 
             // have the X button use a certain amount of space on the right
@@ -68,7 +73,8 @@ namespace ActivityRecommendation
 
         private void ExperimentButton_Clicked(object sender, EventArgs e)
         {
-            this.container.RequestExperiment(this.suggestion);
+            if (this.ExperimentRequested != null)
+                this.ExperimentRequested.Invoke(this.suggestion);
         }
 
         void justifyButton_Click(object sender, EventArgs e)
@@ -78,7 +84,8 @@ namespace ActivityRecommendation
 
         void cancelButton_Click(object sender, EventArgs e)
         {
-            this.container.DeclineSuggestion(this.suggestion);
+            if (this.Dismissed != null)
+                this.Dismissed.Invoke(this.suggestion);
         }
 
         private LayoutChoice_Set make_displayField(string propertyName, string propertyValue)
@@ -116,7 +123,6 @@ namespace ActivityRecommendation
         Button cancelButton;
         Button justifyButton;
         Button experimentButton;
-        SuggestionsView container;
         ActivitySuggestion suggestion;
         
     }

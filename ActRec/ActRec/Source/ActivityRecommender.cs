@@ -99,7 +99,7 @@ namespace ActivityRecommendation
             GridLayout inheritanceInfoView = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
             inheritanceInfoView.AddLayout(new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack));
             inheritanceInfoView.AddLayout(inheritanceEditingView);
-               
+
 
             // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
             this.participationEntryView.Engine = this.engine;
@@ -114,11 +114,12 @@ namespace ActivityRecommendation
             this.suggestionsView.AddSuggestionClickHandler(new EventHandler(this.MakeRecommendation));
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
             this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
+            this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationCorrelationMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
-            
+
             this.statisticsMenu = new ActivityVisualizationMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
             this.statisticsMenu.AddOkClickHandler(new EventHandler(this.VisualizeActivity));
@@ -130,7 +131,7 @@ namespace ActivityRecommendation
 
             this.dataImportView = new DataImportView(this.layoutStack);
             this.dataImportView.RequestImport += this.ImportData;
-            
+
 
             this.dataExportView = new DataExportView(this, this.layoutStack);
 
@@ -166,6 +167,13 @@ namespace ActivityRecommendation
             this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
             //this.displayManager = new ViewManager(this.mainWindow, TextDiagnosticLayout.New());            
 
+        }
+
+        private void SuggestionsView_ExperimentRequested(ActivitySuggestion suggestion)
+        {
+            ExperimentationInitializationLayout layout = new ExperimentationInitializationLayout(this.layoutStack);
+            layout.AddSuggestion(suggestion);
+            this.layoutStack.AddLayout(layout);
         }
 
         public void ImportData(object sender, FileData fileData)
@@ -259,6 +267,11 @@ namespace ActivityRecommendation
             TextblockLayout layout = new TextblockLayout(text);
             this.layoutStack.AddLayout(layout);
         }*/
+
+        public void RequestExperiment() {
+        }
+
+
         private void MakeRecommendation()
         {
             DateTime now = DateTime.Now;

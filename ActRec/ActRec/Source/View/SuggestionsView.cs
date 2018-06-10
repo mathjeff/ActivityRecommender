@@ -12,6 +12,9 @@ namespace ActivityRecommendation
 {
     class SuggestionsView : TitledControl
     {
+        public event RequestedExperiment ExperimentRequested;
+        public delegate void RequestedExperiment(ActivitySuggestion suggestion);
+
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack)
         {
             this.recommender = recommenderToInform;
@@ -97,11 +100,6 @@ namespace ActivityRecommendation
             this.UpdateSuggestions();
         }
 
-        public void DeclineSuggestion(ActivitySuggestion suggestion)
-        {
-            this.RemoveSuggestion(suggestion);
-            this.recommender.DeclineSuggestion(suggestion);
-        }
         /*public void JustifySuggestion(ActivitySuggestion suggestion)
         {
             this.recommender.JustifySuggestion(suggestion);
@@ -135,12 +133,6 @@ namespace ActivityRecommendation
             this.UpdateLayout();
         }
         
-        // Called when the user clicks on an ActivitySuggestion and requests to start an experiment based on it
-        public void RequestExperiment(ActivitySuggestion prompt)
-        {
-            this.layoutStack.AddLayout(new TextblockLayout("Sorry, experimentation isn't supported yet. Check back later!"));
-        }
-
         private void UpdateSuggestions()
         {
             this.Update_Suggestion_StartTimes();
@@ -185,7 +177,27 @@ namespace ActivityRecommendation
 
         private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool experimentationEnabled)
         {
-            return new LayoutCache(new SuggestionView(suggestion, this, experimentationEnabled));
+            SuggestionView suggestionView = new SuggestionView(suggestion, experimentationEnabled);
+            suggestionView.Dismissed += SuggestionView_Dismissed;
+            suggestionView.ExperimentRequested += SuggestionView_ExperimentRequested;
+                
+            return new LayoutCache(suggestionView);
+        }
+
+        private void SuggestionView_ExperimentRequested(ActivitySuggestion suggestion)
+        {
+            this.ExperimentRequested.Invoke(suggestion);
+        }
+
+        private void SuggestionView_Dismissed(ActivitySuggestion suggestion)
+        {
+            this.DeclineSuggestion(suggestion);
+        }
+
+        private void DeclineSuggestion(ActivitySuggestion suggestion)
+        {
+            this.RemoveSuggestion(suggestion);
+            this.recommender.DeclineSuggestion(suggestion);
         }
 
 

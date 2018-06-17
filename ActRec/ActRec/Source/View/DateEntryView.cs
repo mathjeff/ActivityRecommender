@@ -115,16 +115,16 @@ namespace ActivityRecommendation
             if (newText != oldText)
             {
                 this.chooseDate_button.Text = newText;
+                if (this.IsDateValid())
+                    this.appearValid();
+                else
+                    this.appearInvalid();
                 // call handlers
                 TextChangedEventArgs args = new TextChangedEventArgs(oldText, newText);
                 foreach (EventHandler<TextChangedEventArgs> handler in this.textChanged_handlers)
                 {
                     handler.Invoke(this.chooseDate_button, args);
                 }
-                if (this.IsDateValid())
-                    this.appearValid();
-                else
-                    this.appearInvalid();
             }
         }
 

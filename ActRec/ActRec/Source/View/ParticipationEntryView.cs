@@ -95,18 +95,30 @@ namespace ActivityRecommendation
         {
             if (this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid())
             {
-                if (this.StartDate.CompareTo(this.EndDate) <= 0)
+                bool startValid = true;
+                bool endValid = true;
+                if (this.StartDate.CompareTo(this.EndDate) > 0)
                 {
-                    // start date is before end date
-                    this.startDateBox.appearValid();
-                    this.endDateBox.appearValid();
+                    startValid = false;
+                    endValid = false;
                 }
                 else
                 {
-                    // start date is after end date
-                    this.startDateBox.appearInvalid();
-                    this.endDateBox.appearInvalid();
+                    DateTime now = DateTime.Now;
+                    if (this.StartDate.CompareTo(now) > 0)
+                        startValid = false;
+                    if (this.EndDate.CompareTo(now) > 0)
+                        endValid = false;
+
                 }
+                if (startValid)
+                    this.startDateBox.appearValid();
+                else
+                    this.startDateBox.appearInvalid();
+                if (endValid)
+                    this.endDateBox.appearValid();
+                else
+                    this.endDateBox.appearInvalid();
             }
         }
 

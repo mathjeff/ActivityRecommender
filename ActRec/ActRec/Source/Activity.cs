@@ -49,8 +49,8 @@ namespace ActivityRecommendation
             this.uniqueIdentifier = nextID;
             this.defaultDiscoveryDate = DateTime.Now;
             this.participationDurations = Distribution.MakeDistribution(3600, 0, 1);    // default duration of an activity is 1 hour
-            this.scoresWhenSuggested = new Distribution(0, 0, 0);
-            this.scoresWhenNotSuggested = new Distribution(0, 0, 0);
+            this.ratingsWhenSuggested = new Distribution(0, 0, 0);
+            this.ratingsWhenNotSuggested = new Distribution(0, 0, 0);
             this.thinkingTimes = new Distribution(0, 0, 0);
             this.PredictionsNeedRecalculation = true;
             nextID++;
@@ -379,25 +379,18 @@ namespace ActivityRecommendation
                 return this.considerationProgression.NumItems + this.PendingParticipationsForShorttermAnalysis.Count + this.PendingSkips.Count;
             }
         }
-        public Distribution ScoresWhenSuggested     // the scores assigned to it at times when it was executed after being suggested
+        public Distribution RatingsWhenSuggested     // the scores assigned to it at times when it was executed after being suggested
         {
             get
             {
-                return this.scoresWhenSuggested;
+                return this.ratingsWhenSuggested;
             }
         }
-        public Distribution ScoresWhenNotSuggested  // the scores assigned to it at times when it was executed but was not suggested recently
+        public Distribution RatingsWhenNotSuggested  // the scores assigned to it at times when it was executed but was not suggested recently
         {
             get
             {
-                return this.scoresWhenNotSuggested;
-            }
-        }
-        public Distribution Scores
-        {
-            get
-            {
-                return this.scoresWhenSuggested.Plus(this.scoresWhenNotSuggested);
+                return this.ratingsWhenNotSuggested;
             }
         }
         public Distribution ThinkingTimes           // how long it takes the user to skip this activity
@@ -449,6 +442,33 @@ namespace ActivityRecommendation
             if (newRating.Date != null)
                 this.ApplyKnownInteractionDate((DateTime)newRating.Date);
             this.PendingRatings.AddLast(newRating);
+
+
+            // keep track of the ratings when suggested
+            bool suggested = false;
+            AbsoluteRating rating = newRating as AbsoluteRating;
+            if (rating != null && rating.FromUser && rating.Source != null)
+            {
+                Participation sourceParticipation = rating.Source.ConvertedAsParticipation;
+                if (sourceParticipation != null && sourceParticipation.Suggested != null && sourceParticipation.Suggested.Value == true)
+                    suggested = true;
+            }
+            if (suggested)
+                this.ratingsWhenSuggested = this.ratingsWhenSuggested.Plus(rating.Score);
+            else
+                this.ratingsWhenNotSuggested = this.ratingsWhenNotSuggested.Plus(rating.Score);
+            // It would seem that we want to predict the user's overall happiness after this activity gets suggested. 
+            // However, it turns out if we predict happiness from recent activity, then our suggestions become more boring
+            // It seems that this is caused by a few things:
+            // 1. If a long time (maybe a couple of weeks) goes by, then when we normalize the weight, ratings after that period become disproportionately important
+            //   -This is a bug (design flaw) that should be fixed by making a more-intelligent estimate of overall ratings, rather than just the average of nearby ratings
+            // 2. If the user does lots of short activities, that puts more weight on the near future's ratings than if the user did a few long activities
+            //   -It's ok to increase weight based on number of ratings, because: A.
+            //    A. that trains the user to give more ratings
+            //    B. when the user offers more ratings, the user probably cares more about the outcome
+            // For now we approximate that by recording the date whenever the activity is both executed and given a rating
+            //this.AddNew_RatingSummary(newParticipation.StartDate, this.overallRatings_summarizer);
+
         }
         private void ApplyPendingRatings()
         {
@@ -492,32 +512,6 @@ namespace ActivityRecommendation
                 this.participationDurations = this.participationDurations.Plus(Distribution.MakeDistribution(newParticipation.Duration.TotalSeconds, 0, 1));
             }
 
-
-            // keep track of the ratings when suggested
-            AbsoluteRating rating = newParticipation.GetAbsoluteRating();
-            if (rating != null)
-            {
-                // decide whether we know whether it was suggested
-                if (newParticipation.Suggested != null)
-                {
-                    // update the appropriate counts
-                    if (newParticipation.Suggested.Value == true)
-                        this.scoresWhenSuggested = this.scoresWhenSuggested.Plus(rating.Score);
-                    else
-                        this.scoresWhenNotSuggested = this.scoresWhenNotSuggested.Plus(rating.Score);
-                }
-                // It would seem that we want to predict the user's overall happiness after this activity gets suggested. 
-                // However, it turns out if we predict happiness from recent activity, then our suggestions become more boring
-                // It seems that this is caused by a few things:
-                // 1. If a long time (maybe a couple of weeks) goes by, then when we normalize the weight, ratings after that period become disproportionately important
-                //   -This is a bug (design flaw) that should be fixed by making a more-intelligent estimate of overall ratings, rather than just the average of nearby ratings
-                // 2. If the user does lots of short activities, that puts more weight on the near future's ratings than if the user did a few long activities
-                //   -It's ok to increase weight based on number of ratings, because: A.
-                //    A. that trains the user to give more ratings
-                //    B. when the user offers more ratings, the user probably cares more about the outcome
-                // For now we approximate that by recording the date whenever the activity is both executed and given a rating
-                //this.AddNew_RatingSummary(newParticipation.StartDate, this.overallRatings_summarizer);
-            }
 
             this.PendingParticipationsForLongtermAnalysis.AddLast(newParticipation);
             this.PendingParticipationsForShorttermAnalysis.AddLast(newParticipation);
@@ -1111,8 +1105,8 @@ namespace ActivityRecommendation
         
         int numSuggestions;
 
-        Distribution scoresWhenSuggested;
-        Distribution scoresWhenNotSuggested;
+        Distribution ratingsWhenSuggested;
+        Distribution ratingsWhenNotSuggested;
         Distribution thinkingTimes;
         RatingSummarizer overallRatings_summarizer;
 

@@ -243,7 +243,7 @@ namespace ActivityRecommendation
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
                 this.EstimateSuggestionValue(activityToBeat, when);
-                activityToBeat.Utility = activityToBeat.Scores.Mean; // if they're asking for us to beat this activity then it means they want to do it
+                activityToBeat.Utility = activityToBeat.Ratings.Mean; // if they're asking for us to beat this activity then it means they want to do it
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);

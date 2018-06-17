@@ -350,7 +350,7 @@ namespace ActivityRecommendation
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
 
             double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
-            double overallAverageRating = rootActivity.Scores.Mean;
+            double overallAverageRating = rootActivity.Ratings.Mean;
             double shorttermRatio = expectedShortermRating / overallAverageRating;
 
             return "Predicted rating = " + expectedShortermRating.ToString() + " * average";
@@ -362,7 +362,7 @@ namespace ActivityRecommendation
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
 
             double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
-            double overallAverageRating = rootActivity.Scores.Mean;
+            double overallAverageRating = rootActivity.Ratings.Mean;
             double shorttermRatio = expectedShortermRating / overallAverageRating;
 
             return shorttermRatio;

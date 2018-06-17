@@ -335,7 +335,6 @@ namespace ActivityRecommendation
                 average = 1;
             suggestion.PredictedScoreDividedByAverage = bestActivity.PredictedScore.Distribution.Mean / average;
 
-
             // autofill the participationEntryView with a convenient value
             if (existingSuggestions.Count() == 0)
                 this.participationEntryView.SetActivityName(bestActivity.Name);

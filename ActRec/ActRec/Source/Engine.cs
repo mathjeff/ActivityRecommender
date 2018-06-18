@@ -489,21 +489,17 @@ namespace ActivityRecommendation
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
 
-            // When there is little data (1-3 participations), we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
-            // When there is a medium amount of data (4-45 participations), we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
-            // When there is a large amount of data (46+ participations), we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
-            // So the weights will be:
-            // (#ratings + #participations)^(1/3) * (7+1/3)
-            // (#participation)^(2/3) * (3+2/3)
-            // (#participations)
+            // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
+            // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
+            // When there is a huge amount of data, we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
 
             double participationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            double shortWeight = Math.Pow(activity.NumRatings + activity.NumParticipations + 1, 0.3333) * 7.3333;
+            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5) * 40;
             shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
 
-            double mediumWeight = Math.Pow(activity.NumParticipations, 0.6667) * 3.6667;
+            double mediumWeight = Math.Pow(activity.NumParticipations, 0.8333) * 40;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
@@ -515,7 +511,7 @@ namespace ActivityRecommendation
             distributions.Add(mediumTerm_distribution);
             distributions.Add(longTerm_distribution);
 
-            Distribution distribution =  this.CombineRatingDistributions(distributions);
+            Distribution distribution = this.CombineRatingDistributions(distributions);
             Prediction prediction = shortTerm_prediction;
             prediction.Distribution = distribution;
 

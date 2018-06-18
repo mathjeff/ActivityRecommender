@@ -276,6 +276,22 @@ typicalProbabilityError = 0.343135756731594
 equivalentProbability = 0.86367272712184
 weightedProbabilityScore = 0.287756896146186
 equivalentWeightedProbability = 0.916995556809255
+
+updated results on 2018-06-17 with new data
+typical longtermPrediction error = 0.0833641928173899
+typicalScoreError = 0.137588255915862
+typicalProbabilityError = 0.342836995815694
+equivalentProbability = 0.863954384916668
+weightedProbabilityScore = 0.288373617715065
+equivalentWeightedProbability = 0.917108043178257
+
+updated results on 2018-06-17 after having tuned some constants
+typical longtermPrediction error = 0.0796780520090059
+typicalScoreError = 0.137588255915862
+typicalProbabilityError = 0.342836995815694
+equivalentProbability = 0.863954384916668
+weightedProbabilityScore = 0.288373617715065
+equivalentWeightedProbability = 0.917108043178257
  */
 
 

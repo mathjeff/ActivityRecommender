@@ -294,6 +294,10 @@ namespace ActivityRecommendation
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
         {
+            // ignore generated ratings
+            if (!newRating.FromUser)
+                return newRating;
+
             if (this.numRatings % 1000 == 0)
             {
                 this.Compute_FutureEstimate_Errors();

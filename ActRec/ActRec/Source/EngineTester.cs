@@ -293,10 +293,18 @@ equivalentProbability = 0.863954384916668
 weightedProbabilityScore = 0.288373617715065
 equivalentWeightedProbability = 0.917108043178257
 
-
 updated results on 2018-06-19 after getting a little bit of new data and adding longtermPredictionIfParticipated
 typical longtermPredictionIfSuggested error = 0.0803238577232935
-typical longtermPredictionIfParticipated error = 0.0743669783962908
+typical longtermPredictionIfParticipated error = 0.232883937714255
+typicalScoreError = 0.137588255915862
+typicalProbabilityError = 0.342831553588421
+equivalentProbability = 0.863959511297823
+weightedProbabilityScore = 0.288292895034349
+equivalentWeightedProbability = 0.917093329453631
+
+updated results on 2018-06-19 after improving the accuracy of Engine.Get_Overall_ParticipationEstimate
+typical longtermPredictionIfSuggested error = 0.0803238577232935
+typical longtermPredictionIfParticipated error = 0.072638658082502
 typicalScoreError = 0.137588255915862
 typicalProbabilityError = 0.342831553588421
 equivalentProbability = 0.863959511297823

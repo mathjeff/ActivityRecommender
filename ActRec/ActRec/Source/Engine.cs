@@ -483,6 +483,40 @@ namespace ActivityRecommendation
             List<Prediction> predictions = activity.Get_ShortTerm_RatingEstimates(when);
             return predictions;
         }
+
+        // returns a Prediction of what the user's longterm happiness will be after having participated in the given activity at the given time
+        public Prediction Get_Overall_ParticipationEstimate(Activity activity, DateTime when)
+        {
+            // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
+            this.EstimateRating(activity, when);
+
+            // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
+            // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
+            // When there is a huge amount of data, we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
+
+            double participationProbability = 1;
+
+            Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
+            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5) * 40;
+            shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
+
+            double mediumWeight = Math.Pow(activity.NumParticipations, 0.8333) * 40;
+            Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
+            Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
+
+            List<Distribution> distributions = new List<Distribution>();
+            distributions.Add(shortTerm_prediction.Distribution);
+            distributions.Add(mediumTerm_distribution);
+
+            Distribution distribution = this.CombineRatingDistributions(distributions);
+            Prediction prediction = shortTerm_prediction;
+            prediction.Distribution = distribution;
+
+            return prediction;
+
+        }
+
+
         // returns a Prediction of the value of suggesting the given activity at the given time
         private Prediction Get_Overall_SuggestionEstimate(Activity activity, DateTime when)
         {

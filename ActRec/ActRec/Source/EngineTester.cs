@@ -292,6 +292,16 @@ typicalProbabilityError = 0.342836995815694
 equivalentProbability = 0.863954384916668
 weightedProbabilityScore = 0.288373617715065
 equivalentWeightedProbability = 0.917108043178257
+
+
+updated results on 2018-06-19 after getting a little bit of new data and adding longtermPredictionIfParticipated
+typical longtermPredictionIfSuggested error = 0.0803238577232935
+typical longtermPredictionIfParticipated error = 0.0743669783962908
+typicalScoreError = 0.137588255915862
+typicalProbabilityError = 0.342831553588421
+equivalentProbability = 0.863959511297823
+weightedProbabilityScore = 0.288292895034349
+equivalentWeightedProbability = 0.917093329453631
  */
 
 
@@ -305,7 +315,6 @@ namespace ActivityRecommendation
             this.squared_longTermValue_error = new Distribution();
             this.squaredParticipationProbabilityError = new Distribution();
             this.participationPrediction_score = new Distribution();
-            this.valuePredictions = new Dictionary<Prediction, RatingSummary>();
             this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
@@ -388,11 +397,17 @@ namespace ActivityRecommendation
             this.engine.MakeRecommendation(activity, activity, when, null);
 
             // keep track of having made this prediction, so we can later return to it and compute the error
-            Prediction prediction = activity.SuggestionValue;
-            if (prediction.Distribution.Weight > 0)
+            Prediction predictionForSuggestion = activity.SuggestionValue;
+            if (predictionForSuggestion.Distribution.Weight > 0)
             {
                 RatingSummary summary = new RatingSummary(when);
-                this.valuePredictions[prediction] = summary;
+                this.valueIfSuggested_predictions[predictionForSuggestion] = summary;
+
+                if (actualIntensity >= 1)
+                {
+                    Prediction predictionIfParticipated = this.engine.Get_Overall_ParticipationEstimate(activity, when);
+                    this.valueIfParticipated_predictions[predictionIfParticipated] = summary;
+                }
             }
 
             double predictedProbability = activity.PredictedParticipationProbability.Distribution.Mean;
@@ -448,12 +463,17 @@ namespace ActivityRecommendation
         }
 
         // computes the error for each prediction that was made about the future
-        public void Compute_FutureEstimate_Errors()
+        private void Compute_FutureEstimate_Errors()
+        {
+            this.Compute_FutureEstimateIfSuggested_Errors();
+            this.Compute_FutureEstimateIfParticipated_Errors();
+        }
+        private void Compute_FutureEstimateIfSuggested_Errors()
         {
             Distribution errorsSquared = new Distribution();
-            foreach (Prediction prediction in this.valuePredictions.Keys)
+            foreach (Prediction prediction in this.valueIfSuggested_predictions.Keys)
             {
-                RatingSummary summary = this.valuePredictions[prediction];
+                RatingSummary summary = this.valueIfSuggested_predictions[prediction];
                 summary.Update(this.ratingSummarizer);
                 if (summary.Item.Weight > 0)
                 {
@@ -465,7 +485,26 @@ namespace ActivityRecommendation
             }
             double errorSquared = errorsSquared.Mean;
             double typicalPredictionError = Math.Sqrt(errorSquared);
-            System.Diagnostics.Debug.WriteLine("typical longtermPrediction error = " + typicalPredictionError);
+            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfSuggested error = " + typicalPredictionError);
+        }
+        private void Compute_FutureEstimateIfParticipated_Errors()
+        {
+            Distribution errorsSquared = new Distribution();
+            foreach (Prediction prediction in this.valueIfParticipated_predictions.Keys)
+            {
+                RatingSummary summary = this.valueIfParticipated_predictions[prediction];
+                summary.Update(this.ratingSummarizer);
+                if (summary.Item.Weight > 0)
+                {
+                    double predictedScore = prediction.Distribution.Mean;
+                    double actualScore = summary.Item.Mean;
+                    double error = actualScore - predictedScore;
+                    errorsSquared = errorsSquared.Plus(Distribution.MakeDistribution(error * error, 0, 1));
+                }
+            }
+            double errorSquared = errorsSquared.Mean;
+            double typicalPredictionError = Math.Sqrt(errorSquared);
+            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + typicalPredictionError);
         }
         public void PrintResults()
         {
@@ -514,7 +553,10 @@ namespace ActivityRecommendation
         private Distribution squaredParticipationProbabilityError;
         private Distribution participationPrediction_score;
         private RatingSummarizer ratingSummarizer;
-        private Dictionary<Prediction, RatingSummary> valuePredictions; // given a prediction, returns an object that can determine what the actual ratings were
+        // the Engine predicts longterm value based on its suggestions. valueIfSuggested_predictions maps the predictions made to the actual observed longterm value
+        private Dictionary<Prediction, RatingSummary> valueIfSuggested_predictions = new Dictionary<Prediction, RatingSummary>();
+        // the Engine predicts longterm value based on what the user participates in. valueIfParticipated_predictions maps the predictions made to the actual observed longterm value
+        private Dictionary<Prediction, RatingSummary> valueIfParticipated_predictions = new Dictionary<Prediction, RatingSummary>();
         private int numRatings;
     }
 }

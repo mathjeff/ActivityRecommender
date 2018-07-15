@@ -5,8 +5,8 @@ using System.Text;
 using StatLists;
 using AdaptiveLinearInterpolation;
 
-// A ParticipationProgression how much of an Activity the user has done recently
-// It is intended to model brain activity and it uses exponential curves to do so
+// A ParticipationProgression how much of an Doable the user has done recently
+// It is intended to model brain Doable and it uses exponential curves to do so
 namespace ActivityRecommendation
 {
     public class ParticipationAndSummary
@@ -21,7 +21,7 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
-        public AutoSmoothed_ParticipationProgression(Activity owner)
+        public AutoSmoothed_ParticipationProgression(Doable owner)
         {
             this.Owner = owner;
             this.searchHelper = new StatList<DateTime, ParticipationAndSummary>(this, this);
@@ -189,7 +189,7 @@ namespace ActivityRecommendation
 
             if (summary.Trend.Correlation < 0)
             {
-                System.Diagnostics.Debug.WriteLine("illegal correlation found: " + summary.Trend.Correlation + " for activity " + this.Owner.Name);
+                System.Diagnostics.Debug.WriteLine("illegal correlation found: " + summary.Trend.Correlation + " for Doable " + this.Owner.Name);
             }
             // not bothering to assign a Participation because nothing will need it
 
@@ -205,7 +205,7 @@ namespace ActivityRecommendation
 
         #region Functions for IProgression
 
-        public Activity Owner { get; set; }
+        public Doable Owner { get; set; }
 
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
@@ -280,7 +280,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return "How much you've done this activity recently";
+                return "How much you've done this Doable recently";
             }
         }
 

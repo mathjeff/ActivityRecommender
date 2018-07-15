@@ -8,7 +8,7 @@ namespace ActivityRecommendation
 {
     class ExpectedParticipationProbabilityProgression : IProgression
     {
-        public ExpectedParticipationProbabilityProgression(Activity owner)
+        public ExpectedParticipationProbabilityProgression(Doable owner)
         {
             this.Owner = owner;
         }
@@ -35,7 +35,7 @@ namespace ActivityRecommendation
                 return "The current probability that you will do " + this.Owner.Description;
             }
         }
-        public Activity Owner { get; set; }
+        public Doable Owner { get; set; }
         public FloatRange EstimateOutputRange()
         {
             return new FloatRange(0, true, 1, true);

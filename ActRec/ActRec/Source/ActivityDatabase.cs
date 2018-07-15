@@ -21,7 +21,7 @@ namespace ActivityRecommendation
             this.allActivities = new List<Activity>();
             this.ratingSummarizer = ratingSummarizer;
             this.rootActivity = new Activity("Activity", ratingSummarizer);
-            this.rootActivity.Choosable = false;
+            this.rootActivity.setChooseable(false);
             this.AddActivity(this.rootActivity);
         }
 
@@ -193,7 +193,7 @@ namespace ActivityRecommendation
         {
             Activity result = new Activity(sourceDescriptor.ActivityName, this.ratingSummarizer);
             if (sourceDescriptor.Choosable != null)
-                result.Choosable = sourceDescriptor.Choosable.Value;
+                result.setChooseable(sourceDescriptor.Choosable.Value);
             //result.AddParent(this.rootActivity);
             if (this.ActivityAdded != null)
                 this.ActivityAdded.Invoke(this, new EventArgs());

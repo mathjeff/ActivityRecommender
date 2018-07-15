@@ -5,12 +5,12 @@ using System.Text;
 using StatLists;
 using AdaptiveLinearInterpolation;
 
-// A SkipProgression keeps track of how long it has been since the user said that they did not want to do a particular activity
+// A SkipProgression keeps track of how long it has been since the user said that they did not want to do a particular Doable
 namespace ActivityRecommendation
 {
     class SkipProgression : IProgression, ICombiner<ActivitySkip>
     {
-        public SkipProgression(Activity newOwner)
+        public SkipProgression(Doable newOwner)
         {
             this.searchHelper = new StatList<DateTime, ActivitySkip>(new DateComparer(), this);
             this.valuesInDiscoveryOrder = new List<ActivitySkip>();
@@ -49,7 +49,7 @@ namespace ActivityRecommendation
                 return this.valuesInDiscoveryOrder.Count;
             }
         }
-        public Activity Owner
+        public Doable Owner
         {
             get
             {
@@ -60,7 +60,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return "How long it has been since you last skipped this Activity";
+                return "How long it has been since you last skipped this Doable";
             }
         }
 
@@ -91,6 +91,6 @@ namespace ActivityRecommendation
 
         private StatList<DateTime, ActivitySkip> searchHelper;
         private List<ActivitySkip> valuesInDiscoveryOrder;
-        private Activity owner;
+        private Doable owner;
     }
 }

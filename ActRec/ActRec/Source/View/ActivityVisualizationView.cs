@@ -465,7 +465,7 @@ namespace ActivityRecommendation
 
                 bestChild = null;
                 bestTotal = 0;
-                foreach (Activity child in this.yAxisActivity.GetAllSubactivities())
+                foreach (Activity child in this.yAxisActivity.GetChildrenRecursive())
                 {
                     if (child.Children.Count == 0)
                     {

@@ -307,7 +307,7 @@ namespace ActivityRecommendation
 
 
             // now determine which category to predict from
-            Activity bestActivity = null;
+            Doable bestActivity = null;
             TimeSpan processingTime = TimeSpan.FromSeconds(2);
             
             // now we get a recommendation, from among all activities within this category

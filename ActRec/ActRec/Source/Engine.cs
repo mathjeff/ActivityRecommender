@@ -144,8 +144,8 @@ namespace ActivityRecommendation
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
-                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
-                foreach (Activity parent in superCategories)
+                List<Doable> superCategories = this.FindAllSupercategoriesOf(activity);
+                foreach (Doable parent in superCategories)
                 {
                     parent.AddRating(newRating);
                 }
@@ -156,11 +156,11 @@ namespace ActivityRecommendation
         {
             // give the participation to any relevant Activity
             ActivityDescriptor descriptor = newParticipation.ActivityDescriptor;
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Doable activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
-                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
-                foreach (Activity parent in superCategories)
+                List<Doable> superCategories = this.FindAllSupercategoriesOf(activity);
+                foreach (Doable parent in superCategories)
                 {
                     parent.AddParticipation(newParticipation);
                 }
@@ -170,11 +170,11 @@ namespace ActivityRecommendation
         public void CascadeSkip(ActivitySkip newSkip)
         {
             ActivityDescriptor descriptor = newSkip.ActivityDescriptor;
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Doable activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
-                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
-                foreach (Activity parent in superCategories)
+                List<Doable> superCategories = this.FindAllSupercategoriesOf(activity);
+                foreach (Doable parent in superCategories)
                 {
                     parent.AddSkip(newSkip);
                 }
@@ -186,43 +186,43 @@ namespace ActivityRecommendation
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
-                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
-                foreach (Activity parent in superCategories)
+                List<Doable> superCategories = this.FindAllSupercategoriesOf(activity);
+                foreach (Doable parent in superCategories)
                 {
                     parent.AddSuggestion(newSuggestion);
                 }
             }
         }
         // performs Depth First Search to find all superCategories of the given Activity
-        public List<Activity> FindAllSupercategoriesOf(Activity child)
+        public List<Doable> FindAllSupercategoriesOf(Doable child)
         {
             return child.GetAllSuperactivities();
         }
         // performs Depth First Search to find all subCategories of the given Activity
-        public List<Activity> FindAllSubCategoriesOf(Activity parent)
+        public List<Doable> FindAllSubCategoriesOf(Activity parent)
         {
-            return parent.GetAllSubactivities();
+            return parent.GetChildrenRecursive();
         }
-        public Activity MakeRecommendation()
+        public Doable MakeRecommendation()
         {
             DateTime when = DateTime.Now;
             return this.MakeRecommendation(when);
         }
-        public Activity MakeRecommendation(DateTime when)
+        public Doable MakeRecommendation(DateTime when)
         {
             return this.MakeRecommendation(when, null);
         }
 
-        public Activity MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
+        public Doable MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
         {
             return this.MakeRecommendation(null, null, when, requestedProcessingTime);
         }
 
 
-        public Activity MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        public Doable MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
-            List<Activity> candidates;
-            List<Activity> consideredCandidates = new List<Activity>();
+            List<Doable> candidates;
+            List<Doable> consideredCandidates = new List<Doable>();
             DateTime processingStartTime = DateTime.Now;
             // First, go update the stats for existing activities
             this.EnsureRatingsAreAssociated();
@@ -232,12 +232,12 @@ namespace ActivityRecommendation
             }
             // determine which activities to consider
             if (requestCategory != null)
-                candidates = requestCategory.GetAllSubactivities();
+                candidates = requestCategory.GetChildrenRecursive();
             else
-                candidates = new List<Activity>(this.activityDatabase.AllActivities);
+                candidates = new List<Doable>(this.activityDatabase.AllActivities);
             // Now we determine which activity is most important to suggest
             // That requires first finding the one with the highest mean
-            Activity bestActivity = null;
+            Doable bestActivity = null;
             if (activityToBeat != null)
             {
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
@@ -259,7 +259,7 @@ namespace ActivityRecommendation
                 // However, those activities take longer to process, so for now the hope is that if we choose a rare activity that it'll be fast
                 // to process and to move on to the next activity
                 int index = this.randomGenerator.Next(candidates.Count);
-                Activity candidate = candidates[index];
+                Doable candidate = candidates[index];
                 candidates.RemoveAt(index);
                 if (candidate.Choosable)
                 {
@@ -299,7 +299,7 @@ namespace ActivityRecommendation
                 }
             }
             // After finding the activity with the highest expected rating, we need to check for other activities having high variance but almost-as-good values
-            Activity bestActivityToPairWith = bestActivity;
+            Doable bestActivityToPairWith = bestActivity;
             if (bestActivity == null)
                 return null;
             double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
@@ -320,7 +320,7 @@ namespace ActivityRecommendation
         }
         // This function essentially addresses the well-known multi-armed bandit problem
         // Given two distributions, we estimate the expected total value from choosing values from them
-        private double GetCombinedValue(Activity activityA, Activity activityB)
+        private double GetCombinedValue(Doable activityA, Doable activityB)
         {
             Distribution a = activityA.SuggestionValue.Distribution;
             Distribution b = activityB.SuggestionValue.Distribution;
@@ -397,7 +397,7 @@ namespace ActivityRecommendation
             return score;
         }
         // update the estimate of what rating the user would give to this activity now
-        public void EstimateRating(Activity activity, DateTime when)
+        public void EstimateRating(Doable activity, DateTime when)
         {
             // If we've already estimated the rating at this date, then just return what we calculated
             //DateTime latestUpdateDate = activity.PredictedScore.ApplicableDate;
@@ -455,7 +455,7 @@ namespace ActivityRecommendation
         }
 
         // update the estimate of how good it would be to suggest this activity now
-        public void EstimateSuggestionValue(Activity activity, DateTime when)
+        public void EstimateSuggestionValue(Doable activity, DateTime when)
         {
             DateTime startDate = DateTime.Now;
             // Now we estimate how useful it would be to suggest this activity to the user
@@ -476,7 +476,7 @@ namespace ActivityRecommendation
         }
 
         // returns a list of Distributions that are to be used to estimate the rating the user will assign to this Activity
-        private List<Prediction> Get_ShortTerm_RatingEstimates(Activity activity, DateTime when)
+        private List<Prediction> Get_ShortTerm_RatingEstimates(Doable activity, DateTime when)
         {
             // Now that the parents' ratings are up-to-date, the work begins
             // Make a list of predictions based on all the different factors
@@ -514,7 +514,7 @@ namespace ActivityRecommendation
 
 
         // returns a Prediction of the value of suggesting the given activity at the given time
-        private Prediction Get_Overall_SuggestionEstimate(Activity activity, DateTime when)
+        private Prediction Get_Overall_SuggestionEstimate(Doable activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
@@ -899,8 +899,8 @@ namespace ActivityRecommendation
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
-                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
-                foreach (Activity parent in superCategories)
+                List<Doable> superCategories = this.FindAllSupercategoriesOf(activity);
+                foreach (Doable parent in superCategories)
                 {
                     parent.RemoveParticipation(participationToRemove);
                 }

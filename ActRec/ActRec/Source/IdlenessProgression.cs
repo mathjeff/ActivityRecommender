@@ -15,7 +15,7 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
-        public IdlenessProgression(Activity owner)
+        public IdlenessProgression(Doable owner)
         {
             this.Owner = owner;
             this.searchHelper = new StatList<DateTime, Participation>(this, this);
@@ -80,8 +80,8 @@ namespace ActivityRecommendation
 
         #region Functions for IProgression
 
-        public Activity Owner { get; set; }
-        // returns basically the fraction of the user's time that was spent performing that activity recently at that date
+        public Doable Owner { get; set; }
+        // returns basically the fraction of the user's time that was spent performing that Doable recently at that date
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
             // find the most recent Participation

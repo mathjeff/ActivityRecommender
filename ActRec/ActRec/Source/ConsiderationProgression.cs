@@ -5,13 +5,13 @@ using System.Text;
 using StatLists;
 using AdaptiveLinearInterpolation;
 
-// A ConsiderationProgression keeps track of times that the user was considering doing a particular Activity, and times that the user actually did it
-// It is intended to estimate the probability that the user will do the given Activity
+// A ConsiderationProgression keeps track of times that the user was considering doing a particular Doable, and times that the user actually did it
+// It is intended to estimate the probability that the user will do the given Doable
 namespace ActivityRecommendation
 {
     public class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<WillingnessSummary>
     {
-        public ConsiderationProgression(Activity newOwner)
+        public ConsiderationProgression(Doable newOwner)
         {
             this.searchHelper = new StatList<DateTime, WillingnessSummary>(this, this);
             //this.valuesInDiscoveryOrder = new List<ProgressionValue>();
@@ -142,7 +142,7 @@ namespace ActivityRecommendation
                 //return this.valuesInDiscoveryOrder.Count;
             }
         }
-        public Activity Owner
+        public Doable Owner
         {
             get
             {
@@ -192,7 +192,7 @@ namespace ActivityRecommendation
 
         private StatList<DateTime, WillingnessSummary> searchHelper;
         //private List<ProgressionValue> valuesInDiscoveryOrder;
-        private Activity owner;
+        private Doable owner;
         int numComparisons;
         int numAdditions;
     }

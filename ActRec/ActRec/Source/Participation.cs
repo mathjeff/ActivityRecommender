@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ActivityRecommendation.Effectiveness;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,6 +45,7 @@ namespace ActivityRecommendation
         public ActivityDescriptor ActivityDescriptor { get; set; }          // a description of what the user actually did
         public Consideration Consideration { get; set; }            // The user's thoughts that contributed to the fact that they did this activity
         public bool? Suggested { get; set; }     // tells whether the latest suggestion that the engine made was to do this activity
+        public EffectivenessMeasurement EffectivenessMeasurement { get; set; }
 
         public Distribution TotalIntensity // intensity measured in seconds
         {

@@ -16,7 +16,7 @@ namespace ActivityRecommendation.View
 
             this.menuLayout = new MenuLayoutBuilder(layoutStack)
                 .AddLayout("List All Activities", listView)
-                .AddLayout("Search for Specific Activity", searchView)
+                .AddLayout("Find Activity By Name", searchView)
                 .Build();
 
             this.SubLayout = this.menuLayout;
@@ -53,7 +53,7 @@ namespace ActivityRecommendation.View
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
         }
 
-        private void ActivityDatabase_ActivityAdded(object sender, System.EventArgs e)
+        private void ActivityDatabase_ActivityAdded(object sender, Activity a)
         {
             this.invalidateChildren();
         }
@@ -67,7 +67,7 @@ namespace ActivityRecommendation.View
 
         private void generateChildren()
         {
-            List<Activity> activities = this.activityDatabase.AllActivities;
+            IEnumerable<Activity> activities = this.activityDatabase.AllActivities;
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
             this.activityButtons = new Dictionary<Button, Activity>();
             foreach (Activity activity in activities)

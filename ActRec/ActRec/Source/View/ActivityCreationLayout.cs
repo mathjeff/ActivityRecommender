@@ -4,37 +4,30 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation
 {
-    class InheritanceEditingView : TitledControl
+    class ActivityCreationLayout : TitledControl
     {
-        public event InheritanceHandler Submit;
-        public delegate void InheritanceHandler(object sender, Inheritance inheritance);
-
-
-        public InheritanceEditingView(ActivityDatabase activityDatabase, LayoutStack layoutStack, bool makeNewChild)
+        public ActivityCreationLayout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
+            this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
-            this.makeNewChild = makeNewChild;
 
-            if (makeNewChild)
-                this.SetTitle("Add New Activity Choose From");
-            else
-                this.SetTitle("Add Existing Activity as Child of Another Activity");
+            this.SetTitle("Add New Activity Choose From");
 
-            GridLayout content = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout bottomGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            this.childNameBox = new ActivityNameEntryBox("Activity Name", makeNewChild);
+            this.childNameBox = new ActivityNameEntryBox("Activity Name", true);
             this.childNameBox.Database = activityDatabase;
             this.childNameBox.AutoAcceptAutocomplete = false;
-            content.AddLayout(this.childNameBox);
+            bottomGrid.AddLayout(this.childNameBox);
 
             this.parentNameBox = new ActivityNameEntryBox("Parent Name");
             this.parentNameBox.Database = activityDatabase;
             this.parentNameBox.AutoAcceptAutocomplete = false;
-            content.AddLayout(this.parentNameBox);
+            bottomGrid.AddLayout(this.parentNameBox);
 
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Clicked;
-            content.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
+            bottomGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions.")
@@ -50,25 +43,35 @@ namespace ActivityRecommendation
 
             HelpButtonLayout helpLayout = new HelpButtonLayout(helpWindow, layoutStack);
 
-            content.AddLayout(helpLayout);
+            bottomGrid.AddLayout(helpLayout);
 
-            this.SetContent(new LayoutCache(content));
+            this.feedbackView = new Label();
+
+            GridLayout mainGrid = new Vertical_GridLayout_Builder()
+                .AddLayout(new TextblockLayout(this.feedbackView))
+                .AddLayout(bottomGrid)
+                .Build();
+
+            this.SetContent(mainGrid);
         }
 
         private void OkButton_Clicked(object sender, EventArgs e)
         {
-            if (this.Submit != null)
+            ActivityDescriptor childDescriptor = this.childNameBox.ActivityDescriptor;
+            ActivityDescriptor parentDescriptor = this.parentNameBox.ActivityDescriptor;
+            Inheritance inheritance = new Inheritance(parentDescriptor, childDescriptor);
+            inheritance.DiscoveryDate = DateTime.Now;
+
+            string error = this.activityDatabase.CreateActivity(inheritance);
+            if (error == "")
             {
-                ActivityDescriptor childDescriptor = this.childNameBox.ActivityDescriptor;
-                if (!this.makeNewChild && this.childNameBox.Activity == null)
-                    return; // invalid
-                ActivityDescriptor parentDescriptor = this.parentNameBox.ActivityDescriptor;
-                if (this.parentNameBox.Activity == null)
-                    return; // invalid
-                Inheritance inheritance = new Inheritance(parentDescriptor, childDescriptor);
-                this.Submit.Invoke(this, inheritance);
                 this.childNameBox.Clear();
                 this.parentNameBox.Clear();
+                this.feedbackView.Text = "Created " + childDescriptor.ActivityName;
+            }
+            else
+            {
+                this.feedbackView.Text = error;
             }
         }
 
@@ -76,6 +79,7 @@ namespace ActivityRecommendation
         private ActivityNameEntryBox parentNameBox;
         private Button okButton;
         private LayoutStack layoutStack;
-        private bool makeNewChild;
+        private ActivityDatabase activityDatabase;
+        private Label feedbackView;
     }
 }

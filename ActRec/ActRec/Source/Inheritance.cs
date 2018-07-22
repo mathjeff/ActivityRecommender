@@ -14,7 +14,7 @@ namespace ActivityRecommendation
         {
             this.parentDescriptor = parent;
             this.childDescriptor = child;
-            this.Weight = 1;
+            //this.Weight = 1;
         }
         public ActivityDescriptor ParentDescriptor
         {
@@ -39,7 +39,7 @@ namespace ActivityRecommendation
             }
         }
         public DateTime? DiscoveryDate { get; set; }
-        public double Weight { get; set; }
+        //public double Weight { get; set; }
         private ActivityDescriptor parentDescriptor;
         private ActivityDescriptor childDescriptor;
     }

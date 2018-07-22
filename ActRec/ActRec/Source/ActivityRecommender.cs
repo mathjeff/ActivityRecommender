@@ -1,14 +1,10 @@
-﻿using PCLStorage;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using VisiPlacement;
-using System.Threading.Tasks;
 using ActivityRecommendation.View;
 using Xamarin.Forms;
 
-using Plugin.FilePicker;
 using Plugin.FilePicker.Abstractions;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
@@ -77,29 +73,27 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
 
-            InheritanceEditingView activityCreationView = new InheritanceEditingView(this.ActivityDatabase, this.layoutStack, true);
-            activityCreationView.Submit += this.SubmitInheritance;
-            InheritanceEditingView inheritanceCreationView = new InheritanceEditingView(this.ActivityDatabase, this.layoutStack, false);
-            inheritanceCreationView.Submit += this.SubmitInheritance;
+            ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
+            InheritanceEditingLayout inheritanceCreationView = new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack);
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout("Add New Activity", activityCreationView)
-                .AddLayout("Assign Existing Activity as Child of A Parent Activity", inheritanceCreationView)
-                .AddLayout("Undo/Change", (new HelpWindowBuilder()
+                .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
+                .AddLayout("New Activity", activityCreationView)
+                .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
+                .AddLayout("New Completion Metric", (new HelpWindowBuilder()
+                    .AddMessage("Sorry, support to assign a completion metric to an Activity isn't done yet. Check back later!")
+                    .Build()))
+                .AddLayout("Help", (new HelpWindowBuilder()
+                    .AddMessage("This page allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
+                    .AddMessage("This page also allows you to add new types of activities.")
+                    .AddMessage("Any recommendation that ActivityRecommdender makes will be one of these activities.")
+                    .AddMessage("Additionally, if you plan to ask ActivityRecommender to measure how quickly (your Effectiveness) you complete various Activities, you have to enter a "+
+                    "Metric for those activities, so ActivityRecommender can know that it makes sense to measure (for example, it wouldn't make sense to measure how quickly you sleep at "+
+                    "once: it wouldn't count as twice effective to do two sleeps of half duration each).")
                     .AddMessage("To undo, remove, or modify an entry, you have to edit the data file directly. Go back to the Export screen and export all of your data as a .txt file. " +
                     "Then make some changes, and go to the Import screen to load your changed file.")
                     .Build()))
                 .Build();
-
-            BoundProperty_List rowHeights = new BoundProperty_List(2);
-            rowHeights.BindIndices(0, 1);
-            rowHeights.SetPropertyScale(0, 2);
-            rowHeights.SetPropertyScale(1, 3);
-
-            GridLayout inheritanceInfoView = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
-            inheritanceInfoView.AddLayout(new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack));
-            inheritanceInfoView.AddLayout(inheritanceEditingView);
-
 
             // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
             this.participationEntryView.Engine = this.engine;
@@ -139,7 +133,7 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("View/Edit Activities", inheritanceInfoView);
+            usageMenu_builder.AddLayout("View/Edit Activities", inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
@@ -228,11 +222,14 @@ namespace ActivityRecommendation
         {
             this.engine = new Engine();
             this.ReadEngineFiles();
-            //this.engine.FullUpdate(); // this causes this engine to categorize a bunch of data but it takes a while and we don't want to do it right away
+            // listen for subsequently created Activity or Inheritance objects
+            this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
+            this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
             this.engine.CreateNewActivities();
 
             this.PrepareEngine();
         }
+
         // Asks the engine to do some processing so that the next recommendation will be faster
         public void PrepareEngine()
         {
@@ -423,17 +420,6 @@ namespace ActivityRecommendation
             DateTime now = DateTime.Now;
             this.LatestActionDate = now;
             this.participationEntryView.SetEnddateNow(now);
-            /*
-            // first update the dates
-            this.UpdateDefaultParticipationData();
-            // now fill-in the latest activity name
-            string latestName = "";
-            if (this.latestRecommendedActivity != null)
-            {
-                latestName = this.latestRecommendedActivity.Name;
-            }
-            this.participationEntryView.ActivityName = latestName;
-            */
         }
         private void AddParticipation(Participation newParticipation)
         {
@@ -471,7 +457,7 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(newRequest) + Environment.NewLine;
             this.textConverter.AppendText(text, this.ratingsFileName);
         }
-        public void SubmitInheritance(object sender, Inheritance inheritance)
+        /*public void SubmitInheritance(object sender, Inheritance inheritance)
         {
             inheritance.DiscoveryDate = DateTime.Now;
             this.AddInheritance(inheritance);
@@ -481,11 +467,26 @@ namespace ActivityRecommendation
             this.engine.ApplyInheritance(newInheritance);
             this.WriteInheritance(newInheritance);
         }
-        public void WriteInheritance(Inheritance newInheritance)
+        */
+
+        private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
+        {
+            this.WriteActivity(activity);
+        }
+        private void WriteActivity(Activity activity)
+        {
+        }
+
+        private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)
+        {
+            this.WriteInheritance(inheritance);
+        }
+        private void WriteInheritance(Inheritance newInheritance)
         {
             string text = this.textConverter.ConvertToString(newInheritance) + Environment.NewLine;
             this.textConverter.AppendText(text, this.inheritancesFileName);
         }
+
         private void AddRating(Rating newRating)
         {
             AbsoluteRating absoluteRating = (AbsoluteRating)newRating;
@@ -645,7 +646,6 @@ namespace ActivityRecommendation
         public void VisualizeActivity()
         {
             this.engine.EnsureRatingsAreAssociated();
-            //string name = this.statisticsMenu.ActivityName;
 
             //ActivityDescriptor xAxisDescriptor = this.statisticsMenu.XAxisActivityDescriptor;
             IProgression xAxisProgression = this.statisticsMenu.XAxisProgression;
@@ -666,18 +666,9 @@ namespace ActivityRecommendation
             {
                 yAxisActivity.ApplyPendingData();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, UserPreferences.DefaultPreferences.HalfLife, this.engine.RatingSummarizer, this.layoutStack);
-                //visualizationView.AddExitClickHandler(new EventHandler(this.ShowMainview));
                 this.layoutStack.AddLayout(visualizationView);
             }
         }
-
-        /*void mainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.Escape)
-            {
-                this.ShowMainview();
-            }
-        }*/
 
         public void ShowMainview(object sender, EventArgs e)
         {
@@ -685,10 +676,7 @@ namespace ActivityRecommendation
         }
         public void ShowMainview()
         {
-            //this.mainDisplay.PutItem(this.mainDisplayGrid, 1, 0);
             this.displayManager.SetLayout(this.mainLayout);
-            //this.displayManager.InvalidateMeasure();
-            //this.displayManager.SetContent(this.mainDisplayGrid);
         }
 
         public ActivityDatabase ActivityDatabase

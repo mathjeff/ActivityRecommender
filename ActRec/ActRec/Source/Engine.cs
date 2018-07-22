@@ -9,6 +9,8 @@ namespace ActivityRecommendation
         {
             this.weightedRatingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
             this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer);
+            this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
+            this.activityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
             this.unappliedRatings = new List<AbsoluteRating>();
             this.unappliedParticipations = new List<Participation>();
             this.unappliedSkips = new List<ActivitySkip>();
@@ -21,6 +23,7 @@ namespace ActivityRecommendation
             this.ratingsOfUnpromptedActivities = new Distribution();
 
         }
+
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
         public void FullUpdate()
         {
@@ -45,11 +48,7 @@ namespace ActivityRecommendation
             // first, create the necessary Activities
             foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
             {
-                Activity newActivity = this.activityDatabase.CreateActivityIfMissing(descriptor);
-                if (newActivity != null)
-                {
-                    this.CreatingActivity(newActivity);
-                }
+                this.activityDatabase.CreateActivityIfMissing(descriptor);
             }
             this.allActivityDescriptors.Clear();
         }
@@ -129,6 +128,12 @@ namespace ActivityRecommendation
             this.Update_RatingSummaries(numRatingsNewlyApplied);
         }
 
+
+
+        private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
+        {
+            this.CreatingActivity(activity);
+        }
 
         // this function gets called when a new activity gets created
         public void CreatingActivity(Activity activity)
@@ -787,48 +792,19 @@ namespace ActivityRecommendation
                 this.PutRatingInMemory(rating);
             }
         }
-        // provides a previously unknown Inheritance to the Engine
-        public void ApplyInheritance(Inheritance newInheritance)
+
+        private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)
         {
-            // find the activity being described
-            ActivityDescriptor childDescriptor = newInheritance.ChildDescriptor;
-            ActivityDescriptor parentDescriptor = newInheritance.ParentDescriptor;
-            Activity child = this.activityDatabase.ResolveDescriptor(childDescriptor);
-            if (child == null)
+            Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
+            if (child.Parents.Count > 1)
             {
-                // if the activity doesn't exist, then create it
-                child = this.activityDatabase.CreateActivityIfMissing(childDescriptor);
-                // calculate an appropriate DiscoveryDate
-                this.CreatingActivity(child);
-                if (newInheritance.DiscoveryDate != null)
-                    child.ApplyInheritanceDate((DateTime)newInheritance.DiscoveryDate);
-            }
-            else
-            {
-                // if we're not creating a new, empty child, then lots of ratings and participations may have to cascade
-                // and so we will update everything before making another recommendation
+                // this was an existing activity that was given another parent, so we have to cascade ratings, participations, etc
                 this.requiresFullUpdate = true;
             }
-            // locate or create the correct parent
-            Activity parent = this.activityDatabase.ResolveDescriptor(parentDescriptor);
-            if (parent == null)
-            {
-                parent = this.activityDatabase.CreateActivityIfMissing(parentDescriptor);
-                this.CreatingActivity(parent);
-            }
-            child.AddParent(parent);
-            // Important! if (this.requiresFullUpdate) then the value calculated in EstimateRating will be wrong
-            // However, when we need the correct value, we'll go calculate it, so it's okay
-            // It's only when we're doing autocomplete that we don't bother with the full update
-            // if we just created an empty child, then we can estimate its rating based on the parent's rating
             this.EstimateRating(child, DateTime.Now);
-            /*if (!this.requiresFullUpdate)
-            {
-                // if we just created an empty child, then we can estimate its rating based on the parent's rating
-                this.EstimateRating(child, DateTime.Now);
-                //this.MakeRecommendation(child, DateTime.Now);
-            }*/
         }
+
+
         // gets called whenever an outside source adds a participation
         public void DiscoveredParticipation(Participation newParticipation)
         {

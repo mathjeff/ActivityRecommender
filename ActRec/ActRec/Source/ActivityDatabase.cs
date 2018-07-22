@@ -7,10 +7,20 @@ using StatLists;
 // An ActivityDatabase class stores all of the known Activities, for the purpose of resolving a name into an Activity
 namespace ActivityRecommendation
 {
-    public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>
+
+    public interface ReadableActivityDatabase
+    {
+        Activity ResolveDescriptor(ActivityDescriptor activityDescriptor);
+        IEnumerable<Activity> AllActivities { get; }
+    }
+
+    public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>, ReadableActivityDatabase
     {
         public event ActivityAddedHandler ActivityAdded;
-        public delegate void ActivityAddedHandler(object sender, EventArgs e);
+        public delegate void ActivityAddedHandler(object sender, Activity activity);
+
+        public event InheritanceAddedHandler InheritanceAdded;
+        public delegate void InheritanceAddedHandler(object sender, Inheritance inheritance);
 
         #region Constructor
 
@@ -29,6 +39,43 @@ namespace ActivityRecommendation
 
         #region Public Member Functions
 
+        // returns a string other than "" in case of error
+        public string CreateActivity(Inheritance inheritance)
+        {
+            ActivityDescriptor childDescriptor = inheritance.ChildDescriptor;
+            if (childDescriptor == null)
+                return "Child name is required";
+            Activity existingChild = this.ResolveDescriptor(childDescriptor);
+            if (existingChild != null)
+                return "Child " + existingChild.Name + " already exists";
+            ActivityDescriptor parentDescriptor = inheritance.ParentDescriptor;
+            if (parentDescriptor == null)
+                return "Parent name is required";
+            Activity parent = this.ResolveDescriptor(parentDescriptor);
+            if (parent == null)
+                return "Parent " + parentDescriptor.ActivityName + " does not exist";
+            Activity child = this.CreateActivity(childDescriptor);
+            return this.AddParent(inheritance);
+        }
+
+        public string AddParent(Inheritance inheritance)
+        {
+            if (inheritance.ChildDescriptor == null)
+                return "Child name is required";
+            Activity child = this.ResolveDescriptor(inheritance.ChildDescriptor);
+            if (child == null)
+                return "Child " + inheritance.ChildDescriptor.ActivityName + " does not exist";
+            if (inheritance.ParentDescriptor == null)
+                return "Parent name is required";
+            Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
+            if (parent == null)
+                return "Parent " + inheritance.ParentDescriptor.ActivityName + " does not exist";
+            child.AddParent(parent);
+            if (this.InheritanceAdded != null)
+                this.InheritanceAdded.Invoke(this, inheritance);
+            return "";
+        }
+
         // returns the newly created Activity, or null if none was created
         public Activity CreateActivityIfMissing(ActivityDescriptor descriptor)
         {
@@ -37,9 +84,7 @@ namespace ActivityRecommendation
             if (activity == null)
             {
                 // if this descriptor indicates a new activity, then create it
-                activity = this.CreateActivity(descriptor);
-                this.AddActivity(activity);
-                return activity;
+                return this.CreateActivity(descriptor);
             }
             // no Activity was created, so we don't return one
             return null;
@@ -52,19 +97,6 @@ namespace ActivityRecommendation
                 activity = this.CreateActivityIfMissing(descriptor);
             return activity;
         }
-        // puts an Activity in the database
-        public void AddActivity(Activity newActivity)
-        {
-            string activityName = newActivity.Name;
-            // make a list containing just this Activity
-            List<Activity> activityList = new List<Activity>();
-            activityList.Add(newActivity);
-            // add it to the database
-            this.activitiesByName.Add(newActivity.Name, activityList);
-            // add it to the list of all activities
-            this.allActivities.Add(newActivity);
-        }
-
         // finds the Activity indicated by the ActivityDescriptor
         public Activity ResolveDescriptor(ActivityDescriptor descriptor)
         {
@@ -154,7 +186,7 @@ namespace ActivityRecommendation
                 return this.allActivities.Count;
             }
         }
-        public List<Activity> AllActivities
+        public IEnumerable<Activity> AllActivities
         {
             get
             {
@@ -194,9 +226,8 @@ namespace ActivityRecommendation
             Activity result = new Activity(sourceDescriptor.ActivityName, this.ratingSummarizer);
             if (sourceDescriptor.Choosable != null)
                 result.setChooseable(sourceDescriptor.Choosable.Value);
-            //result.AddParent(this.rootActivity);
-            if (this.ActivityAdded != null)
-                this.ActivityAdded.Invoke(this, new EventArgs());
+
+            this.AddActivity(result);
             return result;
         }
 
@@ -339,6 +370,23 @@ namespace ActivityRecommendation
 
             return totalScore;
         }
+
+        // puts an Activity in the database
+        private void AddActivity(Activity newActivity)
+        {
+            string activityName = newActivity.Name;
+            // make a list containing just this Activity
+            List<Activity> activityList = new List<Activity>();
+            activityList.Add(newActivity);
+            // add it to the database
+            this.activitiesByName.Add(newActivity.Name, activityList);
+            // add it to the list of all activities
+            this.allActivities.Add(newActivity);
+
+            if (this.ActivityAdded != null)
+                this.ActivityAdded.Invoke(this, newActivity);
+        }
+
         #endregion
 
         #region Private Variables

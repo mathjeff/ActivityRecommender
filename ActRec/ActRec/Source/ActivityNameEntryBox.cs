@@ -137,7 +137,7 @@ namespace ActivityRecommendation
         {
             this.NameText = text;
         }
-        public ActivityDatabase Database
+        public ReadableActivityDatabase Database
         {
             set
             {
@@ -319,7 +319,7 @@ namespace ActivityRecommendation
         string nameText;
         Editor nameBox;
         Label suggestionBlock;
-        ActivityDatabase database;
+        ReadableActivityDatabase database;
         string suggestedActivityName = "";
         bool createNewActivity;
     }

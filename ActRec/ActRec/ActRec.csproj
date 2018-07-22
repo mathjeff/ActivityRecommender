@@ -81,7 +81,8 @@
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\ExperimentationInitializationLayout.cs" />
     <Compile Include="Source\View\FeatureOverviewLayout.cs" />
-    <Compile Include="Source\View\InheritanceEditingView.cs" />
+    <Compile Include="Source\View\ActivityCreationLayout.cs" />
+    <Compile Include="Source\View\InheritanceEditingLayout.cs" />
     <Compile Include="Source\InterpolatorSuggestionJustification.cs" />
     <Compile Include="Source\IPredictionLink.cs" />
     <Compile Include="Source\IProgression.cs" />

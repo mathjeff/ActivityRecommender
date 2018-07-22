@@ -13,8 +13,6 @@ namespace ActivityRecommendation
     {
         #region Constructors
 
-        static int nextID = 0;
-
         // public
         public ToDo(string activityName, RatingSummarizer overallRatings_summarizer) : base(activityName, overallRatings_summarizer)
         {

@@ -11,46 +11,53 @@ namespace ActivityRecommendation
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
 
-            this.SetTitle("Add New Activity Choose From");
+            this.SetTitle("Add New Activity to Choose From");
 
-            GridLayout bottomGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout mainGrid = GridLayout.New(BoundProperty_List.Uniform(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+
+            Picker picker = new Picker();
+            picker.Items.Add("Category");
+            picker.Items.Add("ToDo");
+            picker.Title = "Type";
+            picker.SelectedItem = "Category";
+            mainGrid.AddLayout(new PickerLayout(picker));
+
+            this.feedbackView = new Label();
+            mainGrid.AddLayout(new TextblockLayout(this.feedbackView));
 
             this.childNameBox = new ActivityNameEntryBox("Activity Name", true);
             this.childNameBox.Database = activityDatabase;
             this.childNameBox.AutoAcceptAutocomplete = false;
-            bottomGrid.AddLayout(this.childNameBox);
+            mainGrid.AddLayout(this.childNameBox);
 
             this.parentNameBox = new ActivityNameEntryBox("Parent Name");
             this.parentNameBox.Database = activityDatabase;
             this.parentNameBox.AutoAcceptAutocomplete = false;
-            bottomGrid.AddLayout(this.parentNameBox);
+            mainGrid.AddLayout(this.parentNameBox);
 
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Clicked;
-            bottomGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
+            mainGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
-
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions.")
-                .AddMessage("The text box on the left is where you type the activity name.")
-                .AddMessage("The text box on the right is where you type another activity that you want to make be a parent of the given activity.")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities to do, to use as future suggestions.")
+                .AddMessage("In the left text box, choose a name for the activity.")
+                .AddMessage("In the right text box, specify another activity to assign as its parent.")
                 .AddMessage("For example, you might specify that Gaming is a child activity of the Fun activity. Grouping activities like this is helpful for two reasons. It gives " +
                 "ActivityRecommender more understanding about the relationships between activities and can help it to notice trends. It also means that you can later request a suggestion " +
                 "from within Activity \"Fun\" and ActivityRecommender will know what you mean, and might suggest \"Gaming\".")
                 .AddMessage("If you haven't created the parent activity yet, you'll have to create it first. The only activity that exists at the beginning is the built-in activity " +
                 "named \"Activity\".")
                 .AddMessage("While typing you can press Enter to fill in the autocomplete suggestion.")
+                .AddMessage("If the thing you're creating is something you plan to do many times (or even if you want it to be able to be the parent of another Activity), then select the type " +
+                "Category. For example, Sleeping would be a Category.")
+                .AddMessage("If the thing you're creating is something you plan to complete once and don't plan to do again, then select the type ToDo. For example, \"Reading " +
+                "ActivityRecommender's Built-In Features Overview\" would be a ToDo.")
                 .Build();
 
             HelpButtonLayout helpLayout = new HelpButtonLayout(helpWindow, layoutStack);
 
-            bottomGrid.AddLayout(helpLayout);
+            mainGrid.AddLayout(helpLayout);
 
-            this.feedbackView = new Label();
-
-            GridLayout mainGrid = new Vertical_GridLayout_Builder()
-                .AddLayout(new TextblockLayout(this.feedbackView))
-                .AddLayout(bottomGrid)
-                .Build();
 
             this.SetContent(mainGrid);
         }

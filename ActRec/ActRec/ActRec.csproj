@@ -133,7 +133,6 @@
     <Compile Include="Source\View\SelectorView.cs" />
     <Compile Include="Source\View\SuggestionsView.cs" />
     <Compile Include="Source\View\SuggestionView.cs" />
-    <Compile Include="Source\View\TitledControl.cs" />
     <Compile Include="Source\View\TitledTextBlock.cs" />
     <Compile Include="Source\View\TitledTextbox.cs" />
     <Compile Include="Source\WillingnessSummary.cs" />

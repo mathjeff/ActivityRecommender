@@ -46,6 +46,7 @@ namespace ActivityRecommendation
         {
             if (!this.recentUserData.Synchronized)
                 this.WriteRecentUserData();
+            this.latestParticipation = null;
         }
 
         public void Reset()

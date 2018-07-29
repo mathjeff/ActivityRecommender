@@ -14,7 +14,7 @@ namespace ActivityRecommendation.Effectiveness
         string Describe();
 
         // the activity being measured
-        Doable GetDoable();
+        Activity GetDoable();
 
         // the score of a Participation that was measured by this Metric
         double GetScore(Participation participation);

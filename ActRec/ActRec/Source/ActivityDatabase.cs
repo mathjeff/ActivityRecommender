@@ -10,14 +10,14 @@ namespace ActivityRecommendation
 
     public interface ReadableActivityDatabase
     {
-        Activity ResolveDescriptor(ActivityDescriptor activityDescriptor);
-        IEnumerable<Activity> AllActivities { get; }
+        Category ResolveDescriptor(ActivityDescriptor activityDescriptor);
+        IEnumerable<Category> AllActivities { get; }
     }
 
-    public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>, ReadableActivityDatabase
+    public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Category>>, ReadableActivityDatabase
     {
         public event ActivityAddedHandler ActivityAdded;
-        public delegate void ActivityAddedHandler(object sender, Activity activity);
+        public delegate void ActivityAddedHandler(object sender, Category activity);
 
         public event InheritanceAddedHandler InheritanceAdded;
         public delegate void InheritanceAddedHandler(object sender, Inheritance inheritance);
@@ -27,10 +27,10 @@ namespace ActivityRecommendation
         public ActivityDatabase(RatingSummarizer ratingSummarizer)
         {
             //this.activitiesByName = new Dictionary<string, List<Activity> >();
-            this.activitiesByName = new StatList<string, IEnumerable<Activity>>(this, this);
-            this.allActivities = new List<Activity>();
+            this.activitiesByName = new StatList<string, IEnumerable<Category>>(this, this);
+            this.allActivities = new List<Category>();
             this.ratingSummarizer = ratingSummarizer;
-            this.rootActivity = new Activity("Activity", ratingSummarizer);
+            this.rootActivity = new Category("Activity", ratingSummarizer);
             this.rootActivity.setChooseable(false);
             this.AddActivity(this.rootActivity);
         }
@@ -45,16 +45,16 @@ namespace ActivityRecommendation
             ActivityDescriptor childDescriptor = inheritance.ChildDescriptor;
             if (childDescriptor == null)
                 return "Child name is required";
-            Activity existingChild = this.ResolveDescriptor(childDescriptor);
+            Category existingChild = this.ResolveDescriptor(childDescriptor);
             if (existingChild != null)
                 return "Child " + existingChild.Name + " already exists";
             ActivityDescriptor parentDescriptor = inheritance.ParentDescriptor;
             if (parentDescriptor == null)
                 return "Parent name is required";
-            Activity parent = this.ResolveDescriptor(parentDescriptor);
+            Category parent = this.ResolveDescriptor(parentDescriptor);
             if (parent == null)
                 return "Parent " + parentDescriptor.ActivityName + " does not exist";
-            Activity child = this.CreateActivity(childDescriptor);
+            Category child = this.CreateActivity(childDescriptor);
             return this.AddParent(inheritance);
         }
 
@@ -62,12 +62,12 @@ namespace ActivityRecommendation
         {
             if (inheritance.ChildDescriptor == null)
                 return "Child name is required";
-            Activity child = this.ResolveDescriptor(inheritance.ChildDescriptor);
+            Category child = this.ResolveDescriptor(inheritance.ChildDescriptor);
             if (child == null)
                 return "Child " + inheritance.ChildDescriptor.ActivityName + " does not exist";
             if (inheritance.ParentDescriptor == null)
                 return "Parent name is required";
-            Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
+            Category parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
             if (parent == null)
                 return "Parent " + inheritance.ParentDescriptor.ActivityName + " does not exist";
             child.AddParent(parent);
@@ -77,10 +77,10 @@ namespace ActivityRecommendation
         }
 
         // returns the newly created Activity, or null if none was created
-        public Activity CreateActivityIfMissing(ActivityDescriptor descriptor)
+        public Category CreateActivityIfMissing(ActivityDescriptor descriptor)
         {
             // attempt to find an activity that matches
-            Activity activity = this.ResolveDescriptor(descriptor);
+            Category activity = this.ResolveDescriptor(descriptor);
             if (activity == null)
             {
                 // if this descriptor indicates a new activity, then create it
@@ -90,17 +90,17 @@ namespace ActivityRecommendation
             return null;
         }
 
-        public Activity GetOrCreate(ActivityDescriptor descriptor)
+        public Category GetOrCreate(ActivityDescriptor descriptor)
         {
-            Activity activity = this.ResolveDescriptor(descriptor);
+            Category activity = this.ResolveDescriptor(descriptor);
             if (activity == null)
                 activity = this.CreateActivityIfMissing(descriptor);
             return activity;
         }
         // finds the Activity indicated by the ActivityDescriptor
-        public Activity ResolveDescriptor(ActivityDescriptor descriptor)
+        public Category ResolveDescriptor(ActivityDescriptor descriptor)
         {
-            IEnumerable<Activity> activities = null;
+            IEnumerable<Category> activities = null;
             if (descriptor.RequiresPerfectMatch)
             {
                 // requiring a perfect match means that we can do a sorted lookup to find the activity by name
@@ -111,10 +111,10 @@ namespace ActivityRecommendation
                 // if we allow approximate string matches, then we have to check all activities
                 activities = this.activitiesByName.CombineAll();
             }
-            Activity result = null;
+            Category result = null;
             double bestMatchScore = 0;
             // figure out which activity matches best
-            foreach (Activity activity in activities)
+            foreach (Category activity in activities)
             {
                 double matchScore = this.MatchQuality(descriptor, activity);
                 if (matchScore > bestMatchScore)
@@ -127,7 +127,7 @@ namespace ActivityRecommendation
             return result;
         }
         // tells whether the given descriptor can match the given activity
-        public bool Matches(ActivityDescriptor descriptor, Activity activity)
+        public bool Matches(ActivityDescriptor descriptor, Category activity)
         {
             if (this.MatchQuality(descriptor, activity) > 0)
                 return true;
@@ -136,7 +136,7 @@ namespace ActivityRecommendation
 
         }
         // returns 0 if there is a discrepancy, otherwise 1 + (the number of fields that match)
-        public double MatchQuality(ActivityDescriptor descriptor, Activity activity)
+        public double MatchQuality(ActivityDescriptor descriptor, Category activity)
         {
             double matchScore = 1; // if there are no problems, we default to a match quality of 1
             if (descriptor.RequiresPerfectMatch)
@@ -186,7 +186,7 @@ namespace ActivityRecommendation
                 return this.allActivities.Count;
             }
         }
-        public IEnumerable<Activity> AllActivities
+        public IEnumerable<Category> AllActivities
         {
             get
             {
@@ -197,19 +197,19 @@ namespace ActivityRecommendation
         {
             this.activitiesByName.Clear();
         }
-        public Activity RootActivity
+        public Category RootActivity
         {
             get
             {
                 return this.rootActivity;
             }
         }
-        public List<Activity> LeafActivities
+        public List<Category> LeafActivities
         {
             get
             {
-                List<Activity> results = new List<Activity>();
-                foreach (Activity activity in this.allActivities)
+                List<Category> results = new List<Category>();
+                foreach (Category activity in this.allActivities)
                 {
                     if (activity.Children.Count == 0)
                         results.Add(activity);
@@ -221,9 +221,9 @@ namespace ActivityRecommendation
         #endregion
 
         // constructs an Activity from the given ActivityDescriptor
-        private Activity CreateActivity(ActivityDescriptor sourceDescriptor)
+        private Category CreateActivity(ActivityDescriptor sourceDescriptor)
         {
-            Activity result = new Activity(sourceDescriptor.ActivityName, this.ratingSummarizer);
+            Category result = new Category(sourceDescriptor.ActivityName, this.ratingSummarizer);
             if (sourceDescriptor.Choosable != null)
                 result.setChooseable(sourceDescriptor.Choosable.Value);
 
@@ -233,7 +233,7 @@ namespace ActivityRecommendation
 
         public void AssignDefaultParent()
         {
-            foreach (Activity activity in this.allActivities)
+            foreach (Category activity in this.allActivities)
             {
                 if (activity.Parents.Count < 1 && activity != this.rootActivity)
                     activity.Parents.Add(this.rootActivity);
@@ -241,14 +241,14 @@ namespace ActivityRecommendation
         }
 
         #region Functions for ICombiner<List<Activity>>
-        public IEnumerable<Activity> Combine(IEnumerable<Activity> list1, IEnumerable<Activity> list2)
+        public IEnumerable<Category> Combine(IEnumerable<Category> list1, IEnumerable<Category> list2)
         {
             return list1.Concat(list2);
             //return null;
         }
-        public IEnumerable<Activity> Default()
+        public IEnumerable<Category> Default()
         {
-            return new List<Activity>();
+            return new List<Category>();
         }
         #endregion
 
@@ -372,11 +372,11 @@ namespace ActivityRecommendation
         }
 
         // puts an Activity in the database
-        private void AddActivity(Activity newActivity)
+        private void AddActivity(Category newActivity)
         {
             string activityName = newActivity.Name;
             // make a list containing just this Activity
-            List<Activity> activityList = new List<Activity>();
+            List<Category> activityList = new List<Category>();
             activityList.Add(newActivity);
             // add it to the database
             this.activitiesByName.Add(newActivity.Name, activityList);
@@ -391,10 +391,10 @@ namespace ActivityRecommendation
 
         #region Private Variables
 
-        private List<Activity> allActivities;
-        private StatList<string, IEnumerable<Activity>> activitiesByName;
+        private List<Category> allActivities;
+        private StatList<string, IEnumerable<Category>> activitiesByName;
         private RatingSummarizer ratingSummarizer;
-        private Activity rootActivity;
+        private Category rootActivity;
 
         #endregion
     }

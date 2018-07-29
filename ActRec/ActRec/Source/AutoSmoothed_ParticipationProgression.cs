@@ -21,7 +21,7 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
-        public AutoSmoothed_ParticipationProgression(Doable owner)
+        public AutoSmoothed_ParticipationProgression(Activity owner)
         {
             this.Owner = owner;
             this.searchHelper = new StatList<DateTime, ParticipationAndSummary>(this, this);
@@ -205,7 +205,7 @@ namespace ActivityRecommendation
 
         #region Functions for IProgression
 
-        public Doable Owner { get; set; }
+        public Activity Owner { get; set; }
 
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {

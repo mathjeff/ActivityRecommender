@@ -123,7 +123,7 @@ namespace ActivityRecommendation
             return new ProgressionValue(when, new Distribution());
         }
 
-        public Doable Owner
+        public Activity Owner
         {
             get
             {

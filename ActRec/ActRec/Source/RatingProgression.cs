@@ -11,7 +11,7 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
-        public RatingProgression(Doable owner)
+        public RatingProgression(Activity owner)
         {
             this.searchHelper = new StatList<DateTime, Distribution>(new DateComparer(), new DistributionAdder());
             this.ratingsInDiscoveryOrder = new List<AbsoluteRating>();
@@ -91,7 +91,7 @@ namespace ActivityRecommendation
 
         #region Functions for IProgression
 
-        public Doable Owner { get; set; }
+        public Activity Owner { get; set; }
 
         // returns basically the average of the recent rating at that date
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)

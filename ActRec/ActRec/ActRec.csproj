@@ -48,8 +48,8 @@
     <Compile Include="Source\Effectiveness\Metric.cs" />
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
     <Compile Include="Source\ToDo.cs" />
-    <Compile Include="Source\Doable.cs" />
     <Compile Include="Source\Activity.cs" />
+    <Compile Include="Source\Category.cs" />
     <Compile Include="Source\ActivityDatabase.cs" />
     <Compile Include="Source\ActivityDescriptor.cs" />
     <Compile Include="Source\ActivityNameEntryBox.cs" />

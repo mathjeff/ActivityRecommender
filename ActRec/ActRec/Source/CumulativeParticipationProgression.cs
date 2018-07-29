@@ -29,7 +29,7 @@ namespace ActivityRecommendation
                 return this.participationProgression.NumItems;
             }
         }
-        public Doable Owner 
+        public Activity Owner 
         { 
             get
             {

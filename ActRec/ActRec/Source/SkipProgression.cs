@@ -10,7 +10,7 @@ namespace ActivityRecommendation
 {
     class SkipProgression : IProgression, ICombiner<ActivitySkip>
     {
-        public SkipProgression(Doable newOwner)
+        public SkipProgression(Activity newOwner)
         {
             this.searchHelper = new StatList<DateTime, ActivitySkip>(new DateComparer(), this);
             this.valuesInDiscoveryOrder = new List<ActivitySkip>();
@@ -49,7 +49,7 @@ namespace ActivityRecommendation
                 return this.valuesInDiscoveryOrder.Count;
             }
         }
-        public Doable Owner
+        public Activity Owner
         {
             get
             {
@@ -91,6 +91,6 @@ namespace ActivityRecommendation
 
         private StatList<DateTime, ActivitySkip> searchHelper;
         private List<ActivitySkip> valuesInDiscoveryOrder;
-        private Doable owner;
+        private Activity owner;
     }
 }

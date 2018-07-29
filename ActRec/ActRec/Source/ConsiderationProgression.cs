@@ -11,7 +11,7 @@ namespace ActivityRecommendation
 {
     public class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<WillingnessSummary>
     {
-        public ConsiderationProgression(Doable newOwner)
+        public ConsiderationProgression(Activity newOwner)
         {
             this.searchHelper = new StatList<DateTime, WillingnessSummary>(this, this);
             //this.valuesInDiscoveryOrder = new List<ProgressionValue>();
@@ -142,7 +142,7 @@ namespace ActivityRecommendation
                 //return this.valuesInDiscoveryOrder.Count;
             }
         }
-        public Doable Owner
+        public Activity Owner
         {
             get
             {
@@ -192,7 +192,7 @@ namespace ActivityRecommendation
 
         private StatList<DateTime, WillingnessSummary> searchHelper;
         //private List<ProgressionValue> valuesInDiscoveryOrder;
-        private Doable owner;
+        private Activity owner;
         int numComparisons;
         int numAdditions;
     }

@@ -383,7 +383,7 @@ namespace ActivityRecommendation
         public void UpdateScoreError(ActivityDescriptor descriptor, DateTime when, double correctScore)
         {
             // compute estimated score
-            Activity activity = this.activityDatabase.GetOrCreate(descriptor);
+            Category activity = this.activityDatabase.GetOrCreate(descriptor);
             this.engine.MakeRecommendation(activity, activity, when, null);
 
             // compute error
@@ -401,7 +401,7 @@ namespace ActivityRecommendation
         public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
         {
             // compute the estimate participation probability
-            Activity activity = this.activityDatabase.GetOrCreate(descriptor);
+            Category activity = this.activityDatabase.GetOrCreate(descriptor);
             this.engine.MakeRecommendation(activity, activity, when, null);
 
             // keep track of having made this prediction, so we can later return to it and compute the error

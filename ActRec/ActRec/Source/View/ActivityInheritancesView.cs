@@ -5,10 +5,10 @@ namespace ActivityRecommendation.View
 {
     class ActivityInheritancesView : TitledControl
     {
-        public ActivityInheritancesView(Doable activity, ActivityDatabase activityDatabase)
+        public ActivityInheritancesView(Activity activity, ActivityDatabase activityDatabase)
         {
-            List<Doable> children = activity.GetChildren();
-            List<Doable> parents = activity.Parents;
+            List<Activity> children = activity.GetChildren();
+            List<Activity> parents = activity.Parents;
             string title;
             if (activity == activityDatabase.RootActivity)
             {
@@ -41,10 +41,10 @@ namespace ActivityRecommendation.View
 
     class ActivityListView : TitledControl
     {
-        public ActivityListView(string name, List<Doable> activities)
+        public ActivityListView(string name, List<Activity> activities)
         {
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-            foreach (Activity activity in activities)
+            foreach (Category activity in activities)
             {
                 gridBuilder.AddLayout(new TextblockLayout(activity.Name, 16));
             }

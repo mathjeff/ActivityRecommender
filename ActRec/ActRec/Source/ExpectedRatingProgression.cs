@@ -8,7 +8,7 @@ namespace ActivityRecommendation
 {
     public class ExpectedRatingProgression : IProgression
     {
-        public ExpectedRatingProgression(Doable owner)
+        public ExpectedRatingProgression(Activity owner)
         {
             this.Owner = owner;
         }
@@ -35,7 +35,7 @@ namespace ActivityRecommendation
                 return "The current rating of " + this.Owner.Description;
             }
         }
-        public Doable Owner { get; set; }
+        public Activity Owner { get; set; }
         public FloatRange EstimateOutputRange()
         {
             return new FloatRange(0, true, 1, true);

@@ -9,7 +9,7 @@ using AdaptiveLinearInterpolation;
 // However, even something that isn't considered work, like watching a specific movie, can be considered a ToDo.
 namespace ActivityRecommendation
 {
-    public class ToDo : Doable
+    public class ToDo : Activity
     {
         #region Constructors
 

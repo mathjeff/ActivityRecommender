@@ -13,7 +13,7 @@ namespace ActivityRecommendation
         //ProgressionValue GetCurrentValue(DateTime when);                    // the value of the Progression at that date, to make the best prediction
         IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive);          // the dates where the Progression makes a significant change
         int NumItems { get; }
-        Doable Owner { get; }
+        Activity Owner { get; }
         string Description { get; }
         FloatRange EstimateOutputRange();
         IEnumerable<double> GetNaturalSubdivisions(double minSubdivision, double maxSubdivision);

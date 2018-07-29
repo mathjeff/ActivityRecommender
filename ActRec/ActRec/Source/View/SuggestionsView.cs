@@ -70,14 +70,14 @@ namespace ActivityRecommendation
         {
             this.suggestionButton.Clicked += e;
         }
-        public Activity DesiredActivity
+        public Category DesiredActivity
         {
             get
             {
                 return this.desiredActivity_box.Activity;
             }
         }
-        public Activity Category
+        public Category Category
         {
             get
             {

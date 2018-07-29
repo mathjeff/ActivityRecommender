@@ -8,15 +8,15 @@ namespace ActivityRecommendation.Effectiveness
 {
     class CompletionMetric : Metric
     {
-        public CompletionMetric(Doable activity)
+        public CompletionMetric(Activity activity)
         {
             this.activity = activity;
         }
-        private Doable activity;
+        private Activity activity;
 
         #region Required to implement Metric
 
-        public Doable GetDoable()
+        public Activity GetDoable()
         {
             return this.activity;
         }

@@ -170,7 +170,7 @@ namespace ActivityRecommendation
             set;
         }
         // Owner must be defined but isn't used
-        public Doable Owner
+        public Activity Owner
         {
             get
             {

@@ -24,7 +24,7 @@ namespace ActivityRecommendation.View
             this.activityDatabase = activityDatabase;
         }
 
-        private void activityChosen(object sender, Activity activity)
+        private void activityChosen(object sender, Category activity)
         {
             this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase));
         }
@@ -43,7 +43,7 @@ namespace ActivityRecommendation.View
     class ListInheritancesView : TitledControl
     {
         public event ActivityChosenHandler ActivityChosen;
-        public delegate void ActivityChosenHandler(object sender, Activity activity);
+        public delegate void ActivityChosenHandler(object sender, Category activity);
 
         public ListInheritancesView(ActivityDatabase activityDatabase)
         {
@@ -53,7 +53,7 @@ namespace ActivityRecommendation.View
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
         }
 
-        private void ActivityDatabase_ActivityAdded(object sender, Activity a)
+        private void ActivityDatabase_ActivityAdded(object sender, Category a)
         {
             this.invalidateChildren();
         }
@@ -67,10 +67,10 @@ namespace ActivityRecommendation.View
 
         private void generateChildren()
         {
-            IEnumerable<Activity> activities = this.activityDatabase.AllActivities;
+            IEnumerable<Category> activities = this.activityDatabase.AllActivities;
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
-            this.activityButtons = new Dictionary<Button, Activity>();
-            foreach (Activity activity in activities)
+            this.activityButtons = new Dictionary<Button, Category>();
+            foreach (Category activity in activities)
             {
                 Button button = new Button();
                 button.Clicked += Button_Clicked;
@@ -88,11 +88,11 @@ namespace ActivityRecommendation.View
         private void Button_Clicked(object sender, System.EventArgs e)
         {
             Button button = sender as Button;
-            Activity activity = this.activityButtons[button];
+            Category activity = this.activityButtons[button];
             this.selected(activity);
         }
 
-        private void selected(Activity activity)
+        private void selected(Category activity)
         {
             if (this.ActivityChosen != null)
             {
@@ -106,14 +106,14 @@ namespace ActivityRecommendation.View
         }
 
 
-        Dictionary<Button, Activity> activityButtons;
+        Dictionary<Button, Category> activityButtons;
         ActivityDatabase activityDatabase;
     }
 
     class ActivitySearchView : TitledControl
     {
         public event ActivityChosenHandler ActivityChosen;
-        public delegate void ActivityChosenHandler(object sender, Activity activity);
+        public delegate void ActivityChosenHandler(object sender, Category activity);
 
 
         public ActivitySearchView(ActivityDatabase activityDatabase, string name)
@@ -133,7 +133,7 @@ namespace ActivityRecommendation.View
         {
             if (this.ActivityChosen != null)
             {
-                Activity activity = this.nameBox.Activity;
+                Category activity = this.nameBox.Activity;
                 if (activity != null)
                     this.ActivityChosen.Invoke(this, activity);
             }

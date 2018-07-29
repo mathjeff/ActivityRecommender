@@ -202,7 +202,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                Category activity = this.nameBox.Activity;
+                Activity activity = this.nameBox.Activity;
                 if (activity == null)
                     return null;
                 return activity.Name;
@@ -247,7 +247,7 @@ namespace ActivityRecommendation
         }
         public Participation GetParticipation(ActivityDatabase activities, Engine engine)
         {
-            Category activity = this.nameBox.Activity;
+            Activity activity = this.nameBox.Activity;
             if (activity == null)
                 return null;
             ActivityDescriptor descriptor = activity.MakeDescriptor();
@@ -304,7 +304,7 @@ namespace ActivityRecommendation
             if (this.startDateBox.IsDateValid() && this.nameBox.ActivityDescriptor != null)
             {
                 DateTime startDate = this.startDateBox.GetDate();
-                Category activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
+                Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
                 if (activity != null)
                 {
                     string text = this.computeFeedback(activity, startDate);
@@ -314,14 +314,14 @@ namespace ActivityRecommendation
             this.feedbackIsUpToDate = true;
         }
 
-        private string computeFeedback(Category chosenActivity, DateTime startDate)
+        private string computeFeedback(Activity chosenActivity, DateTime startDate)
         {
             //return this.compute_estimatedRating_feedback(chosenActivity, startDate);
             //return this.compute_longtermValue_feedback(chosenActivity, startDate);
             return compute_longtermAndShortterm_feedback(chosenActivity, startDate);
         }
 
-        private string compute_longtermAndShortterm_feedback(Category chosenActivity, DateTime startDate)
+        private string compute_longtermAndShortterm_feedback(Activity chosenActivity, DateTime startDate)
         {
             double longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
             if (longtermBonusInDays == -1)
@@ -356,9 +356,9 @@ namespace ActivityRecommendation
             return message;
         }
 
-        private string compute_estimatedRating_feedback(Category chosenActivity, DateTime startDate)
+        private string compute_estimatedRating_feedback(Activity chosenActivity, DateTime startDate)
         {
-            Category rootActivity = this.engine.ActivityDatabase.RootActivity;
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
 
             double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
@@ -368,9 +368,9 @@ namespace ActivityRecommendation
             return "Predicted rating = " + expectedShortermRating.ToString() + " * average";
         }
 
-        private double compute_estimatedRating_ratio(Category chosenActivity, DateTime startDate)
+        private double compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
         {
-            Category rootActivity = this.engine.ActivityDatabase.RootActivity;
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
 
             double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
@@ -380,9 +380,9 @@ namespace ActivityRecommendation
             return shorttermRatio;
         }
 
-        private double compute_longtermValue_increase(Category chosenActivity, DateTime startDate)
+        private double compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
-            Category rootActivity = this.engine.ActivityDatabase.RootActivity;
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
 
             Distribution chosenEstimatedDistribution = this.engine.Get_Overall_ParticipationEstimate(chosenActivity, startDate).Distribution;
             if (chosenEstimatedDistribution.Weight <= 0)
@@ -420,7 +420,7 @@ namespace ActivityRecommendation
             return bonusInDays;
         }
 
-        private string compute_longtermValue_feedback(Category chosenActivity, DateTime startDate)
+        private string compute_longtermValue_feedback(Activity chosenActivity, DateTime startDate)
         {
             double bonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
             if (bonusInDays == -1)

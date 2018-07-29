@@ -48,7 +48,7 @@ namespace ActivityRecommendation
             // first, create the necessary Activities
             foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
             {
-                this.activityDatabase.CreateActivityIfMissing(descriptor);
+                this.activityDatabase.CreateCategoryIfMissing(descriptor);
             }
             this.allActivityDescriptors.Clear();
         }
@@ -58,13 +58,13 @@ namespace ActivityRecommendation
             // next, add the necessary parent pointers
             foreach (Inheritance inheritance in this.inheritances)
             {
-                Category child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
-                Category parent = this.activityDatabase.ResolveDescriptor(inheritance.ParentDescriptor);
+                Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
+                Category parent = this.activityDatabase.ResolveToCategory(inheritance.ParentDescriptor);
                 if (inheritance.DiscoveryDate != null)
                     child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
                 if (child == null)
                 {
-                    foreach (Category activity in this.activityDatabase.AllActivities)
+                    foreach (Activity activity in this.activityDatabase.AllActivities)
                     {
                         System.Diagnostics.Debug.WriteLine("Activity '" + activity.Name + "'");
                     }
@@ -130,13 +130,13 @@ namespace ActivityRecommendation
 
 
 
-        private void ActivityDatabase_ActivityAdded(object sender, Category activity)
+        private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
         {
             this.CreatingActivity(activity);
         }
 
         // this function gets called when a new activity gets created
-        public void CreatingActivity(Category activity)
+        public void CreatingActivity(Activity activity)
         {
             activity.SetDefaultDiscoveryDate(this.firstInteractionDate);
             //activity.ApplyKnownInteractionDate(firstInteractionDate);
@@ -146,7 +146,7 @@ namespace ActivityRecommendation
         public void CascadeRating(AbsoluteRating newRating)
         {
             ActivityDescriptor descriptor = newRating.ActivityDescriptor;
-            Category activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
                 List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
@@ -188,7 +188,7 @@ namespace ActivityRecommendation
         public void CascadeSuggestion(ActivitySuggestion newSuggestion)
         {
             ActivityDescriptor descriptor = newSuggestion.ActivityDescriptor;
-            Category activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Activity activity = this.activityDatabase.ResolveToCategory(descriptor);
             if (activity != null)
             {
                 List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
@@ -204,7 +204,7 @@ namespace ActivityRecommendation
             return child.GetAllSuperactivities();
         }
         // performs Depth First Search to find all subCategories of the given Activity
-        public List<Activity> FindAllSubCategoriesOf(Category parent)
+        public List<Activity> FindAllSubCategoriesOf(Activity parent)
         {
             return parent.GetChildrenRecursive();
         }
@@ -224,22 +224,26 @@ namespace ActivityRecommendation
         }
 
 
-        public Activity MakeRecommendation(Category requestCategory, Category activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        public Activity MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
             List<Activity> candidates;
             List<Activity> consideredCandidates = new List<Activity>();
             DateTime processingStartTime = DateTime.Now;
             // First, go update the stats for existing activities
             this.EnsureRatingsAreAssociated();
-            foreach (Category activity in this.activityDatabase.AllActivities)
+            foreach (Activity activity in this.activityDatabase.AllActivities)
             {
                 activity.PredictionsNeedRecalculation = true;
             }
             // determine which activities to consider
             if (requestCategory != null)
+            {
                 candidates = requestCategory.GetChildrenRecursive();
+            }
             else
+            {
                 candidates = new List<Activity>(this.activityDatabase.AllActivities);
+            }
             // Now we determine which activity is most important to suggest
             // That requires first finding the one with the highest mean
             Activity bestActivity = null;
@@ -247,7 +251,7 @@ namespace ActivityRecommendation
             {
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
-                this.EstimateSuggestionValue(activityToBeat, when);
+                this.UpdateSuggestionValue(activityToBeat, when);
                 activityToBeat.Utility = activityToBeat.Ratings.Mean; // if they're asking for us to beat this activity then it means they want to do it
                 if (candidates.Contains(activityToBeat))
                 {
@@ -269,7 +273,7 @@ namespace ActivityRecommendation
                 if (candidate.Choosable)
                 {
                     // estimate how good it is for us to suggest this particular activity
-                    this.EstimateSuggestionValue(candidate, when);
+                    this.UpdateSuggestionValue(candidate, when);
                     Distribution currentRating = candidate.SuggestionValue.Distribution;
                     bool better = false;
                     if (activityToBeat != null && candidate.Utility < activityToBeat.Utility)
@@ -308,7 +312,7 @@ namespace ActivityRecommendation
             if (bestActivity == null)
                 return null;
             double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
-            foreach (Category candidate in consideredCandidates)
+            foreach (Activity candidate in consideredCandidates)
             {
                 double currentScore = this.GetCombinedValue(bestActivity, candidate);
                 if (currentScore > bestCombinedScore)
@@ -415,7 +419,7 @@ namespace ActivityRecommendation
             // estimate the rating 
             activity.SetupPredictorsIfNeeded();
             // First make sure that all parents' ratings are up-to-date
-            foreach (Category parent in activity.ParentsUsedForPrediction)
+            foreach (Activity parent in activity.ParentsUsedForPrediction)
             {
                 this.EstimateRating(parent, when);
             }
@@ -459,8 +463,16 @@ namespace ActivityRecommendation
             return overallValue;
         }
 
-        // update the estimate of how good it would be to suggest this activity now
+        // recompute the estime of how good it would be to suggest this activity now
         public void EstimateSuggestionValue(Activity activity, DateTime when)
+        {
+            activity.PredictionsNeedRecalculation = true;
+            this.EnsureRatingsAreAssociated();
+            this.UpdateSuggestionValue(activity, when);
+        }
+
+        // update the estimate of how good it would be to suggest this activity now, unless the computation is already up-to-date
+        private void UpdateSuggestionValue(Activity activity, DateTime when)
         {
             DateTime startDate = DateTime.Now;
             // Now we estimate how useful it would be to suggest this activity to the user
@@ -473,7 +485,7 @@ namespace ActivityRecommendation
         }
 
         // attempt to calculate the probability that the user would do this activity if we suggested it at this time
-        public void EstimateParticipationProbability(Category activity, DateTime when)
+        public void EstimateParticipationProbability(Activity activity, DateTime when)
         {
             List<Prediction> predictions = activity.GetParticipationProbabilityEstimates(when);
             Prediction prediction = this.CombineProbabilityPredictions(predictions);
@@ -490,7 +502,7 @@ namespace ActivityRecommendation
         }
 
         // returns a Prediction of what the user's longterm happiness will be after having participated in the given activity at the given time
-        public Prediction Get_Overall_ParticipationEstimate(Category activity, DateTime when)
+        public Prediction Get_Overall_ParticipationEstimate(Activity activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
@@ -723,7 +735,7 @@ namespace ActivityRecommendation
         // tells each activity to spend a little bit of time updating its knowledge of the ratings that came after one of its participations
         public void Update_RatingSummaries(int numRatingsToUpdate)
         {
-            foreach (Category activity in this.ActivityDatabase.AllActivities)
+            foreach (Activity activity in this.ActivityDatabase.AllActivities)
             {
                 activity.UpdateNext_RatingSummaries(numRatingsToUpdate);
             }
@@ -795,7 +807,7 @@ namespace ActivityRecommendation
 
         private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)
         {
-            Category child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
+            Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
             if (child.Parents.Count > 1)
             {
                 // this was an existing activity that was given another parent, so we have to cascade ratings, participations, etc
@@ -872,7 +884,7 @@ namespace ActivityRecommendation
 
             // remove the participation from any relevant Activity
             ActivityDescriptor descriptor = participationToRemove.ActivityDescriptor;
-            Category activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
                 List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
@@ -889,11 +901,11 @@ namespace ActivityRecommendation
             if (this.requiresFullUpdate)
                 this.FullUpdate();
             // Compute updated rating estimates for these activities
-            Category thisActivity = this.activityDatabase.ResolveDescriptor(mainParticipation.ActivityDescriptor);
-            Category otherActivity = this.activityDatabase.ResolveDescriptor(otherParticipation.ActivityDescriptor);
+            Activity thisActivity = this.activityDatabase.ResolveDescriptor(mainParticipation.ActivityDescriptor);
+            Activity otherActivity = this.activityDatabase.ResolveDescriptor(otherParticipation.ActivityDescriptor);
             DateTime when = mainParticipation.StartDate;
-            this.MakeRecommendation(thisActivity, null, when, null);
-            this.MakeRecommendation(otherActivity, null, when, null);
+            this.EstimateSuggestionValue(thisActivity, when);
+            this.EstimateSuggestionValue(otherActivity, when);
             this.MakeRecommendation(mainParticipation.StartDate);
 
             // make an AbsoluteRating for the Activity (leave out date + activity because it's implied)
@@ -968,7 +980,7 @@ namespace ActivityRecommendation
 
         public Rating MakeEstimatedRating(Participation sourceParticipation)
         {
-            Category activity = this.activityDatabase.ResolveDescriptor(sourceParticipation.ActivityDescriptor);
+            Activity activity = this.activityDatabase.ResolveDescriptor(sourceParticipation.ActivityDescriptor);
             if (activity.NumRatings < 1)
             {
                 // skip activities for which we don't have much data

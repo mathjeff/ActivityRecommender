@@ -18,14 +18,14 @@ namespace ActivityRecommendation.View
 
             // For the given activity, make a Progression telling the total time spent on that activity in the next <windowSize>
             // For each other activity, do a linear regression between its current intensity (0 or 1) and the other activity's upcoming avg intensity (during the given window)
-            Category activityToPredict = activityDatabase.ResolveDescriptor(activityDescriptor);
+            Activity activityToPredict = activityDatabase.ResolveDescriptor(activityDescriptor);
             activityToPredict.ApplyPendingData();
             AutoSmoothed_ParticipationProgression participationProgression = activityToPredict.ParticipationProgression;
             DateTime when = DateTime.Now;
             LinearProgression progressionToPredict = participationProgression.Smoothed(windowSize, when);
 
-            StatList<double, Category> results = new StatList<double, Category>(new DoubleComparer(), new NoopCombiner<Category>());
-            foreach (Category activity in activityDatabase.AllActivities)
+            StatList<double, Activity> results = new StatList<double, Activity>(new DoubleComparer(), new NoopCombiner<Activity>());
+            foreach (Activity activity in activityDatabase.AllActivities)
             {
                 System.Diagnostics.Debug.WriteLine("correlating " + activity + " and " + activityToPredict.Name);
                 activity.ApplyPendingData();
@@ -76,13 +76,13 @@ namespace ActivityRecommendation.View
                 }
             }
 
-            IEnumerable<ListItemStats<double, Category>> resultList = results.AllItems;
+            IEnumerable<ListItemStats<double, Activity>> resultList = results.AllItems;
 
             Vertical_GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
-            LinkedList<ListItemStats<double, Category>> mostPositivelyCorrelated = new LinkedList<ListItemStats<double, Category>>();
-            LinkedList<ListItemStats<double, Category>> mostNegativelyCorrelated = new LinkedList<ListItemStats<double, Category>>();
+            LinkedList<ListItemStats<double, Activity>> mostPositivelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
+            LinkedList<ListItemStats<double, Activity>> mostNegativelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
             int i = 0;
-            foreach (ListItemStats<double, Category> result in resultList.Reverse())
+            foreach (ListItemStats<double, Activity> result in resultList.Reverse())
             {
                 mostPositivelyCorrelated.AddLast(result);
                 i++;
@@ -90,7 +90,7 @@ namespace ActivityRecommendation.View
                     break;
             }
             i = 0;
-            foreach (ListItemStats<double, Category> result in resultList)
+            foreach (ListItemStats<double, Activity> result in resultList)
             {
                 mostNegativelyCorrelated.AddLast(result);
                 i++;
@@ -110,19 +110,19 @@ namespace ActivityRecommendation.View
                 layoutBuilder.AddLayout(new TextblockLayout(title));
 
                 layoutBuilder.AddLayout(new TextblockLayout("These activities add to the number of minutes spent per day:"));
-                foreach (ListItemStats<double, Category> result in mostPositivelyCorrelated)
+                foreach (ListItemStats<double, Activity> result in mostPositivelyCorrelated)
                 {
                     double correlation = result.Key;
-                    Category activity = result.Value;
+                    Activity activity = result.Value;
                     String message = activity.ToString() + ": " + Math.Round(correlation, 5);
                     layoutBuilder.AddLayout(new TextblockLayout(message));
                 }
 
                 layoutBuilder.AddLayout(new TextblockLayout("These activities subtract from the number of minutes per day:"));
-                foreach (ListItemStats<double, Category> result in mostNegativelyCorrelated)
+                foreach (ListItemStats<double, Activity> result in mostNegativelyCorrelated)
                 {
                     double correlation = result.Key;
-                    Category activity = result.Value;
+                    Activity activity = result.Value;
                     String message = activity.ToString() + ": " + Math.Round(correlation, 5);
                     layoutBuilder.AddLayout(new TextblockLayout(message));
                 }

@@ -44,7 +44,7 @@ namespace ActivityRecommendation.View
         public ActivityListView(string name, List<Activity> activities)
         {
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-            foreach (Category activity in activities)
+            foreach (Activity activity in activities)
             {
                 gridBuilder.AddLayout(new TextblockLayout(activity.Name, 16));
             }

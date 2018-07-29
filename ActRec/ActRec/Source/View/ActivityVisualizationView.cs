@@ -9,7 +9,7 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationView : TitledControl
     {
-        public ActivityVisualizationView(IProgression participationXAxis, Category yAxisActivity, TimeSpan smoothingWindow, RatingSummarizer summarizer, LayoutStack layoutStack)
+        public ActivityVisualizationView(IProgression participationXAxis, Activity yAxisActivity, TimeSpan smoothingWindow, RatingSummarizer summarizer, LayoutStack layoutStack)
         {
             this.layoutStack = layoutStack;
             if (summarizer != null)
@@ -446,9 +446,9 @@ namespace ActivityRecommendation
             this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + Math.Round(numHoursSpent, 3) + " hours on " + this.YAxisLabel;
             //this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
             this.timeFractionDisplay.Text = "Or " + Environment.NewLine + Math.Round(participationFraction * 24 * 60, 3).ToString() + " minutes per day";
-            Category bestChild = null;
+            Activity bestChild = null;
             double bestTotal = 0;
-            foreach (Category child in this.yAxisActivity.Children)
+            foreach (Activity child in this.yAxisActivity.GetChildren())
             {
                 ParticipationsSummary participation = child.SummarizeParticipationsBetween(startDate, endDate);
                 double currentTotal = participation.CumulativeIntensity.TotalSeconds;
@@ -465,9 +465,9 @@ namespace ActivityRecommendation
 
                 bestChild = null;
                 bestTotal = 0;
-                foreach (Category child in this.yAxisActivity.GetChildrenRecursive())
+                foreach (Activity child in this.yAxisActivity.GetChildrenRecursive())
                 {
-                    if (child.Children.Count == 0)
+                    if (child.GetChildren().Count == 0)
                     {
                         ParticipationsSummary candidate = child.SummarizeParticipationsBetween(startDate, endDate);
                         double currentTotal = candidate.CumulativeIntensity.TotalSeconds;
@@ -557,7 +557,7 @@ namespace ActivityRecommendation
 
         Button exitButton;
         EventHandler exitHandler;
-        Category yAxisActivity;
+        Activity yAxisActivity;
         IProgression xAxisProgression;
         TitledControl ratingsView;
         TitledControl participationsView;

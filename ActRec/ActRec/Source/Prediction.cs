@@ -15,7 +15,7 @@ namespace ActivityRecommendation
         //public Distribution ValueMinusAverage { get; set; } // the expected change in rating caused by doing this activity
         //public Distribution ParticipationProbability { get; set; }  // the probability that the user will take the suggestion
         //public Distribution SuggestionValue { get; set; }   // how important it is to suggest this activity
-        public Category Activity { get; set; }              // the Activity that is being suggested
+        public Activity Activity { get; set; }              // the Activity that is being suggested
         public DateTime ApplicableDate { get; set; }                  // The date that this Prediction describes
         public DateTime CreationDate { get; set; }
 

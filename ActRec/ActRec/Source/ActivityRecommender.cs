@@ -249,7 +249,7 @@ namespace ActivityRecommendation
         public void DeclineSuggestion(ActivitySuggestion suggestion)
         {
             // Calculate the score to generate for this Activity as a result of that statement
-            Category activity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             Distribution previousDistribution = activity.PredictedScore.Distribution;
             // make a Skip object holding the needed data
             DateTime considerationDate = this.LatestActionDate;
@@ -277,7 +277,7 @@ namespace ActivityRecommendation
 
             
             // If the user requested that the first suggestion be from a certain category, find that category
-            Category requestCategory = this.suggestionsView.Category;
+            Activity requestCategory = this.suggestionsView.Category;
             if (requestCategory != null)
             {
                 ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
@@ -285,7 +285,7 @@ namespace ActivityRecommendation
             }
 
             // If the user requested that the suggestion be at least as good as a certain activity, then find that activity
-            Category desiredActivity = this.suggestionsView.DesiredActivity;
+            Activity desiredActivity = this.suggestionsView.DesiredActivity;
 
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
@@ -427,7 +427,6 @@ namespace ActivityRecommendation
             this.PutParticipationInMemory(newParticipation);
             this.SuspectLatestActionDate(newParticipation.EndDate);
             this.WriteParticipation(newParticipation);
-            this.ActivityDatabase.CreateActivityIfMissing(newParticipation.ActivityDescriptor);
         }
         private void WriteParticipation(Participation newParticipation)
         {
@@ -470,11 +469,11 @@ namespace ActivityRecommendation
         }
         */
 
-        private void ActivityDatabase_ActivityAdded(object sender, Category activity)
+        private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
         {
             this.WriteActivity(activity);
         }
-        private void WriteActivity(Category activity)
+        private void WriteActivity(Activity activity)
         {
         }
 
@@ -603,7 +602,7 @@ namespace ActivityRecommendation
                 //this.WriteRecentUserData();
             }
         }
-        public Category CurrentRecommendedActivity
+        public Activity CurrentRecommendedActivity
         {
             get
             {
@@ -652,7 +651,7 @@ namespace ActivityRecommendation
             IProgression xAxisProgression = this.statisticsMenu.XAxisProgression;
             ActivityDescriptor yAxisDescriptor = this.statisticsMenu.YAxisActivityDescriptor;
             //Activity xAxisActivity = null;
-            Category yAxisActivity = null;
+            Activity yAxisActivity = null;
             /*
             if (xAxisDescriptor != null)
             {

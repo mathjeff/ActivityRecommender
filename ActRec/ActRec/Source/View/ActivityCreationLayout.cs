@@ -15,12 +15,13 @@ namespace ActivityRecommendation
 
             GridLayout mainGrid = GridLayout.New(BoundProperty_List.Uniform(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            Picker picker = new Picker();
-            picker.Items.Add("Category");
-            picker.Items.Add("ToDo");
-            picker.Title = "Type";
-            picker.SelectedItem = "Category";
-            mainGrid.AddLayout(new PickerLayout(picker));
+            Picker typePicker = new Picker();
+            typePicker.Items.Add("Category");
+            typePicker.Items.Add("ToDo");
+            typePicker.Title = "Type";
+            typePicker.SelectedItem = "Category";
+            this.typePicker = typePicker;
+            mainGrid.AddLayout(new PickerLayout(typePicker));
 
             this.feedbackView = new Label();
             mainGrid.AddLayout(new TextblockLayout(this.feedbackView));
@@ -62,6 +63,18 @@ namespace ActivityRecommendation
             this.SetContent(mainGrid);
         }
 
+        // returns true if the type of Activity to create is Category (otherwise the type is ToDo)
+        private bool activityTypeIsCategory
+        {
+            get
+            {
+                object activityType = this.typePicker.SelectedItem;
+                if (activityType != null && activityType.ToString() == "Category")
+                    return true;
+                return false;
+            }
+        }
+
         private void OkButton_Clicked(object sender, EventArgs e)
         {
             ActivityDescriptor childDescriptor = this.childNameBox.ActivityDescriptor;
@@ -69,7 +82,11 @@ namespace ActivityRecommendation
             Inheritance inheritance = new Inheritance(parentDescriptor, childDescriptor);
             inheritance.DiscoveryDate = DateTime.Now;
 
-            string error = this.activityDatabase.CreateActivity(inheritance);
+            string error;
+            if (this.activityTypeIsCategory)
+                error = this.activityDatabase.CreateCategory(inheritance);
+            else
+                error = this.activityDatabase.CreateToDo(inheritance);
             if (error == "")
             {
                 this.childNameBox.Clear();
@@ -88,5 +105,6 @@ namespace ActivityRecommendation
         private LayoutStack layoutStack;
         private ActivityDatabase activityDatabase;
         private Label feedbackView;
+        private Picker typePicker;
     }
 }

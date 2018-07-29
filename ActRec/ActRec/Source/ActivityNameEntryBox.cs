@@ -156,7 +156,7 @@ namespace ActivityRecommendation
         {
             string newText = "";
             // look for the activity with the longest common substring that is strictly shorter than the current text
-            foreach (Category activity in this.database.AllActivities)
+            foreach (Activity activity in this.database.AllActivities)
             {
                 string prefix = commonPrefix(activity.Name, oldText);
                 if (prefix.Length > newText.Length && prefix.Length < oldText.Length)
@@ -173,7 +173,7 @@ namespace ActivityRecommendation
         {
             // find the common prefix of all matching activities
             List<String> matchTexts = new List<string>();
-            foreach (Category activity in this.database.AllActivities)
+            foreach (Activity activity in this.database.AllActivities)
             {
                 if (activity.Name.StartsWith(currentText))
                     matchTexts.Add(activity.Name);
@@ -183,7 +183,7 @@ namespace ActivityRecommendation
             {
                 // there was no case-sensitive match; try a case-insensitive match
                 matchTexts = new List<string>();
-                foreach (Category activity in this.database.AllActivities)
+                foreach (Activity activity in this.database.AllActivities)
                 {
                     if (activity.Name.ToLower().StartsWith(currentText.ToLower()))
                         matchTexts.Add(activity.Name);
@@ -235,7 +235,7 @@ namespace ActivityRecommendation
             }
             else
             {
-                Category activity = this.database.ResolveDescriptor(descriptor);
+                Activity activity = this.database.ResolveDescriptor(descriptor);
                 if (activity != null)
                 {
                     // Also consider using color to prompt users to accept the suggestion
@@ -301,7 +301,7 @@ namespace ActivityRecommendation
                 return descriptor;
             }
         }
-        public Category Activity
+        public Activity Activity
         {
             get
             {

@@ -11,8 +11,6 @@ namespace ActivityRecommendation
     {
         #region Constructors
 
-        static int nextID = 0;
-
         // public
         public Category(string activityName, RatingSummarizer overallRatings_summarizer) : base(activityName, overallRatings_summarizer)
         {
@@ -42,29 +40,6 @@ namespace ActivityRecommendation
             this.children.Add(child);
         }
 
-        // returns a list containing this activity and all of its descendents
-        public List<Activity> GetChildrenRecursive()
-        {
-            List<Activity> subCategories = new List<Activity>();
-            subCategories.Add(this);
-            int i = 0;
-            for (i = 0; i < subCategories.Count; i++)
-            {
-                Activity item = subCategories[i];
-                Category activity = item as Category;
-                if (activity != null)
-                {
-                    foreach (Activity child in activity.Children)
-                    {
-                        if (!subCategories.Contains(child))
-                        {
-                            subCategories.Add(child);
-                        }
-                    }
-                }
-            }
-            return subCategories;
-        }
         // makes an ActivityDescriptor that describes this Activity
         public override ActivityDescriptor MakeDescriptor()
         {

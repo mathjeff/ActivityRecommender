@@ -1,16 +1,10 @@
-﻿using PCLStorage;
-using Plugin.FilePicker;
-using Plugin.FilePicker.Abstractions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 // The TextConverter class will convert an object into a string or parse a string into a list of objects
 // It only works on the specific types of objects that matter in the ActivityRecommender project
-
-// TODO: split the TextConverter class into two: one class that does conversions between objects and strings and another class that does file I/O
 namespace ActivityRecommendation
 {
     class TextConverter
@@ -154,88 +148,6 @@ namespace ActivityRecommendation
             return "<" + objectName + ">" + stringBody + "</" + objectName + ">";
         }
 
-        public Boolean FileExists(string fileName)
-        {
-            IFile file = this.GetFile(fileName, false);
-            return (file != null);
-        }
-        public Stream OpenFile(string fileName, FileAccess fileAccess)
-        {
-            IFile file = this.GetFile(fileName, true);
-            if (file == null)
-            {
-                return null;
-            }
-            Stream stream;
-            try
-            {
-                Task<Stream> streamTask = Task.Run(async () => await file.OpenAsync(fileAccess));
-                stream = streamTask.Result;
-            }
-            catch (Exception e)
-            {
-                string message = "exception " + e;
-                System.Diagnostics.Debug.WriteLine(message);
-                return null;
-            }
-            return stream;
-        }
-        private IFile GetFile(string fileName, bool createIfMissing)
-        {
-            IFileSystem fs = FileSystem.Current;
-            IFile file = null;
-            // TODO: instead of ConfigureAwait here, should we make everything function async?
-            Task<ExistenceCheckResult> existenceTask = Task.Run(async () => await fs.LocalStorage.CheckExistsAsync(fileName));
-            ExistenceCheckResult result = existenceTask.Result;
-            if (result == ExistenceCheckResult.FileExists)
-            {
-                Task<IFile> contentTask = Task.Run(async () => await fs.LocalStorage.GetFileAsync(fileName));
-                file = contentTask.Result;
-            }
-            else
-            {
-                if (createIfMissing)
-                {
-                    Task<IFile> creationTask = Task.Run(async () => await fs.LocalStorage.CreateFileAsync(fileName, CreationCollisionOption.FailIfExists));
-                    file = creationTask.Result;
-                }
-
-            }
-
-            return file;
-        }
-        public void AppendText(string text, string fileName)
-        {
-            Stream file = this.OpenFile(fileName, FileAccess.ReadAndWrite);
-            file.Seek(0, SeekOrigin.End);
-
-            StreamWriter writer = new StreamWriter(file);
-            writer.Write(text);
-            writer.Dispose();
-            file.Dispose();
-        }
-        public StreamWriter EraseFileAndOpenForWriting(string fileName)
-        {
-            IFile file = this.GetFile(fileName, false);
-            if (file != null)
-            {
-                Task deletion = file.DeleteAsync();
-                deletion.Wait();
-            }
-            return new StreamWriter(this.OpenFile(fileName, FileAccess.ReadAndWrite));
-        }
-        public StreamReader OpenFileForReading(string fileName)
-        {
-            return new StreamReader(this.OpenFile(fileName, FileAccess.Read));
-        }
-
-        public void EraseFileAndWriteContent(string fileName, string content)
-        {
-            StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
-            writer.Write(content);
-            writer.Dispose();
-        }
-
         private IEnumerable<XmlNode> ParseText(string text)
         {
             if (text.Length <= 0)
@@ -252,7 +164,7 @@ namespace ActivityRecommendation
         // opens the file, converts it into a sequence of objects, and sends them to the Engine
         public void ReadFile(string fileName)
         {
-            StreamReader reader = this.OpenFileForReading(fileName);
+            StreamReader reader = this.internalFileIo.OpenFileForReading(fileName);
             String text = "";
             if (reader.BaseStream.Length > 0)
                 text = reader.ReadToEnd();
@@ -311,21 +223,12 @@ namespace ActivityRecommendation
             }
         }
 
-        public string ReadAllText(string fileName)
-        {
-            // If the file exists, then we want to read all of its data
-            StreamReader reader = this.OpenFileForReading(fileName);
-            string content = reader.ReadToEnd();
-            reader.Dispose();
-            return content;
-        }
-
         // opens the file, converts it into a sequence of objects, updates them to the latest format, and writes it out to the new file
         public void ReformatFile(string currentFileName, string newFileName)
         {
             // If the file exists, then we want to read all of its data
             XmlDocument document = new XmlDocument();
-            document.LoadXml(this.ReadAllText(currentFileName));
+            document.LoadXml(this.internalFileIo.ReadAllText(currentFileName));
             XmlNode root = document.FirstChild;
             string outputText = "";
             Participation latestParticipation = null;
@@ -458,10 +361,7 @@ namespace ActivityRecommendation
             if (latestParticipation != null)
                 outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
 
-            Stream stream = this.OpenFile(newFileName, FileAccess.ReadAndWrite);
-            StreamWriter writer = new StreamWriter(stream);
-            writer.Write(outputText);
-            writer.Dispose();
+            this.internalFileIo.EraseFileAndWriteContent(newFileName, outputText);
         }
 
 
@@ -884,21 +784,6 @@ namespace ActivityRecommendation
             return suggestion;
         }
 
-        // saves text to a file where the user can do something with it
-        public bool ExportFile(string fileName, string content)
-        {
-            IFilePicker filePicker = CrossFilePicker.Current;
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(content);
-
-            FileData fileData = new FileData();
-            fileData.FileName = fileName;
-            fileData.DataArray = bytes;
-            Task<bool> task = Task.Run(async () => await filePicker.SaveFile(fileData));
-            bool success = task.Result;
-
-            return success;
-        }
-
         public void Import(string contents, string inheritancesFilePath, string historyFilePath, string recentUserDataPath)
         {
             IEnumerable<XmlNode> nodes = this.ParseText(contents);
@@ -951,12 +836,10 @@ namespace ActivityRecommendation
             }
 
             string inheritancesText = String.Join("\n", inheritanceTexts);
-            this.EraseFileAndWriteContent(inheritancesFilePath, inheritancesText);
+            this.internalFileIo.EraseFileAndWriteContent(inheritancesFilePath, inheritancesText);
             string historyText = string.Join("\n", historyTexts);
-            this.EraseFileAndWriteContent(historyFilePath, historyText);
-
-            this.EraseFileAndWriteContent(recentUserDataPath, recentUserDataText);
-
+            this.internalFileIo.EraseFileAndWriteContent(historyFilePath, historyText);
+            this.internalFileIo.EraseFileAndWriteContent(recentUserDataPath, recentUserDataText);
         }
 
         // converts the dictionary into a string, without adding the initial <Tag> or final </Tag>
@@ -1297,6 +1180,8 @@ namespace ActivityRecommendation
         private ActivityRecommender recommenderToInform;
         private Participation latestParticipationRead;
         private ActivitySkip pendingSkip;
+        private InternalFileIo internalFileIo = new InternalFileIo();
+        private PublicFileIo publicFileIo = new PublicFileIo();
 
         #endregion
     }

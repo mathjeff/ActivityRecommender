@@ -180,9 +180,9 @@ namespace ActivityRecommendation
         public string ExportData()
         {
             string content = "";
-            content += this.textConverter.ReadAllText(this.recentUserData_fileName);
-            content += this.textConverter.ReadAllText(this.inheritancesFileName);
-            content += this.textConverter.ReadAllText(this.ratingsFileName);
+            content += this.internalFileIo.ReadAllText(this.recentUserData_fileName);
+            content += this.internalFileIo.ReadAllText(this.inheritancesFileName);
+            content += this.internalFileIo.ReadAllText(this.ratingsFileName);
             int maxNumLines = this.dataExportView.Get_NumLines();
             if (maxNumLines > 0)
             {
@@ -204,7 +204,7 @@ namespace ActivityRecommendation
             string fileName = "ActivityData-" + nowText + ".txt";
 
             // TODO make it possible for the user to control the file path
-            bool success = this.textConverter.ExportFile(fileName, content);
+            bool success = this.publicFileIo.ExportFile(fileName, content);
 
             if (success)
                 return "Saved " + fileName;
@@ -379,7 +379,7 @@ namespace ActivityRecommendation
         private void WriteSuggestion(ActivitySuggestion suggestion)
         {
             string text = this.textConverter.ConvertToString(suggestion) + Environment.NewLine;
-            this.textConverter.AppendText(text, this.ratingsFileName);
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
         private void SubmitParticipation(object sender, EventArgs e)
         {
@@ -431,7 +431,7 @@ namespace ActivityRecommendation
         private void WriteParticipation(Participation newParticipation)
         {
             string text = this.textConverter.ConvertToString(newParticipation) + Environment.NewLine;
-            this.textConverter.AppendText(text, this.ratingsFileName);
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
         // declares that the user didn't want to do something that was suggested
         private void AddSkip(ActivitySkip newSkip)
@@ -444,7 +444,7 @@ namespace ActivityRecommendation
         private void WriteSkip(ActivitySkip newSkip)
         {
             string text = this.textConverter.ConvertToString(newSkip) + Environment.NewLine;
-            this.textConverter.AppendText(text, this.ratingsFileName);
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
         // writes this ActivityRequest to a data file
         private void AddActivityRequest(ActivityRequest newRequest)
@@ -455,7 +455,7 @@ namespace ActivityRecommendation
         private void WriteActivityRequest(ActivityRequest newRequest)
         {
             string text = this.textConverter.ConvertToString(newRequest) + Environment.NewLine;
-            this.textConverter.AppendText(text, this.ratingsFileName);
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
         /*public void SubmitInheritance(object sender, Inheritance inheritance)
         {
@@ -484,7 +484,7 @@ namespace ActivityRecommendation
         private void WriteInheritance(Inheritance newInheritance)
         {
             string text = this.textConverter.ConvertToString(newInheritance) + Environment.NewLine;
-            this.textConverter.AppendText(text, this.inheritancesFileName);
+            this.internalFileIo.AppendText(text, this.inheritancesFileName);
         }
 
         private void AddRating(Rating newRating)
@@ -499,7 +499,7 @@ namespace ActivityRecommendation
         private void WriteRating(AbsoluteRating newRating)
         {
             string text = this.textConverter.ConvertToString(newRating) + Environment.NewLine;
-            this.textConverter.AppendText(text, this.ratingsFileName);
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
 
         // writes to a text file saying that the user was is this program now. It gets deleted soon
@@ -635,7 +635,7 @@ namespace ActivityRecommendation
         {
             this.recentUserData.Synchronized = true;
             string text = this.textConverter.ConvertToString(this.recentUserData) + Environment.NewLine;
-            this.textConverter.EraseFileAndWriteContent(this.recentUserData_fileName, text);
+            this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, text);
         }
 
 
@@ -719,6 +719,8 @@ namespace ActivityRecommendation
         ActivityVisualizationMenu statisticsMenu;
         Engine engine;
         TextConverter textConverter;
+        InternalFileIo internalFileIo = new InternalFileIo();
+        PublicFileIo publicFileIo = new PublicFileIo();
         string ratingsFileName;         // the name of the file that stores ratings
         string inheritancesFileName;    // the name of the file that stores inheritances
         string recentUserData_fileName;

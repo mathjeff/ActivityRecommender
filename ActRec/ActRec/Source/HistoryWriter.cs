@@ -58,12 +58,13 @@ namespace ActivityRecommendation
             string nowText = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
             string fileName = "ActivityData-reformatted-" + nowText + ".txt";
 
-            this.textConverter.ExportFile(fileName, String.Join("", this.fileContentComponents));
+            this.publicFileIo.ExportFile(fileName, String.Join("", this.fileContentComponents));
 
             return null;
         }
 
         private TextConverter textConverter;
         private List<string> fileContentComponents = new List<string>();
+        private PublicFileIo publicFileIo = new PublicFileIo();
     }
 }

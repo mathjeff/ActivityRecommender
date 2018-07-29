@@ -26,8 +26,7 @@ namespace ActivityRecommendation
 
         private async void ChooseFile(object sender, EventArgs e)
         {
-            IFilePicker filePicker = CrossFilePicker.Current;
-            FileData fileData = await filePicker.PickFile();
+            FileData fileData = await this.publicFileIo.PromptUserForFile();
             if (fileData == null)
                 return; // cancelled
 
@@ -43,6 +42,8 @@ namespace ActivityRecommendation
 
         private Button importButton;
         private LayoutStack layoutStack;
+        private PublicFileIo publicFileIo = new PublicFileIo();
+
     }
 
     class ImportConfirmationView : TitledControl
@@ -70,6 +71,5 @@ namespace ActivityRecommendation
         }
 
         private FileData fileData;
-
     }
 }

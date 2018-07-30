@@ -310,6 +310,24 @@ typicalProbabilityError = 0.342831553588421
 equivalentProbability = 0.863959511297823
 weightedProbabilityScore = 0.288292895034349
 equivalentWeightedProbability = 0.917093329453631
+
+updated results on 2018-07-29 after getting some new data
+typical longtermPredictionIfSuggested error = 0.0769317230966445
+typical longtermPredictionIfParticipated error = 0.0687857499511654
+typicalScoreError = 0.137300194760722
+typicalProbabilityError = 0.342963751469292
+equivalentProbability = 0.863834942217085
+weightedProbabilityScore = 0.285088970267528
+equivalentWeightedProbability = 0.916506989305579
+
+updated results on 2018-07-29 after some fixups discovered when switching to EstimateSuggestionValue instead of MakeRecommendation
+typical longtermPredictionIfSuggested error = 0.0776676670385656
+typical longtermPredictionIfParticipated error = 0.0677669750654978
+typicalScoreError = 0.136244463813144
+typicalProbabilityError = 0.337362033552108
+equivalentProbability = 0.869035036707338
+weightedProbabilityScore = 0.287448503981239
+equivalentWeightedProbability = 0.916939244447084
  */
 
 
@@ -384,7 +402,7 @@ namespace ActivityRecommendation
         {
             // compute estimated score
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            this.engine.MakeRecommendation((Category)activity, activity, when, null);
+            this.engine.EstimateSuggestionValue(activity, when);
 
             // compute error
             //System.Diagnostics.Debug.WriteLine(descriptor.ActivityName + " - expected : " + activity.PredictedScore.Distribution.Mean + " actual : " + correctScore);
@@ -402,7 +420,7 @@ namespace ActivityRecommendation
         {
             // compute the estimate participation probability
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            this.engine.MakeRecommendation((Category)activity, activity, when, null);
+            this.engine.EstimateSuggestionValue(activity, when);
 
             // keep track of having made this prediction, so we can later return to it and compute the error
             Prediction predictionForSuggestion = activity.SuggestionValue;

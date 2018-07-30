@@ -435,6 +435,7 @@ namespace ActivityRecommendation
             activity.PredictedParticipationProbability = probabilityPrediction;
 
 
+
             activity.Utility = this.RatingAndProbability_Into_Value(activity.PredictedScore.Distribution, probabilityPrediction.Distribution.Mean, activity.MeanParticipationDuration).Mean;
         }
 
@@ -466,7 +467,8 @@ namespace ActivityRecommendation
         // recompute the estime of how good it would be to suggest this activity now
         public void EstimateSuggestionValue(Activity activity, DateTime when)
         {
-            activity.PredictionsNeedRecalculation = true;
+            foreach (Activity other in this.activityDatabase.AllActivities)
+                other.PredictionsNeedRecalculation = true;
             this.EnsureRatingsAreAssociated();
             this.UpdateSuggestionValue(activity, when);
         }

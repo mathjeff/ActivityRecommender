@@ -700,6 +700,7 @@ namespace ActivityRecommendation
         public List<Prediction> Get_ShortTerm_RatingEstimates(DateTime when)
         {
             this.ApplyPendingRatings();
+            this.ApplyPendingParticipations();
 
             double[] coordinates = new double[this.ratingTestingProgressions.Count];
             int i;
@@ -740,6 +741,8 @@ namespace ActivityRecommendation
             coordinateList.Add(this.timeOfDayProgression.GetValueAt(when, false).Value.Mean);
             foreach (Activity Doable in activities)
             {
+                Doable.ApplyPendingSkips();
+                Doable.ApplyPendingParticipationsForShorttermAnalysis();
                 foreach (IProgression progression in Doable.participationTestingProgressions)
                 {
                     ProgressionValue value = progression.GetValueAt(when, false);

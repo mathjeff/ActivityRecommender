@@ -560,6 +560,17 @@ namespace ActivityRecommendation
             distributions.Add(mediumTerm_distribution);
             distributions.Add(longTerm_distribution);
 
+            // also include parent activities in the prediction if this activity is one that the user hasn't done often
+            if (activity.NumConsiderations < 40)
+            {
+                foreach (Activity parent in activity.Parents)
+                {
+                    Distribution parentDistribution = parent.Predict_LongtermValue_If_Participated(when);
+                    double parentWeight = Math.Min(parent.NumParticipations + 1, 40);
+                    distributions.Add(parentDistribution.CopyAndReweightTo(parentWeight));
+                }
+            }
+
             Distribution distribution = this.CombineRatingDistributions(distributions);
             Prediction prediction = shortTerm_prediction;
             prediction.Distribution = distribution;

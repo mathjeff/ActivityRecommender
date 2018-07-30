@@ -328,6 +328,15 @@ typicalProbabilityError = 0.337362033552108
 equivalentProbability = 0.869035036707338
 weightedProbabilityScore = 0.287448503981239
 equivalentWeightedProbability = 0.916939244447084
+
+update results again on 2018-07-29 after a tiny bit more data, plus some tuning of Get_Overall_SuggestionEstimate to favor parent activities more highly
+typical longtermPredictionIfSuggested error = 0.072384304970362
+typical longtermPredictionIfParticipated error = 0.067750639659817
+typicalScoreError = 0.136360253685622
+typicalProbabilityError = 0.3373837026757
+equivalentProbability = 0.869015226201894
+weightedProbabilityScore = 0.290649609017511
+equivalentWeightedProbability = 0.917521710819241
  */
 
 

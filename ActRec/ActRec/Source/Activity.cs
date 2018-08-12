@@ -950,6 +950,9 @@ namespace ActivityRecommendation
             this.ratingTrainingProgressions = new List<IProgression>();
             this.ratingTestingProgressions = new List<IProgression>();
 
+            this.ratingTrainingProgressions.Add(TimeProgression.AbsoluteTime);
+            this.ratingTestingProgressions.Add(TimeProgression.AbsoluteTime);
+
             this.ratingTrainingProgressions.Add(this.idlenessProgression);
             this.ratingTestingProgressions.Add(this.idlenessProgression);
 

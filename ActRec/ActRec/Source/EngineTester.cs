@@ -329,7 +329,7 @@ equivalentProbability = 0.869035036707338
 weightedProbabilityScore = 0.287448503981239
 equivalentWeightedProbability = 0.916939244447084
 
-update results again on 2018-07-29 after a tiny bit more data, plus some tuning of Get_Overall_SuggestionEstimate to favor parent activities more highly
+updated results again on 2018-07-29 after a tiny bit more data, plus some tuning of Get_Overall_SuggestionEstimate to favor parent activities more highly
 typical longtermPredictionIfSuggested error = 0.072384304970362
 typical longtermPredictionIfParticipated error = 0.067750639659817
 typicalScoreError = 0.136360253685622
@@ -337,6 +337,26 @@ typicalProbabilityError = 0.3373837026757
 equivalentProbability = 0.869015226201894
 weightedProbabilityScore = 0.290649609017511
 equivalentWeightedProbability = 0.917521710819241
+
+updated results on 2018-08-12 with new data
+typical longtermPredictionIfSuggested error = 0.068462838080553
+typical longtermPredictionIfParticipated error = 0.0640969948485463
+typicalScoreError = 0.13508617311407
+typicalProbabilityError = 0.337732398701453
+equivalentProbability = 0.868696117239337
+weightedProbabilityScore = 0.288184129377369
+equivalentWeightedProbability = 0.917073499618037
+
+updated results on 2018-08-12 after some tuning: having AdaptiveInterpolator consider more points for splitting,
+and using TimeProgression.AbsoluteTime as a factor for predicting activity ratings
+typical longtermPredictionIfSuggested error = 0.0660279601785022
+typical longtermPredictionIfParticipated error = 0.0455410485831656
+typicalScoreError = 0.140825893664029
+typicalProbabilityError = 0.3396555229262
+equivalentProbability = 0.866925231819413
+weightedProbabilityScore = 0.307009231292974
+equivalentWeightedProbability = 0.920428780086327
+EngineTester completed in 00:03:00.5293930
  */
 
 
@@ -351,6 +371,7 @@ namespace ActivityRecommendation
             this.squaredParticipationProbabilityError = new Distribution();
             this.participationPrediction_score = new Distribution();
             this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.executionStart = DateTime.Now;
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
         {
@@ -360,7 +381,6 @@ namespace ActivityRecommendation
 
             if (this.numRatings % 1000 == 0)
             {
-                this.Compute_FutureEstimate_Errors();
                 this.PrintResults();
                 System.Diagnostics.Debug.WriteLine("Adding rating with date " + ((DateTime)newRating.Date).ToString());
             }
@@ -490,20 +510,8 @@ namespace ActivityRecommendation
                 this.participationPrediction_score = this.participationPrediction_score.Plus(Distribution.MakeDistribution(scoreComponent, 0, 1));
             }
         }
-        public override Engine Finish()
-        {
-            this.Compute_FutureEstimate_Errors();
-            this.PrintResults();
-            return null;
-        }
 
-        // computes the error for each prediction that was made about the future
-        private void Compute_FutureEstimate_Errors()
-        {
-            this.Compute_FutureEstimateIfSuggested_Errors();
-            this.Compute_FutureEstimateIfParticipated_Errors();
-        }
-        private void Compute_FutureEstimateIfSuggested_Errors()
+        private double Compute_FutureEstimateIfSuggested_Errors()
         {
             Distribution errorsSquared = new Distribution();
             foreach (Prediction prediction in this.valueIfSuggested_predictions.Keys)
@@ -520,9 +528,9 @@ namespace ActivityRecommendation
             }
             double errorSquared = errorsSquared.Mean;
             double typicalPredictionError = Math.Sqrt(errorSquared);
-            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfSuggested error = " + typicalPredictionError);
+            return typicalPredictionError;
         }
-        private void Compute_FutureEstimateIfParticipated_Errors()
+        private double  Compute_FutureEstimateIfParticipated_Errors()
         {
             Distribution errorsSquared = new Distribution();
             foreach (Prediction prediction in this.valueIfParticipated_predictions.Keys)
@@ -539,14 +547,21 @@ namespace ActivityRecommendation
             }
             double errorSquared = errorsSquared.Mean;
             double typicalPredictionError = Math.Sqrt(errorSquared);
-            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + typicalPredictionError);
+            return typicalPredictionError;
         }
+
         public void PrintResults()
         {
-            // compute how well the score prediction does, and print the result
+            double futureEstimateIfSuggested_error = this.Compute_FutureEstimateIfSuggested_Errors();
+            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfSuggested error = " + futureEstimateIfSuggested_error);
+            double futureEstimateIfParticipated_error = this.Compute_FutureEstimateIfParticipated_Errors();
+            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + futureEstimateIfParticipated_error);
+
+            // how well the score prediction does
             double typicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
             System.Diagnostics.Debug.WriteLine("typicalScoreError = " + typicalScoreError.ToString());
-            // compute how well the probability prediction does (first using the mean-squared-error, which doesn't take into account what we want to do with this data)
+            
+            // how well the probability prediction does (first using the mean-squared-error, which doesn't take into account what we want to do with this data)
             double typicalProbabilityError = Math.Sqrt(this.squaredParticipationProbabilityError.Mean);
             System.Diagnostics.Debug.WriteLine("typicalProbabilityError = " + typicalProbabilityError.ToString());
             // X * (1 - X) ^ 2 + (1 - X) * X ^ 2 = this.squaredParticipationProbabilityError.Mean
@@ -566,6 +581,19 @@ namespace ActivityRecommendation
             double equivalentWeightedProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
             System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + equivalentWeightedProbability);
         }
+        private void PrintFinalResults()
+        {
+            this.PrintResults();
+            DateTime executionEnd = DateTime.Now;
+            TimeSpan duration = executionEnd.Subtract(this.executionStart);
+            System.Diagnostics.Debug.WriteLine("EngineTester completed in " + duration);
+        }
+        public override Engine Finish()
+        {
+            this.PrintFinalResults();
+            return null;
+        }
+
         // a measure of how far off the engine's predicted scores are from the scores the user actually provides
         public Distribution SquaredScoreError
         {
@@ -593,5 +621,6 @@ namespace ActivityRecommendation
         // the Engine predicts longterm value based on what the user participates in. valueIfParticipated_predictions maps the predictions made to the actual observed longterm value
         private Dictionary<Prediction, RatingSummary> valueIfParticipated_predictions = new Dictionary<Prediction, RatingSummary>();
         private int numRatings;
+        private DateTime executionStart;
     }
 }

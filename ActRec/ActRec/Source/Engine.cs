@@ -545,10 +545,10 @@ namespace ActivityRecommendation
             double participationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5) * 40;
+            double shortWeight = Math.Pow(activity.NumConsiderations + 1, 0.5) * 30 * participationProbability;
             shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
 
-            double mediumWeight = Math.Pow(activity.NumParticipations, 0.8333) * 40;
+            double mediumWeight = Math.Pow(activity.NumConsiderations, 0.8333) * 70 * participationProbability;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 

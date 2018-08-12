@@ -82,7 +82,16 @@ namespace ActivityRecommendation
                 if (stats == null)
                     return new DateTime();
                 return stats.Key;
-
+            }
+        }
+        public DateTime EarliestKnownDate
+        {
+            get
+            {
+                ListItemStats<DateTime, Distribution> stats = this.valuesByDate.GetFirstValue();
+                if (stats == null)
+                    return new DateTime();
+                return stats.Key;
             }
         }
         // returns the cumulative weight for all dates through the given date

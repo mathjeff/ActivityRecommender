@@ -36,7 +36,7 @@ namespace ActivityRecommendation
                 if (this.searchHelper.NumItems <= 0)
                     break;
                 ListItemStats<DateTime, double> item = this.searchHelper.GetFirstValue();
-                if (item.Key.CompareTo(when) > 0)
+                if (item.Key.CompareTo(when) >= 0)
                     return;
                 this.searchHelper.Remove(item.Key);
             }
@@ -67,7 +67,8 @@ namespace ActivityRecommendation
                 double ourValue, theirValue;
                 ourValue = this.GetValueAt(when, false).Value.Mean;
                 theirValue = other.GetValueAt(when, false).Value.Mean;
-                diff.Add(item.Key, ourValue - theirValue);
+                double value = ourValue - theirValue;
+                diff.Add(item.Key, value);
             }
             return diff;
         }

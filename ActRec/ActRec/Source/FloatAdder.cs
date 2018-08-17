@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AdaptiveLinearInterpolation;
+using StatLists;
 
 // The FloatAdder adds numbers, for the purpose of using in Generics
 namespace ActivityRecommendation
 {
-    public class FloatAdder : INumerifier<double>
+    public class FloatAdder : INumerifier<double>, ICombiner<double>
     {
         public FloatAdder()
         {
         }
-
-        #region Required for INumerifier
 
         public AdaptiveLinearInterpolation.Distribution ConvertToDistribution(double number)
         {
@@ -34,7 +33,6 @@ namespace ActivityRecommendation
         {
             return 0;
         }
-        
-        #endregion
+
     }
 }

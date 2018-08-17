@@ -21,8 +21,10 @@ namespace ActivityRecommendation.View
             Activity activityToPredict = activityDatabase.ResolveDescriptor(activityDescriptor);
             activityToPredict.ApplyPendingData();
             AutoSmoothed_ParticipationProgression participationProgression = activityToPredict.ParticipationProgression;
-            DateTime when = DateTime.Now;
-            LinearProgression progressionToPredict = participationProgression.Smoothed(windowSize, when);
+            LinearProgression progressionToPredict = participationProgression.Smoothed(windowSize);
+
+            DateTime now = DateTime.Now;
+            DateTime cutoff = now.Subtract(windowSize);
 
             StatList<double, Activity> results = new StatList<double, Activity>(new DoubleComparer(), new NoopCombiner<Activity>());
             foreach (Activity activity in activityDatabase.AllActivities)
@@ -31,7 +33,7 @@ namespace ActivityRecommendation.View
                 activity.ApplyPendingData();
                 // smoothing with a short duration is a hacky way of getting a LinearProgression that models the instantaneous rate of participation
                 // ideally we'll add support directly into the LinearProgression class itself
-                LinearProgression predictor = activity.ParticipationProgression.Smoothed(TimeSpan.FromSeconds(1), when);
+                LinearProgression predictor = activity.ParticipationProgression.Smoothed(TimeSpan.FromSeconds(1));
 
                 // even if activity == activityToPredict, do the prediction anyway, because it's still meaningful to find that past participations in an activity predict future participations
                 StatList<DateTime, bool> union = new StatList<DateTime, bool>(new DateComparer(), new NoopCombiner<bool>());
@@ -45,26 +47,36 @@ namespace ActivityRecommendation.View
                 {
                     union.Add(date, true);
                 }
-                union.Add(when, true);
 
                 // now compute the value of the formula
                 Correlator correlator = new Correlator();
                 DateTime prevDate = union.GetFirstValue().Key;
+                double x1 = 0;
+                double y1 = 0;
                 foreach (ListItemStats<DateTime, bool> item in union.AllItems)
                 {
                     DateTime nextDate = item.Key;
-                    if (nextDate.CompareTo(prevDate) <= 0)
+                    if (nextDate.CompareTo(prevDate) < 0)
                     {
-                        // skip duplicates
+                        // skip going backwards, just in case
                         continue;
                     }
+                    if (nextDate.CompareTo(cutoff) >= 0)
+                    {
+                        // not enough data to compute the value for this window
+                        // TODO: should we use a smaller window instead?
+                        break;
+                    }
                     double weight = nextDate.Subtract(prevDate).TotalSeconds;
-                    double x1 = predictor.GetValueAt(prevDate, false).Value.Mean;
-                    double y1 = progressionToPredict.GetValueAt(prevDate, false).Value.Mean;
+
                     correlator.Add(x1, y1, weight);
                     double x2 = predictor.GetValueAt(nextDate, false).Value.Mean;
                     double y2 = progressionToPredict.GetValueAt(nextDate, false).Value.Mean;
                     correlator.Add(x2, y2, weight);
+
+                    x1 = x2;
+                    y1 = y2;
+                    prevDate = nextDate;
                 }
                 //double correlation = correlator.Correlation;
 

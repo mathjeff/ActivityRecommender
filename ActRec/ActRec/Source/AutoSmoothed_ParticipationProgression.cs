@@ -107,26 +107,40 @@ namespace ActivityRecommendation
             }
             return results;
         }
-        public LinearProgression Smoothed(TimeSpan windowSize, DateTime maxDate)
+        public LinearProgression Smoothed(TimeSpan windowSize)
         {
             // make a LinkedList of the cumulative time spent
             DateTime minDate = this.Owner.DiscoveryDate;
             IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.AllItems;
             LinearProgression cumulatives = new LinearProgression();
-            DateTime when = minDate;
-            double sum = 0;
+            // first sort the starts and ends
+            StatList<DateTime, double> deltaIntensities = new StatList<DateTime, double>(new DateComparer(), new FloatAdder());
             foreach (ListItemStats<DateTime, ParticipationAndSummary> item in items)
             {
-                cumulatives.Add(item.Value.Participation.StartDate, sum);
-                sum += item.Value.Participation.Duration.TotalSeconds;
-                cumulatives.Add(item.Value.Participation.EndDate, sum);
+                deltaIntensities.Add(item.Value.Participation.StartDate, 1);
+                deltaIntensities.Add(item.Value.Participation.EndDate, -1);
+            }
+            if (deltaIntensities.NumItems < 1)
+                return new LinearProgression();
+            DateTime maxDate = deltaIntensities.GetLastValue().Key;
+            // now add up the (possibly overlapping) values
+            double intensity = 0;
+            DateTime prevDate = minDate;
+            double sum = 0;
+            foreach (ListItemStats<DateTime, double> deltaIntensity in deltaIntensities.AllItems)
+            {
+                double duration = deltaIntensity.Key.Subtract(prevDate).TotalSeconds;
+                sum += intensity * duration;
+                intensity += deltaIntensity.Value;
+
+                cumulatives.Add(deltaIntensity.Key, sum);
+                prevDate = deltaIntensity.Key;
             }
             // find what's in the sliding window by subtracting the cumulative from the shifted cumulative
             LinearProgression shiftedCumulatives = cumulatives.Shifted((new TimeSpan()).Subtract(windowSize));
-//            shiftedCumulatives.RemoveAllBefore(minDate);
+            shiftedCumulatives.Add(maxDate, sum);
+            cumulatives.Add(maxDate, sum);
             LinearProgression result = shiftedCumulatives.Minus(cumulatives);
-            result.RemoveAllBefore(minDate);
-
             return result;
         }
 

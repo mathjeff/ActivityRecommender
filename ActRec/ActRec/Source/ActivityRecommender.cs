@@ -223,10 +223,10 @@ namespace ActivityRecommendation
         {
             this.engine = new Engine();
             this.ReadEngineFiles();
+            this.engine.CreateNewActivities();
             // listen for subsequently created Activity or Inheritance objects
             this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
-            this.engine.CreateNewActivities();
 
             this.PrepareEngine();
         }
@@ -426,6 +426,7 @@ namespace ActivityRecommendation
         {
             this.PutParticipationInMemory(newParticipation);
             this.SuspectLatestActionDate(newParticipation.EndDate);
+
             this.WriteParticipation(newParticipation);
         }
         private void WriteParticipation(Participation newParticipation)
@@ -475,6 +476,8 @@ namespace ActivityRecommendation
         }
         private void WriteActivity(Activity activity)
         {
+            string text = this.textConverter.ConvertToString(activity) + Environment.NewLine;
+            this.internalFileIo.AppendText(text, this.inheritancesFileName);
         }
 
         private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)

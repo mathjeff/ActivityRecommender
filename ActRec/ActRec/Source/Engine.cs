@@ -48,7 +48,7 @@ namespace ActivityRecommendation
             // first, create the necessary Activities
             foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
             {
-                this.activityDatabase.CreateCategoryIfMissing(descriptor);
+                this.activityDatabase.GetOrCreateCategory(descriptor);
             }
             this.allActivityDescriptors.Clear();
         }

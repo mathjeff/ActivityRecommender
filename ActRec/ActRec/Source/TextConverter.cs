@@ -15,7 +15,7 @@ namespace ActivityRecommendation
         {
             this.recommenderToInform = recommender;
         }
-        
+
         #endregion
 
         #region Public Member Functions
@@ -69,6 +69,27 @@ namespace ActivityRecommendation
             return this.ConvertToString(properties, objectName);
 
         }
+        public string ConvertToString(Activity activity)
+        {
+            ToDo toDo = activity as ToDo;
+            if (toDo != null)
+                return this.ConvertToString(toDo);
+            Category category = activity as Category;
+            if (category != null)
+                return this.ConvertToString(category);
+            throw new Exception("Unsupported Activity type: " + activity);
+        }
+        public string ConvertToString(ToDo toDo)
+        {
+            string body = this.ConvertToStringBody(toDo.MakeDescriptor());
+            return this.ConvertToString(body, this.TodoTag);
+        }
+        public string ConvertToString(Category category)
+        {
+            string body = this.ConvertToStringBody(category.MakeDescriptor());
+            return this.ConvertToString(body, this.CategoryTag);
+        }
+
         // converts the ActivityRequest into a string that is ready to write to disk
         public string ConvertToString(ActivityRequest request)
         {
@@ -174,6 +195,16 @@ namespace ActivityRecommendation
                 return;
             foreach (XmlNode node in nodes)
             {
+                if (node.Name == this.CategoryTag)
+                {
+                    this.ProcessCategory(node);
+                    continue;
+                }
+                if (node.Name == this.TodoTag)
+                {
+                    this.ProcessTodo(node);
+                    continue;
+                }
                 if (node.Name == this.ParticipationTag)
                 {
                     this.ProcessParticipation(node);
@@ -328,7 +359,7 @@ namespace ActivityRecommendation
                             latestSuggestion = new ActivitySuggestion(skip.ActivityDescriptor);
                             latestSuggestion.StartDate = skip.CreationDate;
                             latestSuggestion.CreatedDate = skip.SuggestionCreationDate;
- 
+
 
                             outputText += this.ConvertToString(latestSuggestion) + Environment.NewLine;
                         }
@@ -370,6 +401,18 @@ namespace ActivityRecommendation
         {
             DateTime when = this.ReadDate(nodeRepresentation);
             this.recommenderToInform.SuspectLatestActionDate(when);
+        }
+        private void ProcessCategory(XmlNode nodeRepresentation)
+        {
+            // the Category just puts all of the fields of the ActivityDescriptor at the top level
+            ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
+            this.ActivityDatabase.CreateCategory(activityDescriptor);
+        }
+        private void ProcessTodo(XmlNode nodeRepresentation)
+        {
+            // the Todo just puts all of the fields of the ActivityDescriptor at the top level
+            ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
+            this.ActivityDatabase.CreateToDo(activityDescriptor);
         }
         private void ProcessParticipation(XmlNode nodeRepresentation)
         {
@@ -786,6 +829,7 @@ namespace ActivityRecommendation
 
         public void Import(string contents, string inheritancesFilePath, string historyFilePath, string recentUserDataPath)
         {
+            ActivityDatabase activityDatabase = new ActivityDatabase(null);
             IEnumerable<XmlNode> nodes = this.ParseText(contents);
 
             List<string> inheritanceTexts = new List<string>();
@@ -830,6 +874,20 @@ namespace ActivityRecommendation
                 {
                     ActivitySuggestion suggestion = this.ReadSuggestion(node);
                     historyTexts.Add(this.ConvertToString(suggestion));
+                    continue;
+                }
+                if (node.Name == this.CategoryTag)
+                {
+                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
+                    Activity activity = activityDatabase.GetOrCreateCategory(activityDescriptor);
+                    historyTexts.Add(this.ConvertToString(activity));
+                    continue;
+                }
+                if (node.Name == this.TodoTag)
+                {
+                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
+                    Activity activity = activityDatabase.GetOrCreateTodo(activityDescriptor);
+                    historyTexts.Add(this.ConvertToString(activity));
                     continue;
                 }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
@@ -958,6 +1016,20 @@ namespace ActivityRecommendation
             get
             {
                 return "Name";
+            }
+        }
+        public string CategoryTag
+        {
+            get
+            {
+                return "Category";
+            }
+        }
+        public string TodoTag
+        {
+            get
+            {
+                return "ToDo";
             }
         }
         public string ChoosableTag
@@ -1171,6 +1243,16 @@ namespace ActivityRecommendation
             get
             {
                 return "RecentData";
+            }
+        }
+        #endregion
+
+        #region Private member functions
+        private ActivityDatabase ActivityDatabase
+        {
+            get
+            {
+                return this.recommenderToInform.ActivityDatabase;
             }
         }
         #endregion

@@ -24,6 +24,17 @@ namespace ActivityRecommendation.View
                 {
                     title = activity.Name;
                 }
+                if (activity is Category)
+                {
+                    title += " (Category)";
+                }
+                else
+                {
+                    if (activity is ToDo)
+                    {
+                        title += " (ToDo)";
+                    }
+                }
             }
             this.SetTitle(title);
             this.TitleBlock.HorizontalTextAlignment = Xamarin.Forms.TextAlignment.Start;

@@ -80,20 +80,6 @@ namespace ActivityRecommendation
             return "";
         }
 
-        // returns the newly created Activity, or null if none was created
-        public Activity CreateCategoryIfMissing(ActivityDescriptor descriptor)
-        {
-            // attempt to find an activity that matches
-            Activity activity = this.ResolveDescriptor(descriptor);
-            if (activity == null)
-            {
-                // if this descriptor indicates a new activity, then create it
-                return this.CreateCategory(descriptor);
-            }
-            // no Activity was created, so we don't return one
-            return null;
-        }
-
         /*public Activity GetOrCreate(ActivityDescriptor descriptor)
         {
             Activity activity = this.ResolveDescriptor(descriptor);
@@ -136,9 +122,29 @@ namespace ActivityRecommendation
             return (Category)this.ResolveDescriptor(descriptor);
         }
 
+        public Category GetOrCreateCategory(ActivityDescriptor descriptor)
+        {
+            Category existing = this.ResolveToCategory(descriptor);
+            if (existing == null)
+            {
+                return this.CreateCategory(descriptor);
+            }
+            return existing;
+        }
+
         public ToDo ResolveTodo(ActivityDescriptor descriptor)
         {
             return (ToDo)this.ResolveDescriptor(descriptor);
+        }
+
+        public ToDo GetOrCreateTodo(ActivityDescriptor descriptor)
+        {
+            ToDo existing = this.ResolveTodo(descriptor);
+            if (existing == null)
+            {
+                return this.CreateToDo(descriptor);
+            }
+            return existing;
         }
 
         // tells whether the given descriptor can match the given activity
@@ -236,7 +242,7 @@ namespace ActivityRecommendation
         #endregion
 
         // constructs an Activity from the given ActivityDescriptor
-        private Activity CreateCategory(ActivityDescriptor sourceDescriptor)
+        public Category CreateCategory(ActivityDescriptor sourceDescriptor)
         {
             Category result = new Category(sourceDescriptor.ActivityName, this.ratingSummarizer);
             if (sourceDescriptor.Choosable != null)
@@ -246,7 +252,7 @@ namespace ActivityRecommendation
             return result;
         }
 
-        private ToDo CreateToDo(ActivityDescriptor sourceDescriptor)
+        public ToDo CreateToDo(ActivityDescriptor sourceDescriptor)
         {
             ToDo result = new ToDo(sourceDescriptor.ActivityName, this.ratingSummarizer);
             this.AddActivity(result);

@@ -11,9 +11,10 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
-        public TextConverter(ActivityRecommender recommender)
+        public TextConverter(HistoryReplayer listener, ActivityDatabase activityDatabase)
         {
-            this.recommenderToInform = recommender;
+            this.listener = listener;
+            this.activityDatabase = activityDatabase;
         }
 
         #endregion
@@ -400,19 +401,19 @@ namespace ActivityRecommendation
         private void ProcessLatestDate(XmlNode nodeRepresentation)
         {
             DateTime when = this.ReadDate(nodeRepresentation);
-            this.recommenderToInform.SuspectLatestActionDate(when);
+            this.listener.SetLatestDate(when);
         }
         private void ProcessCategory(XmlNode nodeRepresentation)
         {
             // the Category just puts all of the fields of the ActivityDescriptor at the top level
             ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
-            this.ActivityDatabase.CreateCategory(activityDescriptor);
+            this.activityDatabase.CreateCategory(activityDescriptor);
         }
         private void ProcessTodo(XmlNode nodeRepresentation)
         {
             // the Todo just puts all of the fields of the ActivityDescriptor at the top level
             ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
-            this.ActivityDatabase.CreateToDo(activityDescriptor);
+            this.activityDatabase.CreateToDo(activityDescriptor);
         }
         private void ProcessParticipation(XmlNode nodeRepresentation)
         {
@@ -420,46 +421,46 @@ namespace ActivityRecommendation
             // we found something that happened after the latest pending skip, so we update the date of any pending skip to the start date
             this.setPendingSkip(null, currentParticipation.StartDate);
             if (currentParticipation.Duration.TotalSeconds >= 0)
-                this.recommenderToInform.PutParticipationInMemory(currentParticipation);
+                this.listener.AddParticipation(currentParticipation);
             else
                 System.Diagnostics.Debug.WriteLine("Skipping invalid participation having startDate = " + currentParticipation.StartDate.ToString() + " and endDate = " + currentParticipation.EndDate);
         }
         private void ProcessRating(XmlNode nodeRepresentation)
         {
             Rating currentRating = this.ReadRating(nodeRepresentation);
-            this.recommenderToInform.PutRatingInMemory(currentRating);
+            this.listener.AddRating(currentRating);
         }
         private void ProcessActivityDescriptor(XmlNode nodeRepresentation)
         {
             ActivityDescriptor descriptor = this.ReadActivityDescriptor(nodeRepresentation);
-            this.recommenderToInform.PutActivityDescriptorInMemory(descriptor);
+            this.listener.PreviewActivityDescriptor(descriptor);
         }
         private void ProcessInheritanceDescriptor(XmlNode nodeRepresentation)
         {
             Inheritance inheritance = this.ReadInheritance(nodeRepresentation);
-            this.recommenderToInform.PutInheritanceInMemory(inheritance);
+            this.listener.AddInheritance(inheritance);
         }
         private void ProcessSkip(XmlNode nodeRepresentation)
         {
             ActivitySkip skip = this.ReadSkip(nodeRepresentation);
             if (skip != null)
-                this.recommenderToInform.PutSkipInMemory(skip);
+                this.listener.AddSkip(skip);
         }
         private void ProcessActivityRequest(XmlNode nodeRepresentation)
         {
             ActivityRequest request = this.ReadActivityRequest(nodeRepresentation);
-            this.recommenderToInform.PutActivityRequestInMemory(request);
+            this.listener.AddRequest(request);
         }
         private void ProcessRecentUserData(XmlNode nodeRepresentation)
         {
             RecentUserData data = this.ReadRecentUserData(nodeRepresentation);
-            this.recommenderToInform.SetRecentUserData(data);
+            this.listener.SetRecentUserData(data);
         }
         private void ProcessSuggestion(XmlNode nodeRepresentation)
         {
             ActivitySuggestion suggestion = this.ReadSuggestion(nodeRepresentation);
             this.setPendingSkip(null, suggestion.GuessCreationDate());
-            this.recommenderToInform.PutSuggestionInMemory(suggestion);
+            this.listener.AddSuggestion(suggestion);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -619,7 +620,7 @@ namespace ActivityRecommendation
             {
                 if (this.pendingSkip.CreationDate.CompareTo(when) < 0)
                     this.pendingSkip.CreationDate = when;
-                this.recommenderToInform.PutSkipInMemory(this.pendingSkip);
+                this.listener.AddSkip(this.pendingSkip);
             }
             this.pendingSkip = skip;
         }
@@ -1247,23 +1248,14 @@ namespace ActivityRecommendation
         }
         #endregion
 
-        #region Private member functions
-        private ActivityDatabase ActivityDatabase
-        {
-            get
-            {
-                return this.recommenderToInform.ActivityDatabase;
-            }
-        }
-        #endregion
-
         #region Private Member Variables
 
-        private ActivityRecommender recommenderToInform;
+        private HistoryReplayer listener;
         private Participation latestParticipationRead;
         private ActivitySkip pendingSkip;
         private InternalFileIo internalFileIo = new InternalFileIo();
         private PublicFileIo publicFileIo = new PublicFileIo();
+        private ActivityDatabase activityDatabase;
 
         #endregion
     }

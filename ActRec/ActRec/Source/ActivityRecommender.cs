@@ -31,14 +31,6 @@ namespace ActivityRecommendation
             //this.ReadTempFile();
 
             this.SetupDrawing();
-
-            if (this.historyReplayer != null)
-            {
-                // do any cleanup calculations and print results
-                Engine replayerEngine = this.historyReplayer.Finish();
-                if (replayerEngine != null)
-                    this.engine = replayerEngine;
-            }
         }
 
         // call this to do cleanup immediately before this object gets destroyed
@@ -60,7 +52,7 @@ namespace ActivityRecommendation
             this.ratingsFileName = "ActivityRatings.txt";
             this.inheritancesFileName = "ActivityInheritances.txt";
             this.recentUserData_fileName = "TemporaryData.txt";
-            this.textConverter = new TextConverter(this);
+            this.textConverter = new TextConverter(null, null);
             //this.historyReplayer = new EngineTester();
             //this.historyReplayer = new RatingRenormalizer(this.textConverter);
             //this.historyReplayer = new HistoryWriter(this.textConverter);
@@ -121,7 +113,10 @@ namespace ActivityRecommendation
 
             visualizationBuilder.AddLayout("Visualize one Activity", this.statisticsMenu);
 
+            visualizationBuilder.AddLayout("Compute ActivityRecommender's Accuracy (Very Slow)", new EngineTesterView(this, this.layoutStack));
+
             LayoutChoice_Set visualizationMenu = visualizationBuilder.Build();
+            
 
 
             this.dataImportView = new DataImportView(this.layoutStack);
@@ -239,11 +234,31 @@ namespace ActivityRecommendation
         private void ReadEngineFiles()
         {
             System.Diagnostics.Debug.WriteLine("Starting to read files");
-            this.textConverter.ReadFile(this.inheritancesFileName);
-            this.textConverter.ReadFile(this.ratingsFileName);
-            this.textConverter.ReadFile(this.recentUserData_fileName);
+            EngineLoader loader = new EngineLoader();
+            this.LoadFilesInto(loader);
+            this.engine = loader.Finish();
+            this.suggestionDatabase = loader.SuggestionDatabase;
+            this.latestParticipation = loader.LatestParticipation;
+            this.recentUserData = loader.RecentUserData;
+            this.SuspectLatestActionDate(loader.LatestDate);
+
             this.ActivityDatabase.AssignDefaultParent();
             System.Diagnostics.Debug.WriteLine("Done parsing files");
+        }
+
+        public EngineTesterResults TestEngine()
+        {
+            EngineTester engineTester = new EngineTester();
+            this.LoadFilesInto(engineTester);
+            engineTester.Finish();
+            return engineTester.Results;
+        }
+
+        private void LoadFilesInto(HistoryReplayer historyReplayer)
+        {
+            historyReplayer.LoadFile(this.inheritancesFileName);
+            historyReplayer.LoadFile(this.ratingsFileName);
+            historyReplayer.LoadFile(this.recentUserData_fileName);
         }
 
         public void DeclineSuggestion(ActivitySuggestion suggestion)
@@ -424,7 +439,14 @@ namespace ActivityRecommendation
         }
         private void AddParticipation(Participation newParticipation)
         {
-            this.PutParticipationInMemory(newParticipation);
+            if (this.latestParticipation == null || newParticipation.EndDate.CompareTo(this.latestParticipation.EndDate) > 0)
+            {
+                this.latestParticipation = newParticipation;
+                if (this.participationEntryView != null)
+                    this.participationEntryView.LatestParticipation = this.latestParticipation;
+            }
+            this.engine.PutParticipationInMemory(newParticipation);
+
             this.SuspectLatestActionDate(newParticipation.EndDate);
 
             this.WriteParticipation(newParticipation);
@@ -438,7 +460,7 @@ namespace ActivityRecommendation
         private void AddSkip(ActivitySkip newSkip)
         {
             this.SuspectLatestActionDate(newSkip.CreationDate);
-            this.PutSkipInMemory(newSkip);
+            this.engine.PutSkipInMemory(newSkip);
             this.WriteSkip(newSkip);
         }
         // writes this Skip to a data file
@@ -506,60 +528,15 @@ namespace ActivityRecommendation
         }
 
         // writes to a text file saying that the user was is this program now. It gets deleted soon
-        #region Functions to be called by the TextConverter
 
-        public void PutParticipationInMemory(Participation newParticipation)
-        {
-            if (this.latestParticipation == null || newParticipation.EndDate.CompareTo(this.latestParticipation.EndDate) > 0)
-            {
-                this.latestParticipation = newParticipation;
-                if (this.participationEntryView != null)
-                    this.participationEntryView.LatestParticipation = this.latestParticipation;
-            }
-            this.engine.PutParticipationInMemory(newParticipation);
-            if (this.historyReplayer != null)
-                this.historyReplayer.AddParticipation(newParticipation);
-        }
-        public void PutRatingInMemory(Rating newRating)
-        {
-            this.engine.PutRatingInMemory(newRating);
-            if (this.historyReplayer != null)
-                this.historyReplayer.AddRating(newRating);
-        }
-        public void PutSkipInMemory(ActivitySkip newSkip)
-        {
-            // link the skip to its suggestion
-            DateTime suggestionCreationDate = newSkip.SuggestionCreationDate;
-            ActivitySuggestion suggestion = this.suggestionDatabase.GetSuggestion(newSkip.ActivityDescriptor, suggestionCreationDate);
-            if (suggestion != null)
-                suggestion.Skip = newSkip;
-            // save the skip
-            this.engine.PutSkipInMemory(newSkip);
-            if (this.historyReplayer != null)
-                this.historyReplayer.AddSkip(newSkip);
-        }
-        public void PutActivityRequestInMemory(ActivityRequest newRequest)
-        {
-            this.engine.PutActivityRequestInMemory(newRequest);
-            if (this.historyReplayer != null)
-                this.historyReplayer.AddRequest(newRequest);
-        }
-        public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
-        {
-            this.engine.PutActivityDescriptorInMemory(newDescriptor);
-        }
-        public void PutInheritanceInMemory(Inheritance newInheritance)
-        {
-            this.engine.PutInheritanceInMemory(newInheritance);
-            if (this.historyReplayer != null)
-                this.historyReplayer.AddInheritance(newInheritance);
-        }
         // updates the ParticipationEntryView so that the start date is DateTime.Now
         public void MakeStartNow(object sender, EventArgs e)
         {
             DateTime now = DateTime.Now;
             this.SuspectLatestActionDate(now);
         }
+
+        #region Functions to be called by the TextConverter
         // updates the ParticipationEntryView so that the start date is 'when'
         public void SuspectLatestActionDate(DateTime when)
         {
@@ -570,18 +547,8 @@ namespace ActivityRecommendation
                 this.UpdateDefaultParticipationData(when);
             }
         }
-        // sets the given RecentUserData
-        public void SetRecentUserData(RecentUserData data)
-        {
-            this.recentUserData = data;
-        }
-        public void PutSuggestionInMemory(ActivitySuggestion suggestion)
-        {
-            this.suggestionDatabase.AddSuggestion(suggestion);
-            this.engine.PutSuggestionInMemory(suggestion);
-            if (this.historyReplayer != null)
-                this.historyReplayer.AddSuggestion(suggestion);
-        }
+        #endregion
+
         public DateTime LatestActionDate
         {
             get
@@ -689,7 +656,6 @@ namespace ActivityRecommendation
                 return this.engine.ActivityDatabase;
             }
         }
-        #endregion
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
         {
@@ -728,7 +694,6 @@ namespace ActivityRecommendation
         string inheritancesFileName;    // the name of the file that stores inheritances
         string recentUserData_fileName;
         Participation latestParticipation;
-        HistoryReplayer historyReplayer;
         RecentUserData recentUserData;
         int numCategoriesToConsiderAtOnce;
         LayoutStack layoutStack;

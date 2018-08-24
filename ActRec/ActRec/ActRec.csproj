@@ -48,6 +48,7 @@
     <Compile Include="Source\Effectiveness\Metric.cs" />
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
     <Compile Include="Source\FileIo.cs" />
+    <Compile Include="Source\EngineLoader.cs" />
     <Compile Include="Source\ToDo.cs" />
     <Compile Include="Source\Activity.cs" />
     <Compile Include="Source\Category.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Source\Inheritance.cs" />
     <Compile Include="Source\Effectiveness\CompletionMetric.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
+    <Compile Include="Source\View\EngineTesterView.cs" />
     <Compile Include="Source\View\ExperimentationInitializationLayout.cs" />
     <Compile Include="Source\View\FeatureOverviewLayout.cs" />
     <Compile Include="Source\View\ActivityCreationLayout.cs" />

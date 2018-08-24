@@ -550,37 +550,50 @@ namespace ActivityRecommendation
             return typicalPredictionError;
         }
 
+        public EngineTesterResults Results
+        {
+            get
+            {
+                EngineTesterResults results = new EngineTesterResults();
+                results.Longterm_PredictionIfSuggested_Error = this.Compute_FutureEstimateIfSuggested_Errors();
+                results.Longterm_PredictionIfParticipated_Error = this.Compute_FutureEstimateIfParticipated_Errors();
+                
+                // how well the score prediction does
+                results.TypicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
+
+                // how well the probability prediction does (first using the mean-squared-error, which doesn't take into account what we want to do with this data)
+                //double typicalProbabilityError = Math.Sqrt(this.squaredParticipationProbabilityError.Mean);
+                //System.Diagnostics.Debug.WriteLine("typicalProbabilityError = " + typicalProbabilityError.ToString());
+                // X * (1 - X) ^ 2 + (1 - X) * X ^ 2 = this.squaredParticipationProbabilityError.Mean
+                // X * (1 - X) = this.squaredParticipationProbabilityError.Mean
+                // X ^ 2 - X + this.squaredParticipationProbabilityError.Mean = 0
+                //double equivalentProbability = (1 + Math.Sqrt(1 - 4 * this.squaredParticipationProbabilityError.Mean)) / 2;
+                //System.Diagnostics.Debug.WriteLine("equivalentProbability = " + equivalentProbability.ToString());
+                // Now recompute how well the probability prediction does (weighting smaller probabilities more heavily)
+                //double weightedProbabilityScore = this.participationPrediction_score.Mean;
+                //System.Diagnostics.Debug.WriteLine("weightedProbabilityScore = " + weightedProbabilityScore);
+                // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
+                // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -Math.Log(1 - predictedProbability) - 2)
+                // 2 * scoreComponent + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
+                // predictedProbability * (1 - predictedProbability) = e ^ (-2 * this.participationPrediction_score.Mean - 2);
+                // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
+                // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
+                results.TypicalProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
+                //System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + equivalentWeightedProbability);
+                return results;
+            }
+        }
+
         public void PrintResults()
         {
-            double futureEstimateIfSuggested_error = this.Compute_FutureEstimateIfSuggested_Errors();
-            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfSuggested error = " + futureEstimateIfSuggested_error);
-            double futureEstimateIfParticipated_error = this.Compute_FutureEstimateIfParticipated_Errors();
-            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + futureEstimateIfParticipated_error);
+            EngineTesterResults results = this.Results;
 
-            // how well the score prediction does
-            double typicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
-            System.Diagnostics.Debug.WriteLine("typicalScoreError = " + typicalScoreError.ToString());
-            
-            // how well the probability prediction does (first using the mean-squared-error, which doesn't take into account what we want to do with this data)
-            double typicalProbabilityError = Math.Sqrt(this.squaredParticipationProbabilityError.Mean);
-            System.Diagnostics.Debug.WriteLine("typicalProbabilityError = " + typicalProbabilityError.ToString());
-            // X * (1 - X) ^ 2 + (1 - X) * X ^ 2 = this.squaredParticipationProbabilityError.Mean
-            // X * (1 - X) = this.squaredParticipationProbabilityError.Mean
-            // X ^ 2 - X + this.squaredParticipationProbabilityError.Mean = 0
-            double equivalentProbability = (1 + Math.Sqrt(1 - 4 * this.squaredParticipationProbabilityError.Mean)) / 2;
-            System.Diagnostics.Debug.WriteLine("equivalentProbability = " + equivalentProbability.ToString());
-            // Now recompute how well the probability prediction does (weighting smaller probabilities more heavily)
-            double weightedProbabilityScore = this.participationPrediction_score.Mean;
-            System.Diagnostics.Debug.WriteLine("weightedProbabilityScore = " + weightedProbabilityScore);
-            // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
-            // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -Math.Log(1 - predictedProbability) - 2)
-            // 2 * scoreComponent + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
-            // predictedProbability * (1 - predictedProbability) = e ^ (-2 * this.participationPrediction_score.Mean - 2);
-            // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
-            // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
-            double equivalentWeightedProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
-            System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + equivalentWeightedProbability);
+            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfSuggested error = " + results.Longterm_PredictionIfSuggested_Error);
+            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error);
+            System.Diagnostics.Debug.WriteLine("typicalScoreError = " + results.TypicalScoreError);
+            System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + results.TypicalProbability);
         }
+
         private void PrintFinalResults()
         {
             this.PrintResults();
@@ -622,5 +635,18 @@ namespace ActivityRecommendation
         private Dictionary<Prediction, RatingSummary> valueIfParticipated_predictions = new Dictionary<Prediction, RatingSummary>();
         private int numRatings;
         private DateTime executionStart;
+    }
+
+    public class EngineTesterResults
+    {
+        // overall error in (the estimated and actual (longterm happiness prediction if (the given activity is suggested)))
+        public double Longterm_PredictionIfSuggested_Error;
+        // overall error in (the estimated and actual (longterm happiness prediction if (the given activity is participated in)))
+        public double Longterm_PredictionIfParticipated_Error;
+        // typical error in the score prediction
+        public double TypicalScoreError;
+        // An estimate of the accuracy of the estimates of participation probability.
+        // This is the probability such that if the true probability were this value, and if all estimates were perfect, the overall error would be what was observed
+        public double TypicalProbability;
     }
 }

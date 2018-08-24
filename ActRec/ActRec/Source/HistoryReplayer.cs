@@ -11,6 +11,12 @@ namespace ActivityRecommendation
         {
             this.engine = new Engine();
             this.activityDatabase = this.engine.ActivityDatabase;
+            this.textConverter = new TextConverter(this, this.engine.ActivityDatabase);
+        }
+
+        public void LoadFile(string filePath)
+        {
+            this.textConverter.ReadFile(filePath);
         }
 
         public void AddInheritance(Inheritance newInheritance)
@@ -85,6 +91,11 @@ namespace ActivityRecommendation
         }
         public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
         
+        public virtual void PreviewActivityDescriptor(ActivityDescriptor activityDescriptor) { }
+
+        public virtual void SetRecentUserData(RecentUserData recentUserData) { }
+        public virtual void SetLatestDate(DateTime when) { }
+
         // Does cleanup
         // Also can return a new Engine for ActivityRecommender to use
         public virtual Engine Finish() { return null; }
@@ -94,6 +105,7 @@ namespace ActivityRecommendation
         protected ActivityDatabase activityDatabase;
 
         private bool updatedAfterInheritances;
+        private TextConverter textConverter;
 
     }
 }

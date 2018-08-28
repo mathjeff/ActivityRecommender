@@ -891,7 +891,7 @@ namespace ActivityRecommendation
                     historyTexts.Add(this.ConvertToString(activity));
                     continue;
                 }
-                throw new Exception("Unrecognized node: <" + node.Name + ">");
+                throw new InvalidDataException("Unrecognized node: <" + node.Name + ">");
             }
 
             string inheritancesText = String.Join("\n", inheritanceTexts);

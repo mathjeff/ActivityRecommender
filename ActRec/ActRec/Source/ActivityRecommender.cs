@@ -6,6 +6,7 @@ using ActivityRecommendation.View;
 using Xamarin.Forms;
 
 using Plugin.FilePicker.Abstractions;
+using System.IO;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -169,7 +170,15 @@ namespace ActivityRecommendation
         public void ImportData(object sender, FileData fileData)
         {
             string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
-            this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
+            try
+            {
+                this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
+            }
+            catch (InvalidDataException e)
+            {
+                this.layoutStack.AddLayout(new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString()));
+                return;
+            }
             this.Reset();
         }
 

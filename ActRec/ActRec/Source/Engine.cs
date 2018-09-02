@@ -48,7 +48,7 @@ namespace ActivityRecommendation
             // first, create the necessary Activities
             foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
             {
-                this.activityDatabase.GetOrCreateCategory(descriptor);
+                this.activityDatabase.GetActivityOrCreateCategory(descriptor);
             }
             this.allActivityDescriptors.Clear();
         }
@@ -188,7 +188,7 @@ namespace ActivityRecommendation
         public void CascadeSuggestion(ActivitySuggestion newSuggestion)
         {
             ActivityDescriptor descriptor = newSuggestion.ActivityDescriptor;
-            Activity activity = this.activityDatabase.ResolveToCategory(descriptor);
+            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
                 List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);

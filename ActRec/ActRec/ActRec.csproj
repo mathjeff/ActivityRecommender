@@ -45,7 +45,6 @@
     <Compile Include="Source\AbsoluteRating.cs" />
     <Compile Include="Source\AbsoluteRatingEntryView.cs" />
     <Compile Include="Source\Effectiveness\EffectivenessMeasurement.cs" />
-    <Compile Include="Source\Effectiveness\Metric.cs" />
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
     <Compile Include="Source\FileIo.cs" />
     <Compile Include="Source\EngineLoader.cs" />
@@ -79,7 +78,6 @@
     <Compile Include="Source\HistoryWriter.cs" />
     <Compile Include="Source\IdlenessProgression.cs" />
     <Compile Include="Source\Inheritance.cs" />
-    <Compile Include="Source\Effectiveness\CompletionMetric.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
     <Compile Include="Source\View\ExperimentationInitializationLayout.cs" />

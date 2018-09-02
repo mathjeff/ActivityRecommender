@@ -45,7 +45,7 @@ namespace ActivityRecommendation
         {
             ActivityDescriptor descriptor = new ActivityDescriptor();
             descriptor.ActivityName = this.Name;
-            descriptor.Choosable = this.Choosable; // we can require that the descriptor only match activities with the same Choosable as this, but it doesn't give much benefit
+            descriptor.Choosable = this.Choosable;
             return descriptor;
         }
 
@@ -56,8 +56,14 @@ namespace ActivityRecommendation
 
         protected override bool isChoosable()
         {
-            if (this.children.Count > 0)
-                return false;
+            foreach (Activity activity in this.children)
+            {
+                if (activity is Category)
+                {
+                    this.chooseable = false;
+                    break;
+                }
+            }
             return this.chooseable;
         }
         

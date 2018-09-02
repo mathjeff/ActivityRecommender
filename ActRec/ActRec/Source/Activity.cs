@@ -459,7 +459,7 @@ namespace ActivityRecommendation
             }
             this.PendingRatings.Clear();
         }
-        public void AddParticipation(Participation newParticipation)
+        public virtual void AddParticipation(Participation newParticipation)
         {
             // keep track of startDate, endDate, count, and total time spent
             DateTime when = newParticipation.EndDate;
@@ -726,7 +726,8 @@ namespace ActivityRecommendation
 
             foreach (IPredictionLink link in this.extraRatingPredictionLinks)
             {
-                results.Add(link.Guess(when));
+                Prediction otherPrediction = link.Guess(when);
+                results.Add(otherPrediction);
             }
             return results;
         }

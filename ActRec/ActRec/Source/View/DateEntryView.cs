@@ -16,7 +16,6 @@ namespace ActivityRecommendation
             this.chooseDate_button = new Button();
             this.chooseDate_button.Clicked += ChooseDate_button_Clicked;
             this.SetContent(ButtonLayout.WithoutBevel(this.chooseDate_button));
-            this.chooseDate_button.TextColor = Color.Black;
 
             // Use a dateFormat of "yyyy-MM-ddTHH:mm:ss";
             this.dateFormat.Add(new DateCharacter('y', true));

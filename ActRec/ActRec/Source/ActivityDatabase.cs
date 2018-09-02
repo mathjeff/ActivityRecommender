@@ -122,9 +122,9 @@ namespace ActivityRecommendation
             return (Category)this.ResolveDescriptor(descriptor);
         }
 
-        public Category GetOrCreateCategory(ActivityDescriptor descriptor)
+        public Activity GetActivityOrCreateCategory(ActivityDescriptor descriptor)
         {
-            Category existing = this.ResolveToCategory(descriptor);
+            Activity existing = this.ResolveDescriptor(descriptor);
             if (existing == null)
             {
                 return this.CreateCategory(descriptor);
@@ -245,8 +245,6 @@ namespace ActivityRecommendation
         public Category CreateCategory(ActivityDescriptor sourceDescriptor)
         {
             Category result = new Category(sourceDescriptor.ActivityName, this.ratingSummarizer);
-            if (sourceDescriptor.Choosable != null)
-                result.setChooseable(sourceDescriptor.Choosable.Value);
 
             this.AddActivity(result);
             return result;

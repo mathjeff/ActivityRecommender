@@ -51,6 +51,10 @@ namespace ActivityRecommendation
             }
             return true;
         }
+        public bool Matches(Activity activity)
+        {
+            return this.CanMatch(activity.MakeDescriptor());
+        }
         #endregion
 
         #region Private Member Variables

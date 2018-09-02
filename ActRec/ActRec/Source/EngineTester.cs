@@ -357,6 +357,14 @@ equivalentProbability = 0.866925231819413
 weightedProbabilityScore = 0.307009231292974
 equivalentWeightedProbability = 0.920428780086327
 EngineTester completed in 00:03:00.5293930
+
+updated results on 2018-02-27 with more data
+Also, this now runs outside of the debugger so I didn't copy-paste the entire numbers for this run
+typical longtermPredictionIfSuggestedError = 0.0666
+typical longtermPredictionIfParticipated error = 0.0443
+typicalScoreError = 0.1359
+equivalentWeightedProbability = 0.9201
+completed in 00:01:31.8
  */
 
 

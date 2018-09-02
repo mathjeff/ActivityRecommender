@@ -34,21 +34,23 @@ namespace ActivityRecommendation
             return descriptor;
         }
 
-        public void SetComplete(bool complete)
-        {
-            this.complete = complete;
-        }
-
-        public bool GetComplete()
+        public bool IsCompleted()
         {
             return this.complete;
+        }
+
+        public override void AddParticipation(Participation newParticipation)
+        {
+            if (newParticipation.CompletedTodo)
+                this.complete = true;
+            base.AddParticipation(newParticipation);
         }
 
 
         #endregion
 
 
-        #region protected methods
+        #region Protected methods
 
         protected override bool isChoosable()
         {
@@ -62,7 +64,6 @@ namespace ActivityRecommendation
 
         #region Private Member Variables
         private bool complete = false;
-
         #endregion
 
     }

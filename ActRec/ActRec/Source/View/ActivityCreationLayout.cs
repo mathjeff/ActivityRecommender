@@ -15,13 +15,11 @@ namespace ActivityRecommendation
 
             GridLayout mainGrid = GridLayout.New(BoundProperty_List.Uniform(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            Picker typePicker = new Picker();
-            typePicker.Items.Add("Category");
-            typePicker.Items.Add("ToDo");
-            typePicker.Title = "Type";
-            typePicker.SelectedItem = "Category";
-            this.typePicker = typePicker;
-            mainGrid.AddLayout(new PickerLayout(typePicker));
+            CheckBox checkbox = new CheckBox("Type = ToDo", "Type = Category");
+            checkbox.Checked = true;
+
+            this.typePicker = checkbox;
+            mainGrid.AddLayout(ButtonLayout.WithoutBevel(checkbox));
 
             this.feedbackView = new Label();
             mainGrid.AddLayout(new TextblockLayout(this.feedbackView));
@@ -68,10 +66,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                object activityType = this.typePicker.SelectedItem;
-                if (activityType != null && activityType.ToString() == "Category")
-                    return true;
-                return false;
+                return this.typePicker.Checked;
             }
         }
 
@@ -105,6 +100,6 @@ namespace ActivityRecommendation
         private LayoutStack layoutStack;
         private ActivityDatabase activityDatabase;
         private Label feedbackView;
-        private Picker typePicker;
+        private CheckBox typePicker;
     }
 }

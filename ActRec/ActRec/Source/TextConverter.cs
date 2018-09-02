@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ActivityRecommendation.Effectiveness;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -52,7 +53,8 @@ namespace ActivityRecommendation
                 properties[this.CommentTag] = comment;
             if (participation.Consideration != null)
                 properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
-
+            if (participation.CompletedTodo)
+                properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(true);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -498,6 +500,7 @@ namespace ActivityRecommendation
             DateTime endDate = DateTime.Now;
             string comment = null;
             bool? suggested = null;
+            bool successful = false;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -537,6 +540,11 @@ namespace ActivityRecommendation
                     suggested = this.ReadBool(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.ParticipationSuccessful_Tag)
+                {
+                    successful = this.ReadBool(currentChild);
+                    continue;
+                }
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             if (rating != null)
@@ -553,6 +561,12 @@ namespace ActivityRecommendation
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
+            if (successful)
+            {
+                CompletionEffectivenessMeasurement effectiveness = new CompletionEffectivenessMeasurement();
+                effectiveness.Successful = true;
+                currentParticipation.EffectivenessMeasurement = effectiveness;
+            }
 
             this.latestParticipationRead = currentParticipation;
             return currentParticipation;
@@ -880,7 +894,7 @@ namespace ActivityRecommendation
                 if (node.Name == this.CategoryTag)
                 {
                     ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
-                    Activity activity = activityDatabase.GetOrCreateCategory(activityDescriptor);
+                    Activity activity = activityDatabase.GetActivityOrCreateCategory(activityDescriptor);
                     historyTexts.Add(this.ConvertToString(activity));
                     continue;
                 }
@@ -1148,6 +1162,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Consideration";
+            }
+        }
+        private string ParticipationSuccessful_Tag
+        {
+            get
+            {
+                return "Successful";
             }
         }
 

@@ -18,7 +18,7 @@ namespace ActivityRecommendation.Effectiveness
     // a PlannedMeasuredParticipation is a plan to do a specific Participation and to measure it in a certain way
     class PlannedMetric
     {
-        public Metric Metric { get; set; }
+        public Activity Activity { get; set; }
 
         // an estimate of estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds
         public double EstimatedSuccessesPerSecond { get; set; }

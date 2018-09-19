@@ -13,7 +13,7 @@ namespace ActivityRecommendation
     class SuggestionsView : TitledControl
     {
         public event RequestedExperiment ExperimentRequested;
-        public delegate void RequestedExperiment(ActivitySuggestion suggestion);
+        public delegate void RequestedExperiment();
 
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack)
         {
@@ -49,7 +49,7 @@ namespace ActivityRecommendation
                 .AddMessage("If you're looking for an activity to have a high amount of enjoyability right now, then think of what you would do if you couldn't ask ActivityRecommender for " +
                 "help, and type the name of that activity into the second box. If you do, then ActivityRecommender will make sure to provide a suggestion that it thinks you will like as " +
                 "much as it thinks you will like as much as the one you entered.")
-                .AddMessage("Then, push Suggest to see the activity that is expected to maximize the overall long-term value to you, among the availabile choices.")
+                .AddMessage("Then, push Suggest to see the activity that is expected to maximize the overall long-term value to you, among the available choices.")
                 .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, " +
                 "and an estimate of the rating that you'd be expected to give to that activity.")
                 .AddMessage("If you don't like a suggestion, press the X button next to it. The duration between when you ask for a suggestion and when you press the X is considered to " +
@@ -62,8 +62,17 @@ namespace ActivityRecommendation
                 .Build();
 
             this.helpButton_layout = new HelpButtonLayout(helpWindow, this.layoutStack);
+            this.experimentButton = new Button();
+            this.startExperiment_layout = new ButtonLayout(this.experimentButton, "New Experiment");
+            this.experimentButton.Clicked += ExperimentButton_Clicked;
+            this.topLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
 
             this.UpdateSuggestions();
+        }
+
+        private void ExperimentButton_Clicked(object sender, EventArgs e)
+        {
+            this.ExperimentRequested.Invoke();
         }
 
         public void AddSuggestionClickHandler(EventHandler e)
@@ -154,14 +163,12 @@ namespace ActivityRecommendation
         {
             LinkedList<LayoutChoice_Set> layouts = new LinkedList<LayoutChoice_Set>();
             if (this.suggestions.Count == 0)
-                layouts.AddLast(this.helpButton_layout);
+                layouts.AddLast(this.topLayout);
             if (this.errorLayout != null)
                 layouts.AddLast(errorLayout);
-            bool isFirst = true;
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
-                layouts.AddLast(this.makeLayout(suggestion, isFirst));
-                isFirst = false;
+                layouts.AddLast(this.makeLayout(suggestion));
             }
             if (this.suggestions.Count < this.maxNumSuggestions)
                 layouts.AddLast(this.selectorLayout);
@@ -175,18 +182,11 @@ namespace ActivityRecommendation
             this.SetContent(grid);
         }
 
-        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool experimentationEnabled)
+        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion)
         {
-            SuggestionView suggestionView = new SuggestionView(suggestion, experimentationEnabled);
+            SuggestionView suggestionView = new SuggestionView(suggestion);
             suggestionView.Dismissed += SuggestionView_Dismissed;
-            suggestionView.ExperimentRequested += SuggestionView_ExperimentRequested;
-                
             return new LayoutCache(suggestionView);
-        }
-
-        private void SuggestionView_ExperimentRequested(ActivitySuggestion suggestion)
-        {
-            this.ExperimentRequested.Invoke(suggestion);
         }
 
         private void SuggestionView_Dismissed(ActivitySuggestion suggestion)
@@ -206,6 +206,9 @@ namespace ActivityRecommendation
         ActivityNameEntryBox desiredActivity_box;
         ActivityNameEntryBox categoryBox;
         LayoutChoice_Set helpButton_layout;
+        Button experimentButton;
+        LayoutChoice_Set startExperiment_layout;
+        LayoutChoice_Set topLayout;
         LayoutStack layoutStack;
         List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
         int maxNumSuggestions = 4;

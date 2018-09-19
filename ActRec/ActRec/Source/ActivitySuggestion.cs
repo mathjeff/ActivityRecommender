@@ -47,4 +47,15 @@ namespace ActivityRecommendation
             return 0; // self
         }
     }
+
+
+    class ActivitySuggestionOrError
+    {
+        public ActivitySuggestionOrError(ActivitySuggestion suggestion) { this.Suggestion = suggestion; }
+        public ActivitySuggestionOrError(String error) { this.Error = error; }
+
+        public ActivitySuggestion Suggestion { get; set; }
+        public String Error { get; set; }
+    }
+
 }

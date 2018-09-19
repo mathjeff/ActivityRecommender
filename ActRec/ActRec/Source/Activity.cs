@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ActivityRecommendation.Effectiveness;
 using AdaptiveLinearInterpolation;
 
 // The Doable class represents a way for the user to spend his/her time
@@ -811,6 +812,14 @@ namespace ActivityRecommendation
             return subCategories;
         }
 
+        public List<Metric> Metrics
+        {
+            get
+            {
+                return this.metrics;
+            }
+        }
+
 
 
         #endregion
@@ -1045,6 +1054,11 @@ namespace ActivityRecommendation
             return estimate;
         }
 
+        protected void addMetric(Metric metric)
+        {
+            this.metrics.Add(metric);
+        }
+
         #endregion
 
         #region Private Member Variables
@@ -1103,6 +1117,7 @@ namespace ActivityRecommendation
 
         private DateTime defaultDiscoveryDate;
         private Distribution participationDurations;
+        private List<Metric> metrics = new List<Metric>(1);
         
         int numSuggestions;
 

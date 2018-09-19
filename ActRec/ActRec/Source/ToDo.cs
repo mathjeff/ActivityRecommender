@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ActivityRecommendation.Effectiveness;
 using AdaptiveLinearInterpolation;
 
 // A ToDo is a specific thing (like a task but less specific) that can be attempted several times, and can be completed once, at which point it's no longer relevant to attempt.
@@ -16,6 +17,7 @@ namespace ActivityRecommendation
         // public
         public ToDo(string activityName, RatingSummarizer overallRatings_summarizer) : base(activityName, overallRatings_summarizer)
         {
+            this.addMetric(new TodoMetric(this));
         }
         #endregion
 

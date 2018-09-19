@@ -7,11 +7,12 @@ using Xamarin.Forms;
 
 using Plugin.FilePicker.Abstractions;
 using System.IO;
+using ActivityRecommendation.Effectiveness;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
 {
-    class ActivityRecommender
+    public class ActivityRecommender
     {
         public ActivityRecommender(ContentView newMainWindow)
         {
@@ -57,7 +58,6 @@ namespace ActivityRecommendation
             //this.historyReplayer = new EngineTester();
             //this.historyReplayer = new RatingRenormalizer(this.textConverter);
             //this.historyReplayer = new HistoryWriter(this.textConverter);
-            this.numCategoriesToConsiderAtOnce = 3;
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
             this.participationEntryView = new ParticipationEntryView(this.layoutStack);
@@ -99,7 +99,7 @@ namespace ActivityRecommendation
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack);
-            this.suggestionsView.AddSuggestionClickHandler(new EventHandler(this.MakeRecommendation));
+            this.suggestionsView.AddSuggestionClickHandler(new EventHandler(this.SuggestionsView_MakeRecommendation));
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
             this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
@@ -160,11 +160,22 @@ namespace ActivityRecommendation
 
         }
 
-        private void SuggestionsView_ExperimentRequested(ActivitySuggestion suggestion)
+        private void SuggestionsView_ExperimentRequested()
         {
-            ExperimentationInitializationLayout layout = new ExperimentationInitializationLayout(this.layoutStack);
-            layout.AddSuggestion(suggestion);
-            this.layoutStack.AddLayout(layout);
+            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this);
+            this.layoutStack.AddLayout(experimentationLayout);
+            experimentationLayout.RequestedExperiment += ExperimentationLayout_RequestedExperiment;
+
+        }
+
+        private void ExperimentationLayout_RequestedExperiment(List<ExperimentSuggestion> choices)
+        {
+            PlannedExperiment experiment = this.engine.Experiment(choices);
+            ActivitySuggestion suggestion = experiment.NextIncompleteSuggestion;
+            // TODO: disallow ever dismissing this suggestion other than by working on it.
+            // Should the UI convert a dismissal into a recording of an unsuccessful participation? That would be surprising, so probably not
+            this.AddSuggestion_To_SuggestionsView(suggestion);
+            this.layoutStack.RemoveLayout();
         }
 
         public void ImportData(object sender, FileData fileData)
@@ -290,28 +301,50 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(layout);
         }*/
 
-        public void RequestExperiment() {
-        }
-
-
-        private void MakeRecommendation()
+        // called when the SuggestionsView wants to make a recommendation
+        private void SuggestionsView_MakeRecommendation()
         {
             DateTime now = DateTime.Now;
-            this.SuspectLatestActionDate(now);
-
-            
-            // If the user requested that the first suggestion be from a certain category, find that category
             Activity requestCategory = this.suggestionsView.Category;
+            Activity activityToBeat = this.suggestionsView.DesiredActivity;
+            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
+            ActivitySuggestion suggestion = this.MakeRecommendation(now, requestCategory, activityToBeat, existingSuggestions);
+            if (suggestion == null)
+            {
+                this.suggestionsView.SetErrorMessage("No activities available! Go create some activities, and return here for suggestions.");
+            }
+            else
+            {
+                this.AddSuggestion_To_SuggestionsView(suggestion);
+            }
+
+        }
+
+        private void AddSuggestion_To_SuggestionsView(ActivitySuggestion suggestion)
+        {
+            // add the suggestion to the list (note that this makes the startDate a couple seconds later if it took a couple seconds to compute the suggestion)
+            this.suggestionsView.AddSuggestion(suggestion);
+
+            // autofill the participationEntryView with a convenient value
+            this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
+
+            // I'm not sure precisely when we want to update the list of current suggestions (which is used for determining whether a participation was prompted by being suggested)
+            // Currently (2015-03-09) it's only modified when the user asks for another suggestion, at which point it's updated to match the suggestions that are displayed
+            this.CurrentSuggestions = new LinkedList<ActivitySuggestion>(this.suggestionsView.GetSuggestions());
+        }
+
+        // called when making a recommendation, either for the SuggestionsView or the ExperimentationInitializationLayout
+        private ActivitySuggestion MakeRecommendation(DateTime now, Activity requestCategory, Activity activityToBeat, IEnumerable<ActivitySuggestion> existingSuggestions)
+        {
+            this.SuspectLatestActionDate(now);
+            
             if (requestCategory != null)
             {
+                // record the user's request for a certain activity
                 ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
                 this.AddActivityRequest(request);
             }
 
-            // If the user requested that the suggestion be at least as good as a certain activity, then find that activity
-            Activity desiredActivity = this.suggestionsView.DesiredActivity;
-
-            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
 
             DateTime suggestionDate;
@@ -323,58 +356,40 @@ namespace ActivityRecommendation
             // have the engine pretend that the user did everything we've suggested
             IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
 
-            // because the engine takes some time to become fast, we keep track of how many suggestions we've asked for, and we ask for suggestions increasingly more frequently
-            this.numCategoriesToConsiderAtOnce++;
-            int numCategoriesToConsider = this.numCategoriesToConsiderAtOnce;
-
-
             // now determine which category to predict from
-            Activity bestActivity = null;
-            TimeSpan processingTime = TimeSpan.FromSeconds(2);
+            TimeSpan processingTime = this.suggestionProcessingDuration;
             
             // now we get a recommendation, from among all activities within this category
-            bestActivity = this.engine.MakeRecommendation(requestCategory, desiredActivity, suggestionDate, processingTime);
+            ActivitySuggestion suggestion = this.engine.MakeRecommendation(requestCategory, activityToBeat, suggestionDate, processingTime);
 
             // if there are no matching activities, then give up
-            if (bestActivity == null)
+            if (suggestion != null)
             {
-                this.suggestionsView.SetErrorMessage("No activities available! Go create some activities, and return here for suggestions.");
-                return;
+                // we have to separately tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
+                this.engine.PutSuggestionInMemory(suggestion);
+
+                this.WriteSuggestion(suggestion);
             }
-            // after making a recommendation, get the rest of the details of the suggestion
-            // (Note that eventually the suggested duration will be calculated in a more intelligent manner than simply taking the average duration)
-            ParticipationsSummary participationSummary = bestActivity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
-            double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
-            DateTime endDate = suggestionDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
-            ActivitySuggestion suggestion = new ActivitySuggestion(bestActivity.MakeDescriptor());
-            suggestion.CreatedDate = now;
-            suggestion.StartDate = suggestionDate;
-            suggestion.EndDate = endDate;
-            suggestion.ParticipationProbability = bestActivity.PredictedParticipationProbability.Distribution.Mean;
-
-            double average = this.ActivityDatabase.RootActivity.Ratings.Mean;
-            if (average == 0)
-                average = 1;
-            suggestion.PredictedScoreDividedByAverage = bestActivity.PredictedScore.Distribution.Mean / average;
-
-            // autofill the participationEntryView with a convenient value
-            if (existingSuggestions.Count() == 0)
-                this.participationEntryView.SetActivityName(bestActivity.Name);
-
-            // add the suggestion to the list (note that this makes the startDate a couple seconds later if it took a couple seconds to compute the suggestion)
-            this.suggestionsView.AddSuggestion(suggestion);
-
-            this.WriteSuggestion(suggestion);
 
             this.UndoHypotheticalSuggestions(hypotheticalParticipations);
+            return suggestion;
+        }
 
-            // we have to separately tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
-            this.engine.PutSuggestionInMemory(suggestion);
+        public ExperimentSuggestionOrError ChooseExperimentOption(List<ExperimentSuggestion> existingOptions)
+        {
+            DateTime now = DateTime.Now;
+            ExperimentSuggestionOrError result = this.engine.ChooseExperimentOption(existingOptions, this.suggestionProcessingDuration, now);
+            if (result.ExperimentSuggestion == null)
+                return result;
+            ActivitySuggestion suggestion = result.ExperimentSuggestion.ActivitySuggestion;
+            this.engine.PutSuggestionInMemory(suggestion); // have to call this.engine.PutSuggestionInMemory so that ActivityRecommender can ask for a suggestion without recording it
+            this.WriteSuggestion(suggestion);
+            return result;
+        }
 
-            // I'm not sure precisely when we want to update the list of current suggestions (which is used for determining whether a participation was prompted by being suggested)
-            // Currently (2015-03-09) it's only modified when the user asks for another suggestion, at which point it's updated to match the suggestions that are displayed
-            this.CurrentSuggestions = new LinkedList<ActivitySuggestion>(this.suggestionsView.GetSuggestions());
-
+        public string Test_ChooseExperimentOption()
+        {
+            return this.engine.Test_ChooseExperimentOption();
         }
 
         private IEnumerable<Participation> SupposeHypotheticalSuggestions(IEnumerable<ActivitySuggestion> suggestions)
@@ -397,9 +412,9 @@ namespace ActivityRecommendation
                 this.engine.RemoveParticipation(participation);
             }
         }
-        private void MakeRecommendation(object sender, EventArgs e)
+        private void SuggestionsView_MakeRecommendation(object sender, EventArgs e)
         {
-            this.MakeRecommendation();
+            this.SuggestionsView_MakeRecommendation();
         }
         private void WriteSuggestion(ActivitySuggestion suggestion)
         {
@@ -704,9 +719,10 @@ namespace ActivityRecommendation
         string recentUserData_fileName;
         Participation latestParticipation;
         RecentUserData recentUserData;
-        int numCategoriesToConsiderAtOnce;
         LayoutStack layoutStack;
         SuggestionDatabase suggestionDatabase;
+        // how long to spend making a suggestion
+        TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
 
     }
 }

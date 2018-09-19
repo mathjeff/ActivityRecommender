@@ -1,8 +1,11 @@
-﻿using System;
+﻿using ActivityRecommendation.Effectiveness;
+using System;
 using System.Collections.Generic;
 
 namespace ActivityRecommendation
 {
+    // The Engine class analyzes information in various Activity objects and can, for example, make recommendations
+    // The Engine class doesn't have any knowledge of the user interface or about persisting any data across application restarts; that's handled by ActivityRecommender
     class Engine
     {
         public Engine()
@@ -208,29 +211,25 @@ namespace ActivityRecommendation
         {
             return parent.GetChildrenRecursive();
         }
-        public Activity MakeRecommendation()
+        public ActivitySuggestion MakeRecommendation()
         {
             DateTime when = DateTime.Now;
             return this.MakeRecommendation(when);
         }
-        public Activity MakeRecommendation(DateTime when)
+        public ActivitySuggestion MakeRecommendation(DateTime when)
         {
             return this.MakeRecommendation(when, null);
         }
 
-        public Activity MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
+        public ActivitySuggestion MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
         {
-            return this.MakeRecommendation(null, null, when, requestedProcessingTime);
+            return this.MakeRecommendation((Activity)null, null, when, requestedProcessingTime);
         }
 
 
-        public Activity MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        public ActivitySuggestion MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
             List<Activity> candidates;
-            List<Activity> consideredCandidates = new List<Activity>();
-            DateTime processingStartTime = DateTime.Now;
-            // First, go update the stats for existing activities
-            this.EnsureRatingsAreAssociated();
             foreach (Activity activity in this.activityDatabase.AllActivities)
             {
                 activity.PredictionsNeedRecalculation = true;
@@ -244,6 +243,18 @@ namespace ActivityRecommendation
             {
                 candidates = new List<Activity>(this.activityDatabase.AllActivities);
             }
+            return this.MakeRecommendation(candidates, activityToBeat, when, requestedProcessingTime);
+        }
+
+        public ActivitySuggestion MakeRecommendation(List<Activity> candidates, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        {
+            DateTime processingStartTime = DateTime.Now;
+
+            // First, go update the stats for existing activities
+            this.EnsureRatingsAreAssociated();
+
+            List<Activity> consideredCandidates = new List<Activity>();
+
             // Now we determine which activity is most important to suggest
             // That requires first finding the one with the highest mean
             Activity bestActivity = null;
@@ -325,7 +336,22 @@ namespace ActivityRecommendation
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
             // If there was no such pair, then we just want to choose the best activity because no others could help
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
-            return bestActivityToPairWith;
+            return this.SuggestActivity(bestActivityToPairWith, when);
+        }
+        private ActivitySuggestion SuggestActivity(Activity activity, DateTime when)
+        {
+            ActivitySuggestion suggestion = new ActivitySuggestion(activity.MakeDescriptor());
+            ParticipationsSummary participationSummary = activity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
+            double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
+            suggestion.CreatedDate = DateTime.Now;
+            suggestion.StartDate = when;
+            suggestion.EndDate = suggestion.StartDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
+            suggestion.ParticipationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
+            double average = this.ActivityDatabase.RootActivity.Ratings.Mean;
+            if (average == 0)
+                average = 1;
+            suggestion.PredictedScoreDividedByAverage = activity.PredictedScore.Distribution.Mean / average;
+            return suggestion;
         }
         // This function essentially addresses the well-known multi-armed bandit problem
         // Given two distributions, we estimate the expected total value from choosing values from them
@@ -1004,6 +1030,272 @@ namespace ActivityRecommendation
             rating.FromUser = false;
             return rating;
         }
+
+
+        // Tells whether ChooseExperimentOption will return an error
+        // If ChooseExperimentOption is not available right now, returns a string explaining why. Otherwise returns ""
+        public String Test_ChooseExperimentOption()
+        {
+            ExperimentSuggestionOrError result = this.ChooseExperimentOption(new List<ExperimentSuggestion>(0), null, new DateTime(), true);
+            if (result != null)
+                return result.Error;
+            return "";
+        }
+
+        // given a list of options of activities that the user is considering doing; returns a new option (different than the others) that can be added to the list
+        public ExperimentSuggestionOrError ChooseExperimentOption(List<ExperimentSuggestion> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
+        {
+            // activities that can ever be put in an experiment
+            List<Activity> activitiesHavingMetrics = this.ChooseableActivitiesHavingMetrics;
+
+            // activities that are already listed as options can't be re-added as new options
+            HashSet<Activity> excludedActivities = new HashSet<Activity>();
+            foreach (ExperimentSuggestion existingOption in existingOptions)
+            {
+                excludedActivities.Add(this.ActivityDatabase.ResolveDescriptor(existingOption.ActivitySuggestion.ActivityDescriptor));
+            }
+            // determine which activities are already planned as part of an experiment
+            HashSet<Activity> plannedExperimentActivities = new HashSet<Activity>(this.PlannedExperimentActivities);
+
+            List<Activity> availablePreActivities = new List<Activity>();
+            List<Activity> availablePostActivities = new List<Activity>();
+            foreach (Activity activity in activitiesHavingMetrics)
+            {
+                if (!excludedActivities.Contains(activity))
+                {
+                    // found an available Activity; classify it as a pre-Activity (not yet part of a planned Experiment) or post-Activity (already is the second task in a planned Experiment)
+                    if (plannedExperimentActivities.Contains(activity))
+                        availablePostActivities.Add(activity);
+                    else
+                        availablePreActivities.Add(activity);
+                }
+            }
+
+            // Motivation:
+            //  We'd like it to be possible to graph the log of the user's efficiency over time, and for any errors in the graph introduced by randomness to converge to zero,
+            //   or at least definitely not diverge
+            //  The way that efficiency will be computed will be by comparing the completion duration of both tasks in an experiment
+            //  The source of randomness is that the two tasks are ordered randomly but might have significantly different difficulties
+            //  So, we need to have the pool of tasks grow increasingly large so we can compare increasingly distant activities and hopefully cause error to converge to zero
+            // The situation:
+            //  Suppose that the user has completed T tasks.
+            //  Suppose that the number of tasks in the pool equals P(T)
+            // Let us slightly modify this problem for the purpose of more easily modelling it:
+            //  Let us pretend that tasks are separated into bins, each of size P(T)
+            //  Let us pretend that all pairs of tasks are between two adjacent bins, and that they are evently distributed.
+            //   That is, let us pretend that there are (P(T)/2) pairs of tasks that have one task in bin i and one task in bin i+1
+            // The analysis:
+            //  We want to compute the standard deviation (stddev) of the log of the ratio of the efficiency at the beginning of time and the efficiency at the end of time
+            //   This is equivalent to computing the sqrt of the variance of the log of the ratio of the computed efficiency at the beginning and the computed efficiency at the end
+            //    This is equivalent to computing the sqrt of the sum of the variances of the logs of the ratios between adjacent bins
+            //   The stddev of the ratios between adjacent bins (when there are T tasks, and when the stddev of measurement error equals m) is:
+            //    m / sqrt(P(T)/2)
+            //   This gives a variance of the ratios between adjacent bins of:
+            //    2m*m / P(T)
+            //   because log(X) approximately equals X - 1 for X near 1, the variance of the log of the ratios is approximately the same
+            //   Then the sum of the logs of the variances equals:
+            //    sum((probability that T is at the boundary between two bins) * (log of the variance of the ratio P(T+1)/P(T))
+            //    = sum((1/P(T))*(2m*m/P(T)))
+            //    = 2m * m * sum(1/(P(T)^2))
+            //     This diverges for P(T) = T^(1/2) but converges for P(T) = T^(d) for d > 1/2
+            //      What does it converge to? sum(2m*m*sum(T^(-2d))) = (-2m*m/(-2d+1))*(T^(-2d+1))[1,infinity) = 2m*m/(2d-1)
+            //  (Also, recall that we need d <= 1 to collect any data at all (if the current pool contains all tasks ever, then we'll never complete an experiment))
+            //  We need d >= 0.5 for convergence, and the larger it is, the lower the sum we converge to.
+            //  Suppose d = 2/3.
+            //   Then the total variance = 2m*m/(2d-1) = 6m*m, so the total stddev = sqrt(6) * m = about 2.5m
+            //   Then P(8) = 8^(2/3) = 4, so half of tasks would be in the pool after 8 tasks were completed
+            //   Then P(27) = 27^(2/3) = 9, so one third of tasks would be in the pool after 27 tasks were completed
+            //   Then P(365) = 365^(2/3) = roughly 49, so about one seventh of tasks would be in the pool after doing one task per day for a year
+            int numCompletedExperimentalParticipations = this.NumCompletedExperimentalParticipations;
+            int min_pendingPool_size = Math.Max((int)Math.Pow(numCompletedExperimentalParticipations, 0.667), 3); // need at least 3 tasks available to even start an experiment
+            int numActivitiesToChooseFrom = availablePreActivities.Count + availablePostActivities.Count + existingOptions.Count;
+            if (numActivitiesToChooseFrom < min_pendingPool_size)
+            {
+                int numExtraRequiredActivities = min_pendingPool_size - numActivitiesToChooseFrom;
+                string message = "Don't have enough activities having metrics to run another experiment. Go create " + numExtraRequiredActivities + " more ";
+                if (numExtraRequiredActivities == 1)
+                    message += "activity of type ToDo!";
+                else
+                    message += "activities of type ToDo!";
+                // no enough activities for a meaningful experiment
+                return new ExperimentSuggestionOrError(message);
+            }
+
+            if (dryRun)
+            {
+                // validation completed; tell the caller that there was no error
+                return null;
+            }
+
+            // We also want the pre/post status of each item in the pool to be as unpredictable to the user as possible,
+            // to prevent them from subconsciously working harder on tasks that are known to be post tasks.
+            // So, we randomly decide whether to add suggest a pre-task or a post-task, and we weight the suggestion based on how are already in the pool
+            int max_pendingPool_size = min_pendingPool_size * 2;
+            bool choosePostActivity;
+            if (availablePostActivities.Count < min_pendingPool_size)
+            {
+                // not enough tasks in the pool; we're at risk of having too few overlapping comparisons
+                choosePostActivity = false;
+            }
+            else
+            {
+                if (availablePostActivities.Count > max_pendingPool_size)
+                {
+                    // pool is more than big enough; we should start collecting data (completing experiments)
+                    choosePostActivity = true;
+                }
+                else
+                {
+                    int preWeight = availablePostActivities.Count - min_pendingPool_size;
+                    int postWeight = max_pendingPool_size - availablePostActivities.Count;
+                    choosePostActivity = (this.randomGenerator.Next(preWeight + postWeight) >= preWeight);
+                }
+            }
+
+            List<Activity> recommendableActivities;
+            if (choosePostActivity)
+                recommendableActivities = availablePostActivities;
+            else
+                recommendableActivities = availablePreActivities;
+
+
+            // Now that we've identified some activities that are reasonable to add to the experiment, choose the one that we think will provide the most longterm value to the user
+            Activity bestActivity = this.activityDatabase.ResolveDescriptor(this.MakeRecommendation(recommendableActivities, null, DateTime.Now, requestedProcessingTime).ActivityDescriptor);
+
+            // chose a random metric for this activity
+            List<Metric> metrics = bestActivity.Metrics;
+            if (metrics.Count < 1)
+                throw new Exception("Internal error while planning experiment: activity " + bestActivity + " has no metrics");
+            Metric metric = metrics[this.randomGenerator.Next(metrics.Count)];
+
+            ExperimentSuggestion result = new ExperimentSuggestion();
+            result.ActivitySuggestion = this.SuggestActivity(bestActivity, when);
+            result.Metric = metric;
+            result.EstimatedSuccessesPerSecond = 1; // TODO: predict the success rate for bestActivity, or at least take the average
+            return new ExperimentSuggestionOrError(result);
+        }
+
+        public PlannedExperiment Experiment(List<ExperimentSuggestion> choices)
+        {
+            // separate into pre-activities and post-activities
+            List<ExperimentSuggestion> unpairedActivities = new List<ExperimentSuggestion>();
+            List<ExperimentSuggestion> pairedActivities = new List<ExperimentSuggestion>();
+
+            foreach (ExperimentSuggestion suggestion in choices)
+            {
+                if (this.isPartOfPendingExperiment(this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor)))
+                    pairedActivities.Add(suggestion);
+                else
+                    unpairedActivities.Add(suggestion);
+            }
+            // to start a new experiment we need at least 2 available activities
+            if (unpairedActivities.Count < 2)
+                unpairedActivities.Clear();
+
+            // Choose whether to start a new experiment or finish an existing experiment.
+            // We've gone to great lengths to hide from the user the information about whether we're finishing an existing experiment or starting a new experiment because
+            // if the user discovers which one this is, it might subconsciously motivate them to work harder on the post tasks and less hard on the pre tasks, artificially skewing the results
+            int suggestionIndex = this.randomGenerator.Next(unpairedActivities.Count + pairedActivities.Count);
+
+            bool choosePreActivity = (suggestionIndex < unpairedActivities.Count);
+            if (choosePreActivity)
+            {
+                // We're choosing a pre-activity. Pair it with another unpaired activity
+                int suggestion2Index = this.randomGenerator.Next(unpairedActivities.Count - 1);
+                if (suggestion2Index == suggestionIndex)
+                    suggestion2Index = unpairedActivities.Count - 1;
+
+                PlannedExperiment experiment = new PlannedExperiment();
+                experiment.Earlier = unpairedActivities[suggestionIndex];
+                experiment.Later = unpairedActivities[suggestion2Index];
+                return experiment;
+            }
+            else
+            {
+                // We're choosing a post-activity. Find the experiment we previously created for it
+                ExperimentSuggestion experimentSuggestion = pairedActivities[suggestionIndex];
+
+                PlannedExperiment experiment = this.findPendingExperiment(this.ActivityDatabase.ResolveDescriptor(experimentSuggestion.ActivityDescriptor));
+                return experiment;
+            }
+        }
+
+        private PlannedExperiment findPendingExperiment(Activity activity)
+        {
+            foreach (PlannedExperiment experiment in this.currentExperiments)
+            {
+                if (activity == this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor))
+                    return experiment;
+                if (activity == this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor))
+                    return experiment;
+            }
+            return null;
+        }
+        // tells whether there's already a pending experiment containing this activity
+        private bool isPartOfPendingExperiment(Activity activity)
+        {
+            foreach (PlannedExperiment experiment in this.currentExperiments)
+            {
+                if (this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor) == activity)
+                    return true;
+                if (this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor) == activity)
+                    return true;
+            }
+            return false;
+        }
+
+        private int NumCompletedExperiments
+        {
+            get
+            {
+                return this.numCompletedExperiments;
+            }
+        }
+
+        private int NumCompletedExperimentalParticipations
+        {
+            get
+            {
+                return this.NumCompletedExperiments * 2 + this.currentExperiments.Count;
+            }
+        }
+        // returns a list of Activities that are available to be added into a new Experiment
+        private List<Activity> ChooseableActivitiesHavingMetrics
+        {
+            get
+            {
+                // find each Activity that has a metric
+                List<Activity> results = new List<Activity>();
+                foreach (Activity activity in this.activityDatabase.AllActivities)
+                {
+                    if (activity.Choosable)
+                    {
+                        List<Metric> metrics = activity.Metrics;
+                        if (metrics.Count > 0)
+                        {
+                            results.Add(activity);
+                        }
+                    }
+                }
+                return results;
+            }
+        }
+        // returns a list of activities for which there is a Participation planned as part of a planned but not completed Experiment
+        private List<Activity> PlannedExperimentActivities
+        {
+            get
+            {
+                List<Activity> plannedExperiments = new List<Activity>();
+                foreach (PlannedExperiment experiment in this.currentExperiments)
+                {
+                    plannedExperiments.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
+                    if (experiment.FirstParticipation != null)
+                        plannedExperiments.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor));
+                }
+                return plannedExperiments;
+            }
+        }
+
         public DateTime LatestInteractionDate
         {
             get
@@ -1060,6 +1352,9 @@ namespace ActivityRecommendation
         int numUnpromptedParticipations;
         private Random randomGenerator = new Random();
 
+        // a list of experiments that have been planned but not yet completed
+        List<PlannedExperiment> currentExperiments = new List<PlannedExperiment>();
+        int numCompletedExperiments;
 
     }
 }

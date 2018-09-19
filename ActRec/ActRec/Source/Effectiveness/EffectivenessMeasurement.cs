@@ -12,7 +12,7 @@ namespace ActivityRecommendation.Effectiveness
     public class CompletionEffectivenessMeasurement
     {
         public bool Successful { get; set; }
-        public RelativeEffectivenessMeasurement Computed { get; set; }
+        public RelativeEffectivenessMeasurement Computation { get; set; }
     }
 
     // A RelativeEffectivenessMeasurement records the computed effectiveness of the Participation by comparing it to another one

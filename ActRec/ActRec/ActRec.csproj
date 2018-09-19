@@ -19,7 +19,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -27,7 +26,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -45,6 +43,7 @@
     <Compile Include="Source\AbsoluteRating.cs" />
     <Compile Include="Source\AbsoluteRatingEntryView.cs" />
     <Compile Include="Source\Effectiveness\EffectivenessMeasurement.cs" />
+    <Compile Include="Source\Effectiveness\Metric.cs" />
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
     <Compile Include="Source\FileIo.cs" />
     <Compile Include="Source\EngineLoader.cs" />
@@ -80,7 +79,8 @@
     <Compile Include="Source\Inheritance.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
-    <Compile Include="Source\View\ExperimentationInitializationLayout.cs" />
+    <Compile Include="Source\View\ExperimentInitializationLayout.cs" />
+    <Compile Include="Source\View\ExperimentOptionLayout.cs" />
     <Compile Include="Source\View\FeatureOverviewLayout.cs" />
     <Compile Include="Source\View\ActivityCreationLayout.cs" />
     <Compile Include="Source\View\InheritanceEditingLayout.cs" />

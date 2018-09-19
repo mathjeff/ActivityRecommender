@@ -54,12 +54,11 @@ namespace ActivityRecommendation
 
         public ImportConfirmationView(FileData fileData)
         {
-            Button button = new Button();
-            button.Clicked += Button_Clicked;
-
-            button.Text = "Import " + fileData.FileName + " and overwrite ALL existing data.";
-
             this.fileData = fileData;
+
+            Button button = new Button();
+            button.Text = "Import " + fileData.FileName + " (" + fileData.DataArray.Length + " bytes)  and overwrite ALL existing data.";
+            button.Clicked += Button_Clicked;
 
             this.SetTitle("Confirm Import");
             this.SetContent(new ButtonLayout(button));

@@ -13,7 +13,7 @@ namespace ActivityRecommendation
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment(ActivitySuggestion suggestion);
 
-        public SuggestionView(ActivitySuggestion suggestion, bool experimentationEnabled = false)
+        public SuggestionView(ActivitySuggestion suggestion)
         {
             this.suggestion = suggestion;
 
@@ -63,10 +63,7 @@ namespace ActivityRecommendation
             this.justifyButton.Clicked += justifyButton_Click;
             this.experimentButton = new Button();
             this.experimentButton.Clicked += ExperimentButton_Clicked;
-            Vertical_GridLayout_Builder buttonsLayoutBuilder = new Vertical_GridLayout_Builder().Uniform().AddLayout(new ButtonLayout(this.cancelButton, "x"));
-            if (experimentationEnabled)
-                buttonsLayoutBuilder.AddLayout(new ButtonLayout(this.experimentButton, "Exp."));
-            mainGrid.AddLayout(buttonsLayoutBuilder.Build());
+            mainGrid.AddLayout(new ButtonLayout(this.cancelButton, "x"));
             this.SubLayout = mainGrid;
 
         }

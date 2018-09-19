@@ -8,19 +8,49 @@ using System.Threading.Tasks;
 // a PlannedExperiment is a prerequisite to obtaining an EffectivenessMeasurement
 namespace ActivityRecommendation.Effectiveness
 {
-    class PlannedExperiment
+    public class PlannedExperiment
     {
-        PlannedMetric Earlier { get; set; }
-        PlannedMetric Later { get; set; }
-        Participation FirstParticipation { get; set; }
+        public ExperimentSuggestion Earlier { get; set; }
+        public ExperimentSuggestion Later { get; set; }
+        public Participation FirstParticipation { get; set; }
+
+        // returns the ActivitySuggestion that is recommended to be done next as part of this experiment
+        public ActivitySuggestion NextIncompleteSuggestion
+        {
+            get
+            {
+                if (this.FirstParticipation == null)
+                    return this.Earlier.ActivitySuggestion;
+                return this.Later.ActivitySuggestion;
+            }
+        }
     }
 
-    // a PlannedMeasuredParticipation is a plan to do a specific Participation and to measure it in a certain way
-    class PlannedMetric
+    public class ExperimentSuggestion
     {
-        public Activity Activity { get; set; }
+        public ActivitySuggestion ActivitySuggestion { get; set; }
 
-        // an estimate of estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds
+        public Metric Metric { get; set; }
+
+        // an estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds
         public double EstimatedSuccessesPerSecond { get; set; }
+
+        public ActivityDescriptor ActivityDescriptor
+        {
+            get
+            {
+                return this.ActivitySuggestion.ActivityDescriptor;
+            }
+        }
+
+    }
+
+    public class ExperimentSuggestionOrError
+    {
+        public ExperimentSuggestionOrError(ExperimentSuggestion suggestion) { this.ExperimentSuggestion = suggestion; }
+        public ExperimentSuggestionOrError(string error) { this.Error = error; }
+
+        public ExperimentSuggestion ExperimentSuggestion { get; set; }
+        public string Error = "";
     }
 }

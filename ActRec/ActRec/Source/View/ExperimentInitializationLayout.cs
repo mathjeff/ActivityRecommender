@@ -1,36 +1,82 @@
 ﻿using ActivityRecommendation;
+using ActivityRecommendation.Effectiveness;
 using System.Collections.Generic;
 using VisiPlacement;
 using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    public class ExperimentationInitializationLayout : TitledControl
+    public class ExperimentInitializationLayout : TitledControl
     {
-        public ExperimentationInitializationLayout(LayoutStack layoutStack)
+        public event RequestedExperimentHandler RequestedExperiment;
+        public delegate void RequestedExperimentHandler(List<ExperimentSuggestion> choices);
+
+        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender)
         {
             this.SetTitle("Experiment");
+            this.activityRecommender = activityRecommender;
 
             Button okbutton = new Button();
             ButtonLayout okButtonLayout = new ButtonLayout(okbutton, "Accept");
+            okbutton.Clicked += Okbutton_Clicked;
 
             LayoutChoice_Set helpButton = this.make_helpButton(layoutStack);
 
-            this.candidatesLayout = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(3), LayoutScore.Zero);
+            string error = activityRecommender.Test_ChooseExperimentOption();
+            if (error != "")
+            {
+                this.SetContent(new TextblockLayout(error));
+                return;
+            }
 
             GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(okButtonLayout).Uniform().Build();
 
-            LayoutChoice_Set warningLayout = new TextblockLayout("This page is still a work in progress and doesn't work yet.");
+            Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            for (int i = 0; i < this.numChoices; i++)
+            {
+                ExperimentOptionLayout child = new ExperimentOptionLayout(this);
+                this.children.Add(child);
+                childrenBuilder.AddLayout(child);
+            }
+            GridLayout bottomGrid = childrenBuilder.Build();
 
-            GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(warningLayout).AddLayout(topGrid).AddLayout(this.candidatesLayout).Uniform().Build();
+            GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(topGrid).AddLayout(bottomGrid).Uniform().Build();
 
             this.SetContent(mainGrid);
         }
 
-        public void AddSuggestion(ActivitySuggestion suggestion)
+        private void Okbutton_Clicked(object sender, System.EventArgs e)
         {
-            this.suggestions.Add(suggestion);
-            this.candidatesLayout.AddLayout(new SuggestionView(suggestion));
+            List<ExperimentSuggestion> suggestions = this.Suggestions;
+            // confirm that all slots have suggestions visible
+            if (suggestions.Count == this.numChoices)
+            {
+                this.RequestedExperiment.Invoke(suggestions);
+            }
+        }
+
+        public ExperimentSuggestion ChooseExperimentOption()
+        {
+            ExperimentSuggestionOrError result = this.activityRecommender.ChooseExperimentOption(this.Suggestions);
+            if (result.Error != "")
+            {
+                this.SetContent(new TextblockLayout("Internal error; ChooseExperimentOption returned error '" + result.Error + "' after Test_ChooseExperimentOption succeeded"));
+                return null;
+            }
+            return result.ExperimentSuggestion;
+        }
+        private List<ExperimentSuggestion> Suggestions
+        {
+            get
+            {
+                List<ExperimentSuggestion> result = new List<ExperimentSuggestion>();
+                foreach (ExperimentOptionLayout child in this.children)
+                {
+                    if (child.Suggestion != null)
+                        result.Add(child.Suggestion);
+                }
+                return result;
+            }
         }
 
         private LayoutChoice_Set make_helpButton(LayoutStack layoutStack)
@@ -62,8 +108,8 @@ namespace ActivityRecommendation.View
         }
 
         private int numChoices = 3;
-        private GridLayout candidatesLayout;
-        private List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
+        List<ExperimentOptionLayout> children = new List<ExperimentOptionLayout>();
+        ActivityRecommender activityRecommender;
 
     }
 }

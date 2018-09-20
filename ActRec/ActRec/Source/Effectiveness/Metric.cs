@@ -11,7 +11,7 @@ namespace ActivityRecommendation.Effectiveness
     // However, there isn't yet any need for custom conversion-to-float logic; for now all that's needed is an indication that the Activity has a Metric that can be displayed to the user
     public interface Metric
     {
-        string Describe();
+        string Name { get; }
     }
 
     public class TodoMetric : Metric
@@ -20,9 +20,12 @@ namespace ActivityRecommendation.Effectiveness
         {
             this.todo = todo;
         }
-        public string Describe()
+        public string Name
         {
-            return "Complete " + this.todo.Name;
+            get
+            {
+                return "Complete " + this.todo.Name;
+            }
         }
         private ToDo todo;
     }

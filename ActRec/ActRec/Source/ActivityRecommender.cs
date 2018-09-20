@@ -28,7 +28,9 @@ namespace ActivityRecommendation
 
             this.InitializeSettings();
 
-            this.MakeEngine();
+            this.SetupEngine();
+
+            this.textConverter = new TextConverter(null, this.ActivityDatabase);
 
             //this.ReadTempFile();
 
@@ -54,7 +56,7 @@ namespace ActivityRecommendation
             this.ratingsFileName = "ActivityRatings.txt";
             this.inheritancesFileName = "ActivityInheritances.txt";
             this.recentUserData_fileName = "TemporaryData.txt";
-            this.textConverter = new TextConverter(null, null);
+            //this.textConverter = new TextConverter(null, this.ActivityDatabase);
             //this.historyReplayer = new EngineTester();
             //this.historyReplayer = new RatingRenormalizer(this.textConverter);
             //this.historyReplayer = new HistoryWriter(this.textConverter);
@@ -173,14 +175,22 @@ namespace ActivityRecommendation
 
         }
 
-        private void ExperimentationLayout_RequestedExperiment(List<ExperimentSuggestion> choices)
+        private void ExperimentationLayout_RequestedExperiment(List<SuggestedMetric> choices)
         {
-            PlannedExperiment experiment = this.engine.Experiment(choices);
-            ActivitySuggestion suggestion = experiment.NextIncompleteSuggestion;
+            ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, DateTime.Now);
+            ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
             // TODO: disallow ever dismissing this suggestion other than by working on it.
             // Should the UI convert a dismissal into a recording of an unsuccessful participation? That would be surprising, so probably not
-            this.AddSuggestion_To_SuggestionsView(suggestion);
+            this.AddSuggestion_To_SuggestionsView(activitySuggestion);
             this.layoutStack.RemoveLayout();
+
+            PlannedExperiment experiment = experimentSuggestion.Experiment;
+
+            if (!experiment.InProgress)
+            {
+                this.engine.PutExperimentInMemory(experiment);
+                this.WriteExperiment(experiment);
+            }
         }
 
         public void ImportData(object sender, FileData fileData)
@@ -188,7 +198,8 @@ namespace ActivityRecommendation
             string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
             try
             {
-                this.textConverter.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
+                TextConverter importer = new TextConverter(null, new ActivityDatabase(null));
+                importer.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
             }
             catch (InvalidDataException e)
             {
@@ -239,24 +250,7 @@ namespace ActivityRecommendation
         }
 
 
-        private void MakeEngine()
-        {
-            this.engine = new Engine();
-            this.ReadEngineFiles();
-            this.engine.CreateNewActivities();
-            // listen for subsequently created Activity or Inheritance objects
-            this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
-            this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
-
-            this.PrepareEngine();
-        }
-
-        // Asks the engine to do some processing so that the next recommendation will be faster
-        public void PrepareEngine()
-        {
-            this.engine.FullUpdate();
-        }
-        private void ReadEngineFiles()
+        private void SetupEngine()
         {
             System.Diagnostics.Debug.WriteLine("Starting to read files");
 
@@ -281,6 +275,13 @@ namespace ActivityRecommendation
 
             this.ActivityDatabase.AssignDefaultParent();
             System.Diagnostics.Debug.WriteLine("Done parsing files");
+
+            this.engine.CreateNewActivities();
+            // listen for subsequently created Activity or Inheritance objects
+            this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
+            this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
+
+            this.engine.FullUpdate();
         }
 
         public EngineTesterResults TestEngine()
@@ -392,13 +393,14 @@ namespace ActivityRecommendation
             return suggestion;
         }
 
-        public ExperimentSuggestionOrError ChooseExperimentOption(List<ExperimentSuggestion> existingOptions)
+        public SuggestedMetricOrError ChooseExperimentOption(List<SuggestedMetric> existingOptions)
         {
             DateTime now = DateTime.Now;
-            ExperimentSuggestionOrError result = this.engine.ChooseExperimentOption(existingOptions, this.suggestionProcessingDuration, now);
-            if (result.ExperimentSuggestion == null)
+
+            SuggestedMetricOrError result = this.engine.ChooseExperimentOption(existingOptions, this.suggestionProcessingDuration, now);
+            if (result.Error != "")
                 return result;
-            ActivitySuggestion suggestion = result.ExperimentSuggestion.ActivitySuggestion;
+            ActivitySuggestion suggestion = result.ActivitySuggestion;
             this.engine.PutSuggestionInMemory(suggestion); // have to call this.engine.PutSuggestionInMemory so that ActivityRecommender can ask for a suggestion without recording it
             this.WriteSuggestion(suggestion);
             return result;
@@ -436,6 +438,11 @@ namespace ActivityRecommendation
         private void WriteSuggestion(ActivitySuggestion suggestion)
         {
             string text = this.textConverter.ConvertToString(suggestion) + Environment.NewLine;
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
+        }
+        private void WriteExperiment(PlannedExperiment experiment)
+        {
+            string text = this.textConverter.ConvertToString(experiment) + Environment.NewLine;
             this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
         private void SubmitParticipation(object sender, EventArgs e)

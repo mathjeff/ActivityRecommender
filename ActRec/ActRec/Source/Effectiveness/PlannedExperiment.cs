@@ -8,32 +8,39 @@ using System.Threading.Tasks;
 // a PlannedExperiment is a prerequisite to obtaining an EffectivenessMeasurement
 namespace ActivityRecommendation.Effectiveness
 {
+    // Contains a plan to do two activitin a particular order and how to measure them
     public class PlannedExperiment
     {
-        public ExperimentSuggestion Earlier { get; set; }
-        public ExperimentSuggestion Later { get; set; }
+        public PlannedMetric Earlier { get; set; }
+        public PlannedMetric Later { get; set; }
         public Participation FirstParticipation { get; set; }
 
-        // returns the ActivitySuggestion that is recommended to be done next as part of this experiment
-        public ActivitySuggestion NextIncompleteSuggestion
+        public bool InProgress
         {
             get
             {
-                if (this.FirstParticipation == null)
-                    return this.Earlier.ActivitySuggestion;
-                return this.Later.ActivitySuggestion;
+                return this.FirstParticipation != null;
             }
         }
     }
 
-    public class ExperimentSuggestion
+    // A plan to do a certain Activity, along with how to measure its success
+    public class PlannedMetric
     {
-        public ActivitySuggestion ActivitySuggestion { get; set; }
+        public ActivityDescriptor ActivityDescriptor { get; set; }
 
-        public Metric Metric { get; set; }
+        public string MetricName { get; set; }
 
         // an estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds
         public double EstimatedSuccessesPerSecond { get; set; }
+    }
+
+    // Suggests doing a certain activity and measuring it in a certain way (unless it contains an error)
+    public class SuggestedMetric
+    {
+        public SuggestedMetric(PlannedMetric metric, ActivitySuggestion activitySuggestion) { this.PlannedMetric = metric; this.ActivitySuggestion = activitySuggestion; }
+        public PlannedMetric PlannedMetric { get; set; }
+        public ActivitySuggestion ActivitySuggestion { get; set; }
 
         public ActivityDescriptor ActivityDescriptor
         {
@@ -42,15 +49,40 @@ namespace ActivityRecommendation.Effectiveness
                 return this.ActivitySuggestion.ActivityDescriptor;
             }
         }
-
     }
 
-    public class ExperimentSuggestionOrError
+    // holds a SuggestedMetric or an error
+    public class SuggestedMetricOrError
     {
-        public ExperimentSuggestionOrError(ExperimentSuggestion suggestion) { this.ExperimentSuggestion = suggestion; }
-        public ExperimentSuggestionOrError(string error) { this.Error = error; }
+        public SuggestedMetricOrError(SuggestedMetric Content) { this.Content = Content; }
+        public SuggestedMetricOrError(string error) { this.Error = error; }
 
-        public ExperimentSuggestion ExperimentSuggestion { get; set; }
+        public SuggestedMetric Content;
         public string Error = "";
+
+        public ActivitySuggestion ActivitySuggestion
+        {
+            get
+            {
+                return this.Content.ActivitySuggestion;
+            }
+        }
+
+        public PlannedMetric PlannedMetric
+        {
+            get
+            {
+                return this.Content.PlannedMetric;
+            }
+        }
+    }
+
+    // Embodies a suggestion to run an experiment
+    public class ExperimentSuggestion
+    {
+        public ExperimentSuggestion(PlannedExperiment experiment, ActivitySuggestion activitySuggestion) { this.Experiment = experiment; this.ActivitySuggestion = activitySuggestion; }
+
+        public ActivitySuggestion ActivitySuggestion { get; set; }
+        public PlannedExperiment Experiment { get; set; }
     }
 }

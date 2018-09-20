@@ -147,8 +147,12 @@ namespace ActivityRecommendation
         }
         public string ConvertToString(ActivitySuggestion activitySuggestion)
         {
+            string body = this.ConvertToStringBody(activitySuggestion);
+            return this.ConvertToString(body, this.SuggestionTag);
+        }
+        public string ConvertToStringBody(ActivitySuggestion activitySuggestion)
+        {
             Dictionary<string, string> properties = new Dictionary<string, string>();
-            string objectName = this.SuggestionTag;
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(activitySuggestion.ActivityDescriptor);
             if (activitySuggestion.CreatedDate != null)
@@ -157,7 +161,35 @@ namespace ActivityRecommendation
             if (activitySuggestion.EndDate != null)
                 properties[this.SuggestionEndDateTag] = this.ConvertToStringBody(activitySuggestion.EndDate);
 
-            return this.ConvertToString(properties, objectName);
+            return this.ConvertToStringBody(properties);
+        }
+        public string ConvertToString(PlannedExperiment experiment)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+
+            properties[this.EarlierSuggestionInExperimentTag] = this.ConvertToStringBody(experiment.Earlier);
+            properties[this.LaterSuggestionInExperimentTag] = this.ConvertToStringBody(experiment.Later);
+
+            return this.ConvertToString(properties, this.ExperimentTag);
+            
+        }
+        public string ConvertToStringBody(PlannedMetric experiment)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(experiment.ActivityDescriptor);
+
+            // record the metric if it's not the first metric (in most (initially all at the time of writing) cases it will be the first metric)
+            Activity activity = this.activityDatabase.ResolveDescriptor(experiment.ActivityDescriptor);
+            if (activity.Metrics.Count < 1)
+                throw new ArgumentException("Internal error: an ExperimentSuggestion's Activity cannot have 0 metrics");            
+            if (experiment.MetricName != activity.Metrics[0].Name)
+                properties[this.MetricTag] = experiment.MetricName;
+
+            properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.EstimatedSuccessesPerSecond);
+
+
+            return this.ConvertToStringBody(properties);
         }
 
         // converts the dictionary into a string that is ready to be written to disk
@@ -251,6 +283,11 @@ namespace ActivityRecommendation
                 if (node.Name == this.SuggestionTag)
                 {
                     this.ProcessSuggestion(node);
+                    continue;
+                }
+                if (node.Name == this.ExperimentTag)
+                {
+                    this.ProcessExperiment(node);
                     continue;
                 }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
@@ -463,6 +500,11 @@ namespace ActivityRecommendation
             ActivitySuggestion suggestion = this.ReadSuggestion(nodeRepresentation);
             this.setPendingSkip(null, suggestion.GuessCreationDate());
             this.listener.AddSuggestion(suggestion);
+        }
+        private void ProcessExperiment(XmlNode nodeRepresentation)
+        {
+            PlannedExperiment experiment = this.ReadExperiment(nodeRepresentation);
+            this.listener.AddExperiment(experiment);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -842,9 +884,51 @@ namespace ActivityRecommendation
             return suggestion;
         }
 
+        public PlannedExperiment ReadExperiment(XmlNode nodeRepresentation)
+        {
+            PlannedExperiment experiment = new PlannedExperiment();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.EarlierSuggestionInExperimentTag)
+                {
+                    experiment.Earlier = this.ReadExperimentSuggestion(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.LaterSuggestionInExperimentTag)
+                {
+                    experiment.Later = this.ReadExperimentSuggestion(currentChild);
+                    continue;
+                }
+            }
+            return experiment;
+        }
+
+        public PlannedMetric ReadExperimentSuggestion(XmlNode nodeRepresentation)
+        {
+            PlannedMetric metric = new PlannedMetric();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.ActivityDescriptorTag)
+                {
+                    metric.ActivityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.MetricTag)
+                {
+                    metric.MetricName = currentChild.Value;
+                    continue;
+                }
+                if (currentChild.Name == this.SuccessRateTag)
+                {
+                    metric.EstimatedSuccessesPerSecond = this.ReadDouble(currentChild);
+                    continue;
+                }
+            }
+            return metric;
+        }
+
         public void Import(string contents, string inheritancesFilePath, string historyFilePath, string recentUserDataPath)
         {
-            ActivityDatabase activityDatabase = new ActivityDatabase(null);
             IEnumerable<XmlNode> nodes = this.ParseText(contents);
 
             List<string> inheritanceTexts = new List<string>();
@@ -894,15 +978,21 @@ namespace ActivityRecommendation
                 if (node.Name == this.CategoryTag)
                 {
                     ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
-                    Activity activity = activityDatabase.GetActivityOrCreateCategory(activityDescriptor);
+                    Activity activity = this.activityDatabase.GetActivityOrCreateCategory(activityDescriptor);
                     historyTexts.Add(this.ConvertToString(activity));
                     continue;
                 }
                 if (node.Name == this.TodoTag)
                 {
                     ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
-                    Activity activity = activityDatabase.GetOrCreateTodo(activityDescriptor);
+                    Activity activity = this.activityDatabase.GetOrCreateTodo(activityDescriptor);
                     historyTexts.Add(this.ConvertToString(activity));
+                    continue;
+                }
+                if (node.Name == this.ExperimentTag)
+                {
+                    PlannedExperiment experiment = this.ReadExperiment(node);
+                    historyTexts.Add(this.ConvertToString(experiment));
                     continue;
                 }
                 throw new InvalidDataException("Unrecognized node: <" + node.Name + ">");
@@ -1265,6 +1355,41 @@ namespace ActivityRecommendation
             get
             {
                 return "RecentData";
+            }
+        }
+        private string MetricTag
+        {
+            get
+            {
+                return "Metric";
+            }
+        }
+        private string SuccessRateTag
+        {
+            get
+            {
+                return "SuccessRate";
+            }
+        }
+        private string ExperimentTag
+        {
+            get
+            {
+                return "Experiment";
+            }
+        }
+        private string EarlierSuggestionInExperimentTag
+        {
+            get
+            {
+                return "Earlier";
+            }
+        }
+        private string LaterSuggestionInExperimentTag
+        {
+            get
+            {
+                return "Later";
             }
         }
         #endregion

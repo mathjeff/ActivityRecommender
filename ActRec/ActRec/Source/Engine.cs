@@ -842,6 +842,33 @@ namespace ActivityRecommendation
             {
                 this.PutRatingInMemory(rating);
             }
+
+            if (!newParticipation.Hypothetical)
+            {
+                this.updateExperimentsWithNewParticipation(newParticipation);
+            }
+        }
+
+        // updates any existing experiments with information from newParticipation
+        private void updateExperimentsWithNewParticipation(Participation newParticipation)
+        {
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(newParticipation.ActivityDescriptor);
+            if (this.currentExperiments.ContainsKey(activity))
+            {
+                PlannedExperiment experiment = this.currentExperiments[activity];
+                if (experiment.InProgress)
+                {
+                    // found the second participation in the experiment, so mark the experiment as complete
+                    this.currentExperiments.Remove(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor));
+                    this.currentExperiments.Remove(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
+                    this.numCompletedExperiments++;
+                }
+                else
+                {
+                    // found the first participation in the experiment
+                    experiment.FirstParticipation = newParticipation;
+                }
+            }
         }
 
         private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)
@@ -910,6 +937,12 @@ namespace ActivityRecommendation
         {
             this.DiscoveredSuggestion(suggestion);
             this.unappliedSuggestions.Add(suggestion);
+        }
+        public void PutExperimentInMemory(PlannedExperiment experiment)
+        {
+            // save the experiment in a way where we can associate a participation in either activity back to it
+            this.currentExperiments.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor), experiment);
+            this.currentExperiments.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor), experiment);
         }
         // tells the Engine about an Activity that it may choose from
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
@@ -1036,23 +1069,23 @@ namespace ActivityRecommendation
         // If ChooseExperimentOption is not available right now, returns a string explaining why. Otherwise returns ""
         public String Test_ChooseExperimentOption()
         {
-            ExperimentSuggestionOrError result = this.ChooseExperimentOption(new List<ExperimentSuggestion>(0), null, new DateTime(), true);
+            SuggestedMetricOrError result = this.ChooseExperimentOption(new List<SuggestedMetric>(0), null, new DateTime(), true);
             if (result != null)
                 return result.Error;
             return "";
         }
 
         // given a list of options of activities that the user is considering doing; returns a new option (different than the others) that can be added to the list
-        public ExperimentSuggestionOrError ChooseExperimentOption(List<ExperimentSuggestion> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
+        public SuggestedMetricOrError ChooseExperimentOption(List<SuggestedMetric> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
         {
             // activities that can ever be put in an experiment
             List<Activity> activitiesHavingMetrics = this.ChooseableActivitiesHavingMetrics;
 
             // activities that are already listed as options can't be re-added as new options
             HashSet<Activity> excludedActivities = new HashSet<Activity>();
-            foreach (ExperimentSuggestion existingOption in existingOptions)
+            foreach (SuggestedMetric existingOption in existingOptions)
             {
-                excludedActivities.Add(this.ActivityDatabase.ResolveDescriptor(existingOption.ActivitySuggestion.ActivityDescriptor));
+                excludedActivities.Add(this.ActivityDatabase.ResolveDescriptor(existingOption.ActivityDescriptor));
             }
             // determine which activities are already planned as part of an experiment
             HashSet<Activity> plannedExperimentActivities = new HashSet<Activity>(this.PlannedExperimentActivities);
@@ -1118,7 +1151,7 @@ namespace ActivityRecommendation
                 else
                     message += "activities of type ToDo!";
                 // no enough activities for a meaningful experiment
-                return new ExperimentSuggestionOrError(message);
+                return new SuggestedMetricOrError(message);
             }
 
             if (dryRun)
@@ -1168,20 +1201,20 @@ namespace ActivityRecommendation
                 throw new Exception("Internal error while planning experiment: activity " + bestActivity + " has no metrics");
             Metric metric = metrics[this.randomGenerator.Next(metrics.Count)];
 
-            ExperimentSuggestion result = new ExperimentSuggestion();
-            result.ActivitySuggestion = this.SuggestActivity(bestActivity, when);
-            result.Metric = metric;
-            result.EstimatedSuccessesPerSecond = 1; // TODO: predict the success rate for bestActivity, or at least take the average
-            return new ExperimentSuggestionOrError(result);
+            PlannedMetric plannedMetric = new PlannedMetric();
+            plannedMetric.ActivityDescriptor = bestActivity.MakeDescriptor();
+            plannedMetric.MetricName = metric.Name;
+            plannedMetric.EstimatedSuccessesPerSecond = 1; // TODO: predict the success rate for bestActivity, or at least take the average
+            return new SuggestedMetricOrError(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when)));
         }
 
-        public PlannedExperiment Experiment(List<ExperimentSuggestion> choices)
+        public ExperimentSuggestion Experiment(List<SuggestedMetric> choices, DateTime when)
         {
             // separate into pre-activities and post-activities
-            List<ExperimentSuggestion> unpairedActivities = new List<ExperimentSuggestion>();
-            List<ExperimentSuggestion> pairedActivities = new List<ExperimentSuggestion>();
+            List<SuggestedMetric> unpairedActivities = new List<SuggestedMetric>();
+            List<SuggestedMetric> pairedActivities = new List<SuggestedMetric>();
 
-            foreach (ExperimentSuggestion suggestion in choices)
+            foreach (SuggestedMetric suggestion in choices)
             {
                 if (this.isPartOfPendingExperiment(this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor)))
                     pairedActivities.Add(suggestion);
@@ -1206,42 +1239,34 @@ namespace ActivityRecommendation
                     suggestion2Index = unpairedActivities.Count - 1;
 
                 PlannedExperiment experiment = new PlannedExperiment();
-                experiment.Earlier = unpairedActivities[suggestionIndex];
-                experiment.Later = unpairedActivities[suggestion2Index];
-                return experiment;
+                experiment.Earlier = unpairedActivities[suggestionIndex].PlannedMetric;
+                experiment.Later = unpairedActivities[suggestion2Index].PlannedMetric;
+
+                Activity earlierActivity = this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
+                return new ExperimentSuggestion(experiment, unpairedActivities[suggestionIndex].ActivitySuggestion);
             }
             else
             {
                 // We're choosing a post-activity. Find the experiment we previously created for it
-                ExperimentSuggestion experimentSuggestion = pairedActivities[suggestionIndex];
-
-                PlannedExperiment experiment = this.findPendingExperiment(this.ActivityDatabase.ResolveDescriptor(experimentSuggestion.ActivityDescriptor));
-                return experiment;
+                SuggestedMetric experimentSuggestion = pairedActivities[suggestionIndex];
+                Activity laterActivity = this.ActivityDatabase.ResolveDescriptor(experimentSuggestion.ActivityDescriptor);
+                PlannedExperiment experiment = this.findPendingExperiment(laterActivity);
+                return new ExperimentSuggestion(experiment, experimentSuggestion.ActivitySuggestion);
             }
         }
 
         private PlannedExperiment findPendingExperiment(Activity activity)
         {
-            foreach (PlannedExperiment experiment in this.currentExperiments)
+            if (this.currentExperiments.ContainsKey(activity))
             {
-                if (activity == this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor))
-                    return experiment;
-                if (activity == this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor))
-                    return experiment;
+                return this.currentExperiments[activity];
             }
             return null;
         }
         // tells whether there's already a pending experiment containing this activity
         private bool isPartOfPendingExperiment(Activity activity)
         {
-            foreach (PlannedExperiment experiment in this.currentExperiments)
-            {
-                if (this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor) == activity)
-                    return true;
-                if (this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor) == activity)
-                    return true;
-            }
-            return false;
+            return (this.findPendingExperiment(activity) != null);
         }
 
         private int NumCompletedExperiments
@@ -1256,7 +1281,9 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.NumCompletedExperiments * 2 + this.currentExperiments.Count;
+                // NumCompletedExperiments counts the individual experiments that completed, but we're interested in the number of completed participations (so double it) .
+                // this.currentExperiments has 2 entries per experiment (so it can be found via either Activity), but only 1 of them will have been completed (so halve it) .
+                return this.NumCompletedExperiments * 2 + this.currentExperiments.Count / 2;
             }
         }
         // returns a list of Activities that are available to be added into a new Experiment
@@ -1281,12 +1308,12 @@ namespace ActivityRecommendation
             }
         }
         // returns a list of activities for which there is a Participation planned as part of a planned but not completed Experiment
-        private List<Activity> PlannedExperimentActivities
+        private HashSet<Activity> PlannedExperimentActivities
         {
             get
             {
-                List<Activity> plannedExperiments = new List<Activity>();
-                foreach (PlannedExperiment experiment in this.currentExperiments)
+                HashSet<Activity> plannedExperiments = new HashSet<Activity>();
+                foreach (PlannedExperiment experiment in this.currentExperiments.Values)
                 {
                     plannedExperiments.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
                     if (experiment.FirstParticipation != null)
@@ -1353,7 +1380,7 @@ namespace ActivityRecommendation
         private Random randomGenerator = new Random();
 
         // a list of experiments that have been planned but not yet completed
-        List<PlannedExperiment> currentExperiments = new List<PlannedExperiment>();
+        Dictionary<Activity, PlannedExperiment> currentExperiments = new Dictionary<Activity, PlannedExperiment>();
         int numCompletedExperiments;
 
     }

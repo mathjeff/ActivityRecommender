@@ -21,7 +21,7 @@ namespace ActivityRecommendation.View
             suggestButton.Clicked += SuggestButton_Clicked;
         }
 
-        public ExperimentSuggestion Suggestion
+        public SuggestedMetric Suggestion
         {
             get
             {
@@ -32,7 +32,7 @@ namespace ActivityRecommendation.View
                 this.suggestion = value;
                 if (suggestion != null)
                 {
-                    ExperimentSuggestionLayout suggestionLayout = new ExperimentSuggestionLayout(suggestion);
+                    ExperimentSuggestionLayout suggestionLayout = new ExperimentSuggestionLayout(suggestion.PlannedMetric);
                     suggestionLayout.SuggestionCancelled += SuggestionLayout_SuggestionDismissed;
 
                     this.SubLayout = suggestionLayout;
@@ -51,12 +51,13 @@ namespace ActivityRecommendation.View
 
         private void SuggestButton_Clicked(object sender, EventArgs e)
         {
-            this.Suggestion = this.owner.ChooseExperimentOption();
+            SuggestedMetricOrError result = this.owner.ChooseExperimentOption();
+            this.Suggestion = result.Content;
         }
 
         private ButtonLayout suggestButtonLayout;
         private ExperimentInitializationLayout owner;
-        private ExperimentSuggestion suggestion;
+        private SuggestedMetric suggestion;
     }
 
     class ExperimentSuggestionLayout : ContainerLayout
@@ -64,12 +65,12 @@ namespace ActivityRecommendation.View
         public event SuggestionDismissedHandler SuggestionCancelled;
         public delegate void SuggestionDismissedHandler();
 
-        public ExperimentSuggestionLayout(ExperimentSuggestion suggestion)
+        public ExperimentSuggestionLayout(PlannedMetric suggestion)
         {
             this.CancelButton = new Button();
             this.CancelButton.Clicked += CancelButton_Clicked;
 
-            GridLayout grid = new Vertical_GridLayout_Builder()
+            GridLayout grid = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(new TextblockLayout(suggestion.ActivityDescriptor.ActivityName))
                 .AddLayout(new ButtonLayout(this.CancelButton, "X"))
                 .Build();

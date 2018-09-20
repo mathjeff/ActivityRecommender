@@ -109,12 +109,6 @@ namespace ActivityRecommendation
             {
                 this.NameText = newText;
             }
-
-            if (this.NameMatchesSuggestion)
-            {
-                if (this.NameMatchedSuggestion != null)
-                    this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, newText));
-            }
         }
         string NameText
         {
@@ -124,9 +118,17 @@ namespace ActivityRecommendation
             }
             set
             {
+                string oldText = this.nameText;
+
                 this.nameText = value;
                 this.nameBox.Text = value;
                 this.UpdateSuggestions();
+
+                if (this.NameMatchesSuggestion)
+                {
+                    if (this.NameMatchedSuggestion != null)
+                        this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
+                }
             }
         }
         public void Clear()

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ActivityRecommendation.Effectiveness;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -89,8 +90,14 @@ namespace ActivityRecommendation
             this.PreviewSuggestion(suggestion);
             this.engine.PutSuggestionInMemory(suggestion);
         }
+        public void AddExperiment(PlannedExperiment experiment)
+        {
+            this.PreviewExperiment(experiment);
+            this.engine.PutExperimentInMemory(experiment);
+        }
         public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
-        
+        public virtual void PreviewExperiment(PlannedExperiment experiment) { }
+
         public virtual void PreviewActivityDescriptor(ActivityDescriptor activityDescriptor) { }
 
         public virtual void SetRecentUserData(RecentUserData recentUserData) { }

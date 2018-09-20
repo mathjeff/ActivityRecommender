@@ -9,7 +9,7 @@ namespace ActivityRecommendation.View
     public class ExperimentInitializationLayout : TitledControl
     {
         public event RequestedExperimentHandler RequestedExperiment;
-        public delegate void RequestedExperimentHandler(List<ExperimentSuggestion> choices);
+        public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
 
         public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender)
         {
@@ -47,7 +47,7 @@ namespace ActivityRecommendation.View
 
         private void Okbutton_Clicked(object sender, System.EventArgs e)
         {
-            List<ExperimentSuggestion> suggestions = this.Suggestions;
+            List<SuggestedMetric> suggestions = this.Suggestions;
             // confirm that all slots have suggestions visible
             if (suggestions.Count == this.numChoices)
             {
@@ -55,21 +55,21 @@ namespace ActivityRecommendation.View
             }
         }
 
-        public ExperimentSuggestion ChooseExperimentOption()
+        public SuggestedMetricOrError ChooseExperimentOption()
         {
-            ExperimentSuggestionOrError result = this.activityRecommender.ChooseExperimentOption(this.Suggestions);
+            SuggestedMetricOrError result = this.activityRecommender.ChooseExperimentOption(this.Suggestions);
             if (result.Error != "")
             {
                 this.SetContent(new TextblockLayout("Internal error; ChooseExperimentOption returned error '" + result.Error + "' after Test_ChooseExperimentOption succeeded"));
-                return null;
+                return result;
             }
-            return result.ExperimentSuggestion;
+            return result;
         }
-        private List<ExperimentSuggestion> Suggestions
+        private List<SuggestedMetric> Suggestions
         {
             get
             {
-                List<ExperimentSuggestion> result = new List<ExperimentSuggestion>();
+                List<SuggestedMetric> result = new List<SuggestedMetric>();
                 foreach (ExperimentOptionLayout child in this.children)
                 {
                     if (child.Suggestion != null)

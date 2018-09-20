@@ -147,6 +147,11 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout("Start", usageMenu);
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
+            if (this.error != null)
+            {
+                helpOrStart_menu = new TitledControl(this.error, helpOrStart_menu);
+            }
+
 
             this.layoutStack.AddLayout(helpOrStart_menu);
 
@@ -254,8 +259,20 @@ namespace ActivityRecommendation
         private void ReadEngineFiles()
         {
             System.Diagnostics.Debug.WriteLine("Starting to read files");
+
             EngineLoader loader = new EngineLoader();
-            this.LoadFilesInto(loader);
+            this.error = "";
+            try
+            {
+                this.LoadFilesInto(loader);
+            } catch (Exception e)
+            {
+                this.error = "Failed to load files: " + e;
+                if (this.error.Length > 100)
+                {
+                    this.error = this.error.Substring(0, 100) + "...";
+                }
+            }
             this.engine = loader.Finish();
             this.suggestionDatabase = loader.SuggestionDatabase;
             this.latestParticipation = loader.LatestParticipation;
@@ -723,6 +740,7 @@ namespace ActivityRecommendation
         SuggestionDatabase suggestionDatabase;
         // how long to spend making a suggestion
         TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
+        string error = "";
 
     }
 }

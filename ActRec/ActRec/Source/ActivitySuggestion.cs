@@ -46,6 +46,7 @@ namespace ActivityRecommendation
         {
             return 0; // self
         }
+        public bool Skippable = true;
     }
 
 

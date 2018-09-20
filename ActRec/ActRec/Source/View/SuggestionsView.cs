@@ -184,7 +184,7 @@ namespace ActivityRecommendation
 
         private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion)
         {
-            SuggestionView suggestionView = new SuggestionView(suggestion);
+            SuggestionView suggestionView = new SuggestionView(suggestion, this.layoutStack);
             suggestionView.Dismissed += SuggestionView_Dismissed;
             return new LayoutCache(suggestionView);
         }

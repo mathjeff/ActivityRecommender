@@ -12,6 +12,9 @@ namespace ActivityRecommendation.View
     // an ExperimentOptionLayout is one of the entries in an ExperimentationInitializationLayout
     class ExperimentOptionLayout : ContainerLayout
     {
+        public event SuggestionDismissedHandler SuggestionDismissed;
+        public delegate void SuggestionDismissedHandler(ActivitySuggestion suggestion);
+
         public ExperimentOptionLayout(ExperimentInitializationLayout owner)
         {
             this.owner = owner;
@@ -33,7 +36,7 @@ namespace ActivityRecommendation.View
                 if (suggestion != null)
                 {
                     ExperimentSuggestionLayout suggestionLayout = new ExperimentSuggestionLayout(suggestion.PlannedMetric);
-                    suggestionLayout.SuggestionCancelled += SuggestionLayout_SuggestionDismissed;
+                    suggestionLayout.SuggestionDismissed += SuggestionLayout_SuggestionDismissed;
 
                     this.SubLayout = suggestionLayout;
                 }
@@ -46,6 +49,7 @@ namespace ActivityRecommendation.View
 
         private void SuggestionLayout_SuggestionDismissed()
         {
+            this.SuggestionDismissed.Invoke(this.Suggestion.ActivitySuggestion);
             this.Suggestion = null;
         }
 
@@ -62,7 +66,7 @@ namespace ActivityRecommendation.View
 
     class ExperimentSuggestionLayout : ContainerLayout
     {
-        public event SuggestionDismissedHandler SuggestionCancelled;
+        public event SuggestionDismissedHandler SuggestionDismissed;
         public delegate void SuggestionDismissedHandler();
 
         public ExperimentSuggestionLayout(PlannedMetric suggestion)
@@ -79,9 +83,9 @@ namespace ActivityRecommendation.View
 
         private void CancelButton_Clicked(object sender, EventArgs e)
         {
-            if (this.SuggestionCancelled != null)
+            if (this.SuggestionDismissed != null)
             {
-                this.SuggestionCancelled.Invoke();
+                this.SuggestionDismissed.Invoke();
             }
         }
 

@@ -37,12 +37,18 @@ namespace ActivityRecommendation.View
                 ExperimentOptionLayout child = new ExperimentOptionLayout(this);
                 this.children.Add(child);
                 childrenBuilder.AddLayout(child);
+                child.SuggestionDismissed += Child_SuggestionDismissed;
             }
             GridLayout bottomGrid = childrenBuilder.Build();
 
             GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(topGrid).AddLayout(bottomGrid).Uniform().Build();
 
             this.SetContent(mainGrid);
+        }
+
+        private void Child_SuggestionDismissed(ActivitySuggestion suggestion)
+        {
+            this.activityRecommender.DeclineSuggestion(suggestion);
         }
 
         private void Okbutton_Clicked(object sender, System.EventArgs e)

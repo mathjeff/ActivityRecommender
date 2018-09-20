@@ -179,8 +179,6 @@ namespace ActivityRecommendation
         {
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, DateTime.Now);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
-            // TODO: disallow ever dismissing this suggestion other than by working on it.
-            // Should the UI convert a dismissal into a recording of an unsuccessful participation? That would be surprising, so probably not
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);
             this.layoutStack.RemoveLayout();
 

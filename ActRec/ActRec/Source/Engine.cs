@@ -1243,15 +1243,19 @@ namespace ActivityRecommendation
                 experiment.Later = unpairedActivities[suggestion2Index].PlannedMetric;
 
                 Activity earlierActivity = this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
-                return new ExperimentSuggestion(experiment, unpairedActivities[suggestionIndex].ActivitySuggestion);
+                ActivitySuggestion activitySuggestion = unpairedActivities[suggestionIndex].ActivitySuggestion;
+                activitySuggestion.Skippable = false;
+                return new ExperimentSuggestion(experiment, activitySuggestion);
             }
             else
             {
                 // We're choosing a post-activity. Find the experiment we previously created for it
-                SuggestedMetric experimentSuggestion = pairedActivities[suggestionIndex];
+                SuggestedMetric experimentSuggestion = pairedActivities[suggestionIndex - unpairedActivities.Count];
                 Activity laterActivity = this.ActivityDatabase.ResolveDescriptor(experimentSuggestion.ActivityDescriptor);
                 PlannedExperiment experiment = this.findPendingExperiment(laterActivity);
-                return new ExperimentSuggestion(experiment, experimentSuggestion.ActivitySuggestion);
+                ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
+                activitySuggestion.Skippable = false;
+                return new ExperimentSuggestion(experiment, activitySuggestion);
             }
         }
 

@@ -13,9 +13,10 @@ namespace ActivityRecommendation
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment(ActivitySuggestion suggestion);
 
-        public SuggestionView(ActivitySuggestion suggestion)
+        public SuggestionView(ActivitySuggestion suggestion, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
+            this.layoutStack = layoutStack;
 
             // have the X button use a certain amount of space on the right
             BoundProperty_List widths = new BoundProperty_List(2);
@@ -63,9 +64,21 @@ namespace ActivityRecommendation
             this.justifyButton.Clicked += justifyButton_Click;
             this.experimentButton = new Button();
             this.experimentButton.Clicked += ExperimentButton_Clicked;
-            mainGrid.AddLayout(new ButtonLayout(this.cancelButton, "x"));
+            this.explainWhyYouCantSkipButton = new Button();
+            this.explainWhyYouCantSkipButton.Clicked += ExplainWhyYouCantSkipButton_Clicked;
+            if (suggestion.Skippable)
+                mainGrid.AddLayout(new ButtonLayout(this.cancelButton, "x"));
+            else
+                mainGrid.AddLayout(new ButtonLayout(this.explainWhyYouCantSkipButton, "?"));
             this.SubLayout = mainGrid;
 
+        }
+
+        private void ExplainWhyYouCantSkipButton_Clicked(object sender, EventArgs e)
+        {
+            this.layoutStack.AddLayout(new TextblockLayout("This suggestion is part of an experiment, so you're not allowed to skip it. " +
+                "After spending some time on it, if you haven't completed it, then go to the participations page to record having worked on it. " +
+                "That's where you can specify that you didn't complete it."));
         }
 
         private void ExperimentButton_Clicked(object sender, EventArgs e)
@@ -118,9 +131,11 @@ namespace ActivityRecommendation
         
         GridLayout contentGrid;
         Button cancelButton;
+        Button explainWhyYouCantSkipButton;
         Button justifyButton;
         Button experimentButton;
         ActivitySuggestion suggestion;
+        LayoutStack layoutStack;
         
     }
 }

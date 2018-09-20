@@ -160,6 +160,8 @@ namespace ActivityRecommendation
             properties[this.SuggestionStartDateTag] = this.ConvertToStringBody(activitySuggestion.StartDate);
             if (activitySuggestion.EndDate != null)
                 properties[this.SuggestionEndDateTag] = this.ConvertToStringBody(activitySuggestion.EndDate);
+            if (!activitySuggestion.Skippable)
+                properties[this.SkippableTag] = this.ConvertToStringBody(activitySuggestion.Skippable);
 
             return this.ConvertToStringBody(properties);
         }
@@ -854,6 +856,7 @@ namespace ActivityRecommendation
             DateTime startDate = new DateTime();
             DateTime? endDate = null;
             DateTime? createdDate = null;
+            bool skippable = true;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -876,11 +879,17 @@ namespace ActivityRecommendation
                     endDate = this.ReadDate(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.SkippableTag)
+                {
+                    skippable = this.ReadBool(currentChild);
+                    continue;
+                }
             }
             ActivitySuggestion suggestion = new ActivitySuggestion(descriptor);
             suggestion.CreatedDate = createdDate;
             suggestion.StartDate = startDate;
             suggestion.EndDate = endDate;
+            suggestion.Skippable = skippable;
             return suggestion;
         }
 
@@ -1341,6 +1350,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Suggestion";
+            }
+        }
+        private string SkippableTag
+        {
+            get
+            {
+                return "Skippable";
             }
         }
         private string SuggestionsTag

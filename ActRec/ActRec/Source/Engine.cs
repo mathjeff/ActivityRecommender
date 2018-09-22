@@ -230,10 +230,6 @@ namespace ActivityRecommendation
         public ActivitySuggestion MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
             List<Activity> candidates;
-            foreach (Activity activity in this.activityDatabase.AllActivities)
-            {
-                activity.PredictionsNeedRecalculation = true;
-            }
             // determine which activities to consider
             if (requestCategory != null)
             {
@@ -249,6 +245,10 @@ namespace ActivityRecommendation
         public ActivitySuggestion MakeRecommendation(List<Activity> candidates, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
             DateTime processingStartTime = DateTime.Now;
+            foreach (Activity activity in this.activityDatabase.AllActivities)
+            {
+                activity.PredictionsNeedRecalculation = true;
+            }
 
             // First, go update the stats for existing activities
             this.EnsureRatingsAreAssociated();

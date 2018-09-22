@@ -35,7 +35,7 @@ namespace ActivityRecommendation.View
                 this.suggestion = value;
                 if (suggestion != null)
                 {
-                    ExperimentSuggestionLayout suggestionLayout = new ExperimentSuggestionLayout(suggestion.PlannedMetric);
+                    ExperimentSuggestionLayout suggestionLayout = new ExperimentSuggestionLayout(suggestion);
                     suggestionLayout.SuggestionDismissed += SuggestionLayout_SuggestionDismissed;
 
                     this.SubLayout = suggestionLayout;
@@ -69,13 +69,14 @@ namespace ActivityRecommendation.View
         public event SuggestionDismissedHandler SuggestionDismissed;
         public delegate void SuggestionDismissedHandler();
 
-        public ExperimentSuggestionLayout(PlannedMetric suggestion)
+        public ExperimentSuggestionLayout(SuggestedMetric suggestion)
         {
             this.CancelButton = new Button();
             this.CancelButton.Clicked += CancelButton_Clicked;
 
             GridLayout grid = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(new TextblockLayout(suggestion.ActivityDescriptor.ActivityName))
+                .AddLayout(new TextblockLayout("P:" + suggestion.ActivitySuggestion.ParticipationProbability))
                 .AddLayout(new ButtonLayout(this.CancelButton, "X"))
                 .Build();
             this.SubLayout = grid;

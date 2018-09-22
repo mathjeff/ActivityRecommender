@@ -1,9 +1,9 @@
 ﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",
+    "Microsoft.NETCore.UniversalWindowsPlatform": "6.0.1",
     "PCLStorage": "1.0.2",
     "SkiaSharp": "1.60.0",
-    "Xamarin.Forms": "2.3.4.224"
+    "Xamarin.Forms": "2.4.0.282"
   },
   "frameworks": {
     "uap10.0.10586": {}

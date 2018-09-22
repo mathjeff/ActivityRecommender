@@ -365,6 +365,20 @@ typical longtermPredictionIfParticipated error = 0.0443
 typicalScoreError = 0.1359
 equivalentWeightedProbability = 0.9201
 completed in 00:01:31.8
+
+updated results on 2018-09-22 with more data
+Reminder that this runs outside the debugger so I didn't bother copy-pasting the entire numbers of this run either
+typical longtermPredictionIfSuggested = 0.0723
+typical longtermPredictionIfParticipated = 0.0439
+typicalScoreError = 0.1331
+equivalentWeightedProbability = 0.9207
+
+updated results on 2018-09-22 after fixing longtermValue predictions to still incorporate skip probability when skip probability is high
+typical longtermPredictionIfSuggested = 0.0722
+typical longtermPredictionIfParticipated = 0.0439
+typicalScoreError = 0.1331
+equivalentWeightedProbability = 0.9207
+
  */
 
 

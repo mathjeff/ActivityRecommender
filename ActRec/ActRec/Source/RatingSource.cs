@@ -89,9 +89,6 @@ namespace ActivityRecommendation
 
         
         // private
-        private bool isBasedOnPastEvent;
-        private bool isDateExact;
-        private bool isScoreExact;
         private string description;
     }
 }

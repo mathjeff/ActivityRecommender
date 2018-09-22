@@ -68,13 +68,6 @@ namespace ActivityRecommendation
             // setup a display for some statistics
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
 
-#if false
-            // setup an exit button
-            this.exitButton = new Button();
-            builder.AddLayout(new ButtonLayout(this.exitButton, "Escape"));
-#endif
-
-
             // display an editable date range
             this.participationDataDisplay = new TitledControl("Stats:");
             this.queryStartDateDisplay = new DateEntryView("From", this.layoutStack);
@@ -93,24 +86,6 @@ namespace ActivityRecommendation
             this.timeFractionDisplay = new Label();
             this.timeFractionDisplay.HorizontalTextAlignment = TextAlignment.Center;
             builder.AddLayout(new TextblockLayout(this.timeFractionDisplay));
-
-#if false
-            this.thinkingTime_Display = new TitledTextblock("You often spend");
-            this.thinkingTime_Display.Text = this.yAxisActivity.ThinkingTimes.Mean.ToString() + " seconds considering this activity";
-            builder.AddLayout(this.thinkingTime_Display);
-#endif
-
-#if false
-            this.mostPopularChild_View = new TitledTextblock("Your most common immediate subactivity:");
-            this.mostPopularChild_View.Text = "[There are none]";
-            builder.AddLayout(this.mostPopularChild_View);
-#endif
-
-#if false
-            this.mostPopularDescendent_View = new TitledTextblock("Your most common subactivity,\n among those having no subactivities:");
-            this.mostPopularDescendent_View.Text = "[There are none]";
-            builder.AddLayout(this.mostPopularDescendent_View);
-#endif
 
             // display rating statistics
             this.ratingWhenSuggested_Display = new TitledTextblock("Mean rating when suggested:");
@@ -458,39 +433,7 @@ namespace ActivityRecommendation
                     bestTotal = currentTotal;
                 }
             }
-            if (this.mostPopularChild_View != null)
-            {
-                if (bestChild != null)
-                    this.mostPopularChild_View.Text = bestChild.Name;
-
-                bestChild = null;
-                bestTotal = 0;
-                foreach (Activity child in this.yAxisActivity.GetChildrenRecursive())
-                {
-                    if (child.GetChildren().Count == 0)
-                    {
-                        ParticipationsSummary candidate = child.SummarizeParticipationsBetween(startDate, endDate);
-                        double currentTotal = candidate.CumulativeIntensity.TotalSeconds;
-                        if (currentTotal > bestTotal)
-                        {
-                            bestChild = child;
-                            bestTotal = currentTotal;
-                        }
-                    }
-                }
-                if (bestChild != null)
-                    this.mostPopularDescendent_View.Text = bestChild.Name;
-            }
         }
-        public void AddExitClickHandler(EventHandler e)
-        {
-            this.exitButton.Clicked += e;
-            this.exitHandler = e;
-        }
-        /*void ActivityVisualizationView_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            this.exitHandler.Invoke(sender, e);
-        }*/
 
         public string XAxisLabel
         {
@@ -555,14 +498,10 @@ namespace ActivityRecommendation
             return y;
         }
 
-        Button exitButton;
-        EventHandler exitHandler;
         Activity yAxisActivity;
         IProgression xAxisProgression;
         TitledControl ratingsView;
         TitledControl participationsView;
-        TitledTextblock mostPopularChild_View;
-        TitledTextblock mostPopularDescendent_View;
         RatingSummarizer ratingSummarizer;
 
         TitledControl participationDataDisplay;
@@ -573,7 +512,6 @@ namespace ActivityRecommendation
         TimeSpan smoothingDuration;
         TitledTextblock ratingWhenSuggested_Display;
         TitledTextblock ratingWhenNotSuggested_Display;
-        TitledTextblock thinkingTime_Display;
         LayoutStack layoutStack;
     }
 }

@@ -12,7 +12,6 @@ namespace ActivityRecommendation
         {
             this.SetTitle("View Statistics");
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
-            //this.displayGrid = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(1), LayoutScore.Zero);
 
             this.yAxisNameBox = new ActivityNameEntryBox("Activity");
             gridBuilder.AddLayout(this.yAxisNameBox);
@@ -23,8 +22,6 @@ namespace ActivityRecommendation
 
             //this.xAxisNameBox = new ActivityNameEntryBox("X-Axis Activity (optional)");
             //this.xAxisProgressionSelector = new ProgressionSelectionView("X-Axis");
-            //this.displayGrid.AddItem(this.xAxisProgressionSelector);
-
 
             this.SetContent(new LayoutCache(gridBuilder.Build()));
         }
@@ -71,7 +68,6 @@ namespace ActivityRecommendation
             }
         }
         Button okButton;
-        GridLayout displayGrid;
         ActivityNameEntryBox yAxisNameBox;
         //ActivityNameEntryBox xAxisNameBox;
         //ProgressionSelectionView xAxisProgressionSelector; // TODO: make this work

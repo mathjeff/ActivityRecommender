@@ -585,6 +585,8 @@ namespace ActivityRecommendation
                 // For now we approximate that by recording the date whenever it is executed or skipped, and recording the user's overall future happiness
                 //this.AddNew_RatingSummary(newSkip.Date, this.overallRatings_summarizer);
             }
+            // Also update an older datapoint so that no datapoint's value gets old
+            this.UpdateNext_RatingSummaries(this.PendingSkips.Count);
 
 
             this.PendingSkips.Clear();
@@ -692,7 +694,6 @@ namespace ActivityRecommendation
                     coordinates[i] = value.Value.Mean;
                 else
                     coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
-
             }
             return coordinates;
         }

@@ -379,6 +379,18 @@ typical longtermPredictionIfParticipated = 0.0439
 typicalScoreError = 0.1331
 equivalentWeightedProbability = 0.9207
 
+updated results on 2018-09-23 with more data
+0.0681 typical longtermPredictionIfSuggested
+0.0439 typical longtermPredictionIfParticipated
+0.1329 typicalScoreError
+0.9204 equivalentWeightedProbability
+
+updated results on 2018-09-23 after making the longtermValue predictions react to new data more quickly
+0.0683 typical longtermPredictionIfSuggested
+0.0421 typical longtermPredictionIfParticipated
+0.1329 typicalScoreError
+0.9204 equivalentWeightedProbability
+
  */
 
 

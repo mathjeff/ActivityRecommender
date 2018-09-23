@@ -60,7 +60,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.values;
+                return this.values.CopyAndReweightTo(1);
             }
         }
         public double[] OutputCoordinates

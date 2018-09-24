@@ -260,9 +260,9 @@ namespace ActivityRecommendation
             } catch (Exception e)
             {
                 this.error = "Failed to load files: " + e;
-                if (this.error.Length > 100)
+                if (this.error.Length > 200)
                 {
-                    this.error = this.error.Substring(0, 100) + "...";
+                    this.error = this.error.Substring(0, 200) + "...";
                 }
             }
             this.engine = loader.Finish();

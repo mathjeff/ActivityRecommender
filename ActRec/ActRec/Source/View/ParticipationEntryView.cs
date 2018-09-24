@@ -293,11 +293,11 @@ namespace ActivityRecommendation
                 Consideration consideration = new Consideration(considerationDescriptor);
                 participation.Consideration = consideration;
             }
-            if (this.todoCompletionCheckbox.Checked)
+            if (this.EnteringTodo)
             {
-                CompletionEffectivenessMeasurement effectiveness = new CompletionEffectivenessMeasurement();
-                effectiveness.Successful = true;
-                participation.EffectivenessMeasurement = effectiveness;
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(this.todoCompletionCheckbox.Checked);
+                RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
+                participation.EffectivenessMeasurement.Computation = measurement;
             }
 
             return participation;
@@ -318,20 +318,26 @@ namespace ActivityRecommendation
 
         private void updateTodoCheckboxVisibility()
         {
-            Activity activity = this.nameBox.Activity;
-            bool shouldBeChooseable = false;
-            if (activity != null)
-            {
-                if (activity is ToDo)
-                {
-                    shouldBeChooseable = true;
-                }
-            }
-            if (shouldBeChooseable)
+            if (this.EnteringTodo)
                 this.todoCompletionCheckboxHolder.SubLayout = this.todoCompletionCheckboxLayout;
             else
                 this.todoCompletionCheckboxHolder.SubLayout = null;
+        }
 
+        private bool EnteringTodo
+        {
+            get
+            {
+                Activity activity = this.nameBox.Activity;
+                if (activity != null)
+                {
+                    if (activity is ToDo)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
 
         private void Update_FeedbackBlock_Text()

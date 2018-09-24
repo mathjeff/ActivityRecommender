@@ -43,7 +43,7 @@ namespace ActivityRecommendation
 
         public override void AddParticipation(Participation newParticipation)
         {
-            if (newParticipation.CompletedTodo)
+            if (newParticipation.CompletedMetric)
                 this.complete = true;
             base.AddParticipation(newParticipation);
         }

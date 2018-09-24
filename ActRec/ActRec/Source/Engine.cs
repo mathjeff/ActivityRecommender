@@ -172,7 +172,23 @@ namespace ActivityRecommendation
                 {
                     parent.AddParticipation(newParticipation);
                 }
-            }                
+            }
+            RelativeEfficiencyMeasurement efficiencyMeasurement = newParticipation.RelativeEfficiencyMeasurement;
+            if (efficiencyMeasurement != null)
+            {
+                this.CascadeEfficiency(efficiencyMeasurement);
+                if (efficiencyMeasurement.Earlier != null)
+                    this.CascadeEfficiency(efficiencyMeasurement.Earlier);
+            }
+        }
+        // gives the RelativeEfficiencyMeasuremnt to all Activities that are interested in it
+        private void CascadeEfficiency(RelativeEfficiencyMeasurement measurement)
+        {
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(measurement.ActivityDescriptor);
+            foreach (Activity parent in this.FindAllSupercategoriesOf(activity))
+            {
+                parent.AddEfficiencyMeasurement(measurement);
+            }
         }
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
@@ -1064,6 +1080,94 @@ namespace ActivityRecommendation
             return rating;
         }
 
+        public RelativeEfficiencyMeasurement Make_CompletionEfficiencyMeasurement(Participation p)
+        {
+            Activity a = this.ActivityDatabase.ResolveDescriptor(p.ActivityDescriptor);
+            PlannedExperiment experiment = this.findPendingExperiment(a);
+            if (experiment == null)
+            {
+                // can't estimate effectivness without an experiment
+                return null;
+            }
+            if (!experiment.InProgress)
+            {
+                // can't estimate effectiveness if the experiment isn't done
+                return null;
+            }
+
+            // go get a lot of input variables for this effectiveness calculation
+            Participation participation1 = experiment.FirstParticipation;
+            Participation participation2 = p;
+            double predictedDifficulty1 = 1.0 / experiment.Earlier.EstimatedSuccessesPerSecond;
+            double predictedDifficulty2 = 1.0 / experiment.Later.EstimatedSuccessesPerSecond;
+            double duration1 = participation1.Duration.TotalSeconds;
+            double duration2 = participation2.Duration.TotalSeconds;
+            double numSuccesses1 = 0;
+            if (participation1.CompletedMetric)
+                numSuccesses1 = 1;
+            double numSuccesses2 = 0;
+            if (participation2.CompletedMetric)
+                numSuccesses2 = 1;
+            if (numSuccesses1 == 0 && numSuccesses2 == 0)
+            {
+                // if neither participation was successful, then we don't have enough information to update our efficiency estimates
+                // (updatedWeight1 below would be 0)
+                return null;
+            }
+            Activity activity1 = this.ActivityDatabase.ResolveDescriptor(participation1.ActivityDescriptor);
+            Activity activity2 = this.ActivityDatabase.ResolveDescriptor(participation2.ActivityDescriptor);
+            double predictedEfficiency1 = activity1.PredictEfficiency(participation1.StartDate).Mean;
+            double predictedEfficiency2 = activity2.PredictEfficiency(participation2.StartDate).Mean;
+            System.Diagnostics.Debug.WriteLine("Making completion efficiency measurement for " + activity1.Name + " and " + activity2.Name);
+
+            // now calculate efficiency
+            System.Diagnostics.Debug.WriteLine("Duration1 = " + duration1);
+            double weight1 = duration1 / predictedDifficulty1;
+            System.Diagnostics.Debug.WriteLine("Duration2 = " + duration2);
+            double weight2 = duration2 / predictedDifficulty2;
+            double totalEffectiveness = weight1 * predictedEfficiency1 + weight2 * predictedEfficiency2;
+            System.Diagnostics.Debug.WriteLine("NumSuccess1 = " + numSuccesses1);
+            double successFraction1 = numSuccesses1 / (numSuccesses1 + numSuccesses2);
+            System.Diagnostics.Debug.WriteLine("NumSuccess2 = " + numSuccesses2);
+            double successFraction2 = numSuccesses2 / (numSuccesses1 + numSuccesses2);
+            double updatedEfficiency1 = totalEffectiveness * successFraction1 / weight1;
+            double updatedEfficiency2 = totalEffectiveness * successFraction2 / weight2;
+            System.Diagnostics.Debug.WriteLine("updatedEfficiency1 = " + updatedEfficiency1);
+            double updatedWeight1 = numSuccesses1 + numSuccesses2;
+            System.Diagnostics.Debug.WriteLine("updatedEfficiency2 = " + updatedEfficiency2);
+            double updatedWeight2 = updatedWeight1;
+            // Why the efficiencies are computed this way:
+            // Note that weight1*updatedEfficiency1+weight2*updatedEfficiency2=totalProductivity=weight1*predictedEfficiency1+weight2*predictedEfficiency2, so (weighted) average estimated efficiency is conserved
+            //  Note that numSuccesses1 is 0 or 1, and numSucesses2 is 0 or 1
+            // Note that doubling predictedDifficulty[[1,2]] doesn't change updatedEfficiency[[1,2]]
+            //  In other words, having poor difficulty estimates doesn't bias the efficiency measurements (although using poor difficulty estimates does add variance to the efficiency measurements)
+            // Note that spending longer on duration1 than on duration2 makes weight1 larger than weight2, which makes updatedEfficiency2 larger than updatedEfficiency1
+            // Note that doubling duration[i] and predictedDifficulty[i] leaves the efficiency estimates unchanged
+            // Note that if numSuccesses1 == 0, then updatedEfficiency2 = totalProductivity/weight2 = predictedEfficiency1*weight1/weight2 + predictedEfficiency2, which is more than predictedEfficiency2
+            // Note that if this process is run twice, once with two successes and once with numSuccesses1=0,numSuccesses2=1, then assuming everything else is identical:
+            //  The first time, updatedEfficiency1=updatedEfficiency2=1, updatedWeight1=updatedWeight2=2
+            //  The second time, updatedEfficiency1=0, updatedEfficiency2=2, updatedWeight1=updatedWeight2=1
+            //  average(updatedEfficiency1)=2/3, average(updatedEfficiency2)=4/3 = 2*average(updatedEfficiency1) as desired
+
+            // lastly, assemble the results
+            RelativeEfficiencyMeasurement measurement1 = new RelativeEfficiencyMeasurement(participation1, Distribution.MakeDistribution(updatedEfficiency1, 0, updatedWeight1));
+            RelativeEfficiencyMeasurement measurement2 = new RelativeEfficiencyMeasurement(participation2, Distribution.MakeDistribution(updatedEfficiency2, 0, updatedWeight2));
+            measurement1.Later = measurement2;
+            measurement2.Earlier = measurement1;
+
+            return measurement2;
+        }
+        private double computeSuccessesPerSecond(Participation participation)
+        {
+            if (participation.CompletedMetric)
+            {
+                double totalSeconds = participation.Duration.TotalSeconds;
+                if (totalSeconds > 0)
+                    return 1.0 / totalSeconds;
+            }
+            return 0;
+        }
+
 
         // Tells whether ChooseExperimentOption will return an error
         // If ChooseExperimentOption is not available right now, returns a string explaining why. Otherwise returns ""
@@ -1204,7 +1308,14 @@ namespace ActivityRecommendation
             PlannedMetric plannedMetric = new PlannedMetric();
             plannedMetric.ActivityDescriptor = bestActivity.MakeDescriptor();
             plannedMetric.MetricName = metric.Name;
-            plannedMetric.EstimatedSuccessesPerSecond = 1; // TODO: predict the success rate for bestActivity, or at least take the average
+
+            double typicalParticipationDuration = 3600; // default to 1 hour
+            Activity activityToComputeMeanParticipationDuration = bestActivity;
+            if (bestActivity.NumParticipations < 4 && bestActivity.Parents.Count > 0)
+                activityToComputeMeanParticipationDuration = bestActivity.Parents[0];
+            typicalParticipationDuration = activityToComputeMeanParticipationDuration.MeanParticipationDuration;
+            // TODO: measure number of successes and time spent and incorporate that for a more accurate estimate of successes per second
+            plannedMetric.EstimatedSuccessesPerSecond = 1.0 / typicalParticipationDuration;
             return new SuggestedMetricOrError(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when)));
         }
 

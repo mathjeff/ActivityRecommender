@@ -53,8 +53,10 @@ namespace ActivityRecommendation
                 properties[this.CommentTag] = comment;
             if (participation.Consideration != null)
                 properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
-            if (participation.CompletedTodo)
+            if (participation.CompletedMetric)
                 properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(true);
+            if (participation.RelativeEfficiencyMeasurement != null)
+                properties[this.EfficiencyMeasurement_Tag] = this.ConvertToStringBody(participation.RelativeEfficiencyMeasurement);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -545,6 +547,7 @@ namespace ActivityRecommendation
             string comment = null;
             bool? suggested = null;
             bool successful = false;
+            RelativeEfficiencyMeasurement efficiencyMeasurement = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -589,6 +592,11 @@ namespace ActivityRecommendation
                     successful = this.ReadBool(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.EfficiencyMeasurement_Tag)
+                {
+                    efficiencyMeasurement = this.ReadEfficiencyMeasurement(currentChild);
+                    continue;
+                }
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             if (rating != null)
@@ -605,15 +613,55 @@ namespace ActivityRecommendation
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
-            if (successful)
+            if (successful || efficiencyMeasurement != null)
             {
-                CompletionEffectivenessMeasurement effectiveness = new CompletionEffectivenessMeasurement();
-                effectiveness.Successful = true;
-                currentParticipation.EffectivenessMeasurement = effectiveness;
+                currentParticipation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful);
+                if (efficiencyMeasurement != null)
+                {
+                    efficiencyMeasurement.FillInFromParticipation(currentParticipation);
+                }
+                currentParticipation.EffectivenessMeasurement.Computation = efficiencyMeasurement;
             }
 
             this.latestParticipationRead = currentParticipation;
             return currentParticipation;
+        }
+
+        private RelativeEfficiencyMeasurement ReadEfficiencyMeasurement(XmlNode nodeRepresentation)
+        {
+            RelativeEfficiencyMeasurement measurement = new RelativeEfficiencyMeasurement();
+            double weight = 1;
+            double mean = 1;
+            foreach (XmlNode child in nodeRepresentation.ChildNodes)
+            {
+                if (child.Name == this.ActivityDescriptorTag)
+                {
+                    measurement.ActivityDescriptor = this.ReadActivityDescriptor(child);
+                    continue;
+                }
+                if (child.Name == this.DateTag)
+                {
+                    measurement.Date = this.ReadDate(child);
+                    continue;
+                }
+                if (child.Name == this.EfficiencyValue_Tag)
+                {
+                    mean = this.ReadDouble(child);
+                    continue;
+                }
+                if (child.Name == this.EfficiencyWeight_Tag)
+                {
+                    weight = this.ReadDouble(child);
+                    continue;
+                }
+                if (child.Name == this.EarlierEfficency_Tag)
+                {
+                    measurement.Earlier = this.ReadEfficiencyMeasurement(child);
+                    continue;
+                }
+            }
+            measurement.RecomputedEfficiency = Distribution.MakeDistribution(mean, 0, weight);
+            return measurement;
         }
 
         // returns an object of type "Skip" that this XmlNode represents
@@ -1115,6 +1163,24 @@ namespace ActivityRecommendation
             return result;
         }
 
+        private string ConvertToStringBody(RelativeEfficiencyMeasurement measurement)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+
+            bool includeParticipationDescription = (measurement.Earlier == null);
+            if (includeParticipationDescription)
+            {
+                properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(measurement.ActivityDescriptor);
+                properties[this.DateTag] = this.ConvertToStringBody(measurement.Date);
+            }
+            properties[this.EfficiencyValue_Tag] = this.ConvertToStringBody(measurement.RecomputedEfficiency.Mean);
+            properties[this.EfficiencyWeight_Tag] = this.ConvertToStringBody(measurement.RecomputedEfficiency.Weight);
+            if (measurement.Earlier != null)
+                properties[this.EarlierEfficency_Tag] = this.ConvertToStringBody(measurement.Earlier);
+
+            return this.ConvertToStringBody(properties);
+        }
+
         #endregion
 
         #region Special String Identifiers
@@ -1268,6 +1334,35 @@ namespace ActivityRecommendation
             get
             {
                 return "Successful";
+            }
+        }
+        private string EfficiencyMeasurement_Tag
+        {
+            get
+            {
+                return "Efficiency";
+            }
+        }
+        public string EfficiencyValue_Tag
+        {
+            get
+            {
+                return "Value";
+            }
+        }
+        public string EfficiencyWeight_Tag
+        {
+            get
+            {
+                return "Weight";
+            }
+        }
+
+        public string EarlierEfficency_Tag
+        {
+            get
+            {
+                return "Earlier";
             }
         }
 

@@ -45,9 +45,18 @@ namespace ActivityRecommendation
         public ActivityDescriptor ActivityDescriptor { get; set; }          // a description of what the user actually did
         public Consideration Consideration { get; set; }            // The user's thoughts that contributed to the fact that they did this activity
         public bool? Suggested { get; set; }     // tells whether the latest suggestion that the engine made was to do this activity
-        public CompletionEffectivenessMeasurement EffectivenessMeasurement { get; set; }
-        // Returns true if this activity is of type ToDo and this Participation completes it
-        public bool CompletedTodo
+        public CompletionEfficiencyMeasurement EffectivenessMeasurement { get; set; }
+        public RelativeEfficiencyMeasurement RelativeEfficiencyMeasurement
+        {
+            get
+            {
+                if (this.EffectivenessMeasurement == null)
+                    return null;
+                return this.EffectivenessMeasurement.Computation;
+            }
+        }
+        // Returns true if this Participation was assigned a completion metric that considers this Participation to have succeeded
+        public bool CompletedMetric
         {
             get
             {

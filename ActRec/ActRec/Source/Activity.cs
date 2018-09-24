@@ -121,6 +121,7 @@ namespace ActivityRecommendation
         public LinkedList<Participation> PendingParticipationsForShorttermAnalysis = new LinkedList<Participation>();
         public LinkedList<Participation> PendingParticipationsForLongtermAnalysis = new LinkedList<Participation>();
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
+        public List<RelativeEfficiencyMeasurement> PendingEfficiencies = new List<RelativeEfficiencyMeasurement>();
         public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
         public int NumParticipations { get { return (int)this.participationDurations.Weight; } }
@@ -451,14 +452,25 @@ namespace ActivityRecommendation
                     double[] coordinates = this.Get_Rating_TrainingCoordinates((DateTime)newRating.Date);
 
                     Distribution score = Distribution.MakeDistribution(newRating.Score, 0, 1);
-                    AdaptiveLinearInterpolation.Datapoint<Distribution> datapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
-                    this.shortTerm_ratingInterpolator.AddDatapoint(datapoint);
+                    AdaptiveLinearInterpolation.Datapoint<Distribution> ratingDatapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
+                    this.shortTerm_ratingInterpolator.AddDatapoint(ratingDatapoint);
                 }
 
                 // keep track of the ratings
                 this.ratingProgression.AddRating(newRating);
             }
             this.PendingRatings.Clear();
+        }
+        private void ApplyPendingEfficiencies()
+        {
+            foreach (RelativeEfficiencyMeasurement measurement in this.PendingEfficiencies)
+            {
+                double[] coordinates = this.Get_Efficiency_PredictionCoordinates(measurement.Date);
+                Datapoint<Distribution> efficiencyDatapoint = new Datapoint<Distribution>(coordinates, measurement.RecomputedEfficiency);
+                this.efficiencyInterpolator.AddDatapoint(efficiencyDatapoint);
+            }
+            this.PendingEfficiencies.Clear();
+
         }
         public virtual void AddParticipation(Participation newParticipation)
         {
@@ -484,6 +496,10 @@ namespace ActivityRecommendation
 
             this.PendingParticipationsForLongtermAnalysis.AddLast(newParticipation);
             this.PendingParticipationsForShorttermAnalysis.AddLast(newParticipation);
+        }
+        public void AddEfficiencyMeasurement(RelativeEfficiencyMeasurement measurement)
+        {
+            this.PendingEfficiencies.Add(measurement);
         }
         private void ApplyPendingParticipations()
         {
@@ -638,6 +654,22 @@ namespace ActivityRecommendation
             Distribution average = new Distribution(this.longTerm_participationValue_interpolator.GetAverage());
             return average;
         }
+        // Predicts the relative efficiency with which the user is expected to be able to progress on this Activity at the given time
+        // Note that this isn't supposed to be a measure of the overall difficulty of the activity
+        // Because we don't have a way to separate the definitions of difficulty (1 / duration) and efficiency (effectiveness per unit time)
+        // (that is, (effectiveness = duration * efficiency)),
+        // the average return value from PredictEfficiency is supposed to tend toward 1
+        // (of course, in practice, because we need a bunch of data before have good estimates of the difficulties of the various tasks,
+        // in practice, for some activities this will tend to be higher than for others)
+        public Distribution PredictEfficiency(DateTime when)
+        {
+            this.ApplyPendingEfficiencies();
+            double[] coordinates = this.Get_Efficiency_PredictionCoordinates(when);
+            Distribution estimate = new Distribution(this.efficiencyInterpolator.Interpolate(coordinates));
+            // add a little bit of extra error to move the estimate closer to 1
+            estimate = estimate.Plus(Distribution.MakeDistribution(1, 0, 2));
+            return estimate;
+        }
 
         /*public ActivitySuggestionJustification JustifyInterpolation(ActivitySuggestion suggestion)
         {
@@ -697,6 +729,13 @@ namespace ActivityRecommendation
             }
             return coordinates;
         }
+
+
+        private double[] Get_Efficiency_PredictionCoordinates(DateTime when)
+        {
+            return this.Get_Rating_PredictionCoordinates(when);
+        }
+
 
         // returns a bunch of estimates about how it will be rated at this date
         public List<Prediction> Get_ShortTerm_RatingEstimates(DateTime when)
@@ -1004,6 +1043,7 @@ namespace ActivityRecommendation
             this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
             this.longTerm_suggestionValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
             this.longTerm_participationValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
+            this.efficiencyInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
         }
         // initialize the PredictionLinks that estimate the probability that the user will do this Doable
         private void SetupParticipationProbabilityPredictors()
@@ -1102,10 +1142,8 @@ namespace ActivityRecommendation
         private SkipProgression skipProgression;
         private ExpectedParticipationProbabilityProgression expectedParticipationProbabilityProgression;
 
-        //private Queue<RatingSummary> ratingSummariesToUpdate;
-        //private PredictionLink 
+        private AdaptiveLinearInterpolator<Distribution> efficiencyInterpolator;
 
-        //private List<IPredictionLink> parentPredictionLinks;    // a list of all PredictionLinks that are used to predict the value of this Doable's RatingProgression from parent ratings
 
         
         private int uniqueIdentifier;

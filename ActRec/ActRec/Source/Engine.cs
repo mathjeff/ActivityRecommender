@@ -1438,6 +1438,19 @@ namespace ActivityRecommendation
             }
         }
 
+        public List<Activity> ActivitiesSortedByAverageRating
+        {
+            get
+            {
+                List<Activity> activities = new List<Activity>(this.ActivityDatabase.AllActivities);
+                // it takes more time to also analyze the ratings for the root activity, but it's probably not very helpful to do
+                activities.Remove(this.ActivityDatabase.RootActivity);
+                activities.Sort(new ActivityAverageScoreComparer());
+                activities.Reverse();
+                return activities;
+            }
+        }
+
         public DateTime LatestInteractionDate
         {
             get

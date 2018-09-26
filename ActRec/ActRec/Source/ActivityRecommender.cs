@@ -128,7 +128,11 @@ namespace ActivityRecommendation
 
             this.dataExportView = new DataExportView(this, this.layoutStack);
 
-            LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack).AddLayout("Import", this.dataImportView).AddLayout("Export", this.dataExportView).Build();
+            LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack)
+                .AddLayout("Import", this.dataImportView)
+                .AddLayout("Export", this.dataExportView)
+                .AddLayout("Summarize", new PreferenceSummaryLayout(engine, layoutStack, publicFileIo))
+                .Build();
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
@@ -136,7 +140,7 @@ namespace ActivityRecommendation
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
-            usageMenu_builder.AddLayout("Import/Export Data", importExportView);
+            usageMenu_builder.AddLayout("Import/Export", importExportView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 

@@ -110,6 +110,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\AbsoluteRating.cs" />
     <Compile Include="Source\AbsoluteRatingEntryView.cs" />
+    <Compile Include="Source\ActivityAverageScoreComparer.cs" />
     <Compile Include="Source\Effectiveness\EfficiencyMeasurement.cs" />
     <Compile Include="Source\Effectiveness\Metric.cs" />
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
@@ -191,6 +192,7 @@
     <Compile Include="Source\View\ParticipationCorrelationView.cs" />
     <Compile Include="Source\View\ParticipationEntryView.cs" />
     <Compile Include="Source\View\PlotView.cs" />
+    <Compile Include="Source\View\PreferenceSummaryLayout.cs" />
     <Compile Include="Source\View\ProgressionSelectionView.cs" />
     <Compile Include="Source\View\RatingEntryView.cs" />
     <Compile Include="Source\View\RelativeRatingEntryView.cs" />

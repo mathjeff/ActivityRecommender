@@ -19,7 +19,13 @@ namespace ActivityRecommendation
             this.importButton = new Button();
             this.importButton.Clicked += ChooseFile;
             ButtonLayout buttonLayout = new ButtonLayout(this.importButton, "Import and Overwrite");
-            
+
+            GridLayout content = new Vertical_GridLayout_Builder()
+                .Uniform()
+                .AddLayout(new TextblockLayout("The file to import should be of the form created by the Export feature " +
+                "(and the name of file should start with \"ActivityData\")"))
+                .AddLayout(buttonLayout)
+                .Build();
 
             this.SetContent(buttonLayout);
         }

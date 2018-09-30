@@ -11,7 +11,8 @@ namespace ActivityRecommendation
         public Engine()
         {
             this.weightedRatingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
-            this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer);
+            this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
+            this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer, this.efficiencySummarizer);
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.activityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
             this.unappliedRatings = new List<AbsoluteRating>();
@@ -174,21 +175,14 @@ namespace ActivityRecommendation
                 }
             }
             RelativeEfficiencyMeasurement efficiencyMeasurement = newParticipation.RelativeEfficiencyMeasurement;
-            if (efficiencyMeasurement != null)
-            {
-                this.CascadeEfficiency(efficiencyMeasurement);
-                if (efficiencyMeasurement.Earlier != null)
-                    this.CascadeEfficiency(efficiencyMeasurement.Earlier);
-            }
+            this.addEfficiencyMeasurement(efficiencyMeasurement);
         }
-        // gives the RelativeEfficiencyMeasuremnt to all Activities that are interested in it
-        private void CascadeEfficiency(RelativeEfficiencyMeasurement measurement)
+        private void addEfficiencyMeasurement(RelativeEfficiencyMeasurement measurement)
         {
-            Activity activity = this.ActivityDatabase.ResolveDescriptor(measurement.ActivityDescriptor);
-            foreach (Activity parent in this.FindAllSupercategoriesOf(activity))
-            {
-                parent.AddEfficiencyMeasurement(measurement);
-            }
+            if (measurement == null)
+                return;
+            this.addEfficiencyMeasurement(measurement.Earlier);
+            this.efficiencySummarizer.AddRating(measurement.StartDate, measurement.EndDate, measurement.RecomputedEfficiency.Mean);
         }
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
@@ -521,7 +515,7 @@ namespace ActivityRecommendation
             DateTime startDate = DateTime.Now;
             // Now we estimate how useful it would be to suggest this activity to the user
 
-            Prediction suggestionPrediction = this.Get_Overall_SuggestionEstimate(activity, when);
+            Prediction suggestionPrediction = this.Get_OverallHappiness_SuggestionEstimate(activity, when);
             activity.SuggestionValue = suggestionPrediction;
             DateTime endDate = DateTime.Now;
             /*TimeSpan predictionDuration = endDate.Subtract(startDate);
@@ -546,7 +540,7 @@ namespace ActivityRecommendation
         }
 
         // returns a Prediction of what the user's longterm happiness will be after having participated in the given activity at the given time
-        public Prediction Get_Overall_ParticipationEstimate(Activity activity, DateTime when)
+        public Prediction Get_OverallHappiness_ParticipationEstimate(Activity activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
@@ -573,9 +567,8 @@ namespace ActivityRecommendation
             return prediction;
         }
 
-
         // returns a Prediction of the value of suggesting the given activity at the given time
-        private Prediction Get_Overall_SuggestionEstimate(Activity activity, DateTime when)
+        private Prediction Get_OverallHappiness_SuggestionEstimate(Activity activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
@@ -619,6 +612,20 @@ namespace ActivityRecommendation
 
             return prediction;
         }
+
+        // returns a Prediction of what the user's efficiency will be after having participated in the given activity at the given time
+        public Distribution Get_Efficiency_ParticipationEstimate(Activity activity, DateTime when)
+        {
+            return activity.PredictEfficiency(when);
+        }
+
+        // returns the average efficiency after having participated in <activity>
+        // The purpose is that this will be used as a reference to compare the result of Get_Efficiency_ParticipationEstimate to
+        public Distribution Get_AverageEfficiency_ParticipationEstimate(Activity activity)
+        {
+            return activity.GetAverageEfficiencyWhenParticipated();
+        }
+
         // suppose there only Activities are A,B,C,D
         // suppose A and B are parents of C
         // suppose C is the parent of D
@@ -790,9 +797,12 @@ namespace ActivityRecommendation
         // tells each activity to spend a little bit of time updating its knowledge of the ratings that came after one of its participations
         public void Update_RatingSummaries(int numRatingsToUpdate)
         {
-            foreach (Activity activity in this.ActivityDatabase.AllActivities)
+            if (numRatingsToUpdate > 0)
             {
-                activity.UpdateNext_RatingSummaries(numRatingsToUpdate);
+                foreach (Activity activity in this.ActivityDatabase.AllActivities)
+                {
+                    activity.UpdateNext_RatingSummaries(numRatingsToUpdate);
+                }
             }
         }
         // gets called whenever any outside source provides a rating
@@ -1116,6 +1126,8 @@ namespace ActivityRecommendation
             }
             Activity activity1 = this.ActivityDatabase.ResolveDescriptor(participation1.ActivityDescriptor);
             Activity activity2 = this.ActivityDatabase.ResolveDescriptor(participation2.ActivityDescriptor);
+            this.EstimateRating(activity1, p.StartDate);
+            this.EstimateRating(activity2, p.StartDate);
             double predictedEfficiency1 = activity1.PredictEfficiency(participation1.StartDate).Mean;
             double predictedEfficiency2 = activity2.PredictEfficiency(participation2.StartDate).Mean;
             System.Diagnostics.Debug.WriteLine("Making completion efficiency measurement for " + activity1.Name + " and " + activity2.Name);
@@ -1269,7 +1281,7 @@ namespace ActivityRecommendation
             // So, we randomly decide whether to add suggest a pre-task or a post-task, and we weight the suggestion based on how are already in the pool
             int max_pendingPool_size = min_pendingPool_size * 2;
             bool choosePostActivity;
-            if (availablePostActivities.Count < min_pendingPool_size)
+            if (availablePostActivities.Count < min_pendingPool_size && availablePreActivities.Count > 0)
             {
                 // not enough tasks in the pool; we're at risk of having too few overlapping comparisons
                 choosePostActivity = false;
@@ -1499,6 +1511,7 @@ namespace ActivityRecommendation
         //Distribution ratingsForSuggestedActivities;     // the ratings that the user gives to activities that were suggested by the engine
         //Distribution ratingsForUnsuggestedActivities;   // the ratings that the user gives to activities that were not suggestd by the engine
         RatingSummarizer weightedRatingSummarizer;
+        RatingSummarizer efficiencySummarizer;
         
         
         Distribution ratingsOfUnpromptedActivities;

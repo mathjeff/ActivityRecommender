@@ -200,7 +200,7 @@ namespace ActivityRecommendation
             string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
             try
             {
-                TextConverter importer = new TextConverter(null, new ActivityDatabase(null));
+                TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
                 importer.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
             }
             catch (InvalidDataException e)

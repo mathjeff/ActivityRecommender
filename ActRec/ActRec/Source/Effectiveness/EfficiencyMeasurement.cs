@@ -23,8 +23,7 @@ namespace ActivityRecommendation.Effectiveness
     {
         public RelativeEfficiencyMeasurement(Participation participation, Distribution efficiency)
         {
-            this.ActivityDescriptor = participation.ActivityDescriptor;
-            this.Date = participation.StartDate;
+            this.FillInFromParticipation(participation);
             this.RecomputedEfficiency = efficiency;
         }
         public RelativeEfficiencyMeasurement() { }
@@ -32,7 +31,8 @@ namespace ActivityRecommendation.Effectiveness
         public void FillInFromParticipation(Participation participation)
         {
             this.ActivityDescriptor = participation.ActivityDescriptor;
-            this.Date = participation.StartDate;
+            this.StartDate = participation.StartDate;
+            this.EndDate = participation.EndDate;
         }
 
         // How well we compute the Participation to have done based on its duration, success/failure status, and its counterpart
@@ -40,7 +40,8 @@ namespace ActivityRecommendation.Effectiveness
 
         // The participation being measured
         public ActivityDescriptor ActivityDescriptor { get; set; }
-        public DateTime Date { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
 
         // the other RelativeEfficiencyMeasurement that was used to help compute this one, if the other one was earlier
         public RelativeEfficiencyMeasurement Earlier { get; set; }

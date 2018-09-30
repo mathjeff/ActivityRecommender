@@ -494,7 +494,7 @@ namespace ActivityRecommendation
 
                 if (actualIntensity >= 1)
                 {
-                    Prediction predictionIfParticipated = this.engine.Get_Overall_ParticipationEstimate(activity, when);
+                    Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, when);
                     this.valueIfParticipated_predictions[predictionIfParticipated] = summary;
                 }
             }

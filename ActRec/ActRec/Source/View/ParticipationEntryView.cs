@@ -357,56 +357,78 @@ namespace ActivityRecommendation
 
         private string computeFeedback(Activity chosenActivity, DateTime startDate)
         {
-            //return this.compute_estimatedRating_feedback(chosenActivity, startDate);
-            //return this.compute_longtermValue_feedback(chosenActivity, startDate);
-            return compute_longtermAndShortterm_feedback(chosenActivity, startDate);
-        }
-
-        private string compute_longtermAndShortterm_feedback(Activity chosenActivity, DateTime startDate)
-        {
             double longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
-            if (longtermBonusInDays == -1)
+            if (longtermBonusInDays == 0)
             {
                 // no data
                 return "";
             }
             double shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
+            double efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
 
             double roundedLongtermBonus = Math.Round(longtermBonusInDays, 3);
             double roundedShorttermRatio = Math.Round(shorttermValueRatio, 3);
+            double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours, 3);
+
+            string rounded_longtermHappiness_window = "the next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days";
+            string roundedEfficiencyWindow = "the next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
 
             bool fun = (shorttermValueRatio > 1);
-            bool productive = (longtermBonusInDays > 0);
-
+            bool soothing = (longtermBonusInDays >= 0);
+            bool efficient = (efficiencyBonusInHours >= 0);
 
             string message;
             if (fun)
             {
-                if (productive)
-                    message = "Nice! I bet that was fun (" + roundedShorttermRatio + " x avg) and productive (+" + roundedLongtermBonus + " days)";
+                if (soothing)
+                {
+                    if (efficient)
+                        message = "Nice! I bet that was fun (" + roundedShorttermRatio + " x avg), " +
+                            "will improve future happiness (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "and improve future efficiency (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                    else
+                        message = "Pleasant: I bet that was nice (" + roundedShorttermRatio + " x avg) " +
+                            "and will continue to make you happier (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "at the cost of future efficiency (" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                }
                 else
-                    message = "Indulgent: I estimate that was fun (" + roundedShorttermRatio + " x avg) but unproductive (" + roundedLongtermBonus + " days)";
+                {
+                    if (efficient)
+                        message = "A good break? I bet that was fun (" + roundedShorttermRatio + " x avg), " +
+                            "but will sacrifice future happiness (" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "for efficiency (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                    else
+                        message = "Indulgent: I bet that was fun (" + roundedShorttermRatio + " x avg), " +
+                            "but will lower future happiness (-" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "and efficiency (-" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                }
             }
             else
             {
-                if (productive)
-                    message = "Good work! That must've been difficult (fun = " + roundedShorttermRatio + " x avg) but productive (+" + roundedLongtermBonus + " days)";
+                if (soothing)
+                {
+                    if (efficient)
+                        message = "Awesome work: I bet that was hard (" + roundedShorttermRatio + " x avg), " +
+                            "but will make you happier (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "and more efficient (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                    else
+                        message = "Lazy: I bet that wasn't fun (" + roundedShorttermRatio + " x avg), " +
+                            "though you'll appreciate it (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "and lose efficiency (" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                }
                 else
-                    message = "Oops! Probably not fun (" + roundedShorttermRatio + " x avg) or productive (" + roundedLongtermBonus + " days)";
+                {
+                    if (efficient)
+                        message = "Power break: I bet that was difficult (" + roundedShorttermRatio + " x avg), " +
+                            "and will trade upcoming happiness (" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "for efficiency (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                    else
+                        message = "Oops! I bet that wasn't fun (" + roundedShorttermRatio + " x avg) " +
+                            "and won't improve your happiness (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
+                            "or future efficiency (" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")!";
+                }
             }
             return message;
-        }
-
-        private string compute_estimatedRating_feedback(Activity chosenActivity, DateTime startDate)
-        {
-            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
-            this.engine.EstimateSuggestionValue(chosenActivity, startDate);
-
-            double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
-            double overallAverageRating = rootActivity.Ratings.Mean;
-            double shorttermRatio = expectedShortermRating / overallAverageRating;
-
-            return "Predicted rating = " + expectedShortermRating.ToString() + " * average";
         }
 
         private double compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
@@ -421,21 +443,20 @@ namespace ActivityRecommendation
             return shorttermRatio;
         }
 
+        // given an activity and a DateTime for its Participation to start, estimates the change in longterm happiness (measured in days) caused by doing it
         private double compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
-            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
-
-            Distribution chosenEstimatedDistribution = this.engine.Get_Overall_ParticipationEstimate(chosenActivity, startDate).Distribution;
+            Distribution chosenEstimatedDistribution = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, startDate).Distribution;
             if (chosenEstimatedDistribution.Weight <= 0)
-                return -1;
+                return 0;
             double chosenValue = chosenEstimatedDistribution.Mean;
 
+
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
             double usualValue = rootActivity.GetAverageLongtermValueWhenParticipated().Mean;
 
             double bonusInSeconds = 0;
-
             double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
-
             if (usualValue != 0)
             {
                 // relWeight(x) = 1 * 2^(-x/halfLife)
@@ -445,40 +466,49 @@ namespace ActivityRecommendation
                 // absWeight(0) = log(2)/log(e)/halflife
                 // absWeight(0) = log(2)/halflife
 
+                double overallImprovment = (chosenValue / usualValue) - 1;
+
+                bonusInSeconds = overallImprovment / weightOfThisMoment;
+            }
+            if (bonusInSeconds == 0)
+                return 0;
+            double bonusInDays = bonusInSeconds / 60 / 60 / 24;
+            return bonusInDays;
+        }
+
+        // given an activity and a DateTime for its Participation to start, estimates the change in efficiency (measured in hours) in the near future caused by doing it
+        private double computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
+        {
+            Activity rootActivity = this.ActivityDatabase.RootActivity;
+            Distribution usual = rootActivity.GetAverageEfficiencyWhenParticipated();
+            if (usual.Weight <= 0)
+                return 0;
+            double usualValue = usual.Mean;
+
+            Distribution chosenEstimatedDistribution = this.engine.Get_Efficiency_ParticipationEstimate(chosenActivity, startDate);
+            if (chosenEstimatedDistribution.Weight <= 0)
+                return 0;
+            double chosenValue = chosenEstimatedDistribution.Mean;
+
+            double bonusInSeconds = 0;
+            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalSeconds;
+            if (usualValue != 0)
+            {
+                // relWeight(x) = 1 * 2^(-x/halfLife)
+                // totalWeight = integral(relWeight) = (log(e)/log(2))*halfLife
+                // absWeight(x) = 2^(-x/halfLife)/((log(e)/log(2))*halfLife)
+                // absWeight(0) = 1/((log(e)/log(2))*halfLife)
+                // absWeight(0) = log(2)/log(e)/halflife
+                // absWeight(0) = log(2)/halflife
 
                 double overallImprovment = (chosenValue / usualValue) - 1;
 
                 bonusInSeconds = overallImprovment / weightOfThisMoment;
             }
-            //this.engine.RatingSummarizer.
             if (bonusInSeconds == 0)
-            {
                 return 0;
-            }
-            double bonusInDays = bonusInSeconds / 60 / 60 / 24;
-            double baselineDays = usualValue / weightOfThisMoment / 60 / 60 / 24;
-
-            return bonusInDays;
-        }
-
-        private string compute_longtermValue_feedback(Activity chosenActivity, DateTime startDate)
-        {
-            double bonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
-            if (bonusInDays == -1)
-            {
-                // no data
-                return "";
-            }
-
-            double roundedBonus = Math.Round(bonusInDays, 3);
-
-            string message;
-            if (bonusInDays > 0)
-                message = "Nice! I estimate this worth +" + roundedBonus + " days.";
-            else
-                message = "Hmmm. I estimate this worth -" + (-bonusInDays) + " days.";
-            return message;
-
+            double bonusInHours = bonusInSeconds / 60 / 60;
+            return bonusInHours;
         }
 
 

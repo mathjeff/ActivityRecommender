@@ -639,9 +639,14 @@ namespace ActivityRecommendation
                     measurement.ActivityDescriptor = this.ReadActivityDescriptor(child);
                     continue;
                 }
-                if (child.Name == this.DateTag)
+                if (child.Name == this.ParticipationStartDateTag)
                 {
-                    measurement.Date = this.ReadDate(child);
+                    measurement.StartDate = this.ReadDate(child);
+                    continue;
+                }
+                if (child.Name == this.ParticipationEndDateTag)
+                {
+                    measurement.EndDate = this.ReadDate(child);
                     continue;
                 }
                 if (child.Name == this.EfficiencyValue_Tag)
@@ -1171,7 +1176,8 @@ namespace ActivityRecommendation
             if (includeParticipationDescription)
             {
                 properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(measurement.ActivityDescriptor);
-                properties[this.DateTag] = this.ConvertToStringBody(measurement.Date);
+                properties[this.ParticipationStartDateTag] = this.ConvertToStringBody(measurement.StartDate);
+                properties[this.ParticipationEndDateTag] = this.ConvertToStringBody(measurement.EndDate);
             }
             properties[this.EfficiencyValue_Tag] = this.ConvertToStringBody(measurement.RecomputedEfficiency.Mean);
             properties[this.EfficiencyWeight_Tag] = this.ConvertToStringBody(measurement.RecomputedEfficiency.Weight);

@@ -24,13 +24,14 @@ namespace ActivityRecommendation
 
         #region Constructor
 
-        public ActivityDatabase(RatingSummarizer ratingSummarizer)
+        public ActivityDatabase(RatingSummarizer happinessSummarizer, RatingSummarizer efficiencySummarizer)
         {
             //this.activitiesByName = new Dictionary<string, List<Activity> >();
             this.activitiesByName = new StatList<string, IEnumerable<Activity>>(this, this);
             this.allActivities = new List<Activity>();
-            this.ratingSummarizer = ratingSummarizer;
-            this.rootActivity = new Category("Activity", ratingSummarizer);
+            this.happinessSummarizer = happinessSummarizer;
+            this.efficiencySummarizer = efficiencySummarizer;
+            this.rootActivity = new Category("Activity", happinessSummarizer, efficiencySummarizer);
             this.rootActivity.setChooseable(false);
             this.AddActivity(this.rootActivity);
         }
@@ -244,7 +245,7 @@ namespace ActivityRecommendation
         // constructs an Activity from the given ActivityDescriptor
         public Category CreateCategory(ActivityDescriptor sourceDescriptor)
         {
-            Category result = new Category(sourceDescriptor.ActivityName, this.ratingSummarizer);
+            Category result = new Category(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
 
             this.AddActivity(result);
             return result;
@@ -252,7 +253,7 @@ namespace ActivityRecommendation
 
         public ToDo CreateToDo(ActivityDescriptor sourceDescriptor)
         {
-            ToDo result = new ToDo(sourceDescriptor.ActivityName, this.ratingSummarizer);
+            ToDo result = new ToDo(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
             this.AddActivity(result);
             return result;
         }
@@ -375,7 +376,8 @@ namespace ActivityRecommendation
         // We only allow one Activity for each name, but we want to be able to find activities having certain name prefixes, and StatList currently
         // requires that its value type is the same as its aggregation type
         private StatList<string, IEnumerable<Activity>> activitiesByName;
-        private RatingSummarizer ratingSummarizer;
+        private RatingSummarizer happinessSummarizer;
+        private RatingSummarizer efficiencySummarizer;
         private Category rootActivity;
 
         #endregion

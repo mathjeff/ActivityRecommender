@@ -25,7 +25,16 @@ namespace ActivityRecommendation
         {
             get
             {
-                return new TimeSpan(730, 0, 0, 0);  // 2 years
+                return TimeSpan.FromDays(730); // 2 years
+            }
+        }
+
+        // When the user thinks about future efficiency, the user is more interested in sooner efficiency than in later efficiency. This is the halflife of the user's interest.
+        public TimeSpan EfficiencyHalflife
+        {
+            get
+            {
+                return TimeSpan.FromDays(7);
             }
         }
     }

@@ -15,7 +15,7 @@ namespace ActivityRecommendation
         #region Constructors
 
         // public
-        public ToDo(string activityName, RatingSummarizer overallRatings_summarizer) : base(activityName, overallRatings_summarizer)
+        public ToDo(string activityName, RatingSummarizer overallRatings_summarizer, RatingSummarizer overallEfficiency_summarizer) : base(activityName, overallRatings_summarizer, overallEfficiency_summarizer)
         {
             this.addMetric(new TodoMetric(this));
         }

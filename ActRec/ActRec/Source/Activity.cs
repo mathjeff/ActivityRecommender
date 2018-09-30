@@ -623,6 +623,7 @@ namespace ActivityRecommendation
         // 
         public Distribution Predict_LongtermValue_If_Suggested(DateTime when)
         {
+            this.ApplyPendingSuggestions();
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
             Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates));            
             return estimate;

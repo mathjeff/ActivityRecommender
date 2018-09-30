@@ -581,14 +581,25 @@ namespace ActivityRecommendation
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
             shortTerm_prediction.Justification = "How much you're expected to enjoy " + activity.Name;
-            double shortWeight = Math.Pow(activity.NumConsiderations + 1, 0.5);
+            double shortWeight = Math.Pow(activity.NumConsiderations + 1, 0.15);
             shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
 
-            double mediumWeight = Math.Pow(activity.NumParticipations + activity.NumConsiderations, 0.8333) * (6 + 6 * participationProbability);
+            double mediumWeight = Math.Pow(activity.NumParticipations + activity.NumConsiderations, 0.75) * (6 + 6 * participationProbability);
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
-            double longWeight = activity.NumConsiderations;
+            // When predicting longterm happiness based on the DateTimes of suggestions of this Activity, there are two likely sources of error.
+            // One likely source of error is that suggesting this Activity isn't actually what's changing the user's net present happiness. To check the plausibility that
+            // suggesting this Activity is what's changing the net present happiness, we need to have lots of suggestions, and we increase the weight based on the number of suggestions.
+            //
+            // Another likely source of error is that the true net present happiness can't be perfectly computed until after we know how happy the user will be in the future
+            // (because net present happiness is defined as the (exponentially) weighted sum of all future happinesses (with larger weights given to sooner ratings).
+            // As more time elapses, we get an increasingly accurate estimate of the user's net present happiness at a given time. To account for this, we decrease the weight of
+            // the prediction for activities we haven't known about for long
+            TimeSpan existenceDuration = when.Subtract(activity.DiscoveryDate);
+            double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
+            double weightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
+            double longWeight = activity.NumConsiderations * weightMultiplier * 3;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 
             List<Prediction> distributions = new List<Prediction>();
@@ -602,7 +613,7 @@ namespace ActivityRecommendation
                 foreach (Activity parent in activity.Parents)
                 {
                     Distribution parentDistribution = parent.Predict_LongtermValue_If_Participated(when);
-                    double parentWeight = Math.Min(parent.NumParticipations + 1, 40);
+                    double parentWeight = Math.Min(parent.NumParticipations + 1, 40) * participationProbability * 3;
                     parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
                     distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
                 }

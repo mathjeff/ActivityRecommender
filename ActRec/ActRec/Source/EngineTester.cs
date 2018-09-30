@@ -391,6 +391,20 @@ updated results on 2018-09-23 after making the longtermValue predictions react t
 0.1329 typicalScoreError
 0.9204 equivalentWeightedProbability
 
+updated results on 2018-09-30 with more data
+0.0785 typical longtermPredictionIfSuggested error
+0.0422 typical longtermPredictionIfParticipated error
+0.1326 typicalScoreError
+0.9237 equivalentWeightedProbability
+
+updated results on 2018-09-30 after making the longtermValue predictions be less overpowering
+Unfortunately this change slightly increases the error rate, even after making some adjustments to lower the error rate again.
+However, this prevents the experiment screen from appearing to get stuck on the same suggestion repeatedly.
+0.0788 typical longtermPredictionIfSuggested
+0.0422 typical longtermPredictionIfParticipated
+0.1326 typicalScoreError
+0.9237 equivalentWeightedProbability
+
  */
 
 

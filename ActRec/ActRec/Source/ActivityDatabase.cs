@@ -34,6 +34,9 @@ namespace ActivityRecommendation
             this.rootActivity = new Category("Activity", happinessSummarizer, efficiencySummarizer);
             this.rootActivity.setChooseable(false);
             this.AddActivity(this.rootActivity);
+            this.todoCategory = new Category("ToDo", happinessSummarizer, efficiencySummarizer);
+            this.todoCategory.setChooseable(false);
+            this.AddActivity(this.todoCategory);
         }
 
         #endregion
@@ -46,6 +49,9 @@ namespace ActivityRecommendation
             string err = this.ValidateCandidateNewInheritance(inheritance);
             if (err != "")
                 return err;
+            Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
+            if (parent == this.todoCategory)
+                return "You can't assign an Activity of type Category as a child of the Category named ToDo";
             ActivityDescriptor childDescriptor = inheritance.ChildDescriptor;
             Activity child = this.CreateCategory(inheritance.ChildDescriptor);
             return this.AddParent(inheritance);
@@ -57,6 +63,9 @@ namespace ActivityRecommendation
             if (err != "")
                 return err;
             ToDo toDo = this.CreateToDo(inheritance.ChildDescriptor);
+            Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
+            if (parent == this.todoCategory)
+                return ""; // don't have to add the same parent twice
             return this.AddParent(inheritance);
         }
 
@@ -254,6 +263,7 @@ namespace ActivityRecommendation
         public ToDo CreateToDo(ActivityDescriptor sourceDescriptor)
         {
             ToDo result = new ToDo(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
+            result.AddParent(this.todoCategory);
             this.AddActivity(result);
             return result;
         }
@@ -379,6 +389,7 @@ namespace ActivityRecommendation
         private RatingSummarizer happinessSummarizer;
         private RatingSummarizer efficiencySummarizer;
         private Category rootActivity;
+        private Category todoCategory; // a Category that is the parent of each ToDo
 
         #endregion
     }

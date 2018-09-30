@@ -15,11 +15,14 @@ namespace ActivityRecommendation.View
         public event SuggestionDismissedHandler SuggestionDismissed;
         public delegate void SuggestionDismissedHandler(ActivitySuggestion suggestion);
 
+        public event JustifySuggestionHandler JustifySuggestion;
+        public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
+
         public ExperimentOptionLayout(ExperimentInitializationLayout owner)
         {
             this.owner = owner;
-            Button suggestButton = new Button();
-            this.suggestButtonLayout = new ButtonLayout(suggestButton, "?");
+            
+            this.suggestButtonLayout = new ButtonLayout(suggestButton, "Suggest");
             this.Suggestion = null;
             suggestButton.Clicked += SuggestButton_Clicked;
         }
@@ -37,6 +40,7 @@ namespace ActivityRecommendation.View
                 {
                     ExperimentSuggestionLayout suggestionLayout = new ExperimentSuggestionLayout(suggestion);
                     suggestionLayout.SuggestionDismissed += SuggestionLayout_SuggestionDismissed;
+                    suggestionLayout.JustifySuggestion += SuggestionLayout_JustifySuggestion;
 
                     this.SubLayout = suggestionLayout;
                 }
@@ -45,6 +49,11 @@ namespace ActivityRecommendation.View
                     this.SubLayout = this.suggestButtonLayout;
                 }
             }
+        }
+
+        private void SuggestionLayout_JustifySuggestion()
+        {
+            this.JustifySuggestion.Invoke(this.suggestion.ActivitySuggestion);
         }
 
         private void SuggestionLayout_SuggestionDismissed()
@@ -62,6 +71,7 @@ namespace ActivityRecommendation.View
         private ButtonLayout suggestButtonLayout;
         private ExperimentInitializationLayout owner;
         private SuggestedMetric suggestion;
+        private Button suggestButton = new Button();
     }
 
     class ExperimentSuggestionLayout : ContainerLayout
@@ -69,17 +79,28 @@ namespace ActivityRecommendation.View
         public event SuggestionDismissedHandler SuggestionDismissed;
         public delegate void SuggestionDismissedHandler();
 
+        public event JustifySuggestionHandler JustifySuggestion;
+        public delegate void JustifySuggestionHandler();
+
         public ExperimentSuggestionLayout(SuggestedMetric suggestion)
         {
-            this.CancelButton = new Button();
             this.CancelButton.Clicked += CancelButton_Clicked;
+            this.JustifyButton.Clicked += JustifyButton_Clicked;
 
             GridLayout grid = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(new TextblockLayout(suggestion.ActivityDescriptor.ActivityName))
                 .AddLayout(new TextblockLayout("P:" + suggestion.ActivitySuggestion.ParticipationProbability))
-                .AddLayout(new ButtonLayout(this.CancelButton, "X"))
+                .AddLayout(new Horizontal_GridLayout_Builder().Uniform()
+                    .AddLayout(new ButtonLayout(this.CancelButton, "X"))
+                    .AddLayout(new ButtonLayout(this.JustifyButton, "?"))
+                    .Build())
                 .Build();
             this.SubLayout = grid;
+        }
+
+        private void JustifyButton_Clicked(object sender, EventArgs e)
+        {
+            this.JustifySuggestion.Invoke();            
         }
 
         private void CancelButton_Clicked(object sender, EventArgs e)
@@ -90,6 +111,7 @@ namespace ActivityRecommendation.View
             }
         }
 
-        Button CancelButton;
+        private Button CancelButton = new Button();
+        private Button JustifyButton = new Button();
     }
 }

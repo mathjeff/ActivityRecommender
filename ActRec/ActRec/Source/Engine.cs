@@ -568,7 +568,7 @@ namespace ActivityRecommendation
         }
 
         // returns a Prediction of the value of suggesting the given activity at the given time
-        private Prediction Get_OverallHappiness_SuggestionEstimate(Activity activity, DateTime when)
+        private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, DateTime when)
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
@@ -580,6 +580,7 @@ namespace ActivityRecommendation
             double participationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
+            shortTerm_prediction.Justification = "How much you're expected to enjoy " + activity.Name;
             double shortWeight = Math.Pow(activity.NumConsiderations + 1, 0.5);
             shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
 
@@ -590,10 +591,10 @@ namespace ActivityRecommendation
             double longWeight = activity.NumConsiderations;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 
-            List<Distribution> distributions = new List<Distribution>();
-            distributions.Add(shortTerm_prediction.Distribution);
-            distributions.Add(mediumTerm_distribution);
-            distributions.Add(longTerm_distribution);
+            List<Prediction> distributions = new List<Prediction>();
+            distributions.Add(shortTerm_prediction);
+            distributions.Add(new Prediction(activity, mediumTerm_distribution, when, "How happy you have been after having done this activity"));
+            distributions.Add(new Prediction(activity, longTerm_distribution, when, "How happy you have been after this activity has been suggested"));
 
             // also include parent activities in the prediction if this activity is one that the user hasn't done often
             if (activity.NumConsiderations < 40)
@@ -602,14 +603,18 @@ namespace ActivityRecommendation
                 {
                     Distribution parentDistribution = parent.Predict_LongtermValue_If_Participated(when);
                     double parentWeight = Math.Min(parent.NumParticipations + 1, 40);
-                    distributions.Add(parentDistribution.CopyAndReweightTo(parentWeight));
+                    parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
+                    distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
                 }
             }
 
-            Distribution distribution = this.CombineRatingDistributions(distributions);
-            Prediction prediction = shortTerm_prediction;
-            prediction.Distribution = distribution;
+            return distributions;
+        }
 
+        private  Prediction Get_OverallHappiness_SuggestionEstimate(Activity activity, DateTime when)
+        {
+            List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
+            Prediction prediction = this.CombineRatingPredictions(predictions);
             return prediction;
         }
 
@@ -626,33 +631,13 @@ namespace ActivityRecommendation
             return activity.GetAverageEfficiencyWhenParticipated();
         }
 
-        // suppose there only Activities are A,B,C,D
-        // suppose A and B are parents of C
-        // suppose C is the parent of D
-        // The rating of D should exactly equal the rating of C
-        // Currently, the rating of D is a combination of:
-        // -The current expected rating of C
-        // -The predicted rating of D based on the current expected rating of C
-        // -The recent participation average of D
-        // -The recent ratings of D
-        // Here, only the first of these four should make any difference
-        // Therefore, the other three should get weighted by (1-X), where X = (the number of child ratings divided by the number of parent ratings)
-
-        // Suppose that an activity has n parents
-        // If it is the only child of each, then its rating should be the average of each parent's rating
-        // If one parent has more children, that parent's prediction weight becomes relevant, and its characteristic weight decreases
-
-        /*public IActivitySuggestionJustification JustifySuggestion(ActivitySuggestion suggestion)
+        // returns a bunch of thoughts telling why <activity> was last rated as it was
+        public List<string> JustifySuggestion(ActivitySuggestion activitySuggestion)
         {
-            Activity activity = this.activityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
-            IActivitySuggestionJustification justification = activity.JustifyInterpolation(suggestion);
-            return justification;
-        }*/
-        /* // returns a string telling the most important reason that 'activity' was last rated as it was
-        public string JustifyRating(Activity activity)
-        {
+            // first identify the most important reason for convenience
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
             DateTime when = activity.SuggestionValue.ApplicableDate;
-            IEnumerable<Prediction> predictions = this.GetAllSuggestionEstimates(activity, when);
+            List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
             double lowestScore = 1;
             string bestReason = null;
             foreach (Prediction candidate in predictions)
@@ -668,8 +653,17 @@ namespace ActivityRecommendation
                     bestReason = candidate.Justification;
                 }
             }
-            return bestReason;
-        }*/
+            // also list all of the reasons for clarity
+            List<string> clauses = new List<string>();
+            clauses.Add("Why " + activity + " was suggested to start at " + activitySuggestion.StartDate + ":");
+            clauses.Add("Among " + predictions.Count + " reasons, the biggest reason was \"" + bestReason + "\".");
+            clauses.Add("All reasons:");
+            foreach (Prediction contributor in predictions)
+            {
+                clauses.Add(contributor.Justification + ": " + contributor.Distribution.ToString());
+            }
+            return clauses;
+        }
         public Prediction CombineRatingPredictions(IEnumerable<Prediction> predictions)
         {
             List<Distribution> distributions = new List<Distribution>();

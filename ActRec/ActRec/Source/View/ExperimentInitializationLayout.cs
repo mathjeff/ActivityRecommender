@@ -38,12 +38,18 @@ namespace ActivityRecommendation.View
                 this.children.Add(child);
                 childrenBuilder.AddLayout(child);
                 child.SuggestionDismissed += Child_SuggestionDismissed;
+                child.JustifySuggestion += Child_JustifySuggestion;
             }
             GridLayout bottomGrid = childrenBuilder.Build();
 
             GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(topGrid).AddLayout(bottomGrid).Uniform().Build();
 
             this.SetContent(mainGrid);
+        }
+
+        private void Child_JustifySuggestion(ActivitySuggestion suggestion)
+        {
+            this.activityRecommender.JustifySuggestion(suggestion);
         }
 
         private void Child_SuggestionDismissed(ActivitySuggestion suggestion)

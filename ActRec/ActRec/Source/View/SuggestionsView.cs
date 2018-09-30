@@ -15,6 +15,9 @@ namespace ActivityRecommendation
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment();
 
+        public event JustifySuggestionHandler JustifySuggestion;
+        public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
+
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack)
         {
             this.recommender = recommenderToInform;
@@ -186,7 +189,13 @@ namespace ActivityRecommendation
         {
             SuggestionView suggestionView = new SuggestionView(suggestion, this.layoutStack);
             suggestionView.Dismissed += SuggestionView_Dismissed;
+            suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
             return new LayoutCache(suggestionView);
+        }
+
+        private void SuggestionView_JustifySuggestion(ActivitySuggestion suggestion)
+        {
+            this.JustifySuggestion.Invoke(suggestion);
         }
 
         private void SuggestionView_Dismissed(ActivitySuggestion suggestion)

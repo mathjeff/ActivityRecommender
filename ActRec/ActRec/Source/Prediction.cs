@@ -10,6 +10,14 @@ namespace ActivityRecommendation
         public Prediction()
         {
         }
+        public Prediction(Activity activity, Distribution distribution, DateTime when, string justification)
+        {
+            this.Activity = activity;
+            this.Distribution = distribution;
+            this.ApplicableDate = when;
+            this.CreationDate = when;
+            this.Justification = justification;
+        }
         public string Justification { get; set; }           // the primary reason that the PredictedScore is as high as it is
         public Distribution Distribution { get; set; }    // the expected rating that the user would assign to the activity
         //public Distribution ValueMinusAverage { get; set; } // the expected change in rating caused by doing this activity

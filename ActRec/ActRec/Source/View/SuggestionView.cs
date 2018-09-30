@@ -13,6 +13,9 @@ namespace ActivityRecommendation
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment(ActivitySuggestion suggestion);
 
+        public event JustifySuggestionHandler JustifySuggestion;
+        public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
+
         public SuggestionView(ActivitySuggestion suggestion, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
@@ -66,10 +69,17 @@ namespace ActivityRecommendation
             this.experimentButton.Clicked += ExperimentButton_Clicked;
             this.explainWhyYouCantSkipButton = new Button();
             this.explainWhyYouCantSkipButton.Clicked += ExplainWhyYouCantSkipButton_Clicked;
+            ButtonLayout cancelLayout;
             if (suggestion.Skippable)
-                mainGrid.AddLayout(new ButtonLayout(this.cancelButton, "x"));
+                cancelLayout = new ButtonLayout(this.cancelButton, "X");
             else
-                mainGrid.AddLayout(new ButtonLayout(this.explainWhyYouCantSkipButton, "?"));
+                cancelLayout = new ButtonLayout(this.explainWhyYouCantSkipButton, "!");
+            Vertical_GridLayout_Builder sideBuilder = new Vertical_GridLayout_Builder()
+                .Uniform()
+                .AddLayout(cancelLayout);
+            if (this.suggestion.PredictedScoreDividedByAverage != null)
+                sideBuilder.AddLayout(new ButtonLayout(this.justifyButton, "?"));
+            mainGrid.AddLayout(sideBuilder.Build());
             this.SubLayout = mainGrid;
 
         }
@@ -89,7 +99,8 @@ namespace ActivityRecommendation
 
         void justifyButton_Click(object sender, EventArgs e)
         {
-            //this.container.JustifySuggestion(this.suggestion);
+            if (this.JustifySuggestion != null)
+                this.JustifySuggestion.Invoke(this.suggestion);
         }
 
         void cancelButton_Click(object sender, EventArgs e)

@@ -105,6 +105,7 @@ namespace ActivityRecommendation
             this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
             this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
+            this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationCorrelationMenu(this.layoutStack, this.ActivityDatabase, this.engine));
@@ -169,6 +170,11 @@ namespace ActivityRecommendation
             this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
             //this.displayManager = new ViewManager(this.mainWindow, TextDiagnosticLayout.New());            
 
+        }
+
+        private void SuggestionsView_JustifySuggestion(ActivitySuggestion suggestion)
+        {
+            this.JustifySuggestion(suggestion);
         }
 
         private void SuggestionsView_ExperimentRequested()
@@ -313,13 +319,16 @@ namespace ActivityRecommendation
 
             this.AddSkip(skip);
         }
-        /*public void JustifySuggestion(ActivitySuggestion suggestion)
+        public void JustifySuggestion(ActivitySuggestion suggestion)
         {
-            IActivitySuggestionJustification justification = this.engine.JustifySuggestion(suggestion);
-            String text = justification.Summarize();
-            TextblockLayout layout = new TextblockLayout(text);
-            this.layoutStack.AddLayout(layout);
-        }*/
+            List<string> thoughts = this.engine.JustifySuggestion(suggestion);
+            HelpWindowBuilder builder = new HelpWindowBuilder();
+            foreach (string message in thoughts)
+            {
+                builder.AddMessage(message);
+            }
+            this.layoutStack.AddLayout(builder.Build());
+        }
 
         // called when the SuggestionsView wants to make a recommendation
         private void SuggestionsView_MakeRecommendation()

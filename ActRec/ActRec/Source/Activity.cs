@@ -498,7 +498,7 @@ namespace ActivityRecommendation
                 // make a note to use this date for predicting longterm happiness from participations
                 this.AddNew_LongTerm_Participation_Summary_At(newParticipation.StartDate);
             }
-            this.UpdateNext_RatingSummaries(this.PendingParticipationsForShorttermAnalysis.Count);
+            this.UpdateNext_RatingSummaries(this.PendingParticipationsForLongtermAnalysis.Count);
             this.PendingParticipationsForLongtermAnalysis.Clear();
         }
         private void ApplyPendingParticipationsForShorttermAnalysis()

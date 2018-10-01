@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ActivityRecommendation.Effectiveness;
 using StatLists;
 
 // An ActivityDatabase class stores all of the known Activities, for the purpose of resolving a name into an Activity
@@ -21,6 +22,9 @@ namespace ActivityRecommendation
 
         public event InheritanceAddedHandler InheritanceAdded;
         public delegate void InheritanceAddedHandler(object sender, Inheritance inheritance);
+
+        public event MetricAddedHandler MetricAdded;
+        public delegate void MetricAddedHandler(Metric metric, Activity activity);
 
         #region Constructor
 
@@ -266,6 +270,19 @@ namespace ActivityRecommendation
             result.AddParent(this.todoCategory);
             this.AddActivity(result);
             return result;
+        }
+
+        // returns a string telling the error, or "" if no error
+        public string AddMetric(Activity activity, Metric metric)
+        {
+            if (activity.Metrics.Count > 0)
+            {
+                // TODO: remove this requirement when the ParticipationEntryView can support more than one metric per Activity
+                return activity.Name + " already has a metric (" + activity.Metrics[0].Name + ")";
+            }
+            activity.AddMetric(metric);
+            this.MetricAdded.Invoke(metric, activity);
+            return "";
         }
 
         public void AssignDefaultParent()

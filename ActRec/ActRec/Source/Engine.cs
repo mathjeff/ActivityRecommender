@@ -1268,9 +1268,9 @@ namespace ActivityRecommendation
                 int numExtraRequiredActivities = min_pendingPool_size - numActivitiesToChooseFrom;
                 string message = "Don't have enough activities having metrics to run another experiment. Go create " + numExtraRequiredActivities + " more ";
                 if (numExtraRequiredActivities == 1)
-                    message += "activity of type ToDo!";
+                    message += "activity of type ToDo and/or add " + numExtraRequiredActivities + " Metric to another Activity!";
                 else
-                    message += "activities of type ToDo!";
+                    message += "activities of type ToDo and/or add Metrics to " + numExtraRequiredActivities + " more Activities!";
                 // no enough activities for a meaningful experiment
                 return new SuggestedMetricOrError(message);
             }

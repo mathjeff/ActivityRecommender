@@ -192,8 +192,15 @@ namespace ActivityRecommendation
 
             properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.EstimatedSuccessesPerSecond);
 
-
             return this.ConvertToStringBody(properties);
+        }
+        public string ConvertToString(Metric metric)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.MetricName_Tag] = metric.Name;
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(metric.ActivityDescriptor);
+
+            return this.ConvertToString(properties, this.MetricTag);
         }
 
         // converts the dictionary into a string that is ready to be written to disk
@@ -292,6 +299,11 @@ namespace ActivityRecommendation
                 if (node.Name == this.ExperimentTag)
                 {
                     this.ProcessExperiment(node);
+                    continue;
+                }
+                if (node.Name == this.MetricTag)
+                {
+                    this.ProcessMetric(node);
                     continue;
                 }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
@@ -509,6 +521,11 @@ namespace ActivityRecommendation
         {
             PlannedExperiment experiment = this.ReadExperiment(nodeRepresentation);
             this.listener.AddExperiment(experiment);
+        }
+        private void ProcessMetric(XmlNode nodeRepresentation)
+        {
+            Metric metric = this.ReadMetric(nodeRepresentation);
+            this.listener.AddMetric(metric);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -989,6 +1006,28 @@ namespace ActivityRecommendation
             return metric;
         }
 
+        public Metric ReadMetric(XmlNode nodeRepresentation)
+        {
+            string metricName = null;
+            ActivityDescriptor activityDescriptor = null;
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.MetricName_Tag)
+                {
+                    metricName = this.ReadText(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.ActivityDescriptorTag)
+                {
+                    activityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    continue;
+                }
+            }
+            Activity activity = this.activityDatabase.ResolveDescriptor(activityDescriptor);
+            Metric metric = new CompletionMetric(metricName, activity);
+            return metric;
+        }
+
         public void Import(string contents, string inheritancesFilePath, string historyFilePath, string recentUserDataPath)
         {
             IEnumerable<XmlNode> nodes = this.ParseText(contents);
@@ -1006,10 +1045,31 @@ namespace ActivityRecommendation
                     recentUserDataText = this.ConvertToString(recentUserData);
                     continue;
                 }
+
                 if (node.Name == this.InheritanceTag)
                 {
                     Inheritance inheritance = this.ReadInheritance(node);
                     inheritanceTexts.Add(this.ConvertToString(inheritance));
+                    continue;
+                }
+                if (node.Name == this.CategoryTag)
+                {
+                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
+                    Activity activity = this.activityDatabase.GetActivityOrCreateCategory(activityDescriptor);
+                    inheritanceTexts.Add(this.ConvertToString(activity));
+                    continue;
+                }
+                if (node.Name == this.TodoTag)
+                {
+                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
+                    Activity activity = this.activityDatabase.GetOrCreateTodo(activityDescriptor);
+                    inheritanceTexts.Add(this.ConvertToString(activity));
+                    continue;
+                }
+                if (node.Name == this.MetricTag)
+                {
+                    Metric metric = this.ReadMetric(node);
+                    inheritanceTexts.Add(this.ConvertToString(metric));
                     continue;
                 }
 
@@ -1035,20 +1095,6 @@ namespace ActivityRecommendation
                 {
                     ActivitySuggestion suggestion = this.ReadSuggestion(node);
                     historyTexts.Add(this.ConvertToString(suggestion));
-                    continue;
-                }
-                if (node.Name == this.CategoryTag)
-                {
-                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
-                    Activity activity = this.activityDatabase.GetActivityOrCreateCategory(activityDescriptor);
-                    historyTexts.Add(this.ConvertToString(activity));
-                    continue;
-                }
-                if (node.Name == this.TodoTag)
-                {
-                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
-                    Activity activity = this.activityDatabase.GetOrCreateTodo(activityDescriptor);
-                    historyTexts.Add(this.ConvertToString(activity));
                     continue;
                 }
                 if (node.Name == this.ExperimentTag)
@@ -1479,6 +1525,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Metric";
+            }
+        }
+        private string MetricName_Tag
+        {
+            get
+            {
+                return "Name";
             }
         }
         private string SuccessRateTag

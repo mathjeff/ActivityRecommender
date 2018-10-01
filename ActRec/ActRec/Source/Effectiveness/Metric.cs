@@ -12,21 +12,39 @@ namespace ActivityRecommendation.Effectiveness
     public interface Metric
     {
         string Name { get; }
+        ActivityDescriptor ActivityDescriptor { get; }
     }
 
-    public class TodoMetric : Metric
+    public class CompletionMetric : Metric
     {
-        public TodoMetric(ToDo todo)
+        public CompletionMetric(string name, Activity activity)
         {
-            this.todo = todo;
+            this.name = name;
+            this.activity = activity;
         }
         public string Name
         {
             get
             {
-                return "Complete " + this.todo.Name;
+                return this.name;
             }
         }
-        private ToDo todo;
+        public ActivityDescriptor ActivityDescriptor
+        {
+            get
+            {
+                return this.activity.MakeDescriptor();
+            }
+        }
+        private string name;
+        private Activity activity;
     }
+
+    public class TodoMetric : CompletionMetric
+    {
+        public TodoMetric(ToDo todo) : base("Finish", todo)
+        {
+        }
+    }
+
 }

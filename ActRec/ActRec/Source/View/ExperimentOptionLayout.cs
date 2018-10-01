@@ -86,9 +86,10 @@ namespace ActivityRecommendation.View
         {
             this.CancelButton.Clicked += CancelButton_Clicked;
             this.JustifyButton.Clicked += JustifyButton_Clicked;
-
+            
             GridLayout grid = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(new TextblockLayout(suggestion.ActivityDescriptor.ActivityName))
+                .AddLayout(new TextblockLayout("(" + suggestion.PlannedMetric.MetricName + ")"))
                 .AddLayout(new TextblockLayout("P:" + suggestion.ActivitySuggestion.ParticipationProbability))
                 .AddLayout(new Horizontal_GridLayout_Builder().Uniform()
                     .AddLayout(new ButtonLayout(this.CancelButton, "X"))

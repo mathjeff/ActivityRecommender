@@ -44,10 +44,14 @@ namespace ActivityRecommendation
             middleGrid.AddLayout(this.commentBox);
             
             contents.AddLayout(middleGrid);
-            this.todoCompletionCheckbox = new CheckBox("Complete = false", "Complete = true");
+            this.todoCompletionCheckbox = new CheckBox("Incomplete", "Complete!");
             this.todoCompletionCheckboxLayout = ButtonLayout.WithoutBevel(this.todoCompletionCheckbox);
             this.todoCompletionCheckboxHolder = new ContainerLayout();
-            contents.AddLayout(this.todoCompletionCheckboxHolder);
+            this.todoCompletionLabel = new Label();
+            contents.AddLayout(new Horizontal_GridLayout_Builder().Uniform()
+                .AddLayout(new TextblockLayout(this.todoCompletionLabel))
+                .AddLayout(this.todoCompletionCheckboxHolder)
+                .Build());
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
@@ -61,9 +65,6 @@ namespace ActivityRecommendation
             contents.AddLayout(grid3);
             this.setStartdateButton = new Button();
             this.setEnddateButton = new Button();
-
-
-            this.intendedActivity_box = new ActivityNameEntryBox("What you planned to do (optional)");
 
             this.okButton = new Button();
 
@@ -143,7 +144,6 @@ namespace ActivityRecommendation
         {
             this.ratingBox.Clear();
             this.nameBox.Clear();
-            this.intendedActivity_box.Clear();
             this.CommentText = "";
             //this.setEnddateButton.SetDefaultBackground();
             this.predictedRating_block.Text = "";
@@ -155,7 +155,6 @@ namespace ActivityRecommendation
             set
             {
                 this.nameBox.Database = value;
-                this.intendedActivity_box.Database = value;
             }
             get
             {
@@ -287,13 +286,7 @@ namespace ActivityRecommendation
                 // If the rating is invalid, then we can ignore that
             }
 
-            ActivityDescriptor considerationDescriptor = this.intendedActivity_box.ActivityDescriptor;
-            if (considerationDescriptor != null)
-            {
-                Consideration consideration = new Consideration(considerationDescriptor);
-                participation.Consideration = consideration;
-            }
-            if (this.EnteringTodo)
+            if (this.EnteringActivityWithMetric)
             {
                 participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(this.todoCompletionCheckbox.Checked);
                 RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
@@ -318,24 +311,26 @@ namespace ActivityRecommendation
 
         private void updateTodoCheckboxVisibility()
         {
-            if (this.EnteringTodo)
+            if (this.EnteringActivityWithMetric)
+            {
                 this.todoCompletionCheckboxHolder.SubLayout = this.todoCompletionCheckboxLayout;
+                // TODO: if there are multiple metrics; figure out how to determine which one to show
+                this.todoCompletionLabel.Text = this.nameBox.Activity.Metrics[0].Name + "?";
+            }
             else
+            {
                 this.todoCompletionCheckboxHolder.SubLayout = null;
+                this.todoCompletionLabel.Text = "";
+            }
         }
 
-        private bool EnteringTodo
+        private bool EnteringActivityWithMetric
         {
             get
             {
                 Activity activity = this.nameBox.Activity;
                 if (activity != null)
-                {
-                    if (activity is ToDo)
-                    {
-                        return true;
-                    }
-                }
+                    return (activity.Metrics.Count > 0);
                 return false;
             }
         }
@@ -514,7 +509,6 @@ namespace ActivityRecommendation
 
         // private member variables
         ActivityNameEntryBox nameBox;
-        ActivityNameEntryBox intendedActivity_box;
         RelativeRatingEntryView ratingBox;
         TitledTextbox commentBox;
         DateEntryView startDateBox;
@@ -527,6 +521,7 @@ namespace ActivityRecommendation
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;
         CheckBox todoCompletionCheckbox;
+        Label todoCompletionLabel;
         LayoutChoice_Set todoCompletionCheckboxLayout;
         ContainerLayout todoCompletionCheckboxHolder;
     }

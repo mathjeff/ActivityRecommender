@@ -95,8 +95,15 @@ namespace ActivityRecommendation
             this.PreviewExperiment(experiment);
             this.engine.PutExperimentInMemory(experiment);
         }
+        public void AddMetric(Metric metric)
+        {
+            this.PreviewMetric(metric);
+            Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
+            activity.AddMetric(metric);
+        }
         public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
         public virtual void PreviewExperiment(PlannedExperiment experiment) { }
+        public virtual void PreviewMetric(Metric metric) { }
 
         public virtual void PreviewActivityDescriptor(ActivityDescriptor activityDescriptor) { }
 

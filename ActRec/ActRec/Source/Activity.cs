@@ -965,6 +965,10 @@ namespace ActivityRecommendation
             }
         }
 
+        public void AddMetric(Metric metric)
+        {
+            this.metrics.Add(metric);
+        }
 
         #endregion
 
@@ -1087,11 +1091,6 @@ namespace ActivityRecommendation
             }
             Distribution estimate = new Distribution(this.participationInterpolator.Interpolate(coordinates));
             return estimate;
-        }
-
-        protected void addMetric(Metric metric)
-        {
-            this.metrics.Add(metric);
         }
 
         #endregion

@@ -76,9 +76,7 @@ namespace ActivityRecommendation
                 .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
                 .AddLayout("New Activity", activityCreationView)
                 .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
-                .AddLayout("New Completion Metric", (new HelpWindowBuilder()
-                    .AddMessage("Sorry, support to assign a completion metric to an Activity isn't done yet. Check back later!")
-                    .Build()))
+                .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
                 .AddLayout("Help", (new HelpWindowBuilder()
                     .AddMessage("This page allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
                     .AddMessage("This page also allows you to add new types of activities.")
@@ -270,9 +268,10 @@ namespace ActivityRecommendation
             } catch (Exception e)
             {
                 this.error = "Failed to load files: " + e;
-                if (this.error.Length > 200)
+                int maxLength = 200;
+                if (this.error.Length > maxLength)
                 {
-                    this.error = this.error.Substring(0, 200) + "...";
+                    this.error = this.error.Substring(0, maxLength) + "...";
                 }
             }
             this.engine = loader.Finish();
@@ -288,6 +287,7 @@ namespace ActivityRecommendation
             // listen for subsequently created Activity or Inheritance objects
             this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
+            this.engine.ActivityDatabase.MetricAdded += ActivityDatabase_MetricAdded;
 
             this.engine.FullUpdate();
         }
@@ -570,6 +570,17 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(newInheritance) + Environment.NewLine;
             this.internalFileIo.AppendText(text, this.inheritancesFileName);
         }
+
+        private void ActivityDatabase_MetricAdded(Metric metric, Activity activity)
+        {
+            this.WriteMetric(metric);
+        }
+        private void WriteMetric(Metric metric)
+        {
+            string text = this.textConverter.ConvertToString(metric);
+            this.internalFileIo.AppendText(text, this.inheritancesFileName);
+        }
+
 
         private void AddRating(Rating newRating)
         {

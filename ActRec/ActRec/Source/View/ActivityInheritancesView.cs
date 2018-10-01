@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ActivityRecommendation.Effectiveness;
+using System.Collections.Generic;
 using VisiPlacement;
 
 namespace ActivityRecommendation.View
@@ -41,6 +42,10 @@ namespace ActivityRecommendation.View
 
 
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
+            foreach (Metric metric in activity.Metrics)
+            {
+                gridBuilder.AddLayout(new TextblockLayout("Has metric: " + metric.Name));
+            }
             if (parents.Count > 0)
                 gridBuilder.AddLayout(new ActivityListView(parents.Count.ToString() + " Parents:", parents));
             if (children.Count > 0)

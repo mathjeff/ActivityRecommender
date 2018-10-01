@@ -110,7 +110,7 @@ namespace ActivityRecommendation
                 this.NameText = newText;
             }
         }
-        string NameText
+        public string NameText
         {
             get
             {
@@ -291,7 +291,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                string text = this.NameText;
+                string text = this.nameText;
                 if (text == null || text == "")
                 {
                     return null;

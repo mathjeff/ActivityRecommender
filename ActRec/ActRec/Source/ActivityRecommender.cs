@@ -283,7 +283,6 @@ namespace ActivityRecommendation
             this.ActivityDatabase.AssignDefaultParent();
             System.Diagnostics.Debug.WriteLine("Done parsing files");
 
-            this.engine.CreateNewActivities();
             // listen for subsequently created Activity or Inheritance objects
             this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;

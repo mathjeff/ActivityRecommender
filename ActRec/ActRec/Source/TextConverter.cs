@@ -268,7 +268,7 @@ namespace ActivityRecommendation
                 }
                 if (node.Name == this.InheritanceTag)
                 {
-                    this.ProcessInheritanceDescriptor(node);
+                    this.ProcessInheritance(node);
                     continue;
                 }
                 if (node.Name == this.DateTag)
@@ -490,10 +490,13 @@ namespace ActivityRecommendation
             ActivityDescriptor descriptor = this.ReadActivityDescriptor(nodeRepresentation);
             this.listener.PreviewActivityDescriptor(descriptor);
         }
-        private void ProcessInheritanceDescriptor(XmlNode nodeRepresentation)
+        private Inheritance ProcessInheritance(XmlNode nodeRepresentation)
         {
             Inheritance inheritance = this.ReadInheritance(nodeRepresentation);
-            this.listener.AddInheritance(inheritance);
+            this.activityDatabase.AddInheritance(inheritance);
+            if (this.listener != null)
+                this.listener.AddInheritance(inheritance);
+            return inheritance;
         }
         private void ProcessSkip(XmlNode nodeRepresentation)
         {
@@ -522,10 +525,13 @@ namespace ActivityRecommendation
             PlannedExperiment experiment = this.ReadExperiment(nodeRepresentation);
             this.listener.AddExperiment(experiment);
         }
-        private void ProcessMetric(XmlNode nodeRepresentation)
+        private Metric ProcessMetric(XmlNode nodeRepresentation)
         {
             Metric metric = this.ReadMetric(nodeRepresentation);
-            this.listener.AddMetric(metric);
+            Activity activity = this.activityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
+            activity.AddMetric(metric);
+
+            return metric;
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -1048,7 +1054,7 @@ namespace ActivityRecommendation
 
                 if (node.Name == this.InheritanceTag)
                 {
-                    Inheritance inheritance = this.ReadInheritance(node);
+                    Inheritance inheritance = this.ProcessInheritance(node);
                     inheritanceTexts.Add(this.ConvertToString(inheritance));
                     continue;
                 }
@@ -1068,7 +1074,7 @@ namespace ActivityRecommendation
                 }
                 if (node.Name == this.MetricTag)
                 {
-                    Metric metric = this.ReadMetric(node);
+                    Metric metric = this.ProcessMetric(node);
                     inheritanceTexts.Add(this.ConvertToString(metric));
                     continue;
                 }

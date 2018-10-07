@@ -19,8 +19,6 @@ namespace ActivityRecommendation
             this.unappliedParticipations = new List<Participation>();
             this.unappliedSkips = new List<ActivitySkip>();
             this.unappliedSuggestions = new List<ActivitySuggestion>();
-            this.allActivityDescriptors = new List<ActivityDescriptor>();
-            this.inheritances = new List<Inheritance>();
             this.firstInteractionDate = DateTime.Now;
             this.latestInteractionDate = new DateTime(0);
             this.thinkingTime = Distribution.MakeDistribution(60, 0, 1);      // default amount of time thinking about a suggestion is 1 minute
@@ -31,11 +29,6 @@ namespace ActivityRecommendation
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
         public void FullUpdate()
         {
-            this.CreateNewActivities();
-
-            this.ApplyInheritances();
-
-
             this.ApplyParticipationsAndRatings();
             this.requiresFullUpdate = false;
         }
@@ -46,37 +39,9 @@ namespace ActivityRecommendation
             else
                 this.ApplyParticipationsAndRatings();
         }
-        // creates an Activity object for each ActivityDescriptor that needs one
-        public void CreateNewActivities()
+
+        private void ApplyInheritance(Inheritance inheritance)
         {
-            // first, create the necessary Activities
-            foreach (ActivityDescriptor descriptor in this.allActivityDescriptors)
-            {
-                this.activityDatabase.GetActivityOrCreateCategory(descriptor);
-            }
-            this.allActivityDescriptors.Clear();
-        }
-        // connects up all of the parent and child pointers
-        public void ApplyInheritances()
-        {
-            // next, add the necessary parent pointers
-            foreach (Inheritance inheritance in this.inheritances)
-            {
-                Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
-                Category parent = this.activityDatabase.ResolveToCategory(inheritance.ParentDescriptor);
-                if (inheritance.DiscoveryDate != null)
-                    child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
-                if (child == null)
-                {
-                    foreach (Activity activity in this.activityDatabase.AllActivities)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Activity '" + activity.Name + "'");
-                    }
-                    System.Diagnostics.Debug.WriteLine("end of activities");
-                }
-                child.AddParent(parent);
-            }
-            this.inheritances.Clear();
         }
         // moves the ratings and participations from the pending queues into the Activities
         // Note that there is a bug at the moment: when an inheritance is added to an activity, all of its ratings need to cascade appropriately
@@ -933,9 +898,7 @@ namespace ActivityRecommendation
         }
         public void PutInheritanceInMemory(Inheritance newInheritance)
         {
-            this.inheritances.Add(newInheritance);
-            this.PutActivityDescriptorInMemory(newInheritance.ParentDescriptor);
-            this.PutActivityDescriptorInMemory(newInheritance.ChildDescriptor);
+            this.ActivityDatabase.AddInheritance(newInheritance);
             this.requiresFullUpdate = true;
         }
         public void PutSkipInMemory(ActivitySkip newSkip)
@@ -978,7 +941,7 @@ namespace ActivityRecommendation
         // tells the Engine about an Activity that it may choose from
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
         {
-            this.allActivityDescriptors.Add(newDescriptor);
+            this.ActivityDatabase.GetActivityOrCreateCategory(newDescriptor);
         }
         public void RemoveParticipation(Participation participationToRemove)
         {
@@ -1510,8 +1473,6 @@ namespace ActivityRecommendation
         private List<Participation> unappliedParticipations;        // lists all Participations that the ParticipationProgressions don't know about yet
         private List<ActivitySkip> unappliedSkips;                  // lists all skips that the progressions don't know about yet
         private List<ActivitySuggestion> unappliedSuggestions;            // lists all ActivitySuggestions that the Activities don't know about yet
-        private List<ActivityDescriptor> allActivityDescriptors;    // lists all Activities that we need to create
-        private List<Inheritance> inheritances; // tells which Activities are descendents of which others
         // the PredictionLinks can predict the rating of an activity based on the intensity of the parent participations and based on parent ratings
         // 1. Let us create one PredictionLink per parent, which predictions the child's current rating from the parent's current rating
         // This PredictionLink must be trained using only ratings that are actually provided, but as inputs to guess from it may take the current calculated rating of the parent

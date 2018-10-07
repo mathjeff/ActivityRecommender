@@ -258,14 +258,21 @@ namespace ActivityRecommendation
         // constructs an Activity from the given ActivityDescriptor
         public Category CreateCategory(ActivityDescriptor sourceDescriptor)
         {
+            if (this.ResolveDescriptor(sourceDescriptor) != null)
+            {
+                throw new ArgumentException("Activity " + sourceDescriptor.ActivityName + " already exists");
+            }
             Category result = new Category(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
-
             this.AddActivity(result);
             return result;
         }
 
         public ToDo CreateToDo(ActivityDescriptor sourceDescriptor)
         {
+            if (this.ResolveDescriptor(sourceDescriptor) != null)
+            {
+                throw new ArgumentException("Activity " + sourceDescriptor.ActivityName + " already exists");
+            }
             ToDo result = new ToDo(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
             result.AddParent(this.todoCategory);
             this.AddActivity(result);
@@ -292,6 +299,16 @@ namespace ActivityRecommendation
                 if (activity.Parents.Count < 1 && activity != this.rootActivity)
                     activity.Parents.Add(this.rootActivity);
             }
+        }
+
+        public void AddInheritance(Inheritance inheritance)
+        {
+            this.GetActivityOrCreateCategory(inheritance.ParentDescriptor);
+            Category parent = this.ResolveToCategory(inheritance.ParentDescriptor);
+            Activity child = this.GetActivityOrCreateCategory(inheritance.ChildDescriptor);
+            if (inheritance.DiscoveryDate != null)
+                child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
+            child.AddParent(parent);
         }
 
         #region Functions for ICombiner<List<Activity>>

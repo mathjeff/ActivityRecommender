@@ -1225,7 +1225,7 @@ namespace ActivityRecommendation
                 }
             }
 
-            // Motivation:
+            // Motivation #1 (calculating the minimum required number of post-tasks in the pending-task pool)
             //  We'd like it to be possible to graph the log of the user's efficiency over time, and for any errors in the graph introduced by randomness to converge to zero,
             //   or at least definitely not diverge
             //  The way that efficiency will be computed will be by comparing the completion duration of both tasks in an experiment
@@ -1261,11 +1261,24 @@ namespace ActivityRecommendation
             //   Then P(27) = 27^(2/3) = 9, so one third of tasks would be in the pool after 27 tasks were completed
             //   Then P(365) = 365^(2/3) = roughly 49, so about one seventh of tasks would be in the pool after doing one task per day for a year
             int numCompletedExperimentalParticipations = this.NumCompletedExperimentalParticipations;
-            int min_pendingPool_size = Math.Max((int)Math.Pow(numCompletedExperimentalParticipations, 0.667), 3); // need at least 3 tasks available to even start an experiment
+            int min_pendingPostTasks_pool_size = (int)Math.Pow(numCompletedExperimentalParticipations, 0.667);
             int numActivitiesToChooseFrom = availablePreActivities.Count + availablePostActivities.Count + existingOptions.Count;
-            if (numActivitiesToChooseFrom < min_pendingPool_size)
+            // Motivation #2 (calculating the minimum number of tasks in the pending-task pool)
+            //  Note that:
+            //   If we want to keep the size of the pending-task pool above some number (as described above), then:
+            //    When the size of the pending-task pool reaches its minimum target size,
+            //     We must be always choose to increase it
+            //      Increasing the pending-task pool size is equivalent to using only unpaired tasks in the next experiment
+            //  We don't want the user to reach a state where the number of possible tasks that can be suggested for an experiment becomes small
+            //   because the user won't realize how many tasks are available for suggesting
+            //    and the user might try for a while to get some more experiment suggestions without knowing that the Engine will just repeatedly make the same suggestions
+            //     caused by the small number of unpaired tasks
+            //  So, we want the number of available tasks to be larger than the minimum target size of the pending-post-task pool
+            //   For now, let's require that the number of pending tasks is at least double the minimum target number of pending post-tasks
+            int minTotalPoolSize = Math.Max(min_pendingPostTasks_pool_size * 2, 3); // need at least 3 tasks available to even start an experiment
+            if (numActivitiesToChooseFrom < minTotalPoolSize)
             {
-                int numExtraRequiredActivities = min_pendingPool_size - numActivitiesToChooseFrom;
+                int numExtraRequiredActivities = minTotalPoolSize - numActivitiesToChooseFrom;
                 string message = "Don't have enough activities having metrics to run another experiment. Go create " + numExtraRequiredActivities + " more ";
                 if (numExtraRequiredActivities == 1)
                     message += "activity of type ToDo and/or add " + numExtraRequiredActivities + " Metric to another Activity!";
@@ -1284,24 +1297,23 @@ namespace ActivityRecommendation
             // We also want the pre/post status of each item in the pool to be as unpredictable to the user as possible,
             // to prevent them from subconsciously working harder on tasks that are known to be post tasks.
             // So, we randomly decide whether to add suggest a pre-task or a post-task, and we weight the suggestion based on how are already in the pool
-            int max_pendingPool_size = min_pendingPool_size * 2;
             bool choosePostActivity;
-            if (availablePostActivities.Count < min_pendingPool_size && availablePreActivities.Count > 0)
+            if (availablePostActivities.Count < min_pendingPostTasks_pool_size && availablePreActivities.Count > 0)
             {
                 // not enough tasks in the pool; we're at risk of having too few overlapping comparisons
                 choosePostActivity = false;
             }
             else
             {
-                if (availablePostActivities.Count > max_pendingPool_size)
+                if (availablePostActivities.Count > minTotalPoolSize)
                 {
                     // pool is more than big enough; we should start collecting data (completing experiments)
                     choosePostActivity = true;
                 }
                 else
                 {
-                    int preWeight = availablePostActivities.Count - min_pendingPool_size;
-                    int postWeight = max_pendingPool_size - availablePostActivities.Count;
+                    int preWeight = availablePostActivities.Count - min_pendingPostTasks_pool_size;
+                    int postWeight = minTotalPoolSize - availablePostActivities.Count;
                     choosePostActivity = (this.randomGenerator.Next(preWeight + postWeight) >= preWeight);
                 }
             }

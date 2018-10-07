@@ -317,6 +317,7 @@ namespace ActivityRecommendation
             ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptor, suggestionCreationDate, considerationDate, DateTime.Now, suggestion.StartDate);
 
             this.AddSkip(skip);
+            this.PersistSuggestions();
         }
         public void JustifySuggestion(ActivitySuggestion suggestion)
         {
@@ -356,9 +357,12 @@ namespace ActivityRecommendation
             // autofill the participationEntryView with a convenient value
             this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
 
-            // I'm not sure precisely when we want to update the list of current suggestions (which is used for determining whether a participation was prompted by being suggested)
-            // Currently (2015-03-09) it's only modified when the user asks for another suggestion, at which point it's updated to match the suggestions that are displayed
-            this.CurrentSuggestions = new LinkedList<ActivitySuggestion>(this.suggestionsView.GetSuggestions());
+            this.PersistSuggestions();
+        }
+
+        private void PersistSuggestions()
+        {
+            this.CurrentSuggestions = this.suggestionsView.GetSuggestions();
         }
 
         // called when making a recommendation, either for the SuggestionsView or the ExperimentationInitializationLayout
@@ -479,11 +483,13 @@ namespace ActivityRecommendation
             IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
             if (existingSuggestions.Count() > 0 && existingSuggestions.First().ActivityDescriptor.CanMatch(participation.ActivityDescriptor))
                 this.suggestionsView.RemoveSuggestion(existingSuggestions.First());
+            this.PersistSuggestions();
 
             this.UpdateDefaultParticipationData();
 
             // give the information to the appropriate activities
             this.engine.ApplyParticipationsAndRatings();
+
         }
         private void MakeEndNow(object sender, EventArgs e)
         {
@@ -651,7 +657,7 @@ namespace ActivityRecommendation
                 return null;
             }
         }
-        public LinkedList<ActivitySuggestion> CurrentSuggestions
+        public IEnumerable<ActivitySuggestion> CurrentSuggestions
         {
             get
             {

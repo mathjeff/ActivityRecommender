@@ -405,9 +405,20 @@ However, this prevents the experiment screen from appearing to get stuck on the 
 0.1326 typicalScoreError
 0.9237 equivalentWeightedProbability
 
+updated results on 2018-10-13 with new data
+0.0851 typical longtermPredictionIfSuggested error
+0.0427 typical longtermPredictionIfParticipated error
+0.1315 typicalScoreError
+0.9290 equivalentWeightedProbability
+
+updated results on 2018-10-13 after making the the suggestions update to new data more quickly
+0.0779 longtermPredictionIfSuggested error
+0.0465 longtermPredictionIfParticipated error
+0.1317 typicalScoreError
+0.9249 equivalentWeightedProbability
+
  */
-
-
+ 
 namespace ActivityRecommendation
 {
     class EngineTester : HistoryReplayer

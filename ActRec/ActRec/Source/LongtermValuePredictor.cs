@@ -34,6 +34,10 @@ namespace ActivityRecommendation
                 this.interpolator.AddDatapoint(summary);
                 this.ratingSummariesToUpdate.Enqueue(summary);
             }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("RatingSummary with no weight: " + summary);
+            }
         }
         private bool ShouldIncludeSummary(RatingSummary summary)
         {

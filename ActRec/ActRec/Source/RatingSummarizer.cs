@@ -70,9 +70,9 @@ namespace ActivityRecommendation
         }
         // Returns a distribution of scores (possibly weighted by time) between startDate and endDate
         // In the future, the weight of the resultant distribution might adjusted so that any date equal to referenceDate has weight equal to 1
-        public Distribution GetValueDistributionForDates(DateTime startDate, DateTime endDate)
+        public Distribution GetValueDistributionForDates(DateTime startDate, DateTime endDate, bool startInclusive, bool endInclusive)
         {
-            return this.valuesByDate.CombineBetweenKeys(startDate, true, endDate, false);
+            return this.valuesByDate.CombineBetweenKeys(startDate, startInclusive, endDate, endInclusive);
         }
         public DateTime LatestKnownDate
         {

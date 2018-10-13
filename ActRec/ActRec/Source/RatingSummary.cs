@@ -28,20 +28,24 @@ namespace ActivityRecommendation
         {
             if (earliestDateToInclude.CompareTo(this.earliestKnownDate) < 0)
             {
-                this.importData(summarizer, earliestDateToInclude, this.earliestKnownDate);
+                bool endInclusive = (this.values.Weight <= 0);
+                this.importData(summarizer, earliestDateToInclude, this.earliestKnownDate, true, endInclusive);
                 this.earliestKnownDate = earliestDateToInclude;
             }
-            if (latestDateToInclude.CompareTo(this.latestKnownDate) > 0)
+
+            bool startInclusive = (this.values.Weight <= 0);
+            int endComparison = latestDateToInclude.CompareTo(this.latestKnownDate);
+            if (endComparison > 0 || (startInclusive && endComparison >= 0))
             {
-                this.importData(summarizer, this.latestKnownDate, latestDateToInclude);
+                this.importData(summarizer, this.latestKnownDate, latestDateToInclude, startInclusive, true);
                 this.latestKnownDate = latestDateToInclude;
             }
         }
 
         // implements the pull of new data from the RatingSummarizer
-        private void importData(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
+        private void importData(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude, bool startInclusive, bool endInclusive)
         {
-            this.values = this.values.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, latestDateToInclude));
+            this.values = this.values.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, latestDateToInclude, startInclusive, endInclusive));
         }
 
         #region Required for IDatapoint

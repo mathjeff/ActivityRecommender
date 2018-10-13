@@ -3,6 +3,7 @@
     "Microsoft.NETCore.UniversalWindowsPlatform": "6.0.1",
     "PCLStorage": "1.0.2",
     "SkiaSharp": "1.60.0",
+    "Xam.Plugin.FilePicker": "1.1.0",
     "Xamarin.Forms": "2.4.0.282"
   },
   "frameworks": {

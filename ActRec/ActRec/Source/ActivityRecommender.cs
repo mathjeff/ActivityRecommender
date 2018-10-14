@@ -185,7 +185,8 @@ namespace ActivityRecommendation
 
         private void ExperimentationLayout_RequestedExperiment(List<SuggestedMetric> choices)
         {
-            ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, DateTime.Now);
+            DateTime when = DateTime.Now;
+            ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);
             this.layoutStack.RemoveLayout();
@@ -197,6 +198,7 @@ namespace ActivityRecommendation
                 this.engine.PutExperimentInMemory(experiment);
                 this.WriteExperiment(experiment);
             }
+            this.SuspectLatestActionDate(when);
         }
 
         public void ImportData(object sender, FileData fileData)

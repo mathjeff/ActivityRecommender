@@ -113,7 +113,7 @@ namespace ActivityRecommendation.View
                 .AddMessage("One of the visible tasks will then be chosen randomly, and you will be instructed to work on that task until you either complete it or you" +
                 " give up.")
                 .AddMessage("Note that it's very important to focus on this task so ActivityRecommender can have accurate data about how much time you actually spent on it.")
-                .AddMessage("As a result, ActivityRecommender will not allow you to navigate to other screens before you declare having stopped working on this task.")
+                .AddMessage("As a result, ActivityRecommender will not allow you to dismiss the resultant suggestion; you will have to attempt to work on it.")
                 .AddMessage("Ready? Go!")
                 .Build();
             return new HelpButtonLayout("Important Instructions", helpDetails, layoutStack);

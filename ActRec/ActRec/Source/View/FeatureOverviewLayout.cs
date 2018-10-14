@@ -1,7 +1,7 @@
 ﻿using VisiPlacement;
 
 // This file serves two pruposes:
-// #1. It generates the features overview screen in the application
+// #1. It generates the features overview screen in the application, primarily for the purpose of getting users excited
 // #2. It can describe the features to people that don't have the application installed
 
 namespace ActivityRecommendation
@@ -87,6 +87,52 @@ namespace ActivityRecommendation
                 .AddMessage("ActivityRecommender will only attempt to use more of your time when it estimates that your resultant increase in happiness will be enough to compensate.")
                 .Build());
 
+            menuBuilder.AddLayout("Measures your efficiency", (new HelpWindowBuilder())
+                // Defining what to measure is hard,
+                .AddMessage("Imagine that you wanted to measure your efficiency without ActivityRecommender. How would you define the efficiency of your life? " +
+                "It's easy to measure your efficiency on one particular task, for example, by measuring how long it takes you to mow the lawn. " +
+                "However, it's hard to compare that measurement against any other measurement of efficiency. " +
+                "Is mowing your lawn in 30 minutes better or worse than responding to your mail in 25 minutes?")
+                // but if you enter measurable tasks,
+                .AddMessage("ActivityRecommender starts its efficiency measurement process by requiring you to enter some activities you want to do. " +
+                "Each one can either be a ToDo (which gets done once), or can be a Category (which can be done several times) that you've added a Metric to " +
+                "(a Metric signifies that you know how to measure participations in the associated Category).")
+                // then we may be able to measure your efficiency on each individual task and take the average.
+                .AddMessage("ActivityRecommender doesn't expect you to specify everything in your life that you want to get done, because that would take too long. " +
+                "As a result, notice that what ActivityRecommender expects to measure is your efficiency on the tasks you've said you'd like to do, not your " +
+                "productivity over all things you might want to do (because there may also be lots of little things you want to get done that are too much effort " +
+                "to tell to ActivityRecommender).")
+                // We can't just directly compare tasks completed per unit time, though.
+                .AddMessage("This still leaves the question of how to compare tasks having vastly different difficulties. Suppose there are two things you'd like to do: " +
+                "1: Fly from Earth to Mars, and 2: Brush your teeth. One of these things is much more difficult than the other. If we were to directly count the number " +
+                "of tasks you completed every day and count that as your efficiency, then you would get just as many points for flying to the Mars as for brushing your teeth, " +
+                "and it would be tempting to spend more time brushing your teeth and less time flying to the Mars.")
+                // You could estimate difficulty ahead of time, but that's hard.
+                .AddMessage("If you were to estimate the difficulty of each individual task, then theoretically you could divide the expected time required by the actual time time spent and treat that as " +
+                "efficiency. However, do you know how much effort it requires to fly from Earth to Mars? 1 year? 10 years? 100 years? 1000 years? Do you feel confident in your estimate of the difficulty? " +
+                "If there's enough error or uncertainty in your estimates of the difficulty, then measuring how long it takes would provide less information about your efficiency on the task and would provide " +
+                "more information about what the proper difficulty estimate should have been to begin with.")
+                // You could have ActivityRecommender estimate difficulty ahead of time, but that still has the problem where when you do smaller tasks you get more points
+                .AddMessage("If you were to have ActivityRecommender estimate the difficulty of each individual task right before you did it, then that would prevent you from having to estimate difficulty " +
+                "and to subsequently doubt your estimation abilities. However, because ActivityRecommender won't know how long a task will take, this would mean that when you work " +
+                "on an easier task, you complete it more quickly and your computed efficiency is higher, which could make it tempting to complete lots of small tasks.")
+                // ActivityRecommender measures efficiency by running experiments!
+                .AddMessage("How can ActivityRecommender compare tasks of unknown difficulties without asking the user to estimate their difficulties? ActivityRecommender compares tasks by experimenting! " +
+                "When you want to measure your efficiency, you ask ActivityRecommender to start an experiment. You and ActivityRecommender then decide together on the exact set of candidate tasks that might " +
+                "take part in the experiment. After you find a set of tasks that you approve of, you consent to the experiment, and ActivityRecommender randomly selects two tasks for you to do and randomly " +
+                "selects which one of the two you will do first. Because the first task to do is chosen randomly, there is a 50% chance that the easier task will be chosen to go first and a 50% chance that the " +
+                "harder task will be chosen to go first. In mathematical terms, we can now compute an unbiased estimate of your efficiency by assuming that the two tasks are of equal difficulty")
+                // Now ActivityRecommender just needs some machine learning and a huge number of experiments in order to compute trends
+                .AddMessage("Then, with your help, ActivityRecommender can just run a large number of experiments to estimate your efficiency over time and to notice trends. " +
+                "If the tasks you enter vary significantly in difficulty, then this will increase the variance of the measurements but shouldn't introduce any bias. ActivityRecommender also does attempt to look " +
+                "for patterns and to slightly estimate the difficulties of tasks in an effort to decrease variance a little bit more.")
+                // You get feedback, too
+                .AddMessage("These measurements of your efficiency allow ActivityRecommender to give you feedback on your participations, and to look for trends about which activities tend to cause you to be more " +
+                "efficient in the near future. For example, it may be that if you go to bed at a consistent and slightly early time every night then you may observe higher efficiency on tasks in the near future.")
+                // Go!
+                .AddMessage("Are you excited to measure your efficiency!?")
+                .Build());
+            
             menuBuilder.AddLayout("You define what to optimize", (new HelpWindowBuilder())
                 .AddMessage("Throughout ActivityRecommender, the word \"happiness\" is used to refer to the value being optimized. The expectation is that happiness is what you'll choose to " +
                 "optimize, but from ActivityRecommender's perspective, they're just numbers that you're reporting, so the exact meaning is up to you.")
@@ -102,15 +148,15 @@ namespace ActivityRecommendation
                 .AddMessage("No internet is required.")
                 .AddMessage("On-device processing is pretty fast.")
                 .AddMessage("ActivityRecommender itself does not send your data to other devices. Of course, if your device automatically makes backup of application data, then those " +
-                "backups may contain copies of your ActivityRecommender data. You can still use the Export functionality within ActivityRecommender to make save a data snapshot to the " +
+                "backups may contain copies of your ActivityRecommender data. You can still use the Export functionality within ActivityRecommender to save a data snapshot to the " +
                 "device, which you can then separately save.")
                 .Build());
 
             menuBuilder.AddLayout("No fees or ads", (new HelpWindowBuilder())
                 .AddMessage("There are no advertisements in ActivityRecommender, and there is no fee to install it either.")
                 .AddMessage("Why?")
-                .AddMessage("1. I'm more interested in the sense of accomplishment from helping people than in monetizing ActivityRecommender. I expect adoption to be higher if it is free.")
-                .AddMessage("2. I created ActivityRecommender for myself. The fact that other people can use it is a bonus.")
+                .AddMessage("1. I created ActivityRecommender for myself. The fact that other people can use it is a bonus.")
+                .AddMessage("2. I'm more interested in the sense of accomplishment from helping people than in monetizing ActivityRecommender. I expect adoption to be higher if it is free.")
                 .AddMessage("3. ActivityRecommender doesn't require any money to keep a server running, because all the data and processing happen on your device.")
                 .Build());
 

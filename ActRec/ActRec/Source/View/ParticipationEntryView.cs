@@ -365,37 +365,27 @@ namespace ActivityRecommendation
             double roundedShorttermRatio = Math.Round(shorttermValueRatio, 3);
             double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours, 3);
 
-            string rounded_longtermHappiness_window = "the next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days";
-            string roundedEfficiencyWindow = "the next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
-
             bool fun = (shorttermValueRatio > 1);
             bool soothing = (longtermBonusInDays >= 0);
             bool efficient = (efficiencyBonusInHours >= 0);
 
+            string remark;
             string message;
             if (fun)
             {
                 if (soothing)
                 {
                     if (efficient)
-                        message = "Nice! I bet that was fun (" + roundedShorttermRatio + " x avg), " +
-                            "will improve future happiness (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "and improve future efficiency (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "Nice!";
                     else
-                        message = "Pleasant: I bet that was nice (" + roundedShorttermRatio + " x avg) " +
-                            "and will continue to make you happier (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "at the cost of future efficiency (" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "Pleasant.";
                 }
                 else
                 {
                     if (efficient)
-                        message = "A good break? I bet that was fun (" + roundedShorttermRatio + " x avg), " +
-                            "but will sacrifice future happiness (" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "for efficiency (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "A good break?";
                     else
-                        message = "Indulgent: I bet that was fun (" + roundedShorttermRatio + " x avg), " +
-                            "but will lower future happiness (-" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "and efficiency (-" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "Indulgent.";
                 }
             }
             else
@@ -403,26 +393,26 @@ namespace ActivityRecommendation
                 if (soothing)
                 {
                     if (efficient)
-                        message = "Awesome work: I bet that was hard (" + roundedShorttermRatio + " x avg), " +
-                            "but will make you happier (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "and more efficient (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "Awesome work.";
                     else
-                        message = "Lazy: I bet that wasn't fun (" + roundedShorttermRatio + " x avg), " +
-                            "though you'll appreciate it (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "and lose efficiency (" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "Lazy.";
                 }
                 else
                 {
                     if (efficient)
-                        message = "Power break: I bet that was difficult (" + roundedShorttermRatio + " x avg), " +
-                            "and will trade upcoming happiness (" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "for efficiency (+" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")";
+                        remark = "Power break.";
                     else
-                        message = "Oops! I bet that wasn't fun (" + roundedShorttermRatio + " x avg) " +
-                            "and won't improve your happiness (+" + roundedLongtermBonus + " days over " + rounded_longtermHappiness_window + "), " +
-                            "or future efficiency (" + roundedEfficiencyBonus + " hours over " + roundedEfficiencyWindow + ")!";
+                        remark = "Oops!";
                 }
             }
+            message = remark + " I predict: \n";
+            message += roundedShorttermRatio + " * avg fun while doing it\n";
+            if (roundedLongtermBonus > 0)
+                message += "+";
+            message += roundedLongtermBonus + " days fun over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n";
+            if (roundedEfficiencyBonus > 0)
+                message += "+";
+            message += roundedEfficiencyBonus + " hours effectiveness over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
             return message;
         }
 

@@ -9,13 +9,16 @@ namespace ActivityRecommendation.View
     {
         public BrowseInheritancesView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
-            ListInheritancesView listView = new ListInheritancesView(activityDatabase);
+            ListInheritancesView listView = new ListAllActivitiesView(activityDatabase);
+            ListInheritancesView todosView = new ListOpenTodosView(activityDatabase);
             ActivitySearchView searchView = new ActivitySearchView(activityDatabase, "View Activity Inheritances");
             listView.ActivityChosen += this.activityChosen;
+            todosView.ActivityChosen += this.activityChosen;
             searchView.ActivityChosen += this.activityChosen;
 
             this.menuLayout = new MenuLayoutBuilder(layoutStack)
                 .AddLayout("List All Activities", listView)
+                .AddLayout("List Open ToDos", todosView)
                 .AddLayout("Find Activity By Name", searchView)
                 .Build();
 
@@ -40,14 +43,13 @@ namespace ActivityRecommendation.View
 
     }
 
-    class ListInheritancesView : TitledControl
+    abstract class ListInheritancesView : TitledControl
     {
         public event ActivityChosenHandler ActivityChosen;
         public delegate void ActivityChosenHandler(object sender, Activity activity);
 
         public ListInheritancesView(ActivityDatabase activityDatabase)
         {
-            this.SetTitle("Activities You Have Entered");
             this.activityDatabase = activityDatabase;
 
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
@@ -60,14 +62,14 @@ namespace ActivityRecommendation.View
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
-            if (this.GetContent() == null)
+            if (!this.isCacheable() || this.GetContent() == null)
                 this.generateChildren();
             return base.GetBestLayout(query);
         }
 
         private void generateChildren()
         {
-            IEnumerable<Activity> activities = this.activityDatabase.AllActivities;
+            IEnumerable<Activity> activities = this.getActivities(this.activityDatabase);
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
             this.activityButtons = new Dictionary<Button, Activity>();
             foreach (Activity activity in activities)
@@ -77,13 +79,10 @@ namespace ActivityRecommendation.View
                 this.activityButtons[button] = activity;
                 builder.AddLayout(new ButtonLayout(button, activity.Name, 24));
             }
-            /*for (int i = 0; i < 250; i++)
-            {
-                builder.AddLayout(new TextblockLayout("line" + i, 64));
-            }*/
-
             this.SetContent(ScrollLayout.New(builder.Build()));
         }
+
+        protected abstract IEnumerable<Activity> getActivities(ActivityDatabase activityDatabase);
 
         private void Button_Clicked(object sender, System.EventArgs e)
         {
@@ -105,9 +104,42 @@ namespace ActivityRecommendation.View
             this.SetContent(null);
         }
 
+        protected virtual bool isCacheable()
+        {
+            return true;
+        }
+
 
         Dictionary<Button, Activity> activityButtons;
         ActivityDatabase activityDatabase;
+    }
+
+    class ListAllActivitiesView: ListInheritancesView
+    {
+        public ListAllActivitiesView(ActivityDatabase activityDatabase) : base(activityDatabase)
+        {
+            this.SetTitle("Activities You Have Entered");
+        }
+        protected override IEnumerable<Activity> getActivities(ActivityDatabase activityDatabase)
+        {
+            return activityDatabase.AllActivities;
+        }
+    }
+
+    class ListOpenTodosView: ListInheritancesView
+    {
+        public ListOpenTodosView(ActivityDatabase activityDatabase) : base(activityDatabase)
+        {
+            this.SetTitle("Remaining ToDos");
+        }
+        protected override IEnumerable<Activity> getActivities(ActivityDatabase activityDatabase)
+        {
+            return activityDatabase.AllOpenTodos;
+        }
+        protected override bool isCacheable()
+        {
+            return false;
+        }
     }
 
     class ActivitySearchView : TitledControl

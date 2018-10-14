@@ -227,6 +227,39 @@ namespace ActivityRecommendation
                 return this.allActivities;
             }
         }
+        public IEnumerable<ToDo> AllOpenTodos
+        {
+            get
+            {
+                List<ToDo> results = new List<ToDo>();
+                foreach (ToDo todo in this.AllTodos)
+                {
+                    if (!todo.IsCompleted())
+                    {
+                        results.Add(todo);
+                    }
+                }
+                return results;
+            }
+
+        }
+        public IEnumerable<ToDo> AllTodos
+        {
+            get
+            {
+                List<ToDo> toDos = new List<ToDo>(this.todoCategory.Children.Count);
+                foreach (Activity child in this.todoCategory.Children)
+                {
+                    ToDo todo = child as ToDo;
+                    if (todo == null)
+                    {
+                        throw new InvalidCastException("Internal error: Activity " + child + " was assigned as a child of " + this.todoCategory + " but is not of type ToDo");
+                    }
+                    toDos.Add(todo);
+                }
+                return toDos;
+            }
+        }
         public void Clear()
         {
             this.activitiesByName.Clear();

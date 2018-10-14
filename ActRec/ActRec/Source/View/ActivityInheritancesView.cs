@@ -42,6 +42,17 @@ namespace ActivityRecommendation.View
 
 
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
+
+
+            ToDo todo = activity as ToDo;
+            if (todo != null)
+            {
+                if (todo.IsCompleted())
+                    gridBuilder.AddLayout(new TextblockLayout("Status: Completed"));
+                else
+                    gridBuilder.AddLayout(new TextblockLayout("Status: Incomplete"));
+            }
+
             foreach (Metric metric in activity.Metrics)
             {
                 gridBuilder.AddLayout(new TextblockLayout("Has metric: " + metric.Name));

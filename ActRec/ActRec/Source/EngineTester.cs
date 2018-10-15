@@ -417,8 +417,20 @@ updated results on 2018-10-13 after making the the suggestions update to new dat
 0.1317 typicalScoreError
 0.9249 equivalentWeightedProbability
 
+updated results on 2018-10-14 with new data
+0.0786 typical longtermPredictionIfSuggested error
+0.0465 typical longtermPredictionIfParticipated error
+0.1313 typicalScoreError
+0.9298 equivalentWeightedProbability
+
+updated results on 2018-10-14 after improving the participation probability estimates
+0.0792 typical longtermPredictionIfSuggested error
+0.0460 typical longtermPredictionIfParticipated error
+0.1324 typicalScoreError
+0.9349 equivalentWeightedProbability
+
  */
- 
+
 namespace ActivityRecommendation
 {
     class EngineTester : HistoryReplayer

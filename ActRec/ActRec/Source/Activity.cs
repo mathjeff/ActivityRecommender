@@ -1019,10 +1019,10 @@ namespace ActivityRecommendation
                     this.ratingTrainingProgressions.Add(parent.ratingProgression);
                     this.ratingTestingProgressions.Add(parent.expectedRatingProgression);
 
-                    SimplePredictionLink link2 = new SimplePredictionLink(parent.ExpectedRatingProgression, this.RatingProgression, "Probably close to the rating of " + parent.Description);
+                    IPredictionLink link2 = new ExponentiallyWeightedPredictionLink(parent.ExpectedRatingProgression, this.RatingProgression, "Probably close to the rating of " + parent.Description);
                     this.extraRatingPredictionLinks.Add(link2);
 
-                    SimplePredictionLink probabilityLink2 = new SimplePredictionLink(parent.expectedParticipationProbabilityProgression, this.considerationProgression, "Probably just about as likely as " + parent.Description);
+                    IPredictionLink probabilityLink2 = new ConstantWeightedPredictionLink(parent.expectedParticipationProbabilityProgression, this.considerationProgression, "Probably just about as likely as " + parent.Description);
                     this.extraParticipationPredictionLinks.Add(probabilityLink2);
                 }
             }

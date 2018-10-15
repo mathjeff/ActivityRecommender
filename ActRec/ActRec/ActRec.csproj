@@ -116,6 +116,7 @@
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
     <Compile Include="Source\FileIo.cs" />
     <Compile Include="Source\EngineLoader.cs" />
+    <Compile Include="Source\ExponentiallyWeightedPredictionLink.cs" />
     <Compile Include="Source\ToDo.cs" />
     <Compile Include="Source\Activity.cs" />
     <Compile Include="Source\Category.cs" />
@@ -174,7 +175,7 @@
     <Compile Include="Source\RecentUserData.cs" />
     <Compile Include="Source\RelativeRating.cs" />
     <Compile Include="Source\ScatterPlot.cs" />
-    <Compile Include="Source\SimplePredictionLink.cs" />
+    <Compile Include="Source\ConstantWeightedPredictionLink.cs" />
     <Compile Include="Source\SkipProgression.cs" />
     <Compile Include="Source\SuggestionDatabase.cs" />
     <Compile Include="Source\SuggestionJustification.cs" />

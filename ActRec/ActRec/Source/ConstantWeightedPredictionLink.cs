@@ -7,9 +7,9 @@ using System.Text;
 // It simply assumes that the value of the output equals the value of the input
 namespace ActivityRecommendation
 {
-    class SimplePredictionLink : IPredictionLink
+    class ConstantWeightedPredictionLink : IPredictionLink
     {
-        public SimplePredictionLink(IProgression input, IProgression output, string justification)
+        public ConstantWeightedPredictionLink(IProgression input, IProgression output, string justification)
         {
             this.inputProgression = input;
             this.outputProgression = output;
@@ -22,28 +22,16 @@ namespace ActivityRecommendation
         {
             // get the current inputs
             ProgressionValue currentInput = this.inputProgression.GetValueAt(when, false);
-            Distribution newDistribution = currentInput.Value.Plus(Distribution.MakeDistribution(0.5, 0.5, -2)); // remove (most of) the prediction uncertainty and just leave the observations
+            Distribution newDistribution = currentInput.Value;
             // create some result objects
             Prediction prediction = new Prediction();
             prediction.Justification = this.Justification;
             Distribution currentValue = currentInput.Value;
             Distribution output = currentValue;
             double startingWeight = output.Weight;
-            // correct the weight
-            //double newWeight = Math.Sqrt(this.outputProgression.NumItems);
-            double newWeight = newDistribution.Weight / Math.Pow(2, this.outputProgression.NumItems / 2);
-            //double newWeight = currentValue.Weight;
-            //if (currentValue.StdDev != 0)
-            //    newWeight /= currentValue.StdDev;
-            //double newWeight = this.inputProgression.NumItems / ((this.outputProgression.NumItems + 1) * (this.outputProgression.NumItems + 1));
-            //double newWeight = startingWeight;
+            // choose a weight
+            double newWeight = 4;
             prediction.Distribution = output.CopyAndReweightTo(newWeight);
-            /*
-            if (this.outputProgression.NumItems > 0)
-                prediction.Distribution = output.CopyAndReweightBy(1 / Math.Sqrt(this.outputProgression.NumItems));
-            else
-                prediction.Distribution = output;
-            */
             prediction.ApplicableDate = when;
 
             return prediction;

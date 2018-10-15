@@ -514,16 +514,25 @@ namespace ActivityRecommendation
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5) * 8;
+            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5);
             shortTerm_prediction.Distribution = shortTerm_prediction.Distribution.CopyAndReweightTo(shortWeight);
 
-            double mediumWeight = Math.Pow(activity.NumParticipations, 0.8333) * 40;
+            double mediumWeight = activity.NumParticipations;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
             List<Distribution> distributions = new List<Distribution>();
             distributions.Add(shortTerm_prediction.Distribution);
             distributions.Add(mediumTerm_distribution);
+
+            if (activity.NumParticipations < 40)
+            {
+                foreach (Activity parent in activity.ParentsUsedForPrediction)
+                {
+                    Distribution parentDistribution = this.Get_OverallHappiness_ParticipationEstimate(parent, when).Distribution.CopyAndReweightTo(4);
+                    distributions.Add(parentDistribution);
+                }
+            }
 
             Distribution distribution = this.CombineRatingDistributions(distributions);
             Prediction prediction = shortTerm_prediction;
@@ -562,12 +571,12 @@ namespace ActivityRecommendation
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
 
 
-            double mediumWeight = activity.NumConsiderations * participationProbability * activityExistenceWeightMultiplier * 110;
+            double mediumWeight = activity.NumConsiderations * participationProbability * activityExistenceWeightMultiplier * 160;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
 
-            double longWeight = activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 9;
+            double longWeight = activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 6;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 
             List<Prediction> distributions = new List<Prediction>();
@@ -594,6 +603,7 @@ namespace ActivityRecommendation
         {
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
             Prediction prediction = this.CombineRatingPredictions(predictions);
+            System.Diagnostics.Debug.WriteLine("Estimated overall happiness suggestion estimate of " + prediction.Distribution.Mean + " for " + activity + " at " + when);
             return prediction;
         }
 

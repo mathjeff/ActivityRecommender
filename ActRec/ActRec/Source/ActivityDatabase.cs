@@ -104,6 +104,8 @@ namespace ActivityRecommendation
         // finds the Activity indicated by the ActivityDescriptor
         public Activity ResolveDescriptor(ActivityDescriptor descriptor)
         {
+            if (descriptor == null)
+                return null;
             IEnumerable<Activity> activities = null;
             if (descriptor.RequiresPerfectMatch)
             {

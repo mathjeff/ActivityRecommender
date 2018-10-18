@@ -8,7 +8,7 @@ using VisiPlacement;
 using Xamarin.Forms;
 
 // a SuggestionsView provides a user interface for requesting and receiving suggestions for which Activity to do
-namespace ActivityRecommendation
+namespace ActivityRecommendation.View
 {
     class SuggestionsView : TitledControl
     {
@@ -18,7 +18,10 @@ namespace ActivityRecommendation
         public event JustifySuggestionHandler JustifySuggestion;
         public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
 
-        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack)
+        public event RequestSuggestion_Handler RequestSuggestion;
+        public delegate void RequestSuggestion_Handler(ActivityRequest request);
+
+        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase)
         {
             this.recommender = recommenderToInform;
 
@@ -26,21 +29,10 @@ namespace ActivityRecommendation
 
             this.SetTitle("Get Suggestions");
 
-            this.suggestionButton = new Button();
-            ButtonLayout buttonLayout = new ButtonLayout(this.suggestionButton, "Suggest");
+            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true);
+            requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
 
-            this.categoryBox = new ActivityNameEntryBox("From category (optional):");
-            this.desiredActivity_box = new ActivityNameEntryBox("At least as fun as this activity (optional):");
-
-            GridLayout selectionLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
-            selectionLayout.AddLayout(buttonLayout);
-
-            GridLayout categoriesLayout = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
-            categoriesLayout.AddLayout(this.categoryBox);
-            categoriesLayout.AddLayout(this.desiredActivity_box);
-            selectionLayout.AddLayout(categoriesLayout);
-
-            this.selectorLayout = selectionLayout;
+            this.requestSuggestion_layout = requestSuggestion_layout;
 
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a activity recommendations.")
@@ -73,37 +65,14 @@ namespace ActivityRecommendation
             this.UpdateSuggestions();
         }
 
+        private void RequestSuggestion_layout_RequestSuggestion(ActivityRequest activityRequest)
+        {
+            this.RequestSuggestion.Invoke(activityRequest);
+        }
+
         private void ExperimentButton_Clicked(object sender, EventArgs e)
         {
             this.ExperimentRequested.Invoke();
-        }
-
-        public void AddSuggestionClickHandler(EventHandler e)
-        {
-            this.suggestionButton.Clicked += e;
-        }
-        public Activity DesiredActivity
-        {
-            get
-            {
-                return this.desiredActivity_box.Activity;
-            }
-        }
-        public Activity Category
-        {
-            get
-            {
-                return this.categoryBox.Activity;
-            }
-        }
-
-        public ActivityDatabase ActivityDatabase
-        {
-            set
-            {
-                this.categoryBox.Database = value;
-                this.desiredActivity_box.Database = value;
-            }
         }
 
         public void RemoveSuggestion(ActivitySuggestion suggestion)
@@ -112,10 +81,6 @@ namespace ActivityRecommendation
             this.UpdateSuggestions();
         }
 
-        /*public void JustifySuggestion(ActivitySuggestion suggestion)
-        {
-            this.recommender.JustifySuggestion(suggestion);
-        }*/
         public void ClearSuggestions()
         {
             this.suggestions.Clear();
@@ -174,7 +139,7 @@ namespace ActivityRecommendation
                 layouts.AddLast(this.makeLayout(suggestion));
             }
             if (this.suggestions.Count < this.maxNumSuggestions)
-                layouts.AddLast(this.selectorLayout);
+                layouts.AddLast(this.requestSuggestion_layout);
 
             GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(layouts.Count), new BoundProperty_List(1), LayoutScore.Zero);
             foreach (LayoutChoice_Set layout in layouts)
@@ -210,10 +175,7 @@ namespace ActivityRecommendation
         }
 
 
-        LayoutChoice_Set selectorLayout;
-        Button suggestionButton;
-        ActivityNameEntryBox desiredActivity_box;
-        ActivityNameEntryBox categoryBox;
+        LayoutChoice_Set requestSuggestion_layout;
         LayoutChoice_Set helpButton_layout;
         Button experimentButton;
         LayoutChoice_Set startExperiment_layout;

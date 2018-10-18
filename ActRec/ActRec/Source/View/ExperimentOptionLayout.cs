@@ -18,13 +18,19 @@ namespace ActivityRecommendation.View
         public event JustifySuggestionHandler JustifySuggestion;
         public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
 
-        public ExperimentOptionLayout(ExperimentInitializationLayout owner)
+        public ExperimentOptionLayout(ExperimentInitializationLayout owner, ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly)
         {
             this.owner = owner;
-            
-            this.suggestButtonLayout = new ButtonLayout(suggestButton, "Suggest");
+
+            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, allowRequestingActivitiesDirectly);
+            requestSuggestion_layout.RequestSuggestion += RequestSuggestion_Impl;
+            this.requestSuggestion_layout = requestSuggestion_layout;
             this.Suggestion = null;
-            suggestButton.Clicked += SuggestButton_Clicked;
+        }
+
+        private void Layout_RequestSuggestion(ActivityRequest activityRequest)
+        {
+            throw new NotImplementedException();
         }
 
         public SuggestedMetric Suggestion
@@ -46,7 +52,7 @@ namespace ActivityRecommendation.View
                 }
                 else
                 {
-                    this.SubLayout = this.suggestButtonLayout;
+                    this.SubLayout = this.requestSuggestion_layout;
                 }
             }
         }
@@ -60,18 +66,22 @@ namespace ActivityRecommendation.View
         {
             this.SuggestionDismissed.Invoke(this.Suggestion.ActivitySuggestion);
             this.Suggestion = null;
+            this.owner.UpdateOkButton();
         }
 
-        private void SuggestButton_Clicked(object sender, EventArgs e)
+        private void RequestSuggestion_Impl(ActivityRequest activityRequest)
         {
-            SuggestedMetricOrError result = this.owner.ChooseExperimentOption();
-            this.Suggestion = result.Content;
+            SuggestedMetricOrError result = this.owner.ChooseExperimentOption(activityRequest);
+            if (result.Content != null)
+            {
+                this.Suggestion = result.Content;
+                this.owner.UpdateOkButton();
+            }
         }
 
-        private ButtonLayout suggestButtonLayout;
+        private LayoutChoice_Set requestSuggestion_layout;
         private ExperimentInitializationLayout owner;
         private SuggestedMetric suggestion;
-        private Button suggestButton = new Button();
     }
 
     class ExperimentSuggestionLayout : ContainerLayout

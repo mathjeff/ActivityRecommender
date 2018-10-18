@@ -156,7 +156,7 @@ namespace ActivityRecommendation
             }
         }
 
-        // returns a list containing this Doable and all of its ancestors
+        // returns a list containing this Activity and all of its ancestors
         public List<Activity> GetAllSuperactivities()
         {
             List<Activity> superCategories = new List<Activity>();
@@ -174,6 +174,12 @@ namespace ActivityRecommendation
                 }
             }
             return superCategories;
+        }
+        // tells whether <ancestor> is either <this> or one of the ancestors of <this>
+        public bool HasAncestor(Activity ancestor)
+        {
+            return this.GetAllSuperactivities().Contains(ancestor);
+
         }
         public List<Activity> GetParticipationPredictionActivities()
         {

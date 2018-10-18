@@ -98,10 +98,9 @@ namespace ActivityRecommendation
             this.participationEntryView.LatestParticipation = this.latestParticipation;
             this.UpdateDefaultParticipationData();
 
-            this.suggestionsView = new SuggestionsView(this, this.layoutStack);
-            this.suggestionsView.AddSuggestionClickHandler(new EventHandler(this.SuggestionsView_MakeRecommendation));
-            this.suggestionsView.ActivityDatabase = this.engine.ActivityDatabase;
+            this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase);
             this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
+            this.suggestionsView.RequestSuggestion += SuggestionsView_RequestSuggestion;
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
 
@@ -170,6 +169,20 @@ namespace ActivityRecommendation
 
         }
 
+        private void SuggestionsView_RequestSuggestion(ActivityRequest request)
+        {
+            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
+            ActivitySuggestion suggestion = this.MakeRecommendation(request, existingSuggestions);
+            if (suggestion == null)
+            {
+                this.suggestionsView.SetErrorMessage("No activities available! Go create some activities, and return here for suggestions.");
+            }
+            else
+            {
+                this.AddSuggestion_To_SuggestionsView(suggestion);
+            }
+        }
+
         private void SuggestionsView_JustifySuggestion(ActivitySuggestion suggestion)
         {
             this.JustifySuggestion(suggestion);
@@ -177,7 +190,7 @@ namespace ActivityRecommendation
 
         private void SuggestionsView_ExperimentRequested()
         {
-            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this);
+            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase);
             this.layoutStack.AddLayout(experimentationLayout);
             experimentationLayout.RequestedExperiment += ExperimentationLayout_RequestedExperiment;
 
@@ -332,25 +345,6 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(builder.Build());
         }
 
-        // called when the SuggestionsView wants to make a recommendation
-        private void SuggestionsView_MakeRecommendation()
-        {
-            DateTime now = DateTime.Now;
-            Activity requestCategory = this.suggestionsView.Category;
-            Activity activityToBeat = this.suggestionsView.DesiredActivity;
-            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
-            ActivitySuggestion suggestion = this.MakeRecommendation(now, requestCategory, activityToBeat, existingSuggestions);
-            if (suggestion == null)
-            {
-                this.suggestionsView.SetErrorMessage("No activities available! Go create some activities, and return here for suggestions.");
-            }
-            else
-            {
-                this.AddSuggestion_To_SuggestionsView(suggestion);
-            }
-
-        }
-
         private void AddSuggestion_To_SuggestionsView(ActivitySuggestion suggestion)
         {
             // add the suggestion to the list (note that this makes the startDate a couple seconds later if it took a couple seconds to compute the suggestion)
@@ -368,19 +362,18 @@ namespace ActivityRecommendation
         }
 
         // called when making a recommendation, either for the SuggestionsView or the ExperimentationInitializationLayout
-        private ActivitySuggestion MakeRecommendation(DateTime now, Activity requestCategory, Activity activityToBeat, IEnumerable<ActivitySuggestion> existingSuggestions)
+        private ActivitySuggestion MakeRecommendation(ActivityRequest request, IEnumerable<ActivitySuggestion> existingSuggestions)
         {
+            DateTime now = request.Date;
             this.SuspectLatestActionDate(now);
             
-            if (requestCategory != null)
+            if (request.FromCategory != null || request.ActivityToBeat != null)
             {
                 // record the user's request for a certain activity
-                ActivityRequest request = new ActivityRequest(requestCategory.MakeDescriptor(), now);
                 this.AddActivityRequest(request);
             }
 
             List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
-
             DateTime suggestionDate;
             if (existingSuggestions.Count() > 0)
                 suggestionDate = existingSuggestions.Last().EndDate.Value;
@@ -390,11 +383,9 @@ namespace ActivityRecommendation
             // have the engine pretend that the user did everything we've suggested
             IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
 
-            // now determine which category to predict from
-            TimeSpan processingTime = this.suggestionProcessingDuration;
-            
             // now we get a recommendation, from among all activities within this category
-            ActivitySuggestion suggestion = this.engine.MakeRecommendation(requestCategory, activityToBeat, suggestionDate, processingTime);
+            request.RequestedProcessingTime = this.suggestionProcessingDuration;
+            ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
 
             // if there are no matching activities, then give up
             if (suggestion != null)
@@ -409,11 +400,11 @@ namespace ActivityRecommendation
             return suggestion;
         }
 
-        public SuggestedMetricOrError ChooseExperimentOption(List<SuggestedMetric> existingOptions)
+        public SuggestedMetricOrError ChooseExperimentOption(ActivityRequest activityRequest, List<SuggestedMetric> existingOptions)
         {
             DateTime now = DateTime.Now;
 
-            SuggestedMetricOrError result = this.engine.ChooseExperimentOption(existingOptions, this.suggestionProcessingDuration, now);
+            SuggestedMetricOrError result = this.engine.ChooseExperimentOption(activityRequest, existingOptions, this.suggestionProcessingDuration, now);
             if (result.Error != "")
                 return result;
             ActivitySuggestion suggestion = result.ActivitySuggestion;
@@ -446,10 +437,6 @@ namespace ActivityRecommendation
             {
                 this.engine.RemoveParticipation(participation);
             }
-        }
-        private void SuggestionsView_MakeRecommendation(object sender, EventArgs e)
-        {
-            this.SuggestionsView_MakeRecommendation();
         }
         private void WriteSuggestion(ActivitySuggestion suggestion)
         {

@@ -11,13 +11,13 @@ namespace ActivityRecommendation.View
         public event RequestedExperimentHandler RequestedExperiment;
         public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
 
-        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender)
+        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase)
         {
             this.SetTitle("Experiment");
             this.activityRecommender = activityRecommender;
 
             Button okbutton = new Button();
-            ButtonLayout okButtonLayout = new ButtonLayout(okbutton, "Accept");
+            this.okButtonLayout = new ButtonLayout(okbutton, "Accept");
             okbutton.Clicked += Okbutton_Clicked;
 
             LayoutChoice_Set helpButton = this.make_helpButton(layoutStack);
@@ -29,12 +29,14 @@ namespace ActivityRecommendation.View
                 return;
             }
 
-            GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(okButtonLayout).Uniform().Build();
+            this.okButtonHolder = new ContainerLayout();
+            GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(this.okButtonHolder).Uniform().Build();
 
-            Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder();
             for (int i = 0; i < this.numChoices; i++)
             {
-                ExperimentOptionLayout child = new ExperimentOptionLayout(this);
+                bool allowRequestingActivitiesDirectly = (i == 0);
+                ExperimentOptionLayout child = new ExperimentOptionLayout(this, activityDatabase, allowRequestingActivitiesDirectly);
                 this.children.Add(child);
                 childrenBuilder.AddLayout(child);
                 child.SuggestionDismissed += Child_SuggestionDismissed;
@@ -43,6 +45,8 @@ namespace ActivityRecommendation.View
             GridLayout bottomGrid = childrenBuilder.Build();
 
             GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(topGrid).AddLayout(bottomGrid).Uniform().Build();
+
+            this.UpdateOkButton();
 
             this.SetContent(mainGrid);
         }
@@ -55,6 +59,7 @@ namespace ActivityRecommendation.View
         private void Child_SuggestionDismissed(ActivitySuggestion suggestion)
         {
             this.activityRecommender.DeclineSuggestion(suggestion);
+            this.UpdateOkButton();
         }
 
         private void Okbutton_Clicked(object sender, System.EventArgs e)
@@ -67,15 +72,34 @@ namespace ActivityRecommendation.View
             }
         }
 
-        public SuggestedMetricOrError ChooseExperimentOption()
+        public SuggestedMetricOrError ChooseExperimentOption(ActivityRequest activityRequest)
         {
-            SuggestedMetricOrError result = this.activityRecommender.ChooseExperimentOption(this.Suggestions);
+            SuggestedMetricOrError result = this.activityRecommender.ChooseExperimentOption(activityRequest, this.Suggestions);
             if (result.Error != "")
-            {
-                this.SetContent(new TextblockLayout("Internal error; ChooseExperimentOption returned error '" + result.Error + "' after Test_ChooseExperimentOption succeeded"));
-                return result;
-            }
+                this.UpdateOkButton(result.Error);
             return result;
+        }
+        public void UpdateOkButton(string errorMessage = "")
+        {
+            if (errorMessage == "")
+            {
+                int numExtraSuggestionsNeeded = this.numChoices - this.Suggestions.Count;
+                if (numExtraSuggestionsNeeded > 0)
+                {
+                    string text = "Choose " + numExtraSuggestionsNeeded + " suggestion";
+                    if (numExtraSuggestionsNeeded > 1)
+                        text += "s";
+                    this.okButtonHolder.SubLayout = new TextblockLayout(text);
+                }
+                else
+                {
+                    this.okButtonHolder.SubLayout = this.okButtonLayout;
+                }
+            }
+            else
+            {
+                this.okButtonHolder.SubLayout = new TextblockLayout(errorMessage);
+            }
         }
         private List<SuggestedMetric> Suggestions
         {
@@ -120,8 +144,11 @@ namespace ActivityRecommendation.View
         }
 
         private int numChoices = 3;
-        List<ExperimentOptionLayout> children = new List<ExperimentOptionLayout>();
-        ActivityRecommender activityRecommender;
+        private List<ExperimentOptionLayout> children = new List<ExperimentOptionLayout>();
+        private ActivityRecommender activityRecommender;
+        private ContainerLayout okButtonHolder;
+        private LayoutChoice_Set okButtonLayout;
+
 
     }
 }

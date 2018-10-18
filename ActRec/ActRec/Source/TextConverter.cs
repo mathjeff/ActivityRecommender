@@ -101,7 +101,7 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
             string objectName = this.ActivityRequestTag;
 
-            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.ActivityDescriptor);
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.FromCategory);
             properties[this.DateTag] = this.ConvertToStringBody(request.Date);
 
             return this.ConvertToString(properties, objectName);
@@ -309,149 +309,6 @@ namespace ActivityRecommendation
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
             }
         }
-
-        // opens the file, converts it into a sequence of objects, updates them to the latest format, and writes it out to the new file
-        public void ReformatFile(string currentFileName, string newFileName)
-        {
-            // If the file exists, then we want to read all of its data
-            XmlDocument document = new XmlDocument();
-            document.LoadXml(this.internalFileIo.ReadAllText(currentFileName));
-            XmlNode root = document.FirstChild;
-            string outputText = "";
-            Participation latestParticipation = null;
-            ActivitySuggestion latestSuggestion = null;
-            if (root != null)
-            {
-                foreach (XmlNode currentItem in root.ChildNodes)
-                {
-                    if (currentItem.Name == this.ParticipationTag)
-                    {
-                        // read the next particpation
-                        Participation newParticipation = this.ReadParticipation(currentItem);
-                        // write the previous participation
-                        if (latestParticipation != null)
-                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
-
-                        if (newParticipation.Suggested.HasValue && newParticipation.Suggested.Value == true)
-                        {
-                            // This new participation was suggested
-                            if (latestSuggestion != null && newParticipation.ActivityDescriptor.CanMatch(latestSuggestion.ActivityDescriptor) && newParticipation.StartDate.Equals(latestSuggestion.StartDate))
-                            {
-                                // This new participation was suggested but that suggestion was already saved
-                            }
-                            else
-                            {
-                                // This new participation was suggested, and its suggestion wasn't saved yet
-                                // update latestSuggestion and save it before saving the participation
-                                latestSuggestion = new ActivitySuggestion(newParticipation.ActivityDescriptor);
-                                latestSuggestion.StartDate = newParticipation.StartDate;
-                                outputText += this.ConvertToString(latestSuggestion) + Environment.NewLine;
-                            }
-                        }
-
-                        // save the latest participation
-                        latestParticipation = newParticipation;
-                        continue;
-                    }
-                    if (currentItem.Name == this.RatingTag)
-                    {
-                        Rating rating = this.ReadRating(currentItem);
-                        AbsoluteRating absolute = rating as AbsoluteRating;
-                        // check that the rating applies to the previous participation
-                        if (absolute != null && latestParticipation != null && absolute.Date.Equals(latestParticipation.StartDate))
-                        {
-                            // clear some redundant data
-                            absolute.Date = null;
-                            absolute.ActivityDescriptor = null;
-                            // assign it to the latest participation
-                            latestParticipation.RawRating = rating;
-                            // write the previous participation
-                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
-                            latestParticipation = null;
-                            continue;
-                        }
-                        if (latestParticipation != null)
-                        {
-                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
-                            latestParticipation = null;
-                        }
-                        // maybe it's an ActivityRequest
-                        if (absolute != null && absolute.Score == 1)
-                        {
-                            ActivityRequest request = new ActivityRequest(absolute.ActivityDescriptor, (DateTime)absolute.Date);
-                            outputText += this.ConvertToString(request) + Environment.NewLine;
-                            continue;
-                        }
-                    }
-                    if (latestParticipation != null)
-                    {
-                        outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
-                        latestParticipation = null;
-                    }
-                    if (currentItem.Name == this.ActivityDescriptorTag)
-                    {
-                        continue;
-                    }
-                    if (currentItem.Name == this.InheritanceTag)
-                    {
-                        continue;
-                    }
-                    if (currentItem.Name == this.DateTag)
-                    {
-                        continue;
-                    }
-                    if (currentItem.Name == this.SkipTag)
-                    {
-                        ActivitySkip skip = this.ReadSkip(currentItem);
-
-                        if (latestSuggestion != null && latestSuggestion.ActivityDescriptor.CanMatch(skip.ActivityDescriptor) && latestSuggestion.StartDate.Equals(skip.CreationDate))
-                        {
-                            // This skip applied to an existing suggestion already
-                        }
-                        else
-                        {
-                            // This activity was suggested, and that suggestion wasn't saved yet
-                            // update latestSuggestion and save it before saving the skip
-                            latestSuggestion = new ActivitySuggestion(skip.ActivityDescriptor);
-                            latestSuggestion.StartDate = skip.CreationDate;
-                            latestSuggestion.CreatedDate = skip.SuggestionCreationDate;
-
-
-                            outputText += this.ConvertToString(latestSuggestion) + Environment.NewLine;
-                        }
-
-
-                        outputText += this.ConvertToString(skip) + Environment.NewLine;
-                        continue;
-                    }
-                    if (currentItem.Name == this.ActivityRequestTag)
-                    {
-                        ActivityRequest request = this.ReadActivityRequest(currentItem);
-                        outputText += this.ConvertToString(request) + Environment.NewLine;
-                        continue;
-                    }
-                    if (currentItem.Name == this.SuggestionTag)
-                    {
-                        if (latestParticipation != null)
-                        {
-                            // If we're reading a suggestion, then first flush any participation data since we won't update that participation any more
-                            outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
-                            latestParticipation = null;
-                        }
-                        latestSuggestion = this.ReadSuggestion(currentItem);
-                        outputText += this.ConvertToString(latestSuggestion) + Environment.NewLine;
-                        continue;
-                    }
-                    System.Diagnostics.Debug.WriteLine("Warning: unrecognized symbol in TextConverter.ReformatFile");
-                }
-            }
-            if (latestParticipation != null)
-                outputText += this.ConvertToString(latestParticipation) + Environment.NewLine;
-
-            this.internalFileIo.EraseFileAndWriteContent(newFileName, outputText);
-        }
-
-
 
         private void ProcessLatestDate(XmlNode nodeRepresentation)
         {
@@ -766,7 +623,7 @@ namespace ActivityRecommendation
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
                 {
-                    request.ActivityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    request.FromCategory = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.DateTag)

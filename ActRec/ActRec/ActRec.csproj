@@ -198,6 +198,7 @@
     <Compile Include="Source\View\ProgressionSelectionView.cs" />
     <Compile Include="Source\View\RatingEntryView.cs" />
     <Compile Include="Source\View\RelativeRatingEntryView.cs" />
+    <Compile Include="Source\View\RequestSuggestion_Layout.cs" />
     <Compile Include="Source\View\Resizability.cs" />
     <Compile Include="Source\View\ResizableButton.cs" />
     <Compile Include="Source\View\ResizableRadioButton.cs" />

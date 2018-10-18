@@ -12,15 +12,26 @@ namespace ActivityRecommendation
         public ActivityRequest()
         {
         }
-        public ActivityRequest(ActivityDescriptor categoryDescriptor, DateTime when)
+        public ActivityRequest(ActivityDescriptor fromCategory, ActivityDescriptor activityToBeat, DateTime when)
         {
-            this.ActivityDescriptor = categoryDescriptor;
+            this.FromCategory = fromCategory;
+            this.ActivityToBeat = activityToBeat;
+            this.Date = when;
+        }
+        public ActivityRequest(Activity fromCategory, Activity activityToBeat, DateTime when)
+        {
+            if (fromCategory != null)
+                this.FromCategory = fromCategory.MakeDescriptor();
+            if (activityToBeat != null)
+                this.ActivityToBeat = activityToBeat.MakeDescriptor();
             this.Date = when;
         }
 
-        public ActivityDescriptor ActivityDescriptor { get; set; }
+        public ActivityDescriptor FromCategory { get; set; }
+        public ActivityDescriptor ActivityToBeat { get; set; }
         public DateTime Date { get; set; }
         public Rating RawRawing { get; set; }
+        public TimeSpan? RequestedProcessingTime { get; set; }
         public Rating GetCompleteRating()
         {
             return null;

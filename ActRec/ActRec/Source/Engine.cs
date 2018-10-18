@@ -195,7 +195,11 @@ namespace ActivityRecommendation
         {
             return this.MakeRecommendation(when, null);
         }
-
+        public ActivitySuggestion MakeRecommendation(ActivityRequest request)
+        {
+            return this.MakeRecommendation(this.ActivityDatabase.ResolveDescriptor(request.FromCategory), this.ActivityDatabase.ResolveDescriptor(request.ActivityToBeat), request.Date,
+                request.RequestedProcessingTime);
+        }
         public ActivitySuggestion MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
         {
             return this.MakeRecommendation((Activity)null, null, when, requestedProcessingTime);
@@ -1166,14 +1170,14 @@ namespace ActivityRecommendation
         // If ChooseExperimentOption is not available right now, returns a string explaining why. Otherwise returns ""
         public String Test_ChooseExperimentOption()
         {
-            SuggestedMetricOrError result = this.ChooseExperimentOption(new List<SuggestedMetric>(0), null, new DateTime(), true);
+            SuggestedMetricOrError result = this.ChooseExperimentOption(new ActivityRequest(), new List<SuggestedMetric>(0), null, new DateTime(), true);
             if (result != null)
                 return result.Error;
             return "";
         }
 
         // given a list of options of activities that the user is considering doing; returns a new option (different than the others) that can be added to the list
-        public SuggestedMetricOrError ChooseExperimentOption(List<SuggestedMetric> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
+        public SuggestedMetricOrError ChooseExperimentOption(ActivityRequest activityRequest, List<SuggestedMetric> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
         {
             // activities that can ever be put in an experiment
             List<Activity> activitiesHavingMetrics = this.ChooseableActivitiesHavingMetrics;
@@ -1189,79 +1193,140 @@ namespace ActivityRecommendation
 
             List<Activity> availablePreActivities = new List<Activity>();
             List<Activity> availablePostActivities = new List<Activity>();
+
+            // the Activity that the user has requested this suggestion come from
+            Activity fromCategory = this.activityDatabase.ResolveDescriptor(activityRequest.FromCategory);
+
+            // find available activities and classify each as a pre-Activity (not yet part of a planned Experiment) or post-Activity (already is the second task in a planned Experiment)
             foreach (Activity activity in activitiesHavingMetrics)
             {
                 if (!excludedActivities.Contains(activity))
                 {
-                    // found an available Activity; classify it as a pre-Activity (not yet part of a planned Experiment) or post-Activity (already is the second task in a planned Experiment)
-                    if (plannedExperimentActivities.Contains(activity))
-                        availablePostActivities.Add(activity);
-                    else
-                        availablePreActivities.Add(activity);
+                    if (fromCategory == null || activity.HasAncestor(fromCategory))
+                    {
+                        if (plannedExperimentActivities.Contains(activity))
+                            availablePostActivities.Add(activity);
+                        else
+                            availablePreActivities.Add(activity);
+                    }
                 }
             }
 
-            // Motivation #1 (calculating the minimum required number of post-tasks in the pending-task pool)
-            //  We'd like it to be possible to graph the log of the user's efficiency over time, and for any errors in the graph introduced by randomness to converge to zero,
-            //   or at least definitely not diverge
-            //  The way that efficiency will be computed will be by comparing the completion duration of both tasks in an experiment
-            //  The source of randomness is that the two tasks are ordered randomly but might have significantly different difficulties
-            //  So, we need to have the pool of tasks grow increasingly large so we can compare increasingly distant activities and hopefully cause error to converge to zero
-            // The situation:
-            //  Suppose that the user has completed T tasks.
-            //  Suppose that the number of tasks in the pool equals P(T)
-            // Let us slightly modify this problem for the purpose of more easily modelling it:
-            //  Let us pretend that tasks are separated into bins, each of size P(T)
-            //  Let us pretend that all pairs of tasks are between two adjacent bins, and that they are evently distributed.
-            //   That is, let us pretend that there are (P(T)/2) pairs of tasks that have one task in bin i and one task in bin i+1
-            // The analysis:
-            //  We want to compute the standard deviation (stddev) of the log of the ratio of the efficiency at the beginning of time and the efficiency at the end of time
-            //   This is equivalent to computing the sqrt of the variance of the log of the ratio of the computed efficiency at the beginning and the computed efficiency at the end
-            //    This is equivalent to computing the sqrt of the sum of the variances of the logs of the ratios between adjacent bins
-            //   The stddev of the ratios between adjacent bins (when there are T tasks, and when the stddev of measurement error equals m) is:
-            //    m / sqrt(P(T)/2)
-            //   This gives a variance of the ratios between adjacent bins of:
-            //    2m*m / P(T)
-            //   because log(X) approximately equals X - 1 for X near 1, the variance of the log of the ratios is approximately the same
-            //   Then the sum of the logs of the variances equals:
-            //    sum((probability that T is at the boundary between two bins) * (log of the variance of the ratio P(T+1)/P(T))
-            //    = sum((1/P(T))*(2m*m/P(T)))
-            //    = 2m * m * sum(1/(P(T)^2))
-            //     This diverges for P(T) = T^(1/2) but converges for P(T) = T^(d) for d > 1/2
-            //      What does it converge to? sum(2m*m*sum(T^(-2d))) = (-2m*m/(-2d+1))*(T^(-2d+1))[1,infinity) = 2m*m/(2d-1)
-            //  (Also, recall that we need d <= 1 to collect any data at all (if the current pool contains all tasks ever, then we'll never complete an experiment))
-            //  We need d >= 0.5 for convergence, and the larger it is, the lower the sum we converge to.
-            //  Suppose d = 2/3.
-            //   Then the total variance = 2m*m/(2d-1) = 6m*m, so the total stddev = sqrt(6) * m = about 2.5m
-            //   Then P(8) = 8^(2/3) = 4, so half of tasks would be in the pool after 8 tasks were completed
-            //   Then P(27) = 27^(2/3) = 9, so one third of tasks would be in the pool after 27 tasks were completed
-            //   Then P(365) = 365^(2/3) = roughly 49, so about one seventh of tasks would be in the pool after doing one task per day for a year
-            int numCompletedExperimentalParticipations = this.NumCompletedExperimentalParticipations;
-            int min_pendingPostTasks_pool_size = (int)Math.Pow(numCompletedExperimentalParticipations, 0.667);
-            int numActivitiesToChooseFrom = availablePreActivities.Count + availablePostActivities.Count + existingOptions.Count;
-            // Motivation #2 (calculating the minimum number of tasks in the pending-task pool)
-            //  Note that:
-            //   If we want to keep the size of the pending-task pool above some number (as described above), then:
-            //    When the size of the pending-task pool reaches its minimum target size,
-            //     We must be always choose to increase it
-            //      Increasing the pending-task pool size is equivalent to using only unpaired tasks in the next experiment
-            //  We don't want the user to reach a state where the number of possible tasks that can be suggested for an experiment becomes small
-            //   because the user won't realize how many tasks are available for suggesting
-            //    and the user might try for a while to get some more experiment suggestions without knowing that the Engine will just repeatedly make the same suggestions
-            //     caused by the small number of unpaired tasks
-            //  So, we want the number of available tasks to be larger than the minimum target size of the pending-post-task pool
-            //   For now, let's require that the number of pending tasks is at least double the minimum target number of pending post-tasks
-            int minTotalPoolSize = Math.Max(min_pendingPostTasks_pool_size * 2, 3); // need at least 3 tasks available to even start an experiment
-            if (numActivitiesToChooseFrom < minTotalPoolSize)
+            // check ActivityToBeat if specified
+            Activity activityToBeat = this.activityDatabase.ResolveDescriptor(activityRequest.ActivityToBeat);
+            if (activityToBeat != null)
             {
-                int numExtraRequiredActivities = minTotalPoolSize - numActivitiesToChooseFrom;
-                string message = "Don't have enough activities having metrics to run another experiment. Go create " + numExtraRequiredActivities + " more ";
-                if (numExtraRequiredActivities == 1)
-                    message += "activity of type ToDo and/or add " + numExtraRequiredActivities + " Metric to another Activity!";
+                if (!availablePreActivities.Contains(activityToBeat) && !availablePostActivities.Contains(activityToBeat))
+                    return new SuggestedMetricOrError(activityToBeat.Name + " cannot be added to this experiment");
+            }
+
+
+            int numActivitiesToChooseFromNow = availablePreActivities.Count + availablePostActivities.Count;
+
+            // We also want the pre/post status of each item in the pool to be as unpredictable to the user as possible,
+            // to prevent them from subconsciously working harder on tasks that are known to be post tasks.
+            // So, we randomly decide whether to add suggest a pre-task or a post-task, and we weight the suggestion based on how are already in the pool
+            bool considerPreActivities;
+            bool considerPostActivities;
+            if (activityRequest.FromCategory != null || activityRequest.ActivityToBeat != null)
+            {
+                // If the caller passed in an ActivityRequest, then they've specified a specific preference for some activities
+                // We don't wan't to make it easy for the user to accidentially figure out which tasks are unpaired and which tasks are post tasks
+                // (because that could motivate the user to work less hard on pre-tasks)
+                // We also don't want to confuse the user by inexplicably excluding certain tasks
+                // So, if the user passed in an ActivityRequest, then we allow both unpaired and post activities
+                // (However, we only allow the user to specify an ActivityRequest occasionally, to prevent the size of the post tasks from getting too small)
+                considerPreActivities = considerPostActivities = true;
+
+                if (numActivitiesToChooseFromNow < 1)
+                    return new SuggestedMetricOrError("No matching activities!");
+            }
+            else
+            {
+                // Motivation #1 (calculating the minimum required number of post-tasks in the pending-task pool)
+                //  We'd like it to be possible to graph the log of the user's efficiency over time, and for any errors in the graph introduced by randomness to converge to zero,
+                //   or at least definitely not diverge
+                //  The way that efficiency will be computed will be by comparing the completion duration of both tasks in an experiment
+                //  The source of randomness is that the two tasks are ordered randomly but might have significantly different difficulties
+                //  So, we need to have the pool of tasks grow increasingly large so we can compare increasingly distant activities and hopefully cause error to converge to zero
+                // The situation:
+                //  Suppose that the user has completed T tasks.
+                //  Suppose that the number of tasks in the pool equals P(T)
+                // Let us slightly modify this problem for the purpose of more easily modelling it:
+                //  Let us pretend that tasks are separated into bins, each of size P(T)
+                //  Let us pretend that all pairs of tasks are between two adjacent bins, and that they are evently distributed.
+                //   That is, let us pretend that there are (P(T)/2) pairs of tasks that have one task in bin i and one task in bin i+1
+                // The analysis:
+                //  We want to compute the standard deviation (stddev) of the log of the ratio of the efficiency at the beginning of time and the efficiency at the end of time
+                //   This is equivalent to computing the sqrt of the variance of the log of the ratio of the computed efficiency at the beginning and the computed efficiency at the end
+                //    This is equivalent to computing the sqrt of the sum of the variances of the logs of the ratios between adjacent bins
+                //   The stddev of the ratios between adjacent bins (when there are T tasks, and when the stddev of measurement error equals m) is:
+                //    m / sqrt(P(T)/2)
+                //   This gives a variance of the ratios between adjacent bins of:
+                //    2m*m / P(T)
+                //   because log(X) approximately equals X - 1 for X near 1, the variance of the log of the ratios is approximately the same
+                //   Then the sum of the logs of the variances equals:
+                //    sum((probability that T is at the boundary between two bins) * (log of the variance of the ratio P(T+1)/P(T))
+                //    = sum((1/P(T))*(2m*m/P(T)))
+                //    = 2m * m * sum(1/(P(T)^2))
+                //     This diverges for P(T) = T^(1/2) but converges for P(T) = T^(d) for d > 1/2
+                //      What does it converge to? sum(2m*m*sum(T^(-2d))) = (-2m*m/(-2d+1))*(T^(-2d+1))[1,infinity) = 2m*m/(2d-1)
+                //  (Also, recall that we need d <= 1 to collect any data at all (if the current pool contains all tasks ever, then we'll never complete an experiment))
+                //  We need d >= 0.5 for convergence, and the larger it is, the lower the sum we converge to.
+                //  Suppose d = 2/3.
+                //   Then the total variance = 2m*m/(2d-1) = 6m*m, so the total stddev = sqrt(6) * m = about 2.5m
+                //   Then P(8) = 8^(2/3) = 4, so half of tasks would be in the pool after 8 tasks were completed
+                //   Then P(27) = 27^(2/3) = 9, so one third of tasks would be in the pool after 27 tasks were completed
+                //   Then P(365) = 365^(2/3) = roughly 49, so about one seventh of tasks would be in the pool after doing one task per day for a year
+                int numCompletedExperimentalParticipations = this.NumCompletedExperimentalParticipations;
+                int min_pendingPostTasks_pool_size = (int)Math.Pow(numCompletedExperimentalParticipations, 0.667);
+                int numActivitiesToChooseFromTotal = numActivitiesToChooseFromNow + existingOptions.Count;
+                // Motivation #2 (calculating the minimum number of tasks in the pending-task pool)
+                //  Note that:
+                //   If we want to keep the size of the pending-task pool above some number (as described above), then:
+                //    When the size of the pending-task pool reaches its minimum target size,
+                //     We must be always choose to increase it
+                //      Increasing the pending-task pool size is equivalent to using only unpaired tasks in the next experiment
+                //  We don't want the user to reach a state where the number of possible tasks that can be suggested for an experiment becomes small
+                //   because the user won't realize how many tasks are available for suggesting
+                //    and the user might try for a while to get some more experiment suggestions without knowing that the Engine will just repeatedly make the same suggestions
+                //     caused by the small number of unpaired tasks
+                //  So, we want the number of available tasks to be larger than the minimum target size of the pending-post-task pool
+                //   For now, let's require that the number of pending tasks is at least double the minimum target number of pending post-tasks
+                int minTotalPoolSize = Math.Max(min_pendingPostTasks_pool_size * 2, 3); // need at least 3 tasks available to even start an experiment
+
+                if (numActivitiesToChooseFromTotal < minTotalPoolSize)
+                {
+                    int numExtraRequiredActivities = minTotalPoolSize - numActivitiesToChooseFromTotal;
+                    string message = "Don't have enough activities having metrics to run another experiment. Go create " + numExtraRequiredActivities + " more ";
+                    if (numExtraRequiredActivities == 1)
+                        message += "activity of type ToDo and/or add " + numExtraRequiredActivities + " Metric to another Activity!";
+                    else
+                        message += "activities of type ToDo and/or add Metrics to " + numExtraRequiredActivities + " more Activities!";
+                    // no enough activities for a meaningful experiment
+                    return new SuggestedMetricOrError(message);
+                }
+
+                if (availablePostActivities.Count < min_pendingPostTasks_pool_size && availablePreActivities.Count > 0)
+                {
+                    // not enough tasks in the pool; we're at risk of having too few overlapping comparisons
+                    considerPostActivities = false;
+                }
                 else
-                    message += "activities of type ToDo and/or add Metrics to " + numExtraRequiredActivities + " more Activities!";
-                // no enough activities for a meaningful experiment
-                return new SuggestedMetricOrError(message);
+                {
+                    if (availablePostActivities.Count > minTotalPoolSize)
+                    {
+                        // pool is more than big enough; we should start collecting data (completing experiments)
+                        considerPostActivities = true;
+                    }
+                    else
+                    {
+                        int preWeight = availablePostActivities.Count - min_pendingPostTasks_pool_size;
+                        int postWeight = minTotalPoolSize - availablePostActivities.Count;
+                        considerPostActivities = (this.randomGenerator.Next(preWeight + postWeight) >= preWeight);
+                    }
+                }
+                considerPreActivities = !considerPostActivities;
             }
 
             if (dryRun)
@@ -1270,39 +1335,31 @@ namespace ActivityRecommendation
                 return null;
             }
 
-            // We also want the pre/post status of each item in the pool to be as unpredictable to the user as possible,
-            // to prevent them from subconsciously working harder on tasks that are known to be post tasks.
-            // So, we randomly decide whether to add suggest a pre-task or a post-task, and we weight the suggestion based on how are already in the pool
-            bool choosePostActivity;
-            if (availablePostActivities.Count < min_pendingPostTasks_pool_size && availablePreActivities.Count > 0)
+            List<Activity> recommendableActivities;
+            if (considerPreActivities)
             {
-                // not enough tasks in the pool; we're at risk of having too few overlapping comparisons
-                choosePostActivity = false;
-            }
-            else
-            {
-                if (availablePostActivities.Count > minTotalPoolSize)
+                if (considerPostActivities)
                 {
-                    // pool is more than big enough; we should start collecting data (completing experiments)
-                    choosePostActivity = true;
+                    List<Activity> choices = availablePreActivities;
+                    foreach (Activity activity in availablePostActivities)
+                    {
+                        choices.Add(activity);
+                    }
+                    recommendableActivities = choices;
                 }
                 else
                 {
-                    int preWeight = availablePostActivities.Count - min_pendingPostTasks_pool_size;
-                    int postWeight = minTotalPoolSize - availablePostActivities.Count;
-                    choosePostActivity = (this.randomGenerator.Next(preWeight + postWeight) >= preWeight);
+                    recommendableActivities = availablePreActivities;
                 }
             }
-
-            List<Activity> recommendableActivities;
-            if (choosePostActivity)
-                recommendableActivities = availablePostActivities;
             else
-                recommendableActivities = availablePreActivities;
+            {
+                recommendableActivities = availablePostActivities;
+            }
 
 
             // Now that we've identified some activities that are reasonable to add to the experiment, choose the one that we think will provide the most longterm value to the user
-            Activity bestActivity = this.activityDatabase.ResolveDescriptor(this.MakeRecommendation(recommendableActivities, null, DateTime.Now, requestedProcessingTime).ActivityDescriptor);
+            Activity bestActivity = this.activityDatabase.ResolveDescriptor(this.MakeRecommendation(recommendableActivities, activityToBeat, DateTime.Now, requestedProcessingTime).ActivityDescriptor);
 
             // chose a random metric for this activity
             List<Metric> metrics = bestActivity.Metrics;

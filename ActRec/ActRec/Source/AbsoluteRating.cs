@@ -67,7 +67,7 @@ namespace ActivityRecommendation
 
         public override void FillInFromRequest(ActivityRequest request)
         {
-            this.ActivityDescriptor = request.ActivityDescriptor;
+            this.ActivityDescriptor = request.FromCategory;
             this.Date = request.Date;
             this.Score = 1;
             base.FillInFromRequest(request);

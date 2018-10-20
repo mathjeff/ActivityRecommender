@@ -10,7 +10,6 @@ namespace ActivityRecommendation
     {
         public ActivityNameEntryBox(string startingTitle, bool createNewActivity = false) : base(startingTitle)
         {
-
             this.nameBox = new Editor();
             this.nameBox.TextChanged += NameBox_TextChanged;
             this.nameBox_layout = new TextboxLayout(this.nameBox);
@@ -20,9 +19,10 @@ namespace ActivityRecommendation
             Button xButton = new Button();
             xButton.Text = "X";
             xButton.Clicked += XButton_Clicked;
-            this.nameBoxWithX = new Horizontal_GridLayout_Builder().AddLayout(this.nameBox_layout).AddLayout(new ButtonLayout(xButton)).Build();
+            this.xButtonLayout = new ButtonLayout(xButton);
 
-            this.nameLayout = new ContainerLayout();
+            this.nameBoxWithX = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
+            this.nameBoxWithX.AddLayout(this.nameBox_layout);
 
             this.suggestionBlock = new Label();
             LayoutChoice_Set content;
@@ -31,13 +31,13 @@ namespace ActivityRecommendation
 
             if (createNewActivity)
             {
-                content = nameLayout;
+                content = nameBoxWithX;
             }
             else
             {
                 GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
                 contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
-                contentWithSuggestion.AddLayout(nameLayout);
+                contentWithSuggestion.AddLayout(this.nameBoxWithX);
 
                 content = new LayoutCache(contentWithSuggestion);
             }
@@ -74,9 +74,13 @@ namespace ActivityRecommendation
         private void updateXButton()
         {
             if (this.NameText != "" && this.NameText != null)
-                this.nameLayout.SubLayout = this.nameBoxWithX;
+            {
+                this.nameBoxWithX.PutLayout(this.xButtonLayout, 1, 0);
+            }
             else
-                this.nameLayout.SubLayout = this.nameBox_layout;
+            {
+                this.nameBoxWithX.PutLayout(null, 1, 0);
+            }
         }
 
         private void userEnteredText(string oldText, string newText)
@@ -315,7 +319,7 @@ namespace ActivityRecommendation
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
 
-        ContainerLayout nameLayout;
+        ButtonLayout xButtonLayout;
         GridLayout nameBoxWithX;
         TextboxLayout nameBox_layout;
         string nameText;

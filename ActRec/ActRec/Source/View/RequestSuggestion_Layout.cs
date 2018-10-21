@@ -19,7 +19,7 @@ namespace ActivityRecommendation.View
             suggestionButton.Clicked += SuggestionButton_Clicked;
             ButtonLayout buttonLayout = new ButtonLayout(suggestionButton, "Suggest");
 
-            this.categoryBox = new ActivityNameEntryBox("From category(optional):");
+            this.categoryBox = new ActivityNameEntryBox("From category (optional):");
             this.categoryBox.Database = activityDatabase;
 
             this.desiredActivity_box = new ActivityNameEntryBox("At least as fun as this activity (optional):");

@@ -32,7 +32,7 @@ namespace ActivityRecommendation.View
             this.okButtonHolder = new ContainerLayout();
             GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(this.okButtonHolder).Uniform().Build();
 
-            Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder();
+            Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
             for (int i = 0; i < this.numChoices; i++)
             {
                 bool allowRequestingActivitiesDirectly = (i == 0);

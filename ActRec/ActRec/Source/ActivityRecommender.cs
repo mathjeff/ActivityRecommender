@@ -400,11 +400,11 @@ namespace ActivityRecommendation
             return suggestion;
         }
 
-        public SuggestedMetricOrError ChooseExperimentOption(ActivityRequest activityRequest, List<SuggestedMetric> existingOptions)
+        public SuggestedMetric_Metadata ChooseExperimentOption(ActivityRequest activityRequest, List<SuggestedMetric> existingOptions)
         {
             DateTime now = DateTime.Now;
 
-            SuggestedMetricOrError result = this.engine.ChooseExperimentOption(activityRequest, existingOptions, this.suggestionProcessingDuration, now);
+            SuggestedMetric_Metadata result = this.engine.ChooseExperimentOption(activityRequest, existingOptions, this.suggestionProcessingDuration, now);
             if (result.Error != "")
                 return result;
             ActivitySuggestion suggestion = result.ActivitySuggestion;
@@ -413,7 +413,7 @@ namespace ActivityRecommendation
             return result;
         }
 
-        public string Test_ChooseExperimentOption()
+        public SuggestedMetric_Metadata Test_ChooseExperimentOption()
         {
             return this.engine.Test_ChooseExperimentOption();
         }

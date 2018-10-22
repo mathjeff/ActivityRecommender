@@ -22,15 +22,15 @@ namespace ActivityRecommendation.View
 
             LayoutChoice_Set helpButton = this.make_helpButton(layoutStack);
 
-            string error = activityRecommender.Test_ChooseExperimentOption();
-            if (error != "")
+            SuggestedMetric_Metadata experimentsStatus = activityRecommender.Test_ChooseExperimentOption();
+            if (experimentsStatus.Error != "")
             {
-                this.SetContent(new TextblockLayout(error));
+                this.SetContent(new TextblockLayout(experimentsStatus.Error));
                 return;
             }
 
-            this.okButtonHolder = new ContainerLayout();
-            GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(this.okButtonHolder).Uniform().Build();
+            this.statusHolder = new ContainerLayout();
+            GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(this.statusHolder).Uniform().Build();
 
             Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
             for (int i = 0; i < this.numChoices; i++)
@@ -46,7 +46,11 @@ namespace ActivityRecommendation.View
 
             GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(topGrid).AddLayout(bottomGrid).Uniform().Build();
 
-            this.UpdateOkButton();
+            string statusMessage = "(" + experimentsStatus.NumExperimentParticipationsRemaining + " experiment";
+            if (experimentsStatus.NumExperimentParticipationsRemaining != 1)
+                statusMessage += "s";
+            statusMessage += " remaining before another ToDo must be entered!)";
+            this.UpdateStatus(statusMessage);
 
             this.SetContent(mainGrid);
         }
@@ -59,7 +63,7 @@ namespace ActivityRecommendation.View
         private void Child_SuggestionDismissed(ActivitySuggestion suggestion)
         {
             this.activityRecommender.DeclineSuggestion(suggestion);
-            this.UpdateOkButton();
+            this.UpdateStatus();
         }
 
         private void Okbutton_Clicked(object sender, System.EventArgs e)
@@ -72,14 +76,14 @@ namespace ActivityRecommendation.View
             }
         }
 
-        public SuggestedMetricOrError ChooseExperimentOption(ActivityRequest activityRequest)
+        public SuggestedMetric_Metadata ChooseExperimentOption(ActivityRequest activityRequest)
         {
-            SuggestedMetricOrError result = this.activityRecommender.ChooseExperimentOption(activityRequest, this.Suggestions);
+            SuggestedMetric_Metadata result = this.activityRecommender.ChooseExperimentOption(activityRequest, this.Suggestions);
             if (result.Error != "")
-                this.UpdateOkButton(result.Error);
+                this.UpdateStatus(result.Error);
             return result;
         }
-        public void UpdateOkButton(string errorMessage = "")
+        public void UpdateStatus(string errorMessage = "")
         {
             if (errorMessage == "")
             {
@@ -89,16 +93,16 @@ namespace ActivityRecommendation.View
                     string text = "Choose " + numExtraSuggestionsNeeded + " suggestion";
                     if (numExtraSuggestionsNeeded > 1)
                         text += "s";
-                    this.okButtonHolder.SubLayout = new TextblockLayout(text);
+                    this.statusHolder.SubLayout = new TextblockLayout(text);
                 }
                 else
                 {
-                    this.okButtonHolder.SubLayout = this.okButtonLayout;
+                    this.statusHolder.SubLayout = this.okButtonLayout;
                 }
             }
             else
             {
-                this.okButtonHolder.SubLayout = new TextblockLayout(errorMessage);
+                this.statusHolder.SubLayout = new TextblockLayout(errorMessage);
             }
         }
         private List<SuggestedMetric> Suggestions
@@ -146,7 +150,7 @@ namespace ActivityRecommendation.View
         private int numChoices = 3;
         private List<ExperimentOptionLayout> children = new List<ExperimentOptionLayout>();
         private ActivityRecommender activityRecommender;
-        private ContainerLayout okButtonHolder;
+        private ContainerLayout statusHolder;
         private LayoutChoice_Set okButtonLayout;
 
 

@@ -66,16 +66,16 @@ namespace ActivityRecommendation.View
         {
             this.SuggestionDismissed.Invoke(this.Suggestion.ActivitySuggestion);
             this.Suggestion = null;
-            this.owner.UpdateOkButton();
+            this.owner.UpdateStatus();
         }
 
         private void RequestSuggestion_Impl(ActivityRequest activityRequest)
         {
-            SuggestedMetricOrError result = this.owner.ChooseExperimentOption(activityRequest);
+            SuggestedMetric_Metadata result = this.owner.ChooseExperimentOption(activityRequest);
             if (result.Content != null)
             {
                 this.Suggestion = result.Content;
-                this.owner.UpdateOkButton();
+                this.owner.UpdateStatus();
             }
         }
 

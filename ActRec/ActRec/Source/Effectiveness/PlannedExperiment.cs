@@ -51,14 +51,22 @@ namespace ActivityRecommendation.Effectiveness
         }
     }
 
-    // holds a SuggestedMetric or an error
-    public class SuggestedMetricOrError
+    // holds a SuggestedMetric and some information about the process of creating it
+    public class SuggestedMetric_Metadata
     {
-        public SuggestedMetricOrError(SuggestedMetric Content) { this.Content = Content; }
-        public SuggestedMetricOrError(string error) { this.Error = error; }
+        public SuggestedMetric_Metadata(SuggestedMetric Content, int numExperimentParticipationsRemaining)
+        {
+            this.Content = Content;
+            this.NumExperimentParticipationsRemaining = numExperimentParticipationsRemaining;
+        }
+        public SuggestedMetric_Metadata(string error) { this.Error = error; }
 
-        public SuggestedMetric Content;
+        // Holds an error if creating a SuggestedMetric failed. If this is nonempty, the other fields will be empty.
         public string Error = "";
+        // The actual suggestion
+        public SuggestedMetric Content;
+        // The number of times that an experiment participation can happen before no longer having enough tasks (which is required for making comparisons that don't have too much error)
+        public int NumExperimentParticipationsRemaining;
 
         public ActivitySuggestion ActivitySuggestion
         {

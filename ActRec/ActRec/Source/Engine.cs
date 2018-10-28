@@ -40,9 +40,6 @@ namespace ActivityRecommendation
                 this.ApplyParticipationsAndRatings();
         }
 
-        private void ApplyInheritance(Inheritance inheritance)
-        {
-        }
         // moves the ratings and participations from the pending queues into the Activities
         // Note that there is a bug at the moment: when an inheritance is added to an activity, all of its ratings need to cascade appropriately
         // currently they don't. However, as long as the inheritances are always added before this function is called, then it's fine
@@ -1596,21 +1593,10 @@ namespace ActivityRecommendation
         private List<Participation> unappliedParticipations;        // lists all Participations that the ParticipationProgressions don't know about yet
         private List<ActivitySkip> unappliedSkips;                  // lists all skips that the progressions don't know about yet
         private List<ActivitySuggestion> unappliedSuggestions;            // lists all ActivitySuggestions that the Activities don't know about yet
-        // the PredictionLinks can predict the rating of an activity based on the intensity of the parent participations and based on parent ratings
-        // 1. Let us create one PredictionLink per parent, which predictions the child's current rating from the parent's current rating
-        // This PredictionLink must be trained using only ratings that are actually provided, but as inputs to guess from it may take the current calculated rating of the parent
-        // 2. Let us create one PredictionLink per Activity, which predicts its rating from its recent ratings
-        // 3. Let us create one PredictionLink per Activity, which predicts its rating from its recent participations
-        // private Dictionary<string, Dictionary<string, PredictionLink>> PredictionLinks;
-        //TextConverter textConverter;    // converts objects to and from text
-        //string ratingsFileName;         // the name of the file that stores ratings
-        //string inheritancesFileName;    // the name of the file that stores inheritances
         DateTime firstInteractionDate;
         DateTime latestInteractionDate;
         bool requiresFullUpdate;
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
-        //Distribution ratingsForSuggestedActivities;     // the ratings that the user gives to activities that were suggested by the engine
-        //Distribution ratingsForUnsuggestedActivities;   // the ratings that the user gives to activities that were not suggestd by the engine
         RatingSummarizer weightedRatingSummarizer;
         RatingSummarizer efficiencySummarizer;
         

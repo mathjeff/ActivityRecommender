@@ -533,17 +533,6 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(newRequest) + Environment.NewLine;
             this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
-        /*public void SubmitInheritance(object sender, Inheritance inheritance)
-        {
-            inheritance.DiscoveryDate = DateTime.Now;
-            this.AddInheritance(inheritance);
-        }
-        private void AddInheritance(Inheritance newInheritance)
-        {
-            this.engine.ApplyInheritance(newInheritance);
-            this.WriteInheritance(newInheritance);
-        }
-        */
 
         private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
         {

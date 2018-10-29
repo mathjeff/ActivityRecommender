@@ -6,7 +6,7 @@ namespace ActivityRecommendation
 {
     // The Engine class analyzes information in various Activity objects and can, for example, make recommendations
     // The Engine class doesn't have any knowledge of the user interface or about persisting any data across application restarts; that's handled by ActivityRecommender
-    class Engine
+    public class Engine
     {
         public Engine()
         {
@@ -1230,12 +1230,12 @@ namespace ActivityRecommendation
         }
 
         // Does a binary search to figure out how many more experiment participations can happen before we need more tasks
-        private int computeNumRemainingExperimentParticipations(int numCompletedExperimentParticipations, int numPendingTasks)
+        public int ComputeNumRemainingExperimentParticipations(int numCompletedExperimentParticipations, int numPendingTasks)
         {
             int guess = 0;
             int step = 1;
             bool increasePrev = true;
-            int bestResult = 0;
+            int bestResult = -1;
             bool everFlipped = false;
             while (true)
             {
@@ -1378,7 +1378,7 @@ namespace ActivityRecommendation
                 if (dryRun)
                 {
                     // The caller was only looking for some stats; return stats
-                    int maxNumRemainingParticipations = this.computeNumRemainingExperimentParticipations(this.NumCompletedExperimentParticipations, numActivitiesToChooseFromTotal);
+                    int maxNumRemainingParticipations = this.ComputeNumRemainingExperimentParticipations(this.NumCompletedExperimentParticipations, numActivitiesToChooseFromTotal);
                     return new SuggestedMetric_Metadata(null, maxNumRemainingParticipations);
                 }
 

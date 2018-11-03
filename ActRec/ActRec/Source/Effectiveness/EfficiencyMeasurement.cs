@@ -19,7 +19,7 @@ namespace ActivityRecommendation.Effectiveness
     }
 
     // A RelativeEffectivenessMeasurement records the computed effectiveness of the Participation by comparing it to another one
-    public class RelativeEfficiencyMeasurement
+    public class RelativeEfficiencyMeasurement : EfficiencyMeasurement
     {
         public RelativeEfficiencyMeasurement(Participation participation, Distribution efficiency)
         {
@@ -47,6 +47,14 @@ namespace ActivityRecommendation.Effectiveness
         public RelativeEfficiencyMeasurement Earlier { get; set; }
         // the later RelativeEfficiencyMeasurement that was used to help compute this one, if the other one was later
         public RelativeEfficiencyMeasurement Later { get; set; }
+    }
+
+    public interface EfficiencyMeasurement
+    {
+        ActivityDescriptor ActivityDescriptor { get; }
+        DateTime StartDate { get; }
+        DateTime EndDate { get; }
+        Distribution RecomputedEfficiency { get; }
     }
 
 }

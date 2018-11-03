@@ -123,6 +123,7 @@ namespace ActivityRecommendation
         public LinkedList<Participation> PendingParticipationsForLongtermAnalysis = new LinkedList<Participation>();
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
         public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
+        public List<EfficiencyMeasurement> PendingEfficiencyMeasurements = new List<EfficiencyMeasurement>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
         public int NumParticipations { get { return (int)this.participationDurations.Weight; } }
 
@@ -444,7 +445,6 @@ namespace ActivityRecommendation
             //    B. when the user offers more ratings, the user probably cares more about the outcome
             // For now we approximate that by recording the date whenever the Doable is both executed and given a rating
             //this.AddNew_RatingSummary(newParticipation.StartDate, this.overallRatings_summarizer);
-
         }
         private void ApplyPendingRatings()
         {
@@ -488,9 +488,24 @@ namespace ActivityRecommendation
                 this.participationDurations = this.participationDurations.Plus(Distribution.MakeDistribution(newParticipation.Duration.TotalSeconds, 0, 1));
             }
 
-
             this.PendingParticipationsForLongtermAnalysis.AddLast(newParticipation);
             this.PendingParticipationsForShorttermAnalysis.AddLast(newParticipation);
+        }
+        public void AddEfficiencyMeasurement(EfficiencyMeasurement efficiencyMeasurement)
+        {
+            this.PendingEfficiencyMeasurements.Add(efficiencyMeasurement);
+        }
+        private void ApplyPendingEfficiencies()
+        {
+            foreach (EfficiencyMeasurement measurement in this.PendingEfficiencyMeasurements)
+            {
+                double[] coordinates = this.Get_Rating_TrainingCoordinates((DateTime)measurement.StartDate);
+
+                Distribution score = Distribution.MakeDistribution(measurement.RecomputedEfficiency.Mean, 0, 1);
+                AdaptiveLinearInterpolation.Datapoint<Distribution> ratingDatapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
+                this.shortTerm_EfficiencyInterpolator.AddDatapoint(ratingDatapoint);
+            }
+            this.PendingEfficiencyMeasurements.Clear();
         }
         private void ApplyPendingParticipations()
         {
@@ -655,6 +670,17 @@ namespace ActivityRecommendation
         // in practice, for some activities this will tend to be higher than for others)
         public Distribution PredictEfficiency(DateTime when)
         {
+            this.ApplyPendingEfficiencies();
+            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
+            Distribution estimate = new Distribution(this.shortTerm_EfficiencyInterpolator.Interpolate(coordinates));
+            Distribution extraError = Distribution.MakeDistribution(1, 0, 1);
+            Distribution result = estimate.Plus(extraError);
+            return result;
+        }
+
+        // Predicts the user's future overall efficiency after having done this at the given time
+        public Distribution Predict_LongtermEfficiency_If_Participated(DateTime when)
+        {
             this.ApplyPendingParticipations();
             double[] coordinates = this.Get_Efficiency_PredictionCoordinates(when);
             Distribution estimate = new Distribution(this.longTerm_efficiency_interpolator.Interpolate(coordinates));
@@ -662,6 +688,7 @@ namespace ActivityRecommendation
             estimate = estimate.Plus(Distribution.MakeDistribution(1, 0, 2));
             return estimate;
         }
+
 
         public Distribution GetAverageEfficiencyWhenParticipated()
         {
@@ -1045,6 +1072,7 @@ namespace ActivityRecommendation
                 coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange();
             }
             this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.shortTerm_EfficiencyInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
             this.longTerm_suggestionValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
             this.longTerm_participationValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
             this.longTerm_efficiency_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallEfficiency_summarizer);
@@ -1115,6 +1143,7 @@ namespace ActivityRecommendation
         List<IProgression> ratingTrainingProgressions;
         List<IProgression> ratingTestingProgressions;
         AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Doable
+        AdaptiveLinearInterpolator<Distribution> shortTerm_EfficiencyInterpolator;
         LongtermValuePredictor longTerm_participationValue_interpolator; // this interpolator is used to estimate what user's average happiness will if they do this Doable
         LongtermValuePredictor longTerm_suggestionValue_interpolator;    // this interpolator is used to estimate what user's average happiness will if this Doable is suggested
         private List<IPredictionLink> extraRatingPredictionLinks;

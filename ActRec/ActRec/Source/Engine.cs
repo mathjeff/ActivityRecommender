@@ -145,6 +145,11 @@ namespace ActivityRecommendation
                 return;
             this.addEfficiencyMeasurement(measurement.Earlier);
             this.efficiencySummarizer.AddRating(measurement.StartDate, measurement.EndDate, measurement.RecomputedEfficiency.Mean);
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(measurement.ActivityDescriptor);
+            foreach (Activity parent in this.FindAllSupercategoriesOf(activity))
+            {
+                parent.AddEfficiencyMeasurement(measurement);
+            }
         }
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
@@ -608,9 +613,9 @@ namespace ActivityRecommendation
         }
 
         // returns a Prediction of what the user's efficiency will be after having participated in the given activity at the given time
-        public Prediction Get_Efficiency_ParticipationEstimate(Activity activity, DateTime when)
+        public Prediction Get_OverallEfficiency_ParticipationEstimate(Activity activity, DateTime when)
         {
-            Distribution distribution = activity.PredictEfficiency(when);
+            Distribution distribution = activity.Predict_LongtermEfficiency_If_Participated(when);
             return new Prediction(activity, distribution, when, "How efficient you tend to be after doing " + activity.Name);
         }
 
@@ -1072,6 +1077,17 @@ namespace ActivityRecommendation
             return rating;
         }
 
+        public Distribution PredictEfficiency(Activity activity, DateTime when)
+        {
+            Distribution result = activity.PredictEfficiency(when);
+            foreach (Activity parent in activity.ParentsUsedForPrediction)
+            {
+                Distribution parentPrediction = parent.PredictEfficiency(when);
+                result = result.Plus(parentPrediction);
+            }
+            return result;
+        }
+
         public RelativeEfficiencyMeasurement Make_CompletionEfficiencyMeasurement(Participation p)
         {
             Activity a = this.ActivityDatabase.ResolveDescriptor(p.ActivityDescriptor);
@@ -1110,8 +1126,10 @@ namespace ActivityRecommendation
             Activity activity2 = this.ActivityDatabase.ResolveDescriptor(participation2.ActivityDescriptor);
             this.EstimateRating(activity1, p.StartDate);
             this.EstimateRating(activity2, p.StartDate);
-            double predictedEfficiency1 = activity1.PredictEfficiency(participation1.StartDate).Mean;
-            double predictedEfficiency2 = activity2.PredictEfficiency(participation2.StartDate).Mean;
+            double predictedEfficiency1 = this.PredictEfficiency(activity1, participation1.StartDate).Mean;
+            System.Diagnostics.Debug.WriteLine("Predictioned efficiency = " + predictedEfficiency1 + " for " + activity1.Name + " at " + participation1.StartDate);
+            double predictedEfficiency2 = this.PredictEfficiency(activity2, participation2.StartDate).Mean;
+            System.Diagnostics.Debug.WriteLine("Predictioned efficiency = " + predictedEfficiency2 + " for " + activity2.Name + " at " + participation2.StartDate);
             System.Diagnostics.Debug.WriteLine("Making completion efficiency measurement for " + activity1.Name + " and " + activity2.Name);
 
             // now calculate efficiency

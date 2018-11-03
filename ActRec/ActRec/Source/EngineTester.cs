@@ -430,15 +430,15 @@ updated results on 2018-10-14 after improving the participation probability esti
 0.1324 typicalScoreError
 0.9349 equivalentWeightedProbability
 
-
 updated results on 2018-11-03 with new data, plus also computing longtermEfficiencyPredictions error
 0.0771747950148125 typical longtermPredictionIfSuggested error
 0.0446777201816527 typical longtermPredictionIfParticipated error
 0.131600649875188 typicalScoreError
 0.935157989467304 equivalentWeightedProbability
+1.16259387446236 typicalEfficiencyError
 0.149482265649881 typical longtermEfficiencyIfParticipated error
 
- */
+*/
 
 namespace ActivityRecommendation
 {
@@ -446,10 +446,6 @@ namespace ActivityRecommendation
     {
         public EngineTester()
         {
-            this.squared_shortTermScore_error = new Distribution();
-            this.squared_longTermValue_error = new Distribution();
-            this.squaredParticipationProbabilityError = new Distribution();
-            this.participationPrediction_score = new Distribution();
             this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
             this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
             this.executionStart = DateTime.Now;
@@ -509,6 +505,7 @@ namespace ActivityRecommendation
         {
             Distribution computedEfficiency = measurement.RecomputedEfficiency;
             this.efficiencySummarizer.AddRating(measurement.StartDate, measurement.EndDate, computedEfficiency.Mean);
+            this.Update_ShortTermEfficiency_Error(measurement.ActivityDescriptor, measurement.StartDate, measurement.RecomputedEfficiency.Mean);
         }
 
         public override void PreviewSkip(ActivitySkip newSkip)
@@ -527,8 +524,7 @@ namespace ActivityRecommendation
             this.engine.EstimateSuggestionValue(activity, when);
 
             // compute error
-            //System.Diagnostics.Debug.WriteLine(descriptor.ActivityName + " - expected : " + activity.PredictedScore.Distribution.Mean + " actual : " + correctScore);
-            this.Update_ShortTerm_ScoreError(activity.PredictedScore.Distribution.Mean - correctScore);
+            this.Update_ShortTerm_ScoreError(correctScore - activity.PredictedScore.Distribution.Mean);
         }
         public void Update_ShortTerm_ScoreError(double error)
         {
@@ -557,7 +553,7 @@ namespace ActivityRecommendation
                     this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
 
                     ScoreSummary efficiencySummary = new ScoreSummary(when);
-                    Prediction efficiencyIfParticipated = this.engine.Get_Efficiency_ParticipationEstimate(activity, when);
+                    Prediction efficiencyIfParticipated = this.engine.Get_OverallEfficiency_ParticipationEstimate(activity, when);
                     this.efficiencyIfParticipated_predictions[efficiencyIfParticipated] = efficiencySummary;
                 }
             }
@@ -608,6 +604,18 @@ namespace ActivityRecommendation
             }
         }
 
+        public void Update_ShortTermEfficiency_Error(ActivityDescriptor descriptor, DateTime when, double actualEfficiency)
+        {
+            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Distribution prediction = this.engine.PredictEfficiency(activity, when);
+            this.Update_ShortTermEfficiency_Error(actualEfficiency - prediction.Mean);
+        }
+        public void Update_ShortTermEfficiency_Error(double error)
+        {
+            Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
+            this.squared_shortTermEfficiency_error = this.squared_shortTermEfficiency_error.Plus(errorDistribution);
+        }
+
         private double Compute_FutureEstimateIfSuggested_Errors()
         {
             return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer);
@@ -649,21 +657,12 @@ namespace ActivityRecommendation
                 results.Longterm_PredictionIfSuggested_Error = this.Compute_FutureEstimateIfSuggested_Errors();
                 results.Longterm_PredictionIfParticipated_Error = this.Compute_FutureEstimateIfParticipated_Errors();
                 results.Longterm_EfficiencyIfPredicted_Error = this.Compute_FutureEfficiencyIfParticipated_Errors();
+                results.TypicalEfficiencyError = Math.Sqrt(this.squared_shortTermEfficiency_error.Mean);
                 
                 // how well the score prediction does
                 results.TypicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
 
-                // how well the probability prediction does (first using the mean-squared-error, which doesn't take into account what we want to do with this data)
-                //double typicalProbabilityError = Math.Sqrt(this.squaredParticipationProbabilityError.Mean);
-                //System.Diagnostics.Debug.WriteLine("typicalProbabilityError = " + typicalProbabilityError.ToString());
-                // X * (1 - X) ^ 2 + (1 - X) * X ^ 2 = this.squaredParticipationProbabilityError.Mean
-                // X * (1 - X) = this.squaredParticipationProbabilityError.Mean
-                // X ^ 2 - X + this.squaredParticipationProbabilityError.Mean = 0
-                //double equivalentProbability = (1 + Math.Sqrt(1 - 4 * this.squaredParticipationProbabilityError.Mean)) / 2;
-                //System.Diagnostics.Debug.WriteLine("equivalentProbability = " + equivalentProbability.ToString());
-                // Now recompute how well the probability prediction does (weighting smaller probabilities more heavily)
-                //double weightedProbabilityScore = this.participationPrediction_score.Mean;
-                //System.Diagnostics.Debug.WriteLine("weightedProbabilityScore = " + weightedProbabilityScore);
+                // Compute how well the probability prediction does (weighting smaller probabilities more heavily)
                 // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
                 // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -Math.Log(1 - predictedProbability) - 2)
                 // 2 * scoreComponent + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
@@ -671,7 +670,6 @@ namespace ActivityRecommendation
                 // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
                 // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
                 results.TypicalProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
-                //System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + equivalentWeightedProbability);
                 return results;
             }
         }
@@ -684,6 +682,7 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error);
             System.Diagnostics.Debug.WriteLine("typicalScoreError = " + results.TypicalScoreError);
             System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + results.TypicalProbability);
+            System.Diagnostics.Debug.WriteLine("typicalEfficiencyError = " + results.TypicalEfficiencyError);
             System.Diagnostics.Debug.WriteLine("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error);
         }
 
@@ -717,10 +716,11 @@ namespace ActivityRecommendation
         }
 
 
-        private Distribution squared_shortTermScore_error;
-        private Distribution squared_longTermValue_error;
-        private Distribution squaredParticipationProbabilityError;
-        private Distribution participationPrediction_score;
+        private Distribution squared_shortTermScore_error = new Distribution();
+        private Distribution squared_longTermValue_error = new Distribution();
+        private Distribution squaredParticipationProbabilityError = new Distribution();
+        private Distribution participationPrediction_score = new Distribution();
+        private Distribution squared_shortTermEfficiency_error = new Distribution();
         private ScoreSummarizer ratingSummarizer;
         private ScoreSummarizer efficiencySummarizer;
         // the Engine predicts longterm value based on its suggestions. valueIfSuggested_predictions maps the predictions made to the actual observed longterm value
@@ -745,6 +745,8 @@ namespace ActivityRecommendation
         // This is the probability such that if the true probability were this value, and if all estimates were perfect, the overall error would be what was observed
         public double TypicalProbability;
 
+        // typical error in the efficiency prediction
+        public double TypicalEfficiencyError;
         // overall error in (the estimated and actual (longterm efficiency prediction if (the given activity is participated in)))
         public double Longterm_EfficiencyIfPredicted_Error;
     }

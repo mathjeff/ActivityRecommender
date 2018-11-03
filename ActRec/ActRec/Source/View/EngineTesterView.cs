@@ -44,6 +44,7 @@ namespace ActivityRecommendation
                 .AddMessage("typical longtermHappinessPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error)
                 .AddMessage("typicalScoreError = " + results.TypicalScoreError)
                 .AddMessage("equivalentWeightedProbability = " + results.TypicalProbability)
+                .AddMessage("typicalEfficiencyError = " + results.TypicalEfficiencyError)
                 .AddMessage("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error)
                 .AddMessage("Computed results in " + duration)
                 .Build();

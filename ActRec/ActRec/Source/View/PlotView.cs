@@ -145,7 +145,7 @@ namespace ActivityRecommendation
                 if (pointList.Count < 1)
                     continue;
 
-                x = pointList[0].Input;
+                x = (pointList[0].Input - minimumX) * scaleX;
                 y = (maximumY - pointList[0].Output) * scaleY;
 
                 SKPaint brush = makeBrush(plotRequest.DrawColor);

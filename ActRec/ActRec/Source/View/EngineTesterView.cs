@@ -40,10 +40,11 @@ namespace ActivityRecommendation
             TimeSpan duration = end.Subtract(start);
 
             LayoutChoice_Set resultsView = new HelpWindowBuilder().AddMessage("Results")
-                .AddMessage("typical longtermPredictionIfSuggested error = " + results.Longterm_PredictionIfSuggested_Error)
-                .AddMessage("typical longtermPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error)
+                .AddMessage("typical longtermHappinessPredictionIfSuggested error = " + results.Longterm_PredictionIfSuggested_Error)
+                .AddMessage("typical longtermHappinessPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error)
                 .AddMessage("typicalScoreError = " + results.TypicalScoreError)
                 .AddMessage("equivalentWeightedProbability = " + results.TypicalProbability)
+                .AddMessage("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error)
                 .AddMessage("Computed results in " + duration)
                 .Build();
 

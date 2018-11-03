@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ActivityRecommendation.Effectiveness;
+using System;
 using System.Collections.Generic;
 
 // the EngineTester makes an Engine and calculates its average squared error
@@ -429,6 +430,14 @@ updated results on 2018-10-14 after improving the participation probability esti
 0.1324 typicalScoreError
 0.9349 equivalentWeightedProbability
 
+
+updated results on 2018-11-03 with new data, plus also computing longtermEfficiencyPredictions error
+0.0771747950148125 typical longtermPredictionIfSuggested error
+0.0446777201816527 typical longtermPredictionIfParticipated error
+0.131600649875188 typicalScoreError
+0.935157989467304 equivalentWeightedProbability
+0.149482265649881 typical longtermEfficiencyIfParticipated error
+
  */
 
 namespace ActivityRecommendation
@@ -442,6 +451,7 @@ namespace ActivityRecommendation
             this.squaredParticipationProbabilityError = new Distribution();
             this.participationPrediction_score = new Distribution();
             this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
             this.executionStart = DateTime.Now;
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
@@ -486,7 +496,19 @@ namespace ActivityRecommendation
 
 
             this.ratingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
+            if (newParticipation.RelativeEfficiencyMeasurement != null)
+            {
+                RelativeEfficiencyMeasurement laterMeasurement = newParticipation.RelativeEfficiencyMeasurement;
+                RelativeEfficiencyMeasurement earlierMeasurement = laterMeasurement.Earlier;
+                this.addEfficiencyMeasurement(earlierMeasurement);
+                this.addEfficiencyMeasurement(laterMeasurement);
+            }
+        }
 
+        private void addEfficiencyMeasurement(RelativeEfficiencyMeasurement measurement)
+        {
+            Distribution computedEfficiency = measurement.RecomputedEfficiency;
+            this.efficiencySummarizer.AddRating(measurement.StartDate, measurement.EndDate, computedEfficiency.Mean);
         }
 
         public override void PreviewSkip(ActivitySkip newSkip)
@@ -526,13 +548,17 @@ namespace ActivityRecommendation
             Prediction predictionForSuggestion = activity.SuggestionValue;
             if (predictionForSuggestion.Distribution.Weight > 0)
             {
-                RatingSummary summary = new RatingSummary(when);
-                this.valueIfSuggested_predictions[predictionForSuggestion] = summary;
+                ScoreSummary ratingSummary = new ScoreSummary(when);
+                this.valueIfSuggested_predictions[predictionForSuggestion] = ratingSummary;
 
                 if (actualIntensity >= 1)
                 {
                     Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, when);
-                    this.valueIfParticipated_predictions[predictionIfParticipated] = summary;
+                    this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
+
+                    ScoreSummary efficiencySummary = new ScoreSummary(when);
+                    Prediction efficiencyIfParticipated = this.engine.Get_Efficiency_ParticipationEstimate(activity, when);
+                    this.efficiencyIfParticipated_predictions[efficiencyIfParticipated] = efficiencySummary;
                 }
             }
 
@@ -584,30 +610,24 @@ namespace ActivityRecommendation
 
         private double Compute_FutureEstimateIfSuggested_Errors()
         {
-            Distribution errorsSquared = new Distribution();
-            foreach (Prediction prediction in this.valueIfSuggested_predictions.Keys)
-            {
-                RatingSummary summary = this.valueIfSuggested_predictions[prediction];
-                summary.Update(this.ratingSummarizer);
-                if (summary.Item.Weight > 0)
-                {
-                    double predictedScore = prediction.Distribution.Mean;
-                    double actualScore = summary.Item.Mean;
-                    double error = actualScore - predictedScore;
-                    errorsSquared = errorsSquared.Plus(Distribution.MakeDistribution(error * error, 0, 1));
-                }
-            }
-            double errorSquared = errorsSquared.Mean;
-            double typicalPredictionError = Math.Sqrt(errorSquared);
-            return typicalPredictionError;
+            return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer);
         }
         private double  Compute_FutureEstimateIfParticipated_Errors()
         {
+            return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer);
+        }
+        private double Compute_FutureEfficiencyIfParticipated_Errors()
+        {
+            return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer);
+        }
+
+        private double Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ScoreSummarizer ratingSummarizer)
+        {
             Distribution errorsSquared = new Distribution();
-            foreach (Prediction prediction in this.valueIfParticipated_predictions.Keys)
+            foreach (Prediction prediction in predictions.Keys)
             {
-                RatingSummary summary = this.valueIfParticipated_predictions[prediction];
-                summary.Update(this.ratingSummarizer);
+                ScoreSummary summary = predictions[prediction];
+                summary.Update(ratingSummarizer);
                 if (summary.Item.Weight > 0)
                 {
                     double predictedScore = prediction.Distribution.Mean;
@@ -628,6 +648,7 @@ namespace ActivityRecommendation
                 EngineTesterResults results = new EngineTesterResults();
                 results.Longterm_PredictionIfSuggested_Error = this.Compute_FutureEstimateIfSuggested_Errors();
                 results.Longterm_PredictionIfParticipated_Error = this.Compute_FutureEstimateIfParticipated_Errors();
+                results.Longterm_EfficiencyIfPredicted_Error = this.Compute_FutureEfficiencyIfParticipated_Errors();
                 
                 // how well the score prediction does
                 results.TypicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
@@ -663,6 +684,7 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error);
             System.Diagnostics.Debug.WriteLine("typicalScoreError = " + results.TypicalScoreError);
             System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + results.TypicalProbability);
+            System.Diagnostics.Debug.WriteLine("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error);
         }
 
         private void PrintFinalResults()
@@ -699,11 +721,14 @@ namespace ActivityRecommendation
         private Distribution squared_longTermValue_error;
         private Distribution squaredParticipationProbabilityError;
         private Distribution participationPrediction_score;
-        private RatingSummarizer ratingSummarizer;
+        private ScoreSummarizer ratingSummarizer;
+        private ScoreSummarizer efficiencySummarizer;
         // the Engine predicts longterm value based on its suggestions. valueIfSuggested_predictions maps the predictions made to the actual observed longterm value
-        private Dictionary<Prediction, RatingSummary> valueIfSuggested_predictions = new Dictionary<Prediction, RatingSummary>();
+        private Dictionary<Prediction, ScoreSummary> valueIfSuggested_predictions = new Dictionary<Prediction, ScoreSummary>();
         // the Engine predicts longterm value based on what the user participates in. valueIfParticipated_predictions maps the predictions made to the actual observed longterm value
-        private Dictionary<Prediction, RatingSummary> valueIfParticipated_predictions = new Dictionary<Prediction, RatingSummary>();
+        private Dictionary<Prediction, ScoreSummary> valueIfParticipated_predictions = new Dictionary<Prediction, ScoreSummary>();
+        // the Engine predicts longterm efficiency based on what the user participates in. efficiencyIfParticipated_predictions maps the predictions made to the actual observed longterm efficiency
+        private Dictionary<Prediction, ScoreSummary> efficiencyIfParticipated_predictions = new Dictionary<Prediction, ScoreSummary>();
         private int numRatings;
         private DateTime executionStart;
     }
@@ -719,5 +744,8 @@ namespace ActivityRecommendation
         // An estimate of the accuracy of the estimates of participation probability.
         // This is the probability such that if the true probability were this value, and if all estimates were perfect, the overall error would be what was observed
         public double TypicalProbability;
+
+        // overall error in (the estimated and actual (longterm efficiency prediction if (the given activity is participated in)))
+        public double Longterm_EfficiencyIfPredicted_Error;
     }
 }

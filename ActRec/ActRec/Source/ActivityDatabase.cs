@@ -28,7 +28,7 @@ namespace ActivityRecommendation
 
         #region Constructor
 
-        public ActivityDatabase(RatingSummarizer happinessSummarizer, RatingSummarizer efficiencySummarizer)
+        public ActivityDatabase(ScoreSummarizer happinessSummarizer, ScoreSummarizer efficiencySummarizer)
         {
             //this.activitiesByName = new Dictionary<string, List<Activity> >();
             this.activitiesByName = new StatList<string, IEnumerable<Activity>>(this, this);
@@ -455,8 +455,8 @@ namespace ActivityRecommendation
         // We only allow one Activity for each name, but we want to be able to find activities having certain name prefixes, and StatList currently
         // requires that its value type is the same as its aggregation type
         private StatList<string, IEnumerable<Activity>> activitiesByName;
-        private RatingSummarizer happinessSummarizer;
-        private RatingSummarizer efficiencySummarizer;
+        private ScoreSummarizer happinessSummarizer;
+        private ScoreSummarizer efficiencySummarizer;
         private Category rootActivity;
         private Category todoCategory; // a Category that is the parent of each ToDo
 

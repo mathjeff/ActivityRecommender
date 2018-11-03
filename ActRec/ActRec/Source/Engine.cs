@@ -604,14 +604,14 @@ namespace ActivityRecommendation
         {
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
             Prediction prediction = this.CombineRatingPredictions(predictions);
-            System.Diagnostics.Debug.WriteLine("Estimated overall happiness suggestion estimate of " + prediction.Distribution.Mean + " for " + activity + " at " + when);
             return prediction;
         }
 
         // returns a Prediction of what the user's efficiency will be after having participated in the given activity at the given time
-        public Distribution Get_Efficiency_ParticipationEstimate(Activity activity, DateTime when)
+        public Prediction Get_Efficiency_ParticipationEstimate(Activity activity, DateTime when)
         {
-            return activity.PredictEfficiency(when);
+            Distribution distribution = activity.PredictEfficiency(when);
+            return new Prediction(activity, distribution, when, "How efficient you tend to be after doing " + activity.Name);
         }
 
         // returns the average efficiency after having participated in <activity>
@@ -1577,14 +1577,14 @@ namespace ActivityRecommendation
                 return this.activityDatabase;
             }
         }
-        public RatingSummarizer RatingSummarizer
+        public ScoreSummarizer RatingSummarizer
         {
             get
             {
                 return this.weightedRatingSummarizer;
             }
         }
-        public RatingSummarizer EfficiencySummarizer
+        public ScoreSummarizer EfficiencySummarizer
         {
             get
             {
@@ -1604,8 +1604,8 @@ namespace ActivityRecommendation
         DateTime latestInteractionDate;
         bool requiresFullUpdate;
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
-        RatingSummarizer weightedRatingSummarizer;
-        RatingSummarizer efficiencySummarizer;
+        ScoreSummarizer weightedRatingSummarizer;
+        ScoreSummarizer efficiencySummarizer;
         
         
         Distribution ratingsOfUnpromptedActivities;

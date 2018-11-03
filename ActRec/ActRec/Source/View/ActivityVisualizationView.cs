@@ -9,7 +9,7 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationView : TitledControl
     {
-        public ActivityVisualizationView(IProgression participationXAxis, Activity yAxisActivity, RatingSummarizer overallRating_summarizer, RatingSummarizer overallEfficiency_summarizer, LayoutStack layoutStack)
+        public ActivityVisualizationView(IProgression participationXAxis, Activity yAxisActivity, ScoreSummarizer overallRating_summarizer, ScoreSummarizer overallEfficiency_summarizer, LayoutStack layoutStack)
         {
             this.layoutStack = layoutStack;
             this.overallRating_summarizer = overallRating_summarizer;
@@ -180,13 +180,13 @@ namespace ActivityRecommendation
             // compute a smoothed version of the ratings so we can show which activities are actually worth doing
             // (for example, sleeping might feel boring but might increase later happiness)
             TimeSpan totalDuration = endDate.Subtract(startDate);
-            List<RatingSummarizer> ratingSummarizers = new List<RatingSummarizer>();
+            List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
             ratingSummarizers.Add(this.overallRating_summarizer);
             ratingSummarizers.Add(this.overallEfficiency_summarizer);
-            foreach (RatingSummarizer ratingSummarizer in ratingSummarizers)
+            foreach (ScoreSummarizer ratingSummarizer in ratingSummarizers)
             {
                 double i;
-                RatingSummary ratingSummary = new RatingSummary(endDate);
+                ScoreSummary ratingSummary = new ScoreSummary(endDate);
                 List<Datapoint> smoothedRatings = new List<Datapoint>();
                 double maxY = 0;
                 for (i = 1; i >= 0; i -= 0.001)
@@ -506,8 +506,8 @@ namespace ActivityRecommendation
         IProgression xAxisProgression;
         TitledControl ratingsView;
         TitledControl participationsView;
-        RatingSummarizer overallRating_summarizer;
-        RatingSummarizer overallEfficiency_summarizer;
+        ScoreSummarizer overallRating_summarizer;
+        ScoreSummarizer overallEfficiency_summarizer;
 
         TitledControl participationDataDisplay;
         DateEntryView queryStartDateDisplay;

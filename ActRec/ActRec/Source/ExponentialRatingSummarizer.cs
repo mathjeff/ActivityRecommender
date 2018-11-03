@@ -8,7 +8,7 @@ using StatLists;
 // Note that it takes into account both the scores of the ratings and the fraction of time spent idle
 namespace ActivityRecommendation
 {
-    public class ExponentialRatingSummarizer : RatingSummarizer
+    public class ExponentialRatingSummarizer : ScoreSummarizer
     {
         // The weight of each rating (continuously) decays exponentially, and cuts in half after a TimeSpan of halfLife
         public ExponentialRatingSummarizer(TimeSpan halfLife)

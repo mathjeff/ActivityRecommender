@@ -170,8 +170,8 @@
     <Compile Include="Source\RatingRenormalizer.cs" />
     <Compile Include="Source\HistoryReplayer.cs" />
     <Compile Include="Source\RatingSource.cs" />
-    <Compile Include="Source\RatingSummarizer.cs" />
-    <Compile Include="Source\RatingSummary.cs" />
+    <Compile Include="Source\ScoreSummarizer.cs" />
+    <Compile Include="Source\ScoreSummary.cs" />
     <Compile Include="Source\RecentUserData.cs" />
     <Compile Include="Source\RelativeRating.cs" />
     <Compile Include="Source\ScatterPlot.cs" />

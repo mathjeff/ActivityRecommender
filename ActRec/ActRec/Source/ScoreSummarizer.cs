@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using StatLists;
 
-// A RatingSummarizer computes the average value for a bunch of ratings and participations within a certain period of time
+// A ScoreSummarizer computes the average value for a bunch of scores that get assigned to participations within a certain period of time
 // Note that it takes into account both the scores of the ratings and the fraction of time spent idle
 namespace ActivityRecommendation
 {
-    public abstract class RatingSummarizer
+    public abstract class ScoreSummarizer
     {
         // The weight of each rating (continuously) decays exponentially, and cuts in half after a TimeSpan of halfLife
-        public RatingSummarizer()
+        public ScoreSummarizer()
         {
             this.valuesByDate = new StatList<DateTime,Distribution>(new DateComparer(), new DistributionAdder());
         }

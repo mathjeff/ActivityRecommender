@@ -9,11 +9,11 @@ namespace ActivityRecommendation
 {
     class LongtermValuePredictor
     {
-        public LongtermValuePredictor(HyperBox<Distribution> inputBoundary, RatingSummarizer ratingSummarizer)
+        public LongtermValuePredictor(HyperBox<Distribution> inputBoundary, ScoreSummarizer ratingSummarizer)
         {
             this.ratingSummarizer = ratingSummarizer;
             this.interpolator = new AdaptiveLinearInterpolator<Distribution>(inputBoundary, new DistributionAdder());
-            this.ratingSummariesToUpdate = new Queue<RatingSummary>();
+            this.ratingSummariesToUpdate = new Queue<ScoreSummary>();
         }
         public AdaptiveLinearInterpolation.Distribution Interpolate(double[] coordinates)
         {
@@ -26,7 +26,7 @@ namespace ActivityRecommendation
         // specifies that at <when> , the input coordinates were <coordinates> and that this is a datapoint we care to track
         public void AddDatapoint(DateTime when, double[] coordinates)
         {
-            RatingSummary summary = new RatingSummary(when);
+            ScoreSummary summary = new ScoreSummary(when);
             summary.InputCoordinates = coordinates;
             summary.Update(this.ratingSummarizer);
             if (this.ShouldIncludeSummary(summary))
@@ -34,12 +34,8 @@ namespace ActivityRecommendation
                 this.interpolator.AddDatapoint(summary);
                 this.ratingSummariesToUpdate.Enqueue(summary);
             }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("RatingSummary with no weight: " + summary);
-            }
         }
-        private bool ShouldIncludeSummary(RatingSummary summary)
+        private bool ShouldIncludeSummary(ScoreSummary summary)
         {
             return summary.Item.Weight > 0;
         }
@@ -54,7 +50,7 @@ namespace ActivityRecommendation
         {
             if (this.ratingSummariesToUpdate.Count > 0)
             {
-                RatingSummary summary = ratingSummariesToUpdate.Dequeue();
+                ScoreSummary summary = ratingSummariesToUpdate.Dequeue();
                 this.interpolator.RemoveDatapoint(summary);
 
                 summary.Update(this.ratingSummarizer);
@@ -67,8 +63,8 @@ namespace ActivityRecommendation
         {
             return this.interpolator.GetAverage();
         }
-        Queue<RatingSummary> ratingSummariesToUpdate;
+        Queue<ScoreSummary> ratingSummariesToUpdate;
         AdaptiveLinearInterpolator<Distribution> interpolator;
-        RatingSummarizer ratingSummarizer;
+        ScoreSummarizer ratingSummarizer;
     }
 }

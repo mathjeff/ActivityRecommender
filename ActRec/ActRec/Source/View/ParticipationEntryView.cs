@@ -470,7 +470,7 @@ namespace ActivityRecommendation
                 return 0;
             double usualValue = usual.Mean;
 
-            Distribution chosenEstimatedDistribution = this.engine.Get_Efficiency_ParticipationEstimate(chosenActivity, startDate);
+            Distribution chosenEstimatedDistribution = this.engine.Get_Efficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
             if (chosenEstimatedDistribution.Weight <= 0)
                 return 0;
             double chosenValue = chosenEstimatedDistribution.Mean;

@@ -12,7 +12,7 @@ namespace ActivityRecommendation
         #region Constructors
 
         // public
-        public Category(string activityName, RatingSummarizer overallRatings_summarizer, RatingSummarizer efficiencySummarizer) : base(activityName, overallRatings_summarizer, efficiencySummarizer)
+        public Category(string activityName, ScoreSummarizer overallRatings_summarizer, ScoreSummarizer efficiencySummarizer) : base(activityName, overallRatings_summarizer, efficiencySummarizer)
         {
         }
         #endregion

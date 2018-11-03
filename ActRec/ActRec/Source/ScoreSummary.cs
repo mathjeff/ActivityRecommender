@@ -4,19 +4,19 @@ using System.Linq;
 using System.Text;
 using AdaptiveLinearInterpolation;
 
-// A RatingSummary describes the (exponentially-weighted) average rating of ratings after a certain point in time
+// A ScoreSummary describes the (exponentially-weighted) average value of some progression after a certain point in time
 namespace ActivityRecommendation
 {
-    class RatingSummary : IDatapoint<Distribution>
+    class ScoreSummary : IDatapoint<Distribution>
     {
-        public RatingSummary(DateTime when)
+        public ScoreSummary(DateTime when)
         {
             this.earliestKnownDate = when;
             this.latestKnownDate = when;
         }
 
         // Pulls all newer ratings from the RatingSummarizer
-        public void Update(RatingSummarizer summarizer)
+        public void Update(ScoreSummarizer summarizer)
         {
             DateTime latestDate = summarizer.LatestKnownDate;
             // fetch any ratings that appeared since our last update
@@ -24,7 +24,7 @@ namespace ActivityRecommendation
         }
 
         // Pulls new ratings from the RatingSummarizer within a certain date range and updates metadata (min/max)
-        public void Update(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
+        public void Update(ScoreSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
         {
             if (earliestDateToInclude.CompareTo(this.earliestKnownDate) < 0)
             {
@@ -43,7 +43,7 @@ namespace ActivityRecommendation
         }
 
         // implements the pull of new data from the RatingSummarizer
-        private void importData(RatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude, bool startInclusive, bool endInclusive)
+        private void importData(ScoreSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude, bool startInclusive, bool endInclusive)
         {
             this.values = this.values.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, latestDateToInclude, startInclusive, endInclusive));
         }

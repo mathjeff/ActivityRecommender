@@ -20,15 +20,15 @@ namespace ActivityRecommendation
         static int nextID = 0;
 
         // public
-        public Activity(RatingSummarizer overallRatings_summarizer, RatingSummarizer overallEfficiency_summarizer)
+        public Activity(ScoreSummarizer overallRatings_summarizer, ScoreSummarizer overallEfficiency_summarizer)
         {
             this.Initialize("", overallRatings_summarizer, overallEfficiency_summarizer);
         }
-        public Activity(string activityName, RatingSummarizer overallRatings_summarizer, RatingSummarizer overallEfficiency_summarizer)
+        public Activity(string activityName, ScoreSummarizer overallRatings_summarizer, ScoreSummarizer overallEfficiency_summarizer)
         {
             this.Initialize(activityName, overallRatings_summarizer, overallEfficiency_summarizer);
         }
-        private void Initialize(string activityName, RatingSummarizer overallRatings_summarizer, RatingSummarizer overallEfficiency_summarizer)
+        private void Initialize(string activityName, ScoreSummarizer overallRatings_summarizer, ScoreSummarizer overallEfficiency_summarizer)
         {
             this.name = activityName;
             this.parents = new List<Activity>();
@@ -980,7 +980,7 @@ namespace ActivityRecommendation
 
         #region Private Member Functions
 
-        private bool shouldIncludeRatingSummaryInInterpolator(RatingSummary summary)
+        private bool shouldIncludeRatingSummaryInInterpolator(ScoreSummary summary)
         {
             return summary.Item.Weight > 0;
         }
@@ -1162,8 +1162,8 @@ namespace ActivityRecommendation
         Distribution ratingsWhenSuggested;
         Distribution ratingsWhenNotSuggested;
         Distribution thinkingTimes;
-        RatingSummarizer overallRatings_summarizer;
-        RatingSummarizer overallEfficiency_summarizer;
+        ScoreSummarizer overallRatings_summarizer;
+        ScoreSummarizer overallEfficiency_summarizer;
 
         #endregion
 

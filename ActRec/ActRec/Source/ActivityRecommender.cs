@@ -688,7 +688,7 @@ namespace ActivityRecommendation
             if (yAxisActivity != null)
             {
                 yAxisActivity.ApplyPendingData();
-                List<RatingSummarizer> ratingSummarizers = new List<RatingSummarizer>();
+                List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
                 this.layoutStack.AddLayout(visualizationView);
             }

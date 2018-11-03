@@ -9,33 +9,14 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationView : TitledControl
     {
-        public ActivityVisualizationView(IProgression participationXAxis, Activity yAxisActivity, TimeSpan smoothingWindow, RatingSummarizer summarizer, LayoutStack layoutStack)
+        public ActivityVisualizationView(IProgression participationXAxis, Activity yAxisActivity, RatingSummarizer overallRating_summarizer, RatingSummarizer overallEfficiency_summarizer, LayoutStack layoutStack)
         {
             this.layoutStack = layoutStack;
-            if (summarizer != null)
-            {
-                this.ratingSummarizer = summarizer;
-            }
-            else
-            {
-                this.ratingSummarizer = new ExponentialRatingSummarizer(smoothingWindow);
-                foreach (AbsoluteRating rating in yAxisActivity.RatingProgression.GetRatingsInDiscoveryOrder())
-                {
-                    Participation ratingSource = null;
-                    if (rating.Source != null)
-                        ratingSource = rating.Source.ConvertedAsParticipation;
-                    if (ratingSource != null)
-                    {
-                        this.ratingSummarizer.AddRating(ratingSource.StartDate, ratingSource.EndDate, rating.Score);
-                        // TODO: figure out what to do here about skips
-                        this.ratingSummarizer.AddParticipationIntensity(ratingSource.StartDate, ratingSource.EndDate, 1);
-                    }
-                }
-            }
+            this.overallRating_summarizer = overallRating_summarizer;
+            this.overallEfficiency_summarizer = overallEfficiency_summarizer;
 
             this.xAxisProgression = participationXAxis;
             this.yAxisActivity = yAxisActivity;
-            this.smoothingDuration = smoothingWindow;
 
             // setup the title
             this.SetTitle(this.YAxisLabel + " vs. " + this.XAxisLabel);
@@ -109,6 +90,7 @@ namespace ActivityRecommendation
                 .AddMessage("The red plot is a straight line showing the trend of the green plot.")
                 .AddMessage("The blue plot essentially estimates how happy you have been overall"
                 +" (technically, for each point in time, the blue plot shows the net present value (an economics term) of all ratings after that point).")
+                .AddMessage("Similarly, the yellow plot estimates approximately how efficient you have been overall (there will only be efficiency data if you have been using the experimentation feature)")
                 .Build();
             LayoutChoice_Set participationsHelpLayout = new HelpWindowBuilder()
                 .AddMessage("The Participations graph shows three values over time.")
@@ -193,27 +175,51 @@ namespace ActivityRecommendation
                         points.Add(new Datapoint(x, y, 1));
                 }
             }
+            newPlot.AddSeries(points, true);
 
             // compute a smoothed version of the ratings so we can show which activities are actually worth doing
             // (for example, sleeping might feel boring but might increase later happiness)
             TimeSpan totalDuration = endDate.Subtract(startDate);
-            double i;
-            RatingSummary ratingSummary = new RatingSummary(endDate);
-            List<Datapoint> smoothedPoints = new List<Datapoint>();
-            for (i = 1; i >= 0; i -= 0.001)
+            List<RatingSummarizer> ratingSummarizers = new List<RatingSummarizer>();
+            ratingSummarizers.Add(this.overallRating_summarizer);
+            ratingSummarizers.Add(this.overallEfficiency_summarizer);
+            foreach (RatingSummarizer ratingSummarizer in ratingSummarizers)
             {
-                TimeSpan currentDuration = new TimeSpan((long)((double)totalDuration.Ticks * (double)i));
-                DateTime when = startDate.Add(currentDuration);
-                ratingSummary.Update(this.ratingSummarizer, when, endDate);
-                double x = currentDuration.TotalDays;
-                double y = ratingSummary.Item.Mean;
-                if (!double.IsNaN(y))
-                    smoothedPoints.Add(new Datapoint(x, y, 1));
+                double i;
+                RatingSummary ratingSummary = new RatingSummary(endDate);
+                List<Datapoint> smoothedRatings = new List<Datapoint>();
+                double maxY = 0;
+                for (i = 1; i >= 0; i -= 0.001)
+                {
+                    TimeSpan currentDuration = new TimeSpan((long)((double)totalDuration.Ticks * (double)i));
+                    DateTime when = startDate.Add(currentDuration);
+                    ratingSummary.Update(ratingSummarizer, when, endDate);
+                    double x = currentDuration.TotalDays;
+                    double y = ratingSummary.Item.Mean;
+                    if (!double.IsNaN(y))
+                    {
+                        if (ratingSummarizer == this.overallEfficiency_summarizer)
+                        {
+                            // rescale so that the typical value for this rating summarizer (1) is moved to match the typical value for the other plotted values (0.5)
+                            y /= 2;
+                        }
+                        if (y > maxY)
+                            maxY = y;
+                        smoothedRatings.Add(new Datapoint(x, y, 1));
+                    }
+                }
+                smoothedRatings.Reverse();
+                // if the plot overflowed, rescale it to fit
+                if (maxY > 1)
+                {
+                    foreach (Datapoint datapoint in smoothedRatings)
+                    {
+                        datapoint.Output = datapoint.Output / maxY;
+                    }
+                }
+                newPlot.AddSeries(smoothedRatings, false);
+
             }
-            List<List<Datapoint>> allSequences = new List<List<Datapoint>>();
-            allSequences.Add(points);
-            allSequences.Add(smoothedPoints);
-            newPlot.SetData(allSequences);
 
             DateTime end = DateTime.Now;
 
@@ -383,10 +389,8 @@ namespace ActivityRecommendation
                 }
             }
 
-            List<List<Datapoint>> plots = new List<List<Datapoint>>();
-            plots.Add(cumulativeParticipationDurations);
-            plots.Add(cumulativeSuggestionCounts);
-            newPlot.SetData(plots);
+            newPlot.AddSeries(cumulativeParticipationDurations, true);
+            newPlot.AddSeries(cumulativeSuggestionCounts, false);
 
 
             this.participationsView.SetContent(new ImageLayout(newPlot, LayoutScore.Get_UsedSpace_LayoutScore(1)));
@@ -502,14 +506,14 @@ namespace ActivityRecommendation
         IProgression xAxisProgression;
         TitledControl ratingsView;
         TitledControl participationsView;
-        RatingSummarizer ratingSummarizer;
+        RatingSummarizer overallRating_summarizer;
+        RatingSummarizer overallEfficiency_summarizer;
 
         TitledControl participationDataDisplay;
         DateEntryView queryStartDateDisplay;
         DateEntryView queryEndDateDisplay;
         Label totalTimeDisplay;
         Label timeFractionDisplay;
-        TimeSpan smoothingDuration;
         TitledTextblock ratingWhenSuggested_Display;
         TitledTextblock ratingWhenNotSuggested_Display;
         LayoutStack layoutStack;

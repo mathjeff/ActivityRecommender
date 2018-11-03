@@ -688,7 +688,8 @@ namespace ActivityRecommendation
             if (yAxisActivity != null)
             {
                 yAxisActivity.ApplyPendingData();
-                ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, UserPreferences.DefaultPreferences.HalfLife, this.engine.RatingSummarizer, this.layoutStack);
+                List<RatingSummarizer> ratingSummarizers = new List<RatingSummarizer>();
+                ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
                 this.layoutStack.AddLayout(visualizationView);
             }
         }

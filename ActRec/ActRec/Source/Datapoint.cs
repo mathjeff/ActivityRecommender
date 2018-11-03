@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ActivityRecommendation
 {
-    class Datapoint
+    public class Datapoint
     {
         public Datapoint(double inputValue, double outputValue, double weightValue)
         {

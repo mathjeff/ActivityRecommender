@@ -101,4 +101,5 @@ namespace ActivityRecommendation
         protected DateTime firstDate;
         
     }
+
 }

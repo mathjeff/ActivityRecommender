@@ -190,7 +190,9 @@ namespace ActivityRecommendation
             if (experiment.MetricName != activity.Metrics[0].Name)
                 properties[this.MetricTag] = experiment.MetricName;
 
-            properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.EstimatedSuccessesPerSecond);
+            properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.EstimatedSuccessesPerSecond);
+            properties[this.NumEasierParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumEasiers);
+            properties[this.NumHarderParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumHarders);
 
             return this.ConvertToStringBody(properties);
         }
@@ -754,6 +756,10 @@ namespace ActivityRecommendation
             string text = this.ReadText(nodeRepresentation);
             return Double.Parse(text);
         }
+        private int ReadInt(XmlNode nodeRepresentation)
+        {
+            return (int)this.ReadDouble(nodeRepresentation);
+        }
         private RecentUserData ReadRecentUserData(XmlNode nodeRepresentation)
         {
             RecentUserData data = new RecentUserData();
@@ -862,7 +868,17 @@ namespace ActivityRecommendation
                 }
                 if (currentChild.Name == this.SuccessRateTag)
                 {
-                    metric.EstimatedSuccessesPerSecond = this.ReadDouble(currentChild);
+                    metric.DifficultyEstimate.EstimatedSuccessesPerSecond = this.ReadDouble(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.NumEasierParticipationsTag)
+                {
+                    metric.DifficultyEstimate.NumEasiers = this.ReadInt(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.NumHarderParticipationsTag)
+                {
+                    metric.DifficultyEstimate.NumHarders = this.ReadInt(currentChild);
                     continue;
                 }
             }
@@ -1402,6 +1418,20 @@ namespace ActivityRecommendation
             get
             {
                 return "SuccessRate";
+            }
+        }
+        private string NumEasierParticipationsTag
+        {
+            get
+            {
+                return "Easiers";
+            }
+        }
+        private string NumHarderParticipationsTag
+        {
+            get
+            {
+                return "Harders";
             }
         }
         private string ExperimentTag

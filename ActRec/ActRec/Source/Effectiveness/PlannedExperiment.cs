@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VisiPlacement;
 
 // a PlannedExperiment represents an intent to do two Participations, each measured by a corresponding Metric, and compare the results
 // a PlannedExperiment is a prerequisite to obtaining an EffectivenessMeasurement
@@ -31,8 +32,21 @@ namespace ActivityRecommendation.Effectiveness
 
         public string MetricName { get; set; }
 
-        // an estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds
+        public DifficultyEstimate DifficultyEstimate = new DifficultyEstimate();
+    }
+
+    public class DifficultyEstimate
+    {
+        // an estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds, using information about the activity itself but without asking the user
+        public double EstimatedSuccessesPerSecond_WithoutUser { get; set; }
+
+        // an estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds, using information about the activity and also consulting the user
         public double EstimatedSuccessesPerSecond { get; set; }
+
+        // the number of activities that the user said were harder than this one, from among the list of other activities being considered at the same time
+        public int NumHarders { get; set; }
+        // the number of activities that the user said were easier than this one, from among the list of other activities being considered at the same time
+        public int NumEasiers { get; set; }
     }
 
     // Suggests doing a certain activity and measuring it in a certain way (unless it contains an error)
@@ -50,6 +64,21 @@ namespace ActivityRecommendation.Effectiveness
             }
         }
     }
+
+    public class SuggestedMetric_Renderer : LayoutProvider<SuggestedMetric>
+    {
+        public static SuggestedMetric_Renderer Instance = new SuggestedMetric_Renderer();
+        public LayoutChoice_Set GetLayout(SuggestedMetric metric)
+        {
+            Horizontal_GridLayout_Builder gridBuilder = new Horizontal_GridLayout_Builder();
+            gridBuilder.AddLayout(new TextblockLayout(metric.ActivityDescriptor.ActivityName));
+            gridBuilder.AddLayout(new TextblockLayout(metric.PlannedMetric.MetricName));
+            return gridBuilder.Build();
+        }
+
+
+    }
+
 
     // holds a SuggestedMetric and some information about the process of creating it
     public class SuggestedMetric_Metadata
@@ -93,4 +122,5 @@ namespace ActivityRecommendation.Effectiveness
         public ActivitySuggestion ActivitySuggestion { get; set; }
         public PlannedExperiment Experiment { get; set; }
     }
+
 }

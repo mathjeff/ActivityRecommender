@@ -192,17 +192,28 @@ namespace ActivityRecommendation
         {
             ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase);
             this.layoutStack.AddLayout(experimentationLayout);
-            experimentationLayout.RequestedExperiment += ExperimentationLayout_RequestedExperiment;
+            experimentationLayout.RequestedExperiment += ExperimentationInitializationLayout_RequestedExperiment;
 
         }
 
-        private void ExperimentationLayout_RequestedExperiment(List<SuggestedMetric> choices)
+        private void ExperimentationInitializationLayout_RequestedExperiment(List<SuggestedMetric> choices)
+        {
+            this.Request_ExperimentOption_Difficulties(choices);
+        }
+
+        public void Request_ExperimentOption_Difficulties(List<SuggestedMetric> choices)
+        {
+            ExperimentationDifficultySelectionLayout layout = new ExperimentationDifficultySelectionLayout(choices);
+            layout.Done += this.ExperimentDifficultySelectionLayout_Done;
+            this.layoutStack.AddLayout(layout);
+        }
+
+        private void ExperimentDifficultySelectionLayout_Done(List<SuggestedMetric> choices)
         {
             DateTime when = DateTime.Now;
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);
-            this.layoutStack.RemoveLayout();
 
             PlannedExperiment experiment = experimentSuggestion.Experiment;
 
@@ -212,6 +223,9 @@ namespace ActivityRecommendation
                 this.WriteExperiment(experiment);
             }
             this.SuspectLatestActionDate(when);
+
+            this.layoutStack.RemoveLayout();
+            this.layoutStack.RemoveLayout();
         }
 
         public void ImportData(object sender, FileData fileData)

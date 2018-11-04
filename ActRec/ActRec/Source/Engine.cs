@@ -1102,8 +1102,8 @@ namespace ActivityRecommendation
             // go get a lot of input variables for this effectiveness calculation
             Participation participation1 = experiment.FirstParticipation;
             Participation participation2 = p;
-            double predictedDifficulty1 = 1.0 / experiment.Earlier.EstimatedSuccessesPerSecond;
-            double predictedDifficulty2 = 1.0 / experiment.Later.EstimatedSuccessesPerSecond;
+            double predictedDifficulty1 = 1.0 / experiment.Earlier.DifficultyEstimate.EstimatedSuccessesPerSecond;
+            double predictedDifficulty2 = 1.0 / experiment.Later.DifficultyEstimate.EstimatedSuccessesPerSecond;
             double duration1 = participation1.Duration.TotalSeconds;
             double duration2 = participation2.Duration.TotalSeconds;
             double numSuccesses1 = 0;
@@ -1441,10 +1441,51 @@ namespace ActivityRecommendation
                 activityToComputeMeanParticipationDuration = bestActivity.Parents[0];
             typicalParticipationDuration = activityToComputeMeanParticipationDuration.MeanParticipationDuration;
             // TODO: measure number of successes and time spent and incorporate that for a more accurate estimate of successes per second
-            plannedMetric.EstimatedSuccessesPerSecond = 1.0 / typicalParticipationDuration;
+            plannedMetric.DifficultyEstimate = new DifficultyEstimate();
+            plannedMetric.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = 1.0 / typicalParticipationDuration;
             return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when)), -1);
         }
 
+        // assigns estimated number of successes per second without using the user's estimates
+        public void ignoreUserDifficultyEstimates(PlannedMetric a, PlannedMetric b)
+        {
+            a.DifficultyEstimate.EstimatedSuccessesPerSecond = a.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser;
+            b.DifficultyEstimate.EstimatedSuccessesPerSecond = b.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser;
+        }
+        // computes estimated number of successes per second based on both past history and user's estimates
+        public void incorporateUserDifficultyEstimates(PlannedMetric a, PlannedMetric b)
+        {
+            // estimate overall expected difficulty
+            double totalEstimatedNumSuccessesPerSecond = a.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser +
+                b.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser;
+            int difficultyDifference = b.DifficultyEstimate.NumHarders - a.DifficultyEstimate.NumHarders;
+            int absDifficultyDifference = Math.Abs(difficultyDifference);
+            double maxDiffIndices = 2;
+            if (absDifficultyDifference == 0 || absDifficultyDifference > maxDiffIndices)
+            {
+                throw new InvalidOperationException("Unsupported difference (" + difficultyDifference + ") , must be one of [-2,-1,1,2]");
+            }
+            double maxMultiplier = 3;
+            double minEasierWeight = Math.Pow(maxMultiplier, (double)(absDifficultyDifference - 1) / maxDiffIndices);
+            double maxEasierWeight = Math.Pow(maxMultiplier, (double)absDifficultyDifference / maxDiffIndices);
+            double easierWeight = (minEasierWeight + maxEasierWeight) / 2;
+            double harderWeight = 1;
+
+            // renormalize
+            easierWeight = easierWeight / (easierWeight + harderWeight);
+            harderWeight = 1 - easierWeight;
+
+            // swap if backwards
+            if (a.DifficultyEstimate.NumHarders < b.DifficultyEstimate.NumHarders)
+            {
+                PlannedMetric temp = a;
+                a = b;
+                b = temp;
+            }
+            // compute updated difficulty 
+            a.DifficultyEstimate.EstimatedSuccessesPerSecond = totalEstimatedNumSuccessesPerSecond * easierWeight;
+            b.DifficultyEstimate.EstimatedSuccessesPerSecond = totalEstimatedNumSuccessesPerSecond * harderWeight;
+        }
         public ExperimentSuggestion Experiment(List<SuggestedMetric> choices, DateTime when)
         {
             // separate into pre-activities and post-activities
@@ -1478,6 +1519,18 @@ namespace ActivityRecommendation
                 PlannedExperiment experiment = new PlannedExperiment();
                 experiment.Earlier = unpairedActivities[suggestionIndex].PlannedMetric;
                 experiment.Later = unpairedActivities[suggestion2Index].PlannedMetric;
+
+                if (this.activityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor).NumParticipations <= 2 &&
+                    this.activityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor).NumParticipations <= 2)
+                {
+                    // If neither activity has been done many times before, then make the difficulty estimates be close to each other but slightly offset based on what the user guesses
+                    this.incorporateUserDifficultyEstimates(experiment.Earlier, experiment.Later);
+                }
+                else
+                {
+                    // If either activity has been done often, then just estimate the difficulty directly based on what has historically been observed
+                    this.ignoreUserDifficultyEstimates(experiment.Earlier, experiment.Later);
+                }
 
                 Activity earlierActivity = this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
                 ActivitySuggestion activitySuggestion = unpairedActivities[suggestionIndex].ActivitySuggestion;

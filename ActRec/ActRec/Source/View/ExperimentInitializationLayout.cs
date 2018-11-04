@@ -17,7 +17,7 @@ namespace ActivityRecommendation.View
             this.activityRecommender = activityRecommender;
 
             Button okbutton = new Button();
-            this.okButtonLayout = new ButtonLayout(okbutton, "Accept");
+            this.okButtonLayout = new ButtonLayout(okbutton, "Next");
             okbutton.Clicked += Okbutton_Clicked;
 
             LayoutChoice_Set helpButton = this.make_helpButton(layoutStack);

@@ -150,6 +150,7 @@
     <Compile Include="Source\Inheritance.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
+    <Compile Include="Source\View\ExperimentationDifficultySelectionLayout.cs" />
     <Compile Include="Source\View\ExperimentInitializationLayout.cs" />
     <Compile Include="Source\View\ExperimentOptionLayout.cs" />
     <Compile Include="Source\View\FeatureOverviewLayout.cs" />

@@ -323,9 +323,6 @@ namespace ActivityRecommendation
 
         public void DeclineSuggestion(ActivitySuggestion suggestion)
         {
-            // Calculate the score to generate for this Activity as a result of that statement
-            Activity activity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
-            Distribution previousDistribution = activity.PredictedScore.Distribution;
             // make a Skip object holding the needed data
             DateTime considerationDate = this.LatestActionDate;
             DateTime suggestionCreationDate = suggestion.GuessCreationDate();
@@ -534,7 +531,7 @@ namespace ActivityRecommendation
             this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
 
-        private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
+        private void ActivityDatabase_ActivityAdded(Activity activity)
         {
             this.WriteActivity(activity);
         }
@@ -544,7 +541,7 @@ namespace ActivityRecommendation
             this.internalFileIo.AppendText(text, this.inheritancesFileName);
         }
 
-        private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)
+        private void ActivityDatabase_InheritanceAdded(Inheritance inheritance)
         {
             this.WriteInheritance(inheritance);
         }

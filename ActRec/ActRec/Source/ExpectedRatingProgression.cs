@@ -8,13 +8,15 @@ namespace ActivityRecommendation
 {
     public class ExpectedRatingProgression : IProgression
     {
-        public ExpectedRatingProgression(Activity owner)
+        public ExpectedRatingProgression(Activity owner, Engine engine)
         {
             this.Owner = owner;
+            this.Engine = engine;
         }
         public ProgressionValue GetValueAt(DateTime when, bool strictlyEarlier)
         {
-            ProgressionValue value = new ProgressionValue(when, Owner.PredictedScore.Distribution);
+            Prediction prediction = this.Engine.EstimateRating(this.Owner, when);
+            ProgressionValue value = new ProgressionValue(when, prediction.Distribution);
             return value;
         }
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
@@ -36,6 +38,7 @@ namespace ActivityRecommendation
             }
         }
         public Activity Owner { get; set; }
+        public Engine Engine { get; set; }
         public FloatRange EstimateOutputRange()
         {
             return new FloatRange(0, true, 1, true);

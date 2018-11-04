@@ -14,6 +14,10 @@ namespace ActivityRecommendation
             this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
             this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer, this.efficiencySummarizer);
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
+            foreach (Activity activity in this.activityDatabase.AllActivities)
+            {
+                this.ActivityDatabase_ActivityAdded(activity);
+            }
             this.activityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
             this.unappliedRatings = new List<AbsoluteRating>();
             this.unappliedParticipations = new List<Participation>();
@@ -96,7 +100,7 @@ namespace ActivityRecommendation
 
 
 
-        private void ActivityDatabase_ActivityAdded(object sender, Activity activity)
+        private void ActivityDatabase_ActivityAdded(Activity activity)
         {
             this.CreatingActivity(activity);
         }
@@ -105,8 +109,7 @@ namespace ActivityRecommendation
         public void CreatingActivity(Activity activity)
         {
             activity.SetDefaultDiscoveryDate(this.firstInteractionDate);
-            //activity.ApplyKnownInteractionDate(firstInteractionDate);
-            //activity.DiscoveryDate = this.firstInteractionDate;
+            activity.engine = this;
         }
         // gives the Rating to all Activities to which it applies
         public void CascadeRating(AbsoluteRating newRating)
@@ -226,10 +229,7 @@ namespace ActivityRecommendation
         public ActivitySuggestion MakeRecommendation(List<Activity> candidates, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
         {
             DateTime processingStartTime = DateTime.Now;
-            foreach (Activity activity in this.activityDatabase.AllActivities)
-            {
-                activity.PredictionsNeedRecalculation = true;
-            }
+            ActivityRecommendationsAnalysis recommendationsCache = this.cacheForDate(when);
 
             // First, go update the stats for existing activities
             this.EnsureRatingsAreAssociated();
@@ -244,7 +244,9 @@ namespace ActivityRecommendation
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
                 this.UpdateSuggestionValue(activityToBeat, when);
-                activityToBeat.Utility = activityToBeat.Ratings.Mean; // if they're asking for us to beat this activity then it means they want to do it
+                recommendationsCache.utilities[activityToBeat] = activityToBeat.Ratings.Mean; // if they're asking for us to beat this activity then it means they want to do it
+                Prediction participationPrediction = new Prediction(activityToBeat, Distribution.MakeDistribution(1, 0, 1), when, "You asked for an activity at least as fun as this one");
+                recommendationsCache.participationProbabilities[activityToBeat] = participationPrediction;
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);
@@ -266,15 +268,14 @@ namespace ActivityRecommendation
                 {
                     // estimate how good it is for us to suggest this particular activity
                     this.UpdateSuggestionValue(candidate, when);
-                    Distribution currentRating = candidate.SuggestionValue.Distribution;
+                    Distribution currentRating = recommendationsCache.suggestionValues[candidate].Distribution;
                     bool better = false;
-                    if (activityToBeat != null && candidate.Utility < activityToBeat.Utility)
+                    if (activityToBeat != null && recommendationsCache.utilities[candidate] < recommendationsCache.utilities[activityToBeat])
                         better = false; // user doesn't have enough will power to do this activity
                     else
                     {
                         consideredCandidates.Add(candidate);
-                        //if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
-                        if (bestActivity == null || candidate.SuggestionValue.Distribution.Mean >= bestActivity.SuggestionValue.Distribution.Mean)
+                        if (bestActivity == null || recommendationsCache.suggestionValues[candidate].Distribution.Mean >= recommendationsCache.suggestionValues[bestActivity].Distribution.Mean)
                             better = true; // found a better activity
                     }
                     if (better)
@@ -303,10 +304,10 @@ namespace ActivityRecommendation
             Activity bestActivityToPairWith = bestActivity;
             if (bestActivity == null)
                 return null;
-            double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith);
+            double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith, recommendationsCache);
             foreach (Activity candidate in consideredCandidates)
             {
-                double currentScore = this.GetCombinedValue(bestActivity, candidate);
+                double currentScore = this.GetCombinedValue(bestActivity, candidate, recommendationsCache);
                 if (currentScore > bestCombinedScore)
                 {
                     //System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
@@ -327,19 +328,19 @@ namespace ActivityRecommendation
             suggestion.CreatedDate = DateTime.Now;
             suggestion.StartDate = when;
             suggestion.EndDate = suggestion.StartDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
-            suggestion.ParticipationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
+            suggestion.ParticipationProbability = this.EstimateParticipationProbability(activity, when).Distribution.Mean;
             double average = this.ActivityDatabase.RootActivity.Ratings.Mean;
             if (average == 0)
                 average = 1;
-            suggestion.PredictedScoreDividedByAverage = activity.PredictedScore.Distribution.Mean / average;
+            suggestion.PredictedScoreDividedByAverage = this.EstimateRating(activity, when).Distribution.Mean / average;
             return suggestion;
         }
         // This function essentially addresses the well-known multi-armed bandit problem
         // Given two distributions, we estimate the expected total value from choosing values from them
-        private double GetCombinedValue(Activity activityA, Activity activityB)
+        private double GetCombinedValue(Activity activityA, Activity activityB, ActivityRecommendationsAnalysis recommendationsCache)
         {
-            Distribution a = activityA.SuggestionValue.Distribution;
-            Distribution b = activityB.SuggestionValue.Distribution;
+            Distribution a = recommendationsCache.suggestionValues[activityA].Distribution;
+            Distribution b = recommendationsCache.suggestionValues[activityB].Distribution;
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
             // Convert to BinomialDistribution
@@ -413,15 +414,13 @@ namespace ActivityRecommendation
             return score;
         }
         // update the estimate of what rating the user would give to this activity now
-        public void EstimateRating(Activity activity, DateTime when)
+        public Prediction EstimateRating(Activity activity, DateTime when)
         {
             // If we've already estimated the rating at this date, then just return what we calculated
             //DateTime latestUpdateDate = activity.PredictedScore.ApplicableDate;
-            if (!activity.PredictionsNeedRecalculation)
-            {
-                return;
-            }
-            activity.PredictionsNeedRecalculation = false;
+            ActivityRecommendationsAnalysis recommendationsCache = this.cacheForDate(when);
+            if (recommendationsCache.ratings.ContainsKey(activity))
+                return recommendationsCache.ratings[activity];
             // If we get here, then we have to do some calculations
             // estimate the rating 
             activity.SetupPredictorsIfNeeded();
@@ -434,16 +433,16 @@ namespace ActivityRecommendation
             List<Prediction> ratingPredictions = this.Get_ShortTerm_RatingEstimates(activity, when);
             // now that we've made a list of guesses, combine them to make one final guess of what we expect the user's rating to be
             Prediction ratingPrediction = this.CombineRatingPredictions(ratingPredictions);
-            activity.PredictedScore = ratingPrediction;
+            recommendationsCache.ratings[activity] = ratingPrediction;
 
             // Estimate the probability that the user would do this activity
             List<Prediction> probabilityPredictions = activity.GetParticipationProbabilityEstimates(when);
             Prediction probabilityPrediction = this.CombineProbabilityPredictions(probabilityPredictions);
-            activity.PredictedParticipationProbability = probabilityPrediction;
+            recommendationsCache.participationProbabilities[activity] = probabilityPrediction;
 
 
-
-            activity.Utility = this.RatingAndProbability_Into_Value(activity.PredictedScore.Distribution, probabilityPrediction.Distribution.Mean, activity.MeanParticipationDuration).Mean;
+            recommendationsCache.utilities[activity] = this.RatingAndProbability_Into_Value(ratingPrediction.Distribution, probabilityPrediction.Distribution.Mean, activity.MeanParticipationDuration).Mean;
+            return ratingPrediction;
         }
 
         private Distribution RatingAndProbability_Into_Value(Distribution rating, double suggestedParticipation_probability, double meanParticipationDuration)
@@ -472,33 +471,31 @@ namespace ActivityRecommendation
         }
 
         // recompute the estime of how good it would be to suggest this activity now
-        public void EstimateSuggestionValue(Activity activity, DateTime when)
+        public Prediction EstimateSuggestionValue(Activity activity, DateTime when)
         {
-            foreach (Activity other in this.activityDatabase.AllActivities)
-                other.PredictionsNeedRecalculation = true;
             this.EnsureRatingsAreAssociated();
             this.UpdateSuggestionValue(activity, when);
+            return this.currentRecommendationsCache.suggestionValues[activity];
         }
 
         // update the estimate of how good it would be to suggest this activity now, unless the computation is already up-to-date
         private void UpdateSuggestionValue(Activity activity, DateTime when)
         {
-            DateTime startDate = DateTime.Now;
+            ActivityRecommendationsAnalysis recommendationsCache = this.cacheForDate(when);
             // Now we estimate how useful it would be to suggest this activity to the user
 
             Prediction suggestionPrediction = this.Get_OverallHappiness_SuggestionEstimate(activity, when);
-            activity.SuggestionValue = suggestionPrediction;
-            DateTime endDate = DateTime.Now;
-            /*TimeSpan predictionDuration = endDate.Subtract(startDate);
-            System.Diagnostics.Debug.WriteLine(predictionDuration.ToString() + " to evaluate " + activity.Name);*/
+            recommendationsCache.suggestionValues[activity] = suggestionPrediction;
         }
 
         // attempt to calculate the probability that the user would do this activity if we suggested it at this time
-        public void EstimateParticipationProbability(Activity activity, DateTime when)
+        public Prediction EstimateParticipationProbability(Activity activity, DateTime when)
         {
+            ActivityRecommendationsAnalysis recommendationsCache = this.cacheForDate(when);
             List<Prediction> predictions = activity.GetParticipationProbabilityEstimates(when);
             Prediction prediction = this.CombineProbabilityPredictions(predictions);
-            activity.PredictedParticipationProbability = prediction;            
+            recommendationsCache.participationProbabilities[activity] = prediction;
+            return prediction;
         }
 
         // returns a list of Distributions that are to be used to estimate the rating the user will assign to this Activity
@@ -552,12 +549,13 @@ namespace ActivityRecommendation
         {
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
+            Prediction probabilityPrediction = this.EstimateParticipationProbability(activity, when);
 
             // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
             // When there is a huge amount of data, we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
 
-            double participationProbability = activity.PredictedParticipationProbability.Distribution.Mean;
+            double participationProbability = probabilityPrediction.Distribution.Mean;
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
             shortTerm_prediction.Justification = "How much you're expected to enjoy " + activity.Name;
@@ -631,7 +629,7 @@ namespace ActivityRecommendation
         {
             // first identify the most important reason for convenience
             Activity activity = this.ActivityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
-            DateTime when = activity.SuggestionValue.ApplicableDate;
+            DateTime when = this.currentRecommendationsCache.ApplicableDate;
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
             double lowestScore = 1;
             string bestReason = null;
@@ -886,7 +884,7 @@ namespace ActivityRecommendation
             }
         }
 
-        private void ActivityDatabase_InheritanceAdded(object sender, Inheritance inheritance)
+        private void ActivityDatabase_InheritanceAdded(Inheritance inheritance)
         {
             Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
             if (child.Parents.Count > 1)
@@ -995,15 +993,13 @@ namespace ActivityRecommendation
 
             // make an AbsoluteRating for the Activity (leave out date + activity because it's implied)
             AbsoluteRating thisRating = new AbsoluteRating();
-            this.EstimateRating(thisActivity, mainParticipation.StartDate);
-            Distribution thisPrediction = thisActivity.PredictedScore.Distribution;
+            Distribution thisPrediction = this.EstimateRating(thisActivity, mainParticipation.StartDate).Distribution;
 
             // make an AbsoluteRating for the other Activity (include date + activity because they're not implied)
             AbsoluteRating otherRating = new AbsoluteRating();
             otherRating.Date = otherParticipation.StartDate;
             otherRating.ActivityDescriptor = otherParticipation.ActivityDescriptor;
-            this.EstimateRating(otherActivity, otherParticipation.StartDate);
-            Distribution otherPrediction = otherActivity.PredictedScore.Distribution;
+            Distribution otherPrediction = this.EstimateRating(otherActivity, otherParticipation.StartDate).Distribution;
 
             // now we compute updated scores for the new activities
             thisPrediction = thisPrediction.CopyAndReweightTo(1);
@@ -1071,8 +1067,8 @@ namespace ActivityRecommendation
                 // skip activities for which we don't have much data
                 return null;
             }
-            this.EstimateRating(activity, sourceParticipation.StartDate);
-            AbsoluteRating rating = new AbsoluteRating(activity.PredictedScore.Distribution.Mean, sourceParticipation.StartDate, sourceParticipation.ActivityDescriptor, RatingSource.FromParticipation(sourceParticipation));
+            Prediction prediction = this.EstimateRating(activity, sourceParticipation.StartDate);
+            AbsoluteRating rating = new AbsoluteRating(prediction.Distribution.Mean, sourceParticipation.StartDate, sourceParticipation.ActivityDescriptor, RatingSource.FromParticipation(sourceParticipation));
             rating.FromUser = false;
             return rating;
         }
@@ -1613,6 +1609,13 @@ namespace ActivityRecommendation
         {
             return UserPreferences.DefaultPreferences;
         }
+        private ActivityRecommendationsAnalysis cacheForDate(DateTime when)
+        {
+            if (this.currentRecommendationsCache == null || !when.Equals(this.currentRecommendationsCache.ApplicableDate))
+                this.currentRecommendationsCache = new ActivityRecommendationsAnalysis(when);
+            return this.currentRecommendationsCache;
+        }
+
         private ActivityDatabase activityDatabase;                  // stores all Activities
         private List<AbsoluteRating> unappliedRatings;              // lists all Ratings that the RatingProgressions don't know about yet
         private List<Participation> unappliedParticipations;        // lists all Participations that the ParticipationProgressions don't know about yet
@@ -1635,6 +1638,7 @@ namespace ActivityRecommendation
         // a list of experiments that have been planned but not yet completed
         Dictionary<Activity, PlannedExperiment> currentExperiments = new Dictionary<Activity, PlannedExperiment>();
         int numCompletedExperiments;
+        ActivityRecommendationsAnalysis currentRecommendationsCache;
 
     }
 }

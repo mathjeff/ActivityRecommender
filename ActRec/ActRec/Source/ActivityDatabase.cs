@@ -18,10 +18,10 @@ namespace ActivityRecommendation
     public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>, ReadableActivityDatabase
     {
         public event ActivityAddedHandler ActivityAdded;
-        public delegate void ActivityAddedHandler(object sender, Activity activity);
+        public delegate void ActivityAddedHandler(Activity activity);
 
         public event InheritanceAddedHandler InheritanceAdded;
-        public delegate void InheritanceAddedHandler(object sender, Inheritance inheritance);
+        public delegate void InheritanceAddedHandler(Inheritance inheritance);
 
         public event MetricAddedHandler MetricAdded;
         public delegate void MetricAddedHandler(Metric metric, Activity activity);
@@ -90,7 +90,7 @@ namespace ActivityRecommendation
                 return "Parent " + parent.Name + " is not of type Category";
             child.AddParent(parentCategory);
             if (this.InheritanceAdded != null)
-                this.InheritanceAdded.Invoke(this, inheritance);
+                this.InheritanceAdded.Invoke(inheritance);
             return "";
         }
 
@@ -423,7 +423,7 @@ namespace ActivityRecommendation
             this.allActivities.Add(newActivity);
 
             if (this.ActivityAdded != null)
-                this.ActivityAdded.Invoke(this, newActivity);
+                this.ActivityAdded.Invoke(newActivity);
         }
 
         // confirms that it is valid to create a new activity with the given name and parent

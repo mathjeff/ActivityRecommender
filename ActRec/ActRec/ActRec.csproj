@@ -111,6 +111,7 @@
     <Compile Include="Source\AbsoluteRating.cs" />
     <Compile Include="Source\AbsoluteRatingEntryView.cs" />
     <Compile Include="Source\ActivityAverageScoreComparer.cs" />
+    <Compile Include="Source\ActivityRecommendationsAnalysis.cs" />
     <Compile Include="Source\Effectiveness\EfficiencyMeasurement.cs" />
     <Compile Include="Source\Effectiveness\Metric.cs" />
     <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />

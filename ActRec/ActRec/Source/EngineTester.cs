@@ -438,6 +438,14 @@ updated results on 2018-11-03 with new data, plus also computing longtermEfficie
 1.16259387446236 typicalEfficiencyError
 0.149482265649881 typical longtermEfficiencyIfParticipated error
 
+updated results on 2018-11-04 after what was supposed to be a refactor but ended up introducing small changes too
+0.0772857169301227 typical longtermPredictionIfSuggested error
+0.0447131366293045 typical longtermPredictionIfParticipated error
+0.131708768952102 typicalScoreError
+0.935149685404044 equivalentWeightedProbability
+1.16259387446236 typicalEfficiencyError
+0.149467844999278 typical longtermEfficiencyIfParticipated error
+
 */
 
 namespace ActivityRecommendation
@@ -522,9 +530,10 @@ namespace ActivityRecommendation
             // compute estimated score
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             this.engine.EstimateSuggestionValue(activity, when);
+            Prediction prediction = this.engine.EstimateRating(activity, when);
 
             // compute error
-            this.Update_ShortTerm_ScoreError(correctScore - activity.PredictedScore.Distribution.Mean);
+            this.Update_ShortTerm_ScoreError(correctScore - prediction.Distribution.Mean);
         }
         public void Update_ShortTerm_ScoreError(double error)
         {
@@ -538,10 +547,8 @@ namespace ActivityRecommendation
         {
             // compute the estimate participation probability
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            this.engine.EstimateSuggestionValue(activity, when);
+            Prediction predictionForSuggestion =  this.engine.EstimateSuggestionValue(activity, when);
 
-            // keep track of having made this prediction, so we can later return to it and compute the error
-            Prediction predictionForSuggestion = activity.SuggestionValue;
             if (predictionForSuggestion.Distribution.Weight > 0)
             {
                 ScoreSummary ratingSummary = new ScoreSummary(when);
@@ -558,7 +565,7 @@ namespace ActivityRecommendation
                 }
             }
 
-            double predictedProbability = activity.PredictedParticipationProbability.Distribution.Mean;
+            double predictedProbability = this.engine.EstimateParticipationProbability(activity, when).Distribution.Mean;
             double error = predictedProbability - actualIntensity;
             Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
             this.squaredParticipationProbabilityError = this.squaredParticipationProbabilityError.Plus(errorDistribution);

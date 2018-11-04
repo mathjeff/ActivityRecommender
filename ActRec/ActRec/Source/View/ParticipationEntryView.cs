@@ -420,8 +420,9 @@ namespace ActivityRecommendation
         {
             Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
+            Prediction prediction = this.engine.EstimateRating(chosenActivity, startDate);
 
-            double expectedShortermRating = chosenActivity.PredictedScore.Distribution.Mean;
+            double expectedShortermRating = prediction.Distribution.Mean;
             double overallAverageRating = rootActivity.Ratings.Mean;
             double shorttermRatio = expectedShortermRating / overallAverageRating;
 

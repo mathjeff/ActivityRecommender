@@ -41,11 +41,6 @@ namespace ActivityRecommendation
             //this.SetupRatingPredictors();
             this.SetupParticipationProbabilityPredictors();
 
-            this.PredictedScore = new Prediction();
-            this.PredictedParticipationProbability = new Prediction();
-            //this.LatestPrediction = new Prediction();
-            //this.LatestPrediction.Date = new DateTime(0);
-            this.latestRatingEstimationDate = new DateTime(0);
             this.latestParticipationDate = null;
             this.latestInteractionDate = null;
             this.uniqueIdentifier = nextID;
@@ -54,7 +49,6 @@ namespace ActivityRecommendation
             this.ratingsWhenSuggested = new Distribution(0, 0, 0);
             this.ratingsWhenNotSuggested = new Distribution(0, 0, 0);
             this.thinkingTimes = new Distribution(0, 0, 0);
-            this.PredictionsNeedRecalculation = true;
             nextID++;
         }
 
@@ -69,8 +63,8 @@ namespace ActivityRecommendation
             this.timeOfWeekProgression = TimeProgression.WeekCycle;
             this.considerationProgression = new ConsiderationProgression(this);
             this.skipProgression = new SkipProgression(this);
-            this.expectedRatingProgression = new ExpectedRatingProgression(this);
-            this.expectedParticipationProbabilityProgression = new ExpectedParticipationProbabilityProgression(this);
+            this.expectedRatingProgression = new ExpectedRatingProgression(this, null);
+            this.expectedParticipationProbabilityProgression = new ExpectedParticipationProbabilityProgression(this, null);
         }
         #endregion
 
@@ -137,9 +131,6 @@ namespace ActivityRecommendation
             {
                 this.parents.Add(newParent);
                 newParent.AddChild(this);
-
-                // need to rebuild the interpolator because the number of dimensions is wrong
-                //this.SetupRatingInterpolator();
             }
         }
         public List<Activity> Parents
@@ -230,15 +221,6 @@ namespace ActivityRecommendation
         }
 
 
-        // the most recent estimate about the rating of the Doable
-        public Prediction PredictedScore { get; set; }
-        // the most recent estimate about the importants of suggesting the Doable
-        public Prediction SuggestionValue { get; set; }
-        // the most recent estimate about how likely the user is to do the Doable if we suggest it
-        public Prediction PredictedParticipationProbability { get; set; }
-        // the most recent estimate of the short-term average of what the user's happiness will be if this is suggested
-        public double Utility { get; set; } // TODO change into a distribution having variance
-        public bool PredictionsNeedRecalculation { get; set; }
         public TimeSpan AverageTimeBetweenConsiderations
         {
             get
@@ -1063,6 +1045,15 @@ namespace ActivityRecommendation
             this.SetupInterpolators();
         }
 
+        public Engine engine
+        {
+            set
+            {
+                this.expectedRatingProgression.Engine = value;
+                this.expectedParticipationProbabilityProgression.Engine = value;
+            }
+        }
+
         private void SetupInterpolators()
         {
             FloatRange[] coordinates = new FloatRange[this.ratingTrainingProgressions.Count];
@@ -1132,9 +1123,6 @@ namespace ActivityRecommendation
         #region Private Member Variables
 
         private string name;
-        //private string id;
-        //private string description;
-        private DateTime latestRatingEstimationDate;
         private List<Activity> parents;
         private List<Activity> parentsUsedForPrediction;
         private List<ActivityDescriptor> parentDescriptors;

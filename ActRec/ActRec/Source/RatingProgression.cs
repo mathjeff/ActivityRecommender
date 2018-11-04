@@ -117,12 +117,7 @@ namespace ActivityRecommendation
             ProgressionValue result = new ProgressionValue(when, sum);
             return result;
         }
-        public ProgressionValue GetCurrentValue(DateTime when)
-        {
-            Distribution distribution = this.Owner.PredictedScore.Distribution;
-            ProgressionValue result = new ProgressionValue(when, distribution);
-            return result;
-        }
+
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
             //int i = indexInclusive;

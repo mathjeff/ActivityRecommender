@@ -55,7 +55,7 @@ namespace ActivityRecommendation.View
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
         }
 
-        private void ActivityDatabase_ActivityAdded(object sender, Activity a)
+        private void ActivityDatabase_ActivityAdded(Activity a)
         {
             this.invalidateChildren();
         }

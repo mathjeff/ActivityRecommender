@@ -517,7 +517,7 @@ namespace ActivityRecommendation
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5);
+            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.4);
             shortTerm_prediction.Distribution = shortTerm_prediction.Distribution.CopyAndReweightTo(shortWeight);
 
             double mediumWeight = activity.NumParticipations;

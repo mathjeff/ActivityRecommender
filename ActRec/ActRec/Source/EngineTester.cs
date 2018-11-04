@@ -446,6 +446,14 @@ updated results on 2018-11-04 after what was supposed to be a refactor but ended
 1.16259387446236 typicalEfficiencyError
 0.149467844999278 typical longtermEfficiencyIfParticipated error
 
+updated results on 2018-11-04 after a little bit of tuning to make up for the previous slight decrease in accuracy
+0.0772857169301227 typical longtermPredictionIfSuggested error
+0.0440196026228229 typical longtermPredictionIfParticipated error
+0.131708768952102 typicalScoreError
+0.935149685404044 equivalentWeightedProbability
+1.16259387446236 typicalEfficiencyError
+0.149467844999278 typical longtermEfficiencyIfParticipated error
+
 */
 
 namespace ActivityRecommendation

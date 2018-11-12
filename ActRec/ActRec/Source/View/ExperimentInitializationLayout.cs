@@ -44,7 +44,14 @@ namespace ActivityRecommendation.View
             }
             GridLayout bottomGrid = childrenBuilder.Build();
 
-            GridLayout mainGrid = new Vertical_GridLayout_Builder().AddLayout(topGrid).AddLayout(bottomGrid).Uniform().Build();
+            BoundProperty_List rowHeights = new BoundProperty_List(2);
+            rowHeights.BindIndices(0, 1);
+            rowHeights.SetPropertyScale(0, 2);
+            rowHeights.SetPropertyScale(1, 3);
+
+            GridLayout mainGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
+            mainGrid.AddLayout(topGrid);
+            mainGrid.AddLayout(bottomGrid);
 
             string statusMessage = "(" + experimentsStatus.NumExperimentParticipationsRemaining + " experiment";
             if (experimentsStatus.NumExperimentParticipationsRemaining != 1)

@@ -7,8 +7,22 @@ using Xamarin.Forms;
 // the DateEntryView class allows the user to select a date
 namespace ActivityRecommendation
 {
+    // a DateEntryView is a small button that displays a DateTime. If a DateEntryView is clicked, it brings up a fullscreen editing view
     class DateEntryView : TitledControl, OnBack_Listener
     {
+        public static bool Parse(string text, out DateTime result)
+        {
+            if (text != null)
+            {
+                if (text.Length == 4)
+                {
+                    // allow parsing a 4-digit number as a year
+                    text = text + "-01";
+                }
+            }
+            return DateTime.TryParse(text, out result);
+        }
+
         public DateEntryView(string title, LayoutStack layoutStack)
         {
             this.SetTitle(title);
@@ -87,7 +101,7 @@ namespace ActivityRecommendation
 
         private bool Parse(out DateTime result)
         {
-            return DateTime.TryParse(this.getDateText(), out result);
+            return Parse(this.getDateText(), out result);
         }
 
         private String getDateFormatString()
@@ -322,7 +336,7 @@ namespace ActivityRecommendation
 
         private bool Parse(out DateTime result)
         {
-            return DateTime.TryParse(this.DateText, out result);
+            return DateEntryView.Parse(this.DateText, out result);
         }
 
         private String getDateFormatString()
@@ -448,8 +462,7 @@ namespace ActivityRecommendation
 
         private bool Parse(out DateTime result)
         {
-            //return DateTime.TryParseExact(this.getDisplayText(), this.getDateFormatString(), null, System.Globalization.DateTimeStyles.None, out result);
-            return DateTime.TryParse(this.getDisplayText(), out result);
+            return DateEntryView.Parse(this.getDisplayText(), out result);
         }
         private string getDisplayText()
         {

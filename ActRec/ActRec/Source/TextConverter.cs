@@ -101,7 +101,10 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
             string objectName = this.ActivityRequestTag;
 
-            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.FromCategory);
+            if (request.FromCategory != null)
+                properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.FromCategory);
+            if (request.ActivityToBeat != null)
+                properties[this.ActivityToBeat_Tag] = this.ConvertToStringBody(request.ActivityToBeat);
             properties[this.DateTag] = this.ConvertToStringBody(request.Date);
 
             return this.ConvertToString(properties, objectName);
@@ -631,6 +634,11 @@ namespace ActivityRecommendation
                 if (currentChild.Name == this.DateTag)
                 {
                     request.Date = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.ActivityToBeat_Tag)
+                {
+                    request.ActivityToBeat = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
             }
@@ -1360,6 +1368,14 @@ namespace ActivityRecommendation
             get
             {
                 return "Request";
+            }
+        }
+
+        private string ActivityToBeat_Tag
+        {
+            get
+            {
+                return "Beat";
             }
         }
 

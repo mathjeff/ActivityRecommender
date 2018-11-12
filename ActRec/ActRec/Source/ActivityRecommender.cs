@@ -361,8 +361,11 @@ namespace ActivityRecommendation
             // add the suggestion to the list (note that this makes the startDate a couple seconds later if it took a couple seconds to compute the suggestion)
             this.suggestionsView.AddSuggestion(suggestion);
 
-            // autofill the participationEntryView with a convenient value
-            this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
+            if (this.suggestionsView.GetSuggestions().Count() == 1)
+            {
+                // autofill the participationEntryView with a convenient value
+                this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
+            }
 
             this.PersistSuggestions();
         }

@@ -103,6 +103,10 @@ namespace ActivityRecommendation
                     this.nameBlock.Text = "You haven't done anything to compare to!";
                 }
             }
+            get
+            {
+                return this.latestParticipation;
+            }
         }
         // creates the rating to assign to the given Participation
         public Rating GetRating(ActivityDatabase activities, Engine engine, Participation participation)

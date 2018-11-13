@@ -79,9 +79,17 @@ namespace ActivityRecommendation
         {
             this.chooseDate_button.BackgroundColor = Color.Red;
         }
-        public void appearValid()
+        public void appear_defaultValid()
         {
             this.chooseDate_button.BackgroundColor = Color.LightGray;
+        }
+        public void appearHappy()
+        {
+            this.chooseDate_button.BackgroundColor = Color.Green;
+        }
+        public void appearConcerned()
+        {
+            this.chooseDate_button.BackgroundColor = Color.Yellow;
         }
 
         public bool IsDateValid()
@@ -129,7 +137,7 @@ namespace ActivityRecommendation
             {
                 this.chooseDate_button.Text = newText;
                 if (this.IsDateValid())
-                    this.appearValid();
+                    this.appear_defaultValid();
                 else
                     this.appearInvalid();
                 // call handlers

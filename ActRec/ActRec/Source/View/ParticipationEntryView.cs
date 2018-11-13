@@ -106,7 +106,7 @@ namespace ActivityRecommendation
             {
                 bool startValid = true;
                 bool endValid = true;
-                if (this.StartDate.CompareTo(this.EndDate) > 0)
+                if (this.StartDate.CompareTo(this.EndDate) >= 0)
                 {
                     startValid = false;
                     endValid = false;
@@ -118,16 +118,29 @@ namespace ActivityRecommendation
                         startValid = false;
                     if (this.EndDate.CompareTo(now) > 0)
                         endValid = false;
-
                 }
                 if (startValid)
-                    this.startDateBox.appearValid();
+                {
+                    if (this.LatestParticipation != null && this.StartDate.Equals(this.LatestParticipation.EndDate))
+                        this.startDateBox.appearHappy();
+                    else
+                        this.startDateBox.appear_defaultValid();
+                }
                 else
+                {
                     this.startDateBox.appearInvalid();
+                }
                 if (endValid)
-                    this.endDateBox.appearValid();
+                {
+                    if (this.EndDate.Subtract(this.StartDate).CompareTo(TimeSpan.FromDays(1)) >= 0)
+                        this.endDateBox.appearConcerned();
+                    else
+                        this.endDateBox.appear_defaultValid();
+                }
                 else
+                {
                     this.endDateBox.appearInvalid();
+                }
             }
         }
 
@@ -173,6 +186,10 @@ namespace ActivityRecommendation
             set
             {
                 this.ratingBox.LatestParticipation = value;
+            }
+            get
+            {
+                return this.ratingBox.LatestParticipation;
             }
         }
         public void SetStartDate(DateTime newDate)

@@ -106,14 +106,14 @@ namespace ActivityRecommendation.View
         }
         public void SetErrorMessage(string errorMessage)
         {
-            this.errorLayout = new TextblockLayout(errorMessage);
+            this.messageLayout = new TextblockLayout(errorMessage);
             this.UpdateLayout();
         }
         
         private void UpdateSuggestions()
         {
             this.Update_Suggestion_StartTimes();
-            this.errorLayout = null;
+            this.messageLayout = null;
             this.UpdateLayout();
         }
         private void Update_Suggestion_StartTimes()
@@ -132,8 +132,8 @@ namespace ActivityRecommendation.View
             LinkedList<LayoutChoice_Set> layouts = new LinkedList<LayoutChoice_Set>();
             if (this.suggestions.Count == 0)
                 layouts.AddLast(this.topLayout);
-            if (this.errorLayout != null)
-                layouts.AddLast(errorLayout);
+            if (this.messageLayout != null)
+                layouts.AddFirst(messageLayout);
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
                 layouts.AddLast(this.makeLayout(suggestion));
@@ -170,8 +170,12 @@ namespace ActivityRecommendation.View
 
         private void DeclineSuggestion(ActivitySuggestion suggestion)
         {
-            this.RemoveSuggestion(suggestion);
-            this.recommender.DeclineSuggestion(suggestion);
+            this.suggestions.Remove(suggestion);
+            ActivitySkip skip = this.recommender.DeclineSuggestion(suggestion);
+            double numSecondsThinking = skip.ThinkingTime.TotalSeconds;
+            this.messageLayout = new TextblockLayout("Recorded " + (int)numSecondsThinking + " seconds (wasted) considering " + suggestion.ActivityDescriptor.ActivityName);
+            this.Update_Suggestion_StartTimes();
+            this.UpdateLayout();
         }
 
 
@@ -184,6 +188,6 @@ namespace ActivityRecommendation.View
         List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
         int maxNumSuggestions = 4;
         ActivityRecommender recommender;
-        LayoutChoice_Set errorLayout;
+        LayoutChoice_Set messageLayout;
     }
 }

@@ -66,7 +66,6 @@ namespace ActivityRecommendation.View
         {
             this.SuggestionDismissed.Invoke(this.Suggestion.ActivitySuggestion);
             this.Suggestion = null;
-            this.owner.UpdateStatus();
         }
 
         private void RequestSuggestion_Impl(ActivityRequest activityRequest)

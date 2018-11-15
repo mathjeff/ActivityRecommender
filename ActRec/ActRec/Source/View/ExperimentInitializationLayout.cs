@@ -69,8 +69,9 @@ namespace ActivityRecommendation.View
 
         private void Child_SuggestionDismissed(ActivitySuggestion suggestion)
         {
-            this.activityRecommender.DeclineSuggestion(suggestion);
-            this.UpdateStatus();
+            ActivitySkip skip = this.activityRecommender.DeclineSuggestion(suggestion);
+            double numSecondsThinking = skip.ThinkingTime.TotalSeconds;
+            this.UpdateStatus("Recorded " + (int)numSecondsThinking + " seconds wasted");
         }
 
         private void Okbutton_Clicked(object sender, System.EventArgs e)

@@ -335,7 +335,7 @@ namespace ActivityRecommendation
             historyReplayer.LoadFile(this.recentUserData_fileName);
         }
 
-        public void DeclineSuggestion(ActivitySuggestion suggestion)
+        public ActivitySkip DeclineSuggestion(ActivitySuggestion suggestion)
         {
             // make a Skip object holding the needed data
             DateTime considerationDate = this.LatestActionDate;
@@ -344,6 +344,8 @@ namespace ActivityRecommendation
 
             this.AddSkip(skip);
             this.PersistSuggestions();
+
+            return skip;
         }
         public void JustifySuggestion(ActivitySuggestion suggestion)
         {

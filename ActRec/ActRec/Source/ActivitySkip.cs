@@ -22,5 +22,12 @@ namespace ActivityRecommendation
         public DateTime SuggestionCreationDate { get; set; }    // the date that the suggestion was given
         public DateTime ConsideredSinceDate { get; set; }    // the date at which the user started considering the idea
         public DateTime SuggestionStartDate { get; set; } // the date that the user is talking about when (s)he says (s)he doesn't want to do this activity on that date
+        public TimeSpan ThinkingTime
+        {
+            get
+            {
+                return this.CreationDate.Subtract(this.ConsideredSinceDate);
+            }
+        }
     }
 }

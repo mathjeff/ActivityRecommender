@@ -148,6 +148,7 @@
     <Compile Include="Source\HistoryWriter.cs" />
     <Compile Include="Source\IdlenessProgression.cs" />
     <Compile Include="Source\Inheritance.cs" />
+    <Compile Include="Source\View\ActivityImportLayout.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
     <Compile Include="Source\View\ExperimentationDifficultySelectionLayout.cs" />

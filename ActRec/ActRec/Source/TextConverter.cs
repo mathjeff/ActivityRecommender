@@ -233,7 +233,6 @@ namespace ActivityRecommendation
             return root.ChildNodes;
         }
 
-        // opens the file, converts it into a sequence of objects, and sends them to the Engine
         public void ReadFile(string fileName)
         {
             StreamReader reader = this.internalFileIo.OpenFileForReading(fileName);
@@ -241,6 +240,11 @@ namespace ActivityRecommendation
             if (reader.BaseStream.Length > 0)
                 text = reader.ReadToEnd();
             reader.Dispose();
+            this.ReadText(text);
+        }
+        // converts the given text into a sequence of objects and sends them to the Engine
+        public void ReadText(string text)
+        {
             IEnumerable<XmlNode> nodes = this.ParseText(text);
             if (nodes == null)
                 return;
@@ -1483,6 +1487,31 @@ namespace ActivityRecommendation
         private ActivityDatabase activityDatabase;
 
         #endregion
+    }
+
+    class InheritancesParser
+    {
+        public static List<Inheritance> Parse(string text)
+        {
+            return new InheritancesParser().parse(text);
+        }
+
+        private void ActivityDatabase_InheritanceAdded(Inheritance inheritance)
+        {
+            this.inheritances.Add(inheritance);
+        }
+
+        private List<Inheritance> parse(string text)
+        {
+            ActivityDatabase activityDatabase = new ActivityDatabase(null, null);
+            activityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
+            TextConverter impl = new TextConverter(null, activityDatabase);
+            impl.ReadText(text);
+
+            return this.inheritances;
+        }
+
+        private List<Inheritance> inheritances = new List<Inheritance>();
     }
 
 

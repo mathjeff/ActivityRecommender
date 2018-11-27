@@ -133,6 +133,11 @@ namespace ActivityRecommendation
             return result;
         }
 
+        public bool HasActivity(ActivityDescriptor descriptor)
+        {
+            return (this.ResolveDescriptor(descriptor) != null);
+        }
+
         public Category ResolveToCategory(ActivityDescriptor descriptor)
         {
             return (Category)this.ResolveDescriptor(descriptor);
@@ -344,6 +349,8 @@ namespace ActivityRecommendation
             if (inheritance.DiscoveryDate != null)
                 child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
             child.AddParent(parent);
+            if (this.InheritanceAdded != null)
+                this.InheritanceAdded.Invoke(inheritance);
         }
 
         #region Functions for ICombiner<List<Activity>>

@@ -70,11 +70,13 @@ namespace ActivityRecommendation
         {
 
             ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
+            ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
             InheritanceEditingLayout inheritanceCreationView = new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack);
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
-                .AddLayout("New Activity", activityCreationView)
+                .AddLayout("Import Some Common Activities", activityImportLayout)
+                .AddLayout("Enter New Activity", activityCreationView)
                 .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
                 .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
                 .AddLayout("Help", (new HelpWindowBuilder()

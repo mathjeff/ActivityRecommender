@@ -378,6 +378,7 @@ namespace ActivityRecommendation
         private void ProcessRecentUserData(XmlNode nodeRepresentation)
         {
             RecentUserData data = this.ReadRecentUserData(nodeRepresentation);
+            data.Synchronized = true;
             this.listener.SetRecentUserData(data);
         }
         private void ProcessSuggestion(XmlNode nodeRepresentation)
@@ -788,7 +789,6 @@ namespace ActivityRecommendation
                     continue;
                 }
             }
-            data.Synchronized = true;
             return data;
         }
         private LinkedList<ActivitySuggestion> ReadSuggestions(XmlNode nodeRepresentation)

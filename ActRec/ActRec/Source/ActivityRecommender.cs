@@ -37,17 +37,9 @@ namespace ActivityRecommendation
             this.SetupDrawing();
         }
 
-        // call this to do cleanup immediately before this object gets destroyed
-        public void ShutDown()
+        public void Reload()
         {
-            if (!this.recentUserData.Synchronized)
-                this.WriteRecentUserData();
             this.latestParticipation = null;
-        }
-
-        public void Reset()
-        {
-            this.ShutDown();
             this.Initialize();
         }
 
@@ -243,7 +235,7 @@ namespace ActivityRecommendation
                 this.layoutStack.AddLayout(new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString()));
                 return;
             }
-            this.Reset();
+            this.Reload();
         }
 
         public string ExportData()

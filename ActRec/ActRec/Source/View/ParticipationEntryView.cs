@@ -106,7 +106,7 @@ namespace ActivityRecommendation
             {
                 bool startValid = true;
                 bool endValid = true;
-                if (this.StartDate.CompareTo(this.EndDate) >= 0)
+                if (this.StartDate.CompareTo(this.EndDate) > 0)
                 {
                     startValid = false;
                     endValid = false;
@@ -120,16 +120,9 @@ namespace ActivityRecommendation
                         endValid = false;
                 }
                 if (startValid)
-                {
-                    if (this.LatestParticipation != null && this.StartDate.Equals(this.LatestParticipation.EndDate))
-                        this.startDateBox.appearHappy();
-                    else
-                        this.startDateBox.appear_defaultValid();
-                }
+                    this.startDateBox.appear_defaultValid();
                 else
-                {
                     this.startDateBox.appearInvalid();
-                }
                 if (endValid)
                 {
                     if (this.EndDate.Subtract(this.StartDate).CompareTo(TimeSpan.FromDays(1)) >= 0)

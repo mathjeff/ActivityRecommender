@@ -13,7 +13,7 @@ namespace ActivityRecommendation.View
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
 
-        public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly)
+        public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool vertical)
         {
             Button suggestionButton = new Button();
             suggestionButton.Clicked += SuggestionButton_Clicked;
@@ -31,20 +31,22 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                GridLayout horizontalContentLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
-                horizontalContentLayout.AddLayout(buttonLayout);
-
                 GridLayout configurationLayout = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
                 configurationLayout.AddLayout(this.categoryBox);
                 configurationLayout.AddLayout(this.desiredActivity_box);
 
+                GridLayout horizontalContentLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+                horizontalContentLayout.AddLayout(buttonLayout);
                 horizontalContentLayout.AddLayout(configurationLayout);
 
                 GridLayout verticalContentLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(2));
                 verticalContentLayout.AddLayout(configurationLayout);
                 verticalContentLayout.AddLayout(buttonLayout);
 
-                this.SubLayout = new LayoutUnion(horizontalContentLayout, verticalContentLayout);
+                if (vertical)
+                    this.SubLayout = verticalContentLayout;
+                else
+                    this.SubLayout = horizontalContentLayout;
             }
         }
 

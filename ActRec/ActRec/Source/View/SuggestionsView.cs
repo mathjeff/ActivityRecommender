@@ -29,7 +29,7 @@ namespace ActivityRecommendation.View
 
             this.SetTitle("Get Suggestions");
 
-            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true);
+            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, false);
             requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
 
             this.requestSuggestion_layout = requestSuggestion_layout;

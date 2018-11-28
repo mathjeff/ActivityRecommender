@@ -1125,6 +1125,12 @@ namespace ActivityRecommendation
             this.EstimateRating(activity2, p.StartDate);
             double predictedEfficiency1 = this.PredictEfficiency(activity1, participation1.StartDate).Mean;
             System.Diagnostics.Debug.WriteLine("Predictioned efficiency = " + predictedEfficiency1 + " for " + activity1.Name + " at " + participation1.StartDate);
+            // TODO: when predicting the efficiency of participation2, don't use lots of extra prediction factors, just use the timestamp
+            // because although the first participation was chosen randomly, the second wasn't chosen from the same pool
+            // (For example, the user might tend to prefer to work on easier tasks in the evening, and so if participation2.StartDate is in the evening,
+            // then the user may have only consented to activity2 because the user thought activity2 sounded sufficiently easy.
+            // If we use time of day (or any other predictor, really) as a prediction factor, then it might cause us to draw the (incorrect) conclusion
+            // that that time of day results in more eficiency)
             double predictedEfficiency2 = this.PredictEfficiency(activity2, participation2.StartDate).Mean;
             System.Diagnostics.Debug.WriteLine("Predictioned efficiency = " + predictedEfficiency2 + " for " + activity2.Name + " at " + participation2.StartDate);
             System.Diagnostics.Debug.WriteLine("Making completion efficiency measurement for " + activity1.Name + " and " + activity2.Name);

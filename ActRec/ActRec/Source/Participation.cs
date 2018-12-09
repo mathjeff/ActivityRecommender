@@ -54,6 +54,12 @@ namespace ActivityRecommendation
                     return null;
                 return this.EffectivenessMeasurement.Computation;
             }
+            set
+            {
+                if (this.EffectivenessMeasurement == null)
+                    this.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(value.RecomputedEfficiency.Mean > 0);
+                this.EffectivenessMeasurement.Computation = value;
+            }
         }
         // Returns true if this Participation was assigned a completion metric that considers this Participation to have succeeded
         public bool CompletedMetric

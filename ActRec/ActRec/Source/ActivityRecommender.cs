@@ -48,10 +48,6 @@ namespace ActivityRecommendation
             this.ratingsFileName = "ActivityRatings.txt";
             this.inheritancesFileName = "ActivityInheritances.txt";
             this.recentUserData_fileName = "TemporaryData.txt";
-            //this.textConverter = new TextConverter(null, this.ActivityDatabase);
-            //this.historyReplayer = new EngineTester();
-            //this.historyReplayer = new RatingRenormalizer(this.textConverter);
-            //this.historyReplayer = new HistoryWriter(this.textConverter);
 
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
             this.participationEntryView = new ParticipationEntryView(this.layoutStack);
@@ -186,7 +182,6 @@ namespace ActivityRecommendation
             ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase);
             this.layoutStack.AddLayout(experimentationLayout);
             experimentationLayout.RequestedExperiment += ExperimentationInitializationLayout_RequestedExperiment;
-
         }
 
         private void ExperimentationInitializationLayout_RequestedExperiment(List<SuggestedMetric> choices)
@@ -282,12 +277,14 @@ namespace ActivityRecommendation
         {
             System.Diagnostics.Debug.WriteLine("Starting to read files");
 
-            EngineLoader loader = new EngineLoader();
             this.error = "";
+            EngineLoader loader = new EngineLoader();
+            Engine engine;
             try
             {
                 this.LoadFilesInto(loader);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 this.error = "Failed to load files: " + e;
                 int maxLength = 200;
@@ -296,7 +293,18 @@ namespace ActivityRecommendation
                     this.error = this.error.Substring(0, maxLength) + "...";
                 }
             }
-            this.engine = loader.Finish();
+#if true
+            // If we get here then we just set an Engine up as normal
+            // This is the typical case
+            engine = loader.Finish();
+#else
+            // If we get here then we run a special HistoryReplayer before startup
+            // This is extra slow and extra confusing so to enable it you have to change the source code
+            HistoryReplayer historyReplayer = new RatingRenormalizer(false, true);
+            this.LoadFilesInto(historyReplayer);
+            engine = historyReplayer.Finish();
+#endif
+            this.engine = engine;
             this.suggestionDatabase = loader.SuggestionDatabase;
             this.latestParticipation = loader.LatestParticipation;
             this.recentUserData = loader.RecentUserData;
@@ -306,11 +314,11 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("Done parsing files");
 
             // listen for subsequently created Activity or Inheritance objects
-            this.engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
-            this.engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
-            this.engine.ActivityDatabase.MetricAdded += ActivityDatabase_MetricAdded;
+            engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
+            engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
+            engine.ActivityDatabase.MetricAdded += ActivityDatabase_MetricAdded;
 
-            this.engine.FullUpdate();
+            engine.FullUpdate();
         }
 
         public EngineTesterResults TestEngine()
@@ -763,6 +771,5 @@ namespace ActivityRecommendation
         // how long to spend making a suggestion
         TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
         string error = "";
-
     }
 }

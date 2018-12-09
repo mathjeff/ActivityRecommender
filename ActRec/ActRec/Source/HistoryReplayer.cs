@@ -27,6 +27,10 @@ namespace ActivityRecommendation
             this.PostInheritance(newInheritance);
         }
         public virtual void PostInheritance(Inheritance newInheritance) { }
+        public virtual void PostCategory(Category category) { }
+        public virtual void PostToDo(ToDo todo) { }
+
+
 
         public void AddRequest(ActivityRequest newRequest)
         {
@@ -117,7 +121,7 @@ namespace ActivityRecommendation
         protected ActivityDatabase activityDatabase;
 
         private bool updatedAfterInheritances;
-        private TextConverter textConverter;
+        protected TextConverter textConverter;
 
     }
 }

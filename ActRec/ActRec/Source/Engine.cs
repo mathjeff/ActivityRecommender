@@ -1441,15 +1441,19 @@ namespace ActivityRecommendation
             plannedMetric.ActivityDescriptor = bestActivity.MakeDescriptor();
             plannedMetric.MetricName = metric.Name;
 
-            double typicalParticipationDuration = 3600; // default to 1 hour
-            Activity activityToComputeMeanParticipationDuration = bestActivity;
-            if (bestActivity.NumParticipations < 4 && bestActivity.Parents.Count > 0)
-                activityToComputeMeanParticipationDuration = bestActivity.Parents[0];
-            typicalParticipationDuration = activityToComputeMeanParticipationDuration.MeanParticipationDuration;
-            // TODO: measure number of successes and time spent and incorporate that for a more accurate estimate of successes per second
-            plannedMetric.DifficultyEstimate = new DifficultyEstimate();
-            plannedMetric.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = 1.0 / typicalParticipationDuration;
             return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when)), -1);
+        }
+
+        // returns number of successes per second
+        public double EstimateDifficulty_WithoutUser(Activity activity)
+        {
+            double typicalParticipationDuration = 3600; // default to 1 hour
+            Activity activityToComputeMeanParticipationDuration = activity;
+            if (activity.NumParticipations < 4 && activity.Parents.Count > 0)
+                activityToComputeMeanParticipationDuration = activity.Parents[0];
+            typicalParticipationDuration = activityToComputeMeanParticipationDuration.MeanParticipationDuration;
+            DifficultyEstimate difficultyEstimate = new DifficultyEstimate();
+            return 1.0 / typicalParticipationDuration;
         }
 
         // assigns estimated number of successes per second without using the user's estimates
@@ -1467,19 +1471,27 @@ namespace ActivityRecommendation
             int difficultyDifference = b.DifficultyEstimate.NumHarders - a.DifficultyEstimate.NumHarders;
             int absDifficultyDifference = Math.Abs(difficultyDifference);
             double maxDiffIndices = 2;
-            if (absDifficultyDifference == 0 || absDifficultyDifference > maxDiffIndices)
+            double easierWeight, harderWeight;
+            if (absDifficultyDifference == 0)
             {
-                throw new InvalidOperationException("Unsupported difference (" + difficultyDifference + ") , must be one of [-2,-1,1,2]");
+                easierWeight = harderWeight = 0.5;
             }
-            double maxMultiplier = 3;
-            double minEasierWeight = Math.Pow(maxMultiplier, (double)(absDifficultyDifference - 1) / maxDiffIndices);
-            double maxEasierWeight = Math.Pow(maxMultiplier, (double)absDifficultyDifference / maxDiffIndices);
-            double easierWeight = (minEasierWeight + maxEasierWeight) / 2;
-            double harderWeight = 1;
+            else
+            {
+                if (absDifficultyDifference > maxDiffIndices)
+                {
+                    throw new InvalidOperationException("Unsupported difference (" + difficultyDifference + ") , must be one of [-2,-1,1,2]");
+                }
+                double maxMultiplier = 3;
+                double minEasierWeight = Math.Pow(maxMultiplier, (double)(absDifficultyDifference - 1) / maxDiffIndices);
+                double maxEasierWeight = Math.Pow(maxMultiplier, (double)absDifficultyDifference / maxDiffIndices);
+                easierWeight = (minEasierWeight + maxEasierWeight) / 2;
+                harderWeight = 1;
 
-            // renormalize
-            easierWeight = easierWeight / (easierWeight + harderWeight);
-            harderWeight = 1 - easierWeight;
+                // renormalize
+                easierWeight = easierWeight / (easierWeight + harderWeight);
+                harderWeight = 1 - easierWeight;
+            }
 
             // swap if backwards
             if (a.DifficultyEstimate.NumHarders < b.DifficultyEstimate.NumHarders)
@@ -1524,21 +1536,7 @@ namespace ActivityRecommendation
                 if (suggestion2Index == suggestionIndex)
                     suggestion2Index = unpairedActivities.Count - 1;
 
-                PlannedExperiment experiment = new PlannedExperiment();
-                experiment.Earlier = unpairedActivities[suggestionIndex].PlannedMetric;
-                experiment.Later = unpairedActivities[suggestion2Index].PlannedMetric;
-
-                if (this.activityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor).NumParticipations <= 2 &&
-                    this.activityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor).NumParticipations <= 2)
-                {
-                    // If neither activity has been done many times before, then make the difficulty estimates be close to each other but slightly offset based on what the user guesses
-                    this.incorporateUserDifficultyEstimates(experiment.Earlier, experiment.Later);
-                }
-                else
-                {
-                    // If either activity has been done often, then just estimate the difficulty directly based on what has historically been observed
-                    this.ignoreUserDifficultyEstimates(experiment.Earlier, experiment.Later);
-                }
+                PlannedExperiment experiment = this.PlanExperiment(unpairedActivities[suggestionIndex], unpairedActivities[suggestion2Index]);
 
                 Activity earlierActivity = this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
                 ActivitySuggestion activitySuggestion = unpairedActivities[suggestionIndex].ActivitySuggestion;
@@ -1554,6 +1552,38 @@ namespace ActivityRecommendation
                 ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
                 activitySuggestion.Skippable = false;
                 return new ExperimentSuggestion(experiment, activitySuggestion);
+            }
+        }
+
+        // Given two SuggestedMetric objects which suggest doing certain activities, returns a PlannedExperiment that estimates the difficulty of each
+        public PlannedExperiment PlanExperiment(SuggestedMetric a, SuggestedMetric b)
+        {
+            PlannedExperiment experiment = new PlannedExperiment();
+            experiment.Earlier = a.PlannedMetric;
+            experiment.Later = b.PlannedMetric;
+
+            this.ReplanExperiment(experiment);
+
+            return experiment;
+        }
+
+        // Recomputes estimated difficulties for the given experiment
+        public void ReplanExperiment(PlannedExperiment experiment)
+        {
+            experiment.Earlier.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = this.EstimateDifficulty_WithoutUser(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor));
+            experiment.Later.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = this.EstimateDifficulty_WithoutUser(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
+
+            if (this.activityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor).NumParticipations <= 2 &&
+                this.activityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor).NumParticipations <= 2 &&
+                (experiment.Earlier.DifficultyEstimate.NumEasiers > 0 || experiment.Earlier.DifficultyEstimate.NumHarders > 0))
+            {
+                // If neither activity has been done many times before, then make the difficulty estimates be close to each other but slightly offset based on what the user guesses
+                this.incorporateUserDifficultyEstimates(experiment.Earlier, experiment.Later);
+            }
+            else
+            {
+                // If either activity has been done often, then just estimate the difficulty directly based on what has historically been observed
+                this.ignoreUserDifficultyEstimates(experiment.Earlier, experiment.Later);
             }
         }
 

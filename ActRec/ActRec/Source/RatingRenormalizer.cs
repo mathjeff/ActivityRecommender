@@ -1,32 +1,40 @@
 ﻿using System;
 using System.IO;
+using ActivityRecommendation.Effectiveness;
 
-// The RatingRenormalizer will scan the user's history of ratings and recompute the Rating for each Participation.
-//  It will recompute the scores for each RelativeRating, and will also generate an absoluteRating if no rating was given
-// It uses the current version of the Engine to do the computations
-// Most importantly, this means that it ignores any user-entered AbsoluteRating in the rating calculations
-
-// TODOS:
-// IS string concatenation slow?
-// Have to make the Participation serialization include FromUser
-// Should make the Participation serialization include the newlines
-// Should double-check that the data gets saved successfully
+// A few things computed by the Engine over time are too expensive to always recompute
+//  So, some computations are saved into the data files
+//  The RatingRenormalizer redoes all of these computations and as a result is rather slow.
+//   Specifically:
+//    The RatingRenormalizer recomputes absolute ratings from relative ratings
+//    The RatingRenormalizer recalculates experiment predicted difficulties
+//    The RatingRenormalizer recalculates experiment efficiencies
 namespace ActivityRecommendation
 {
     class RatingRenormalizer : HistoryWriter
     {
-        public RatingRenormalizer(TextConverter textConverter) : base(textConverter)
+        public RatingRenormalizer(bool recomputeRatings, bool recomputeEfficiencies)
         {
+            this.recomputeRatings = recomputeRatings;
+            this.recomputeEfficiencies = recomputeEfficiencies;
         }
         public override void PreviewParticipation(Participation newParticipation)
         {
-            if (newParticipation.RawRating == null)
+            if (this.recomputeRatings)
             {
-                newParticipation.RawRating = this.engine.MakeEstimatedRating(newParticipation);
+                if (newParticipation.RawRating == null)
+                    newParticipation.RawRating = this.engine.MakeEstimatedRating(newParticipation);
+            }
+            if (this.recomputeEfficiencies)
+            {
+                if (newParticipation.RelativeEfficiencyMeasurement != null)
+                    newParticipation.RelativeEfficiencyMeasurement = this.engine.Make_CompletionEfficiencyMeasurement(newParticipation);
             }
         }
         public override RelativeRating ProcessRating(RelativeRating newRating)
         {
+            if (!this.recomputeRatings)
+                return newRating;
             System.Diagnostics.Debug.WriteLine("Adding rating with date " + ((DateTime)newRating.FirstRating.Date).ToString());
 
             AbsoluteRating otherRating = newRating.FirstRating;
@@ -88,11 +96,18 @@ namespace ActivityRecommendation
             }
             return newRating;
         }
+        public override void PreviewExperiment(PlannedExperiment experiment)
+        {
+            this.engine.ReplanExperiment(experiment);
+            base.PreviewExperiment(experiment);
+        }
         public override Engine Finish()
         {
             base.Finish();
             return this.engine;
         }
+        private bool recomputeRatings;
+        private bool recomputeEfficiencies;
     }
 
 }

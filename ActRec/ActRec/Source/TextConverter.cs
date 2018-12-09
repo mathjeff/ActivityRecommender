@@ -328,13 +328,15 @@ namespace ActivityRecommendation
         {
             // the Category just puts all of the fields of the ActivityDescriptor at the top level
             ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
-            this.activityDatabase.CreateCategory(activityDescriptor);
+            Category category = this.activityDatabase.CreateCategory(activityDescriptor);
+            this.listener.PostCategory(category);
         }
         private void ProcessTodo(XmlNode nodeRepresentation)
         {
             // the Todo just puts all of the fields of the ActivityDescriptor at the top level
             ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
-            this.activityDatabase.CreateToDo(activityDescriptor);
+            ToDo todo = this.activityDatabase.CreateToDo(activityDescriptor);
+            this.listener.PostToDo(todo);
         }
         private void ProcessParticipation(XmlNode nodeRepresentation)
         {
@@ -397,6 +399,8 @@ namespace ActivityRecommendation
             Metric metric = this.ReadMetric(nodeRepresentation);
             Activity activity = this.activityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
             activity.AddMetric(metric);
+            if (this.listener != null)
+                this.listener.AddMetric(metric);
 
             return metric;
         }

@@ -11,74 +11,28 @@ namespace ActivityRecommendation.View
 {
     class ParticipationCorrelationView : ContainerLayout
     {
-        public ParticipationCorrelationView(Engine engine, ActivityDatabase activityDatabase, ActivityDescriptor activityDescriptor, TimeSpan windowSize)
+        public ParticipationCorrelationView(Engine engine, IEnumerable<Activity> activitiesToPredictFrom, Activity activityToPredict, TimeSpan windowSize)
         {
-
+            DateTime now = DateTime.Now;
             engine.EnsureRatingsAreAssociated();
 
-            // For the given activity, make a Progression telling the total time spent on that activity in the next <windowSize>
-            // For each other activity, do a linear regression between its current intensity (0 or 1) and the other activity's upcoming avg intensity (during the given window)
-            Activity activityToPredict = activityDatabase.ResolveDescriptor(activityDescriptor);
             activityToPredict.ApplyPendingData();
             AutoSmoothed_ParticipationProgression participationProgression = activityToPredict.ParticipationProgression;
             LinearProgression progressionToPredict = participationProgression.Smoothed(windowSize);
 
-            DateTime now = DateTime.Now;
-            DateTime cutoff = now.Subtract(windowSize);
-
             StatList<double, Activity> results = new StatList<double, Activity>(new DoubleComparer(), new NoopCombiner<Activity>());
-            foreach (Activity activity in activityDatabase.AllActivities)
+
+            foreach (Activity activity in activitiesToPredictFrom)
             {
-                System.Diagnostics.Debug.WriteLine("correlating " + activity + " and " + activityToPredict.Name);
-                activity.ApplyPendingData();
-                // smoothing with a short duration is a hacky way of getting a LinearProgression that models the instantaneous rate of participation
-                // ideally we'll add support directly into the LinearProgression class itself
-                LinearProgression predictor = activity.ParticipationProgression.Smoothed(TimeSpan.FromSeconds(1));
-
-                // even if activity == activityToPredict, do the prediction anyway, because it's still meaningful to find that past participations in an activity predict future participations
-                StatList<DateTime, bool> union = new StatList<DateTime, bool>(new DateComparer(), new NoopCombiner<bool>());
-
-                // find all the keys that either one contains
-                foreach (DateTime date in progressionToPredict.Keys)
-                {
-                    union.Add(date, true);
-                }
-                foreach (DateTime date in predictor.Keys)
-                {
-                    union.Add(date, true);
-                }
+                System.Diagnostics.Debug.WriteLine("comparing " + activity + " and " + activityToPredict.Name);
+                List<Datapoint> datapoints = activity.compareParticipations(TimeSpan.FromSeconds(1), progressionToPredict, now.Subtract(windowSize));
 
                 // now compute the value of the formula
                 Correlator correlator = new Correlator();
-                DateTime prevDate = union.GetFirstValue().Key;
-                double x1 = 0;
-                double y1 = 0;
-                foreach (ListItemStats<DateTime, bool> item in union.AllItems)
+                foreach (Datapoint datapoint in datapoints)
                 {
-                    DateTime nextDate = item.Key;
-                    if (nextDate.CompareTo(prevDate) < 0)
-                    {
-                        // skip going backwards, just in case
-                        continue;
-                    }
-                    if (nextDate.CompareTo(cutoff) >= 0)
-                    {
-                        // not enough data to compute the value for this window
-                        // TODO: should we use a smaller window instead?
-                        break;
-                    }
-                    double weight = nextDate.Subtract(prevDate).TotalSeconds;
-
-                    correlator.Add(x1, y1, weight);
-                    double x2 = predictor.GetValueAt(nextDate, false).Value.Mean;
-                    double y2 = progressionToPredict.GetValueAt(nextDate, false).Value.Mean;
-                    correlator.Add(x2, y2, weight);
-
-                    x1 = x2;
-                    y1 = y2;
-                    prevDate = nextDate;
+                    correlator.Add(datapoint);
                 }
-                //double correlation = correlator.Correlation;
 
                 double bonusSecondsPerWindow = correlator.Slope;
                 if (!double.IsNaN(bonusSecondsPerWindow))
@@ -94,19 +48,21 @@ namespace ActivityRecommendation.View
             LinkedList<ListItemStats<double, Activity>> mostPositivelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
             LinkedList<ListItemStats<double, Activity>> mostNegativelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
             int i = 0;
+            int numPositives = Math.Min(4, resultList.Count());
             foreach (ListItemStats<double, Activity> result in resultList.Reverse())
             {
                 mostPositivelyCorrelated.AddLast(result);
                 i++;
-                if (i > 4)
+                if (i > numPositives)
                     break;
             }
             i = 0;
+            int numNegatives = Math.Min(4, resultList.Count() - numPositives);
             foreach (ListItemStats<double, Activity> result in resultList)
             {
                 mostNegativelyCorrelated.AddLast(result);
                 i++;
-                if (i > 4)
+                if (i > numNegatives)
                     break;
             }
 
@@ -117,29 +73,42 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                string title = "Activities whose participations are strongly correlated with participations in " + activityToPredict.Name + " over the next " +
-                    Math.Round(windowSize.TotalDays, 0) + " days";
-                layoutBuilder.AddLayout(new TextblockLayout(title));
-
-                layoutBuilder.AddLayout(new TextblockLayout("These activities add to the number of minutes spent per day:"));
-                foreach (ListItemStats<double, Activity> result in mostPositivelyCorrelated)
+                if (numPositives > 0 && numNegatives > 0)
                 {
-                    double correlation = result.Key;
-                    Activity activity = result.Value;
-                    String message = activity.ToString() + ": " + Math.Round(correlation, 5);
-                    layoutBuilder.AddLayout(new TextblockLayout(message));
+                    string title = "Activities whose participations are strongly correlated with participations in " + activityToPredict.Name + " over the next " +
+                        Math.Round(windowSize.TotalDays, 0) + " days";
+                    layoutBuilder.AddLayout(new TextblockLayout(title));
                 }
 
-                layoutBuilder.AddLayout(new TextblockLayout("These activities subtract from the number of minutes per day:"));
-                foreach (ListItemStats<double, Activity> result in mostNegativelyCorrelated)
+                if (numPositives > 0)
                 {
-                    double correlation = result.Key;
-                    Activity activity = result.Value;
-                    String message = activity.ToString() + ": " + Math.Round(correlation, 5);
-                    layoutBuilder.AddLayout(new TextblockLayout(message));
+                    if (numPositives > 1)
+                        layoutBuilder.AddLayout(new TextblockLayout("These activities add to the number of minutes spent per day:"));
+                    else
+                        layoutBuilder.AddLayout(new TextblockLayout("This activity adds to the number of minutes spent per day:"));
+                    foreach (ListItemStats<double, Activity> result in mostPositivelyCorrelated)
+                    {
+                        double correlation = result.Key;
+                        Activity activity = result.Value;
+                        String message = activity.ToString() + ": " + Math.Round(correlation, 5);
+                        layoutBuilder.AddLayout(new TextblockLayout(message));
+                    }
                 }
 
-
+                if (numNegatives > 0)
+                {
+                    if (numNegatives > 1)
+                        layoutBuilder.AddLayout(new TextblockLayout("These activities subtract from the number of minutes spent per day:"));
+                    else
+                        layoutBuilder.AddLayout(new TextblockLayout("This activity subtracts from the number of minutes spent per day:"));
+                    foreach (ListItemStats<double, Activity> result in mostNegativelyCorrelated)
+                    {
+                        double correlation = result.Key;
+                        Activity activity = result.Value;
+                        String message = activity.ToString() + ": " + Math.Round(correlation, 5);
+                        layoutBuilder.AddLayout(new TextblockLayout(message));
+                    }
+                }
 
                 this.SubLayout = layoutBuilder.Build();
             }

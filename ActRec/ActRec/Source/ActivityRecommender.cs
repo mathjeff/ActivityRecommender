@@ -99,8 +99,7 @@ namespace ActivityRecommendation
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
-            visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationCorrelationMenu(this.layoutStack, this.ActivityDatabase, this.engine));
-
+            visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
             this.statisticsMenu = new ActivityVisualizationMenu();
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;

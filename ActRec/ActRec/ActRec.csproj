@@ -193,7 +193,8 @@
     <Compile Include="Source\View\BrowseInheritancesView.cs" />
     <Compile Include="Source\View\InstructionsLayout.cs" />
     <Compile Include="Source\View\MetricEditingLayout.cs" />
-    <Compile Include="Source\View\ParticipationCorrelationMenu.cs" />
+    <Compile Include="Source\View\ParticipationComparisonMenu.cs" />
+    <Compile Include="Source\View\Participation_BinComparison_View.cs" />
     <Compile Include="Source\View\ParticipationCorrelationView.cs" />
     <Compile Include="Source\View\ParticipationEntryView.cs" />
     <Compile Include="Source\View\PlotView.cs" />
@@ -207,7 +208,6 @@
     <Compile Include="Source\View\ResizableRadioButton.cs" />
     <Compile Include="Source\View\ResizableTextBlock.cs" />
     <Compile Include="Source\View\ResizableTextBox.cs" />
-    <Compile Include="Source\View\SelectorView.cs" />
     <Compile Include="Source\View\SuggestionsView.cs" />
     <Compile Include="Source\View\SuggestionView.cs" />
     <Compile Include="Source\View\TitledTextBlock.cs" />

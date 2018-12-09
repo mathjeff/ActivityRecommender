@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using ActivityRecommendation.Effectiveness;
 using AdaptiveLinearInterpolation;
+using StatLists;
 
 // The Doable class represents a way for the user to spend his/her time
 // The entire goal of this program is to tell the user which Doable to spend time on
@@ -985,6 +986,62 @@ namespace ActivityRecommendation
             this.metrics.Add(metric);
         }
 
+        // Smoothes by <smoothingWindowDuration> the participation intensities in <this> and matches them up against those of <activityToPredict>
+        // The output coordinates are as defined by progressionToPredict
+        // The input coordinates are measured in seconds (spend on this activity during the window)
+        public List<Datapoint> compareParticipations(TimeSpan smoothingWindowDuration, LinearProgression progressionToPredict, DateTime cutoffDate)
+        {
+            List<Datapoint> results = new List<Datapoint>();
+            this.ApplyPendingData();
+
+            // smoothing with a short duration is a hacky way of getting a LinearProgression that models the instantaneous rate of participation
+            // ideally we'll add support directly into the LinearProgression class itself
+            LinearProgression predictor = this.ParticipationProgression.Smoothed(smoothingWindowDuration);
+
+            StatList<DateTime, bool> union = new StatList<DateTime, bool>(new DateComparer(), new NoopCombiner<bool>());
+
+            // find all the keys that either one contains
+            foreach (DateTime date in progressionToPredict.Keys)
+            {
+                union.Add(date, true);
+            }
+            foreach (DateTime date in predictor.Keys)
+            {
+                union.Add(date, true);
+            }
+
+            // now compute the value of the formula
+            DateTime prevDate = union.GetFirstValue().Key;
+            double x1 = 0;
+            double y1 = 0;
+            foreach (ListItemStats<DateTime, bool> item in union.AllItems)
+            {
+                DateTime nextDate = item.Key;
+                if (nextDate.CompareTo(prevDate) < 0)
+                {
+                    // skip going backwards, just in case
+                    continue;
+                }
+                if (nextDate.CompareTo(cutoffDate) >= 0)
+                {
+                    // not enough data to compute the value for this window
+                    // TODO: should we use a smaller window instead?
+                    break;
+                }
+                double weight = nextDate.Subtract(prevDate).TotalSeconds;
+
+                results.Add(new Datapoint(x1, y1, weight));
+                double x2 = predictor.GetValueAt(nextDate, false).Value.Mean;
+                double y2 = progressionToPredict.GetValueAt(nextDate, false).Value.Mean;
+                results.Add(new Datapoint(x2, y2, weight));
+
+                x1 = x2;
+                y1 = y2;
+                prevDate = nextDate;
+            }
+
+            return results;
+        }
         #endregion
 
         #region Private Member Functions

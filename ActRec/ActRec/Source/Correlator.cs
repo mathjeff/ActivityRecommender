@@ -24,6 +24,10 @@ namespace ActivityRecommendation
             this.count += weight;
             this.sumXY += x * y * weight;
         }
+        public void Add(Datapoint datapoint)
+        {
+            this.Add(datapoint.Input, datapoint.Output, datapoint.Weight);
+        }
 
         public double Correlation
         {

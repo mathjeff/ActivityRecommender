@@ -454,6 +454,25 @@ updated results on 2018-11-04 after a little bit of tuning to make up for the pr
 1.16259387446236 typicalEfficiencyError
 0.149467844999278 typical longtermEfficiencyIfParticipated error
 
+updated results on 2018-12-09 with new data
+0.0852 typical longtermPredictionIfSuggested error
+0.0425 typical longtermPredictionIfParticipated error
+0.1270 typicalScoreError
+0.9370 equivalentWeightedProbability
+2.8188 typicalEfficiencyError
+0.1982 typical longtermEfficiencyIfParticipated error
+Computed results in 00:02:40
+
+updated results on 2018-12-09 after some tweaks to AdaptiveLinearInterpolator to facilitate making findRepresentativePoints terminate
+0.0853 typical longtermPredictionIfSuggested error
+0.0425 typical longtermPredictionIfParticipated error
+0.1271 typicalScoreError
+0.9369 equivalentWeightedProbability
+2.8188 typicalEfficiencyError
+0.1982 typical longtermEfficiencyIfParticipated error
+Computed results in 00:02:40
+
+
 */
 
 namespace ActivityRecommendation

@@ -180,7 +180,7 @@ namespace ActivityRecommendation
         // returns 0 if there is a discrepancy, otherwise 1 + (the number of fields that match)
         public double MatchQuality(ActivityDescriptor descriptor, Activity activity)
         {
-            double matchScore = 1; // if there are no problems, we default to a match quality of 1
+            double matchScore = 0;
             if (descriptor.RequiresPerfectMatch)
             {
                 // make sure the name matches
@@ -201,6 +201,11 @@ namespace ActivityRecommendation
                 {
                     matchScore = this.stringScore(activity.Name, desiredName);
                 }
+                if (desiredName.Length > 0 && matchScore <= 0)
+                {
+                    // name has nothing in common
+                    return 0;
+                }
             }
             // now that we've verified that this activity is allowed to be a match, we calculate its score
 
@@ -209,7 +214,7 @@ namespace ActivityRecommendation
                 matchScore += 1;
 
 
-            // up to 0.5 extra points based on the likelihood that the user did this activity
+            // up to 1 extra point based on the likelihood that the user did this activity
             if (descriptor.PreferMorePopular)
             {
                 // Give better scores to activities that the user has logged more often
@@ -396,7 +401,7 @@ namespace ActivityRecommendation
 
                     int matchScore = 0;
                     if (itemWordLower.StartsWith(queryWordLower))
-                        matchScore += 2;
+                        matchScore++;
                     if (itemWord.StartsWith(queryWord))
                         matchScore++;
                     if (itemWordLower == queryWordLower)
@@ -406,9 +411,9 @@ namespace ActivityRecommendation
                     if (matchScore > 0)
                     {
                         if (i == 0)
-                            matchScore++;
+                            matchScore += 3;
                         totalScore += matchScore * queryWord.Length;
-                        itemWords.RemoveAt(i);
+                        itemWords.RemoveRange(0, i + 1);
                         break;
                     }
                 }

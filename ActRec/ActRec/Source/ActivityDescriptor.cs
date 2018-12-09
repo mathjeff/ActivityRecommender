@@ -12,36 +12,28 @@ namespace ActivityRecommendation
 
         public ActivityDescriptor()
         {
-            this.Choosable = null;
-            this.RequiresPerfectMatch = true;
+        }
+
+        public ActivityDescriptor(string ActivityName)
+        {
+            this.ActivityName = ActivityName;
         }
 
         #endregion
 
         #region Public Member Functions
         
-        public string ActivityName
-        {
-            get
-            {
-                return this.activityName;
-            }
-            set
-            {
-                // now update the desired data
-                this.activityName = value;
-            }
-        }
-        public bool? Choosable { get; set; }
-        public bool PreferMorePopular { get; set; }   // tells whether this descriptor wants to match the Activity with the best rating
-        public bool RequiresPerfectMatch { get; set; }
+        public string ActivityName { get; set; }
+        public bool? Choosable = null;
+        public bool PreferMorePopular = false;   // tells whether this descriptor wants to match the Activity with the best rating
+        public bool RequiresPerfectMatch = true;
         public bool CanMatch(ActivityDescriptor other)
         {
             if (other == null)
                 return false;
-            if (this.ActivityName != null && other.activityName != null)
+            if (this.ActivityName != null && other.ActivityName != null)
             {
-                if (!this.activityName.Equals(other.activityName))
+                if (!this.ActivityName.Equals(other.ActivityName))
                     return false;
             }
             if (this.Choosable != null && other.Choosable != null)
@@ -55,12 +47,6 @@ namespace ActivityRecommendation
         {
             return this.CanMatch(activity.MakeDescriptor());
         }
-        #endregion
-
-        #region Private Member Variables
-
-        private string activityName;
-
         #endregion
 
     }

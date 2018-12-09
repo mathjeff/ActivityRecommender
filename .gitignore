@@ -9,3 +9,4 @@ PerfLogs
 temp
 .vs
 packages
+*.user

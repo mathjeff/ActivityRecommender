@@ -704,6 +704,8 @@ namespace ActivityRecommendation
         private double[] Get_Rating_TrainingCoordinates(DateTime when)
         {
             this.SetupPredictorsIfNeeded();
+            this.ApplyPendingSkips();
+            this.ApplyPendingParticipationsForShorttermAnalysis();
 
             double[] coordinates = new double[this.ratingTrainingProgressions.Count];
             int i;

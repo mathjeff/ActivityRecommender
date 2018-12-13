@@ -472,6 +472,14 @@ updated results on 2018-12-09 after some tweaks to AdaptiveLinearInterpolator to
 0.1982 typical longtermEfficiencyIfParticipated error
 Computed results in 00:02:40
 
+updated results on 2018-12-13 after a small amount of new data, plus some bugfixes to make multidimensional interpolation work better
+0.0783 typical longtermPredictionIfSuggested error
+0.0434 typical longtermPredictionIfParticipated error
+0.1312 typicalScoreError
+0.9350 equivalentWeightedProbability
+2.8054 typicalEfficiencyError
+0.1996 typical longtermEfficiencyIfParticipated error
+Computed results in 00:02:41
 
 */
 

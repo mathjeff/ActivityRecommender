@@ -77,7 +77,7 @@ namespace ActivityRecommendation
                 .AddMessage("If this Activity is a ToDo, you will see a box asking you to specify whether you completed the ToDo. Press the box if you completed it.")
                 .AddMessage("3. Enter a start date and an end date. If you use the \"End = Now\" button right when the activity completes, you don't even need to type the date in. If you " +
                 "do have to type the date in, press the white box.")
-                .AddMessage("4. Enter a comment if you like. For the moment, the comments are just stored but don't do anything. That might change in the future.")
+                .AddMessage("4. Enter a comment if you like.")
                 .AddMessage("5. Lastly, press OK.")
                 .AddMessage("It's up to you how many participations you log, how often you rate them, and how accurate the start and end dates are. ActivityRecommender will be able to " +
                 "provide more useful help to you if you provide more accurate data, but even just a few participations per day should still be enough for meaningful feedback.")

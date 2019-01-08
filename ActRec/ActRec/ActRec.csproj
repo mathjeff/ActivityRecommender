@@ -194,6 +194,8 @@
     <Compile Include="Source\View\InstructionsLayout.cs" />
     <Compile Include="Source\View\MetricEditingLayout.cs" />
     <Compile Include="Source\View\ParticipationComparisonMenu.cs" />
+    <Compile Include="Source\View\ParticipationsCommentView.cs" />
+    <Compile Include="Source\View\ParticipationView.cs" />
     <Compile Include="Source\View\Participation_BinComparison_View.cs" />
     <Compile Include="Source\View\ParticipationCorrelationView.cs" />
     <Compile Include="Source\View\ParticipationEntryView.cs" />

@@ -525,6 +525,16 @@ namespace ActivityRecommendation
             }
             this.PendingParticipationsForShorttermAnalysis.Clear();
         }
+        public IEnumerable<Participation> Participations
+        {
+            get
+            {
+                this.ApplyPendingParticipations();
+                return this.participationProgression.Participations;
+            }
+        }
+
+
         public void RemoveParticipation(Participation unwantedParticipation)
         {
             this.ApplyPendingParticipations();
@@ -1043,6 +1053,32 @@ namespace ActivityRecommendation
             }
 
             return results;
+        }
+
+        public List<Participation> CommentedParticipations
+        {
+            get
+            {
+                List<Participation> results = new List<Participation>();
+                foreach (Participation participation in this.Participations)
+                {
+                    if (participation.Comment != null)
+                        results.Add(participation);
+                }
+                return results;
+            }
+        }
+
+        // returns a list of Participations having comments, sorted by decreasing happiness score
+        public List<Participation> CommentedParticipationsSortedByDecreasingScore
+        {
+            get
+            {
+                List<Participation> candidates = this.CommentedParticipations;
+                candidates.Sort(new ParticipationScoreComparer());
+                candidates.Reverse();
+                return candidates;
+            }
         }
         #endregion
 

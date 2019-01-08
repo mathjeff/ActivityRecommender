@@ -172,6 +172,25 @@ namespace ActivityRecommendation
         private Rating rawRating;
 
         #endregion
+    }
 
+    public class ParticipationScoreComparer : IComparer<Participation>
+    {
+        public int Compare(Participation a, Participation b)
+        {
+            AbsoluteRating ratingA = a.GetAbsoluteRating();
+            AbsoluteRating ratingB = b.GetAbsoluteRating();
+            double scoreA;
+            double scoreB;
+            if (ratingA != null)
+                scoreA = ratingA.Score;
+            else
+                scoreA = double.NegativeInfinity;
+            if (ratingB != null)
+                scoreB = ratingB.Score;
+            else
+                scoreB = double.NegativeInfinity;
+            return scoreA.CompareTo(scoreB);
+        }
     }
 }

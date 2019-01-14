@@ -481,6 +481,22 @@ updated results on 2018-12-13 after a small amount of new data, plus some bugfix
 0.1996 typical longtermEfficiencyIfParticipated error
 Computed results in 00:02:41
 
+updated results on 2019-01-14 after some new data
+0.0827 typical longtermPredictionIfSuggested error
+0.0423 typical longtermPredictionIfParticipated error
+0.1288 typicalScoreError
+0.9438 equivalentWeightedProbability
+3.8972 typicalEfficiencyError
+0.5102 typical longtermEfficiencyIfParticipated error
+
+updated results on 2019-01-14 after making ratingTestingProgressions match ratingTrainingProgressions
+0.0828 typical longtermPredictionIfSuggested error
+0.0424 typical longtermPredictionIfParticipated error
+0.1279 typicalScoreError
+0.9438 equivalentWeightedProbability
+3.8972 typicalEfficiencyError
+0.5102 typical longtermEfficiencyIfParticipated error
+Computed results in 00:03:02
 */
 
 namespace ActivityRecommendation

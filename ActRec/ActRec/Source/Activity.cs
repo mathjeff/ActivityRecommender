@@ -737,15 +737,15 @@ namespace ActivityRecommendation
             this.ApplyPendingData();
             this.ApplyPendingSkips(); // TODO: figure out why this line changes the results
 
-            double[] coordinates = new double[this.ratingTestingProgressions.Count];
+            double[] coordinates = new double[this.ratingTrainingProgressions.Count];
             int i;
             for (i = 0; i < coordinates.Length; i++)
             {
-                ProgressionValue value = this.ratingTestingProgressions[i].GetValueAt(when, false);
+                ProgressionValue value = this.ratingTrainingProgressions[i].GetValueAt(when, false);
                 if (value != null)
                     coordinates[i] = value.Value.Mean;
                 else
-                    coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
+                    coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange().Middle;
             }
             return coordinates;
         }
@@ -763,15 +763,15 @@ namespace ActivityRecommendation
             this.ApplyPendingRatings();
             this.ApplyPendingParticipations();
 
-            double[] coordinates = new double[this.ratingTestingProgressions.Count];
+            double[] coordinates = new double[this.ratingTrainingProgressions.Count];
             int i;
             for (i = 0; i < coordinates.Length; i++)
             {
-                ProgressionValue value = this.ratingTestingProgressions[i].GetValueAt(when, false);
+                ProgressionValue value = this.ratingTrainingProgressions[i].GetValueAt(when, false);
                 if (value != null)
                     coordinates[i] = value.Value.Mean;
                 else
-                    coordinates[i] = this.ratingTestingProgressions[i].EstimateOutputRange().Middle;
+                    coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange().Middle;
             }
             List<Prediction> results = new List<Prediction>();
             Distribution estimate = new Distribution(this.shortTerm_ratingInterpolator.Interpolate(coordinates));
@@ -1106,19 +1106,14 @@ namespace ActivityRecommendation
             this.extraRatingPredictionLinks = new List<IPredictionLink>();
 
             this.ratingTrainingProgressions = new List<IProgression>();
-            this.ratingTestingProgressions = new List<IProgression>();
 
             this.ratingTrainingProgressions.Add(TimeProgression.AbsoluteTime);
-            this.ratingTestingProgressions.Add(TimeProgression.AbsoluteTime);
 
             this.ratingTrainingProgressions.Add(this.idlenessProgression);
-            this.ratingTestingProgressions.Add(this.idlenessProgression);
 
             this.ratingTrainingProgressions.Add(this.participationProgression);
-            this.ratingTestingProgressions.Add(this.participationProgression);
 
             this.ratingTrainingProgressions.Add(this.timeOfDayProgression);
-            this.ratingTestingProgressions.Add(this.timeOfDayProgression);
 
             foreach (Activity parent in this.parents)
             {
@@ -1127,7 +1122,6 @@ namespace ActivityRecommendation
                     this.parentsUsedForPrediction.Add(parent);
 
                     this.ratingTrainingProgressions.Add(parent.ratingProgression);
-                    this.ratingTestingProgressions.Add(parent.expectedRatingProgression);
 
                     IPredictionLink link2 = new ExponentiallyWeightedPredictionLink(parent.ExpectedRatingProgression, this.RatingProgression, "Probably close to the rating of " + parent.Description);
                     this.extraRatingPredictionLinks.Add(link2);
@@ -1224,7 +1218,6 @@ namespace ActivityRecommendation
 
         //private List<IPredictionLink> ratingPredictors;
         List<IProgression> ratingTrainingProgressions;
-        List<IProgression> ratingTestingProgressions;
         AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Doable
         AdaptiveLinearInterpolator<Distribution> shortTerm_EfficiencyInterpolator;
         LongtermValuePredictor longTerm_participationValue_interpolator; // this interpolator is used to estimate what user's average happiness will if they do this Doable

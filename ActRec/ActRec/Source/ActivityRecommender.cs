@@ -140,9 +140,9 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout("Start", usageMenu);
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
-            if (this.error != null)
+            if (this.error != "")
             {
-                helpOrStart_menu = new TitledControl(this.error, helpOrStart_menu);
+                helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayout(new TextblockLayout(this.error)).AddLayout(helpOrStart_menu).Build();
             }
 
 
@@ -280,17 +280,24 @@ namespace ActivityRecommendation
             this.error = "";
             EngineLoader loader = new EngineLoader();
             Engine engine;
-            try
+            if (System.Diagnostics.Debugger.IsAttached)
             {
                 this.LoadFilesInto(loader);
             }
-            catch (Exception e)
+            else
             {
-                this.error = "Failed to load files: " + e;
-                int maxLength = 200;
-                if (this.error.Length > maxLength)
+                try
                 {
-                    this.error = this.error.Substring(0, maxLength) + "...";
+                    this.LoadFilesInto(loader);
+                }
+                catch (Exception e)
+                {
+                    this.error = "Failed to load files: " + e;
+                    int maxLength = 1000;
+                    if (this.error.Length > maxLength)
+                    {
+                        this.error = this.error.Substring(0, maxLength) + "...";
+                    }
                 }
             }
 #if true

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using System.Xml;
 
 // The TextConverter class will convert an object into a string or parse a string into a list of objects
 // It only works on the specific types of objects that matter in the ActivityRecommender project
@@ -226,7 +227,21 @@ namespace ActivityRecommendation
                 return null;
             text = "<root>" + text + "</root>";
             XmlDocument document = new XmlDocument();
-            document.LoadXml(text);
+            try
+            {
+                document.LoadXml(text);
+            }
+            catch (XmlException e)
+            {
+                int lineNumber = e.LineNumber - 1;
+                string[] lines = text.Split('\n');
+                if (lineNumber >= 0 && lineNumber < lines.Length)
+                {
+                    string line = lines[lineNumber];
+                    throw new XmlException("Failed to parse '" + lines[lineNumber] + "'", e);
+                }
+                throw e;
+            }
             XmlNode root = document.FirstChild;
             if (root == null)
                 return null;

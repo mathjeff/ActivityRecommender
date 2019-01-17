@@ -51,7 +51,7 @@ namespace ActivityRecommendation
             if (participation.Suggested != null)
                 properties[this.WasSuggestedTag] = this.ConvertToStringBody((bool)participation.Suggested);
             if (comment != null)
-                properties[this.CommentTag] = comment;
+                properties[this.CommentTag] = this.XmlEscape(comment);
             if (participation.Consideration != null)
                 properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
             if (participation.CompletedMetric)
@@ -191,8 +191,8 @@ namespace ActivityRecommendation
             Activity activity = this.activityDatabase.ResolveDescriptor(experiment.ActivityDescriptor);
             if (activity.Metrics.Count < 1)
                 throw new ArgumentException("Internal error: an ExperimentSuggestion's Activity cannot have 0 metrics");            
-            if (experiment.MetricName != activity.Metrics[0].Name)
-                properties[this.MetricTag] = experiment.MetricName;
+            if (experiment.MetricName != activity.Metrics[0].Name && experiment.MetricName != null)
+                properties[this.MetricTag] = this.XmlEscape(experiment.MetricName);
 
             properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.EstimatedSuccessesPerSecond);
             properties[this.NumEasierParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumEasiers);
@@ -203,7 +203,7 @@ namespace ActivityRecommendation
         public string ConvertToString(Metric metric)
         {
             Dictionary<string, string> properties = new Dictionary<string, string>();
-            properties[this.MetricName_Tag] = metric.Name;
+            properties[this.MetricName_Tag] = this.XmlEscape(metric.Name);
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(metric.ActivityDescriptor);
 
             return this.ConvertToString(properties, this.MetricTag);
@@ -1041,7 +1041,7 @@ namespace ActivityRecommendation
             string activityName = descriptor.ActivityName;
             if (activityName != null)
             {
-                properties[this.ActivityNameTag] = activityName;
+                properties[this.ActivityNameTag] = this.XmlEscape(activityName);
             }
             return this.ConvertToStringBody(properties);
         }
@@ -1141,6 +1141,11 @@ namespace ActivityRecommendation
                 properties[this.EarlierEfficency_Tag] = this.ConvertToStringBody(measurement.Earlier);
 
             return this.ConvertToStringBody(properties);
+        }
+
+        private string XmlEscape(String input)
+        {
+            return input.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
         }
 
         #endregion

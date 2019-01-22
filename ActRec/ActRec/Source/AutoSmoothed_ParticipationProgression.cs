@@ -160,9 +160,9 @@ namespace ActivityRecommendation
 
         public ParticipationAndSummary Combine(ParticipationAndSummary a, ParticipationAndSummary b)
         {
-            if (a == null)
+            if (a == null || a.Summary.CumulativeIntensity.TotalSeconds <= 0)
                 return b;
-            if (b == null)
+            if (b == null || b.Summary.CumulativeIntensity.TotalSeconds <= 0)
                 return a;
             ParticipationsSummary earlier = a.Summary;
             ParticipationsSummary later = b.Summary;

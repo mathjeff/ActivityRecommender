@@ -9,7 +9,7 @@ using System.Xml;
 // It only works on the specific types of objects that matter in the ActivityRecommender project
 namespace ActivityRecommendation
 {
-    class TextConverter
+    public class TextConverter
     {
         #region Constructor
 
@@ -221,7 +221,7 @@ namespace ActivityRecommendation
             return "<" + objectName + ">" + stringBody + "</" + objectName + ">";
         }
 
-        private IEnumerable<XmlNode> ParseText(string text)
+        private IEnumerable<XmlNode> ParseToXmlNodes(string text)
         {
             if (text.Length <= 0)
                 return null;
@@ -248,19 +248,10 @@ namespace ActivityRecommendation
             return root.ChildNodes;
         }
 
-        public void ReadFile(string fileName)
-        {
-            StreamReader reader = this.internalFileIo.OpenFileForReading(fileName);
-            String text = "";
-            if (reader.BaseStream.Length > 0)
-                text = reader.ReadToEnd();
-            reader.Dispose();
-            this.ReadText(text);
-        }
         // converts the given text into a sequence of objects and sends them to the Engine
         public void ReadText(string text)
         {
-            IEnumerable<XmlNode> nodes = this.ParseText(text);
+            IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(text);
             if (nodes == null)
                 return;
             foreach (XmlNode node in nodes)
@@ -938,9 +929,9 @@ namespace ActivityRecommendation
             return metric;
         }
 
-        public void Import(string contents, string inheritancesFilePath, string historyFilePath, string recentUserDataPath)
+        public PersistentUserData ParseForImport(string contents)
         {
-            IEnumerable<XmlNode> nodes = this.ParseText(contents);
+            IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(contents);
 
             List<string> inheritanceTexts = new List<string>();
             List<string> historyTexts = new List<string>();
@@ -1016,11 +1007,13 @@ namespace ActivityRecommendation
                 throw new InvalidDataException("Unrecognized node: <" + node.Name + ">");
             }
 
-            string inheritancesText = String.Join("\n", inheritanceTexts);
-            this.internalFileIo.EraseFileAndWriteContent(inheritancesFilePath, inheritancesText);
-            string historyText = string.Join("\n", historyTexts);
-            this.internalFileIo.EraseFileAndWriteContent(historyFilePath, historyText);
-            this.internalFileIo.EraseFileAndWriteContent(recentUserDataPath, recentUserDataText);
+            PersistentUserData result = new PersistentUserData();
+
+            result.InheritancesText = String.Join("\n", inheritanceTexts);
+            result.HistoryText = string.Join("\n", historyTexts);
+            result.RecentUserDataText = recentUserDataText;
+
+            return result;
         }
 
         // converts the dictionary into a string, without adding the initial <Tag> or final </Tag>
@@ -1538,5 +1531,15 @@ namespace ActivityRecommendation
         private List<Inheritance> inheritances = new List<Inheritance>();
     }
 
+    public class PersistentUserData
+    {
+        public String InheritancesText;
+        public String HistoryText;
+        public String RecentUserDataText;
 
+        public String serialize()
+        {
+            return this.RecentUserDataText + "\n" + this.InheritancesText + "\n" + this.HistoryText;
+        }
+    }
 }

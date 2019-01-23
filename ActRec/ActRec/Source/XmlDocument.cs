@@ -55,7 +55,7 @@ namespace ActivityRecommendation
         }
     }
 
-    class XmlNode
+    public class XmlNode
     {
         public XmlNode()
         {

@@ -222,7 +222,10 @@ namespace ActivityRecommendation
             try
             {
                 TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
-                importer.Import(content, this.inheritancesFileName, this.ratingsFileName, this.recentUserData_fileName);
+                PersistentUserData userData = importer.ParseForImport(content);
+                this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesText);
+                this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryText);
+                this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataText);
             }
             catch (InvalidDataException e)
             {
@@ -232,12 +235,18 @@ namespace ActivityRecommendation
             this.Reload();
         }
 
+        private PersistentUserData readPersistentUserData()
+        {
+            PersistentUserData data = new PersistentUserData();
+            data.InheritancesText = this.internalFileIo.ReadAllText(this.inheritancesFileName);
+            data.HistoryText = this.internalFileIo.ReadAllText(this.ratingsFileName);
+            data.RecentUserDataText = this.internalFileIo.ReadAllText(this.recentUserData_fileName);
+            return data;
+        }
+
         public string ExportData()
         {
-            string content = "";
-            content += this.internalFileIo.ReadAllText(this.recentUserData_fileName);
-            content += this.internalFileIo.ReadAllText(this.inheritancesFileName);
-            content += this.internalFileIo.ReadAllText(this.ratingsFileName);
+            string content = this.readPersistentUserData().serialize();
             int maxNumLines = this.dataExportView.Get_NumLines();
             if (maxNumLines > 0)
             {
@@ -338,9 +347,10 @@ namespace ActivityRecommendation
 
         private void LoadFilesInto(HistoryReplayer historyReplayer)
         {
-            historyReplayer.LoadFile(this.inheritancesFileName);
-            historyReplayer.LoadFile(this.ratingsFileName);
-            historyReplayer.LoadFile(this.recentUserData_fileName);
+            PersistentUserData data = this.readPersistentUserData();
+            historyReplayer.ReadText(data.InheritancesText);
+            historyReplayer.ReadText(data.HistoryText);
+            historyReplayer.ReadText(data.RecentUserDataText);
         }
 
         public ActivitySkip DeclineSuggestion(ActivitySuggestion suggestion)

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ActivityRecommendation
 {
-    abstract class HistoryReplayer
+    public abstract class HistoryReplayer
     {
         public HistoryReplayer()
         {
@@ -15,9 +15,9 @@ namespace ActivityRecommendation
             this.textConverter = new TextConverter(this, this.engine.ActivityDatabase);
         }
 
-        public void LoadFile(string filePath)
+        public void ReadText(string text)
         {
-            this.textConverter.ReadFile(filePath);
+            this.textConverter.ReadText(text);
         }
 
         public void AddInheritance(Inheritance newInheritance)

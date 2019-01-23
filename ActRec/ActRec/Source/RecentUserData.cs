@@ -6,7 +6,7 @@ using System.Text;
 // the RecentUserData class stores a small information about what the user has done recently.
 namespace ActivityRecommendation
 {
-    class RecentUserData
+    public class RecentUserData
     {
         public RecentUserData()
         {

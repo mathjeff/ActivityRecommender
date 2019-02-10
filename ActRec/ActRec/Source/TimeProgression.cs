@@ -126,39 +126,53 @@ namespace ActivityRecommendation
                 DateTime startDate = reference.Add(duration1);
                 DateTime endDate = reference.Add(duration2);
                 TimeSpan windowDuration = endDate.Subtract(startDate);
-                // check whether the end date is at least 2 months after the start date
-                //if (endDate.Year * 12 + endDate.Month >= startDate.Year * 12 + startDate.Month + 2)
-                if (windowDuration.TotalDays >= 59)
+
+                if (windowDuration.TotalDays > 366)
                 {
-                    // split into months
-                    DateTime tickDate = new DateTime(startDate.Year, startDate.Month, 1);
+                    // split into years
+                    DateTime tickDate = new DateTime(startDate.Year, 1, 1);
                     while (tickDate.CompareTo(endDate) <= 0)
                     {
                         subdivisions.Add(this.GetValueAt(tickDate, false).Value.Mean);
-                        tickDate = tickDate.AddMonths(1);
+                        tickDate = tickDate.AddYears(1);
                     }
                 }
                 else
                 {
-                    // check whether the end date is at least 2 days after the start date
-                    //if (endDate.Day >= startDate.Day + 2)
-                    if (windowDuration.TotalDays >= 2)
+                    if (windowDuration.TotalDays > 31)
                     {
-                        // split into days
-                        DateTime tickDate = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+                        // split into months
+                        DateTime tickDate = new DateTime(startDate.Year, startDate.Month, 1);
                         while (tickDate.CompareTo(endDate) <= 0)
                         {
                             subdivisions.Add(this.GetValueAt(tickDate, false).Value.Mean);
-                            tickDate = tickDate.AddDays(1);
+                            tickDate = tickDate.AddMonths(1);
                         }
                     }
                     else
                     {
-                        // split into hours
+                        if (windowDuration.TotalDays > 1)
+                        {
+                            // split into days
+                            DateTime tickDate = new DateTime(startDate.Year, startDate.Month, startDate.Day);
+                            while (tickDate.CompareTo(endDate) <= 0)
+                            {
+                                subdivisions.Add(this.GetValueAt(tickDate, false).Value.Mean);
+                                tickDate = tickDate.AddDays(1);
+                            }
+                        }
+                        else
+                        {
+                            // split into hours
+                            DateTime tickDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, startDate.Hour, 0, 0);
+                            while (tickDate.CompareTo(endDate) <= 0)
+                            {
+                                subdivisions.Add(this.GetValueAt(tickDate, false).Value.Mean);
+                                tickDate = tickDate.AddHours(1);
+                            }
+                        }
                     }
                 }
-                // Split the interval up into months, weeks, or days
-                // NOT DONE YET!
             }
             return subdivisions;
         }

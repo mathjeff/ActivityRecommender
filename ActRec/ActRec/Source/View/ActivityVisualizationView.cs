@@ -154,20 +154,22 @@ namespace ActivityRecommendation
 
             // make a plot
             PlotView newPlot = new PlotView();
-            newPlot.ShowRegressionLine = true;
             newPlot.MinX = 0;
             newPlot.MaxX = endDate.Subtract(startDate).TotalDays;
             newPlot.MinY = 0;
             newPlot.MaxY = 1;
+
+            if (this.xAxisProgression != null)
+                this.configureXAxisSubdivisions(newPlot);
+
+            newPlot.YAxisSubdivisions = new List<double> { 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 };
 
             // compute the rating at each relevant date
             foreach (AbsoluteRating rating in ratings)
             {
                 if (rating.Date != null)
                 {
-                    TimeSpan duration = ((DateTime)rating.Date).Subtract(startDate);
-                    // calculate x
-                    double x = duration.TotalDays;
+                    double x = this.GetXCoordinate((DateTime)rating.Date);
                     // calculate y
                     double y = rating.Score;
                     // make sure we want to include it in the plot (and therefore the regression line)
@@ -194,7 +196,7 @@ namespace ActivityRecommendation
                     TimeSpan currentDuration = new TimeSpan((long)((double)totalDuration.Ticks * (double)i));
                     DateTime when = startDate.Add(currentDuration);
                     ratingSummary.Update(ratingSummarizer, when, endDate);
-                    double x = currentDuration.TotalDays;
+                    double x = this.GetXCoordinate(when);
                     double y = ratingSummary.Item.Mean;
                     if (!double.IsNaN(y))
                     {
@@ -244,24 +246,18 @@ namespace ActivityRecommendation
             List<double> suggestionDates = new List<double>();
 
             PlotView newPlot = new PlotView();
-            newPlot.ShowRegressionLine = true;
 
             
             newPlot.MinX = 0;
             newPlot.MaxX = 1;
 
-            double x1, x2, cumulativeParticipationDuration, cumulativeSuggestionCount;
+            double x1, x2, cumulativeParticipationSeconds, cumulativeSuggestionCount;
             x1 = 0;
 
             if (this.xAxisProgression != null)
-            {
-                AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
-                if (inputRange == null)
-                    inputRange = new AdaptiveLinearInterpolation.FloatRange(this.xAxisProgression.GetValueAt(firstDate, false).Value.Mean, true, this.xAxisProgression.GetValueAt(lastDate, false).Value.Mean, true);
-                newPlot.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
-                newPlot.MinX = x1 = inputRange.LowCoordinate;
-                newPlot.MaxX = inputRange.HighCoordinate;
-            }
+                this.configureXAxisSubdivisions(newPlot);
+            if (newPlot.MinX.HasValue)
+                x1 = newPlot.MinX.Value;
 
 
             double maxXPlotted = 0;
@@ -281,8 +277,8 @@ namespace ActivityRecommendation
                 // make sure this participation is relevant
                 if (startDate.CompareTo(firstDate) >= 0 && endDate.CompareTo(lastDate) <= 0)
                 {
-                    startX = this.GetParticipationXCoordinate(participation.StartDate);
-                    endX = this.GetParticipationXCoordinate(participation.EndDate);
+                    startX = this.GetXCoordinate(participation.StartDate);
+                    endX = this.GetXCoordinate(participation.EndDate);
                     startXs.Add(startX);
                     endXs.Add(endX);
                     if (startX > endX)
@@ -292,13 +288,13 @@ namespace ActivityRecommendation
                     if (participation.Suggested.GetValueOrDefault(false))
                     {
                         // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
-                        suggestionDates.Add(this.GetParticipationXCoordinate(participation.StartDate));
+                        suggestionDates.Add(this.GetXCoordinate(participation.StartDate));
                     }
                 }
             }
             startXs.Sort();
             endXs.Sort();
-            cumulativeParticipationDuration = 0;
+            cumulativeParticipationSeconds = 0;
             while (endXs.Count > 0 || startXs.Count > 0)
             {
                 if (startXs.Count > 0)
@@ -324,11 +320,11 @@ namespace ActivityRecommendation
                     x2 = startX;
                     double weight = x2 - x1;
                     // add a datapoint denoting the start of the interval
-                    cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationDuration, weight));
-                    cumulativeParticipationDuration += weight * numActiveIntervals;
+                    cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationSeconds, weight));
+                    cumulativeParticipationSeconds += weight * numActiveIntervals;
                     numActiveIntervals++;
                     // add a datapoint denoting the end of the interval
-                    cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationDuration, weight));
+                    cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationSeconds, weight));
                     startXs.RemoveAt(0);
                 }
                 else
@@ -336,24 +332,29 @@ namespace ActivityRecommendation
                     x2 = endX;
                     double weight = x2 - x1;
                     // add a datapoint denoting the start of the interval
-                    cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationDuration, weight));
-                    cumulativeParticipationDuration += weight * numActiveIntervals;
+                    cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationSeconds, weight));
+                    cumulativeParticipationSeconds += weight * numActiveIntervals;
                     numActiveIntervals--;
                     // add a datapoint denoting the end of the interval
-                    cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationDuration, weight));
+                    cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationSeconds, weight));
                     endXs.RemoveAt(0);
                 }
                 maxXPlotted = x2;
                 x1 = x2;
             }
 
+            double cumulativeParticipationHours = cumulativeParticipationSeconds / 3600;
+            double hoursPerTick = this.computeTickInterval(cumulativeParticipationHours);
+            double spacePerTick = hoursPerTick * 3600;
+
             // rescale cumulativeParticipationDurations to total 1
-            if (cumulativeParticipationDuration != 0)
+            if (cumulativeParticipationSeconds != 0)
             {
                 foreach (Datapoint item in cumulativeParticipationDurations)
                 {
-                    item.Output = item.Output / cumulativeParticipationDuration;
+                    item.Output = item.Output / cumulativeParticipationSeconds;
                 }
+                spacePerTick = spacePerTick / cumulativeParticipationSeconds;
             }
 
 
@@ -364,7 +365,7 @@ namespace ActivityRecommendation
                 // make sure the participation is within the requested window
                 if (item.Key.CompareTo(firstDate) >= 0 && item.Key.CompareTo(lastDate) <= 0)
                 {
-                    double x = this.GetParticipationXCoordinate(item.Key);
+                    double x = this.GetXCoordinate(item.Key);
                     if (item.Value.NumSkips > 0)
                     {
                         // found a skip
@@ -392,6 +393,18 @@ namespace ActivityRecommendation
             newPlot.AddSeries(cumulativeParticipationDurations, true);
             newPlot.AddSeries(cumulativeSuggestionCounts, false);
 
+            // assign y-axis tick marks
+            if (spacePerTick > 0)
+            {
+                double y = 0;
+                List<double> yTicks = new List<double>();
+                while (y < 1)
+                {
+                    yTicks.Add(y);
+                    y += spacePerTick;
+                }
+                newPlot.YAxisSubdivisions = yTicks;
+            }
 
             this.participationsView.SetContent(new ImageLayout(newPlot, LayoutScore.Get_UsedSpace_LayoutScore(1)));
 
@@ -400,6 +413,27 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " to update partipations plot");
 
         }
+
+        // Given the size of some range, returns an appropriate interval for separating tick marks on a graph of that size
+        private double computeTickInterval(double range)
+        {
+            return Math.Pow(10, (int)Math.Log10(range / 2));
+        }
+        private void configureXAxisSubdivisions(PlotView plotView)
+        {
+            AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
+            if (inputRange == null)
+            {
+                DateTime firstDate = this.queryStartDateDisplay.GetDate();
+                DateTime lastDate = this.queryEndDateDisplay.GetDate();
+                inputRange = new AdaptiveLinearInterpolation.FloatRange(this.GetXCoordinate(firstDate), true, GetXCoordinate(lastDate), true);
+            }
+
+            plotView.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
+            plotView.MinX = inputRange.LowCoordinate;
+            plotView.MaxX = inputRange.HighCoordinate;
+        }
+
         private void DateTextChanged(object sender, TextChangedEventArgs e)
         {
             this.UpdateParticipationStatsView();
@@ -463,7 +497,7 @@ namespace ActivityRecommendation
             }
         }
 
-        private double GetParticipationXCoordinate(DateTime when)
+        private double GetXCoordinate(DateTime when)
         {
             double x;
             DateTime startDate = this.queryStartDateDisplay.GetDate();

@@ -96,7 +96,7 @@ namespace ActivityRecommendation
         public double? MaxY { get; set; }
         //public int? NumXAxisTickMarks { get; set; }
         public IEnumerable<double> XAxisSubdivisions { get; set; }
-        public bool ShowRegressionLine { get; set; }
+        public IEnumerable<double> YAxisSubdivisions { get; set; }
 
         protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
         {
@@ -108,9 +108,7 @@ namespace ActivityRecommendation
         {
             this.UpdateDrawing(e.Surface.Canvas, e.Info.Size);
         }
-
-
-
+        
         // updates the locations at which to draw the provided points
         private void UpdateDrawing(SKCanvas canvas, SkiaSharp.SKSizeI displaySize)
         {
@@ -229,9 +227,21 @@ namespace ActivityRecommendation
                     canvas.DrawLine((float)((tickX - minimumX) * scaleX), (float)y, (float)((tickX - minimumX) * scaleX), (float)y2, cyanBrush);
                 }
             }
+            if (this.YAxisSubdivisions != null)
+            {
+                x = 0;
+                x2 = displaySize.Width / 20;
+                foreach (double tickY in this.YAxisSubdivisions)
+                {
+                    canvas.DrawLine((float)x, (float)((maximumY - tickY) * scaleY), (float)x2, (float)((maximumY - tickY) * scaleY), cyanBrush);
+                }
+            }
+            // draw some axes
+            canvas.DrawLine(0, 0, 0, displaySize.Height, cyanBrush);
+            canvas.DrawLine(0, displaySize.Height - 1, displaySize.Width, displaySize.Height - 1, cyanBrush);
 
             DateTime end = DateTime.Now;
-            System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " in PlotView.UpdatPoints");
+            System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " in PlotView.UpdatePoints");
         }
 
 

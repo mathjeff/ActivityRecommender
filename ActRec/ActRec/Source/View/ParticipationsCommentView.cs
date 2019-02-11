@@ -48,7 +48,7 @@ namespace ActivityRecommendation.View
             if (participations.Count > maxCount)
                 participations = participations.GetRange(0, maxCount);
 
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             gridBuilder.AddLayout(new TextblockLayout("Top " + participations.Count + " commented participations in " + activity.Name));
             foreach (Participation participation in participations)
             {

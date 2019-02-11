@@ -148,13 +148,15 @@ namespace ActivityRecommendation
 
             this.layoutStack.AddLayout(helpOrStart_menu);
 
+            GridLayout gridLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            gridLayout.PutLayout(new LayoutCache(this.layoutStack), 0, 1);
 
-            this.mainLayout = new LayoutCache(this.layoutStack);
+            this.mainLayout = gridLayout;
 
             this.mainWindow.BackgroundColor = Color.Black;
 
             this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
-            //this.displayManager = new ViewManager(this.mainWindow, TextDiagnosticLayout.New());            
+            gridLayout.PutLayout(new LayoutDuration_Layout(this.displayManager), 0, 0);
 
         }
 

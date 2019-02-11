@@ -142,7 +142,10 @@ namespace ActivityRecommendation
 
             if (this.error != "")
             {
-                helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayout(new TextblockLayout(this.error)).AddLayout(helpOrStart_menu).Build();
+                TextblockLayout textLayout = new TextblockLayout(this.error);
+                textLayout.ScoreIfCropped = true;
+                
+                helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayout(textLayout).AddLayout(helpOrStart_menu).Build();
             }
 
 
@@ -229,9 +232,11 @@ namespace ActivityRecommendation
                 this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryText);
                 this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataText);
             }
-            catch (InvalidDataException e)
+            catch (Exception e)
             {
-                this.layoutStack.AddLayout(new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString()));
+                TextblockLayout textLayout = new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString());
+                textLayout.ScoreIfCropped = true;
+                this.layoutStack.AddLayout(textLayout);
                 return;
             }
             this.Reload();
@@ -304,11 +309,6 @@ namespace ActivityRecommendation
                 catch (Exception e)
                 {
                     this.error = "Failed to load files: " + e;
-                    int maxLength = 1000;
-                    if (this.error.Length > maxLength)
-                    {
-                        this.error = this.error.Substring(0, maxLength) + "...";
-                    }
                 }
             }
 #if true

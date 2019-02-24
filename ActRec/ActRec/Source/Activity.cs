@@ -618,7 +618,7 @@ namespace ActivityRecommendation
             foreach (ActivitySuggestion newSuggestion in this.PendingSuggestions)
             {
                 // We want to predict the user's overall happiness after this Doable gets suggested, so that we can detect if merely suggesting this Doable has a positive impact
-                this.AddNew_LongTerm_SuggestionValue_Summary_At(newSuggestion.GuessCreationDate());
+                this.AddNew_LongTerm_SuggestionValue_Summary_At(newSuggestion.CreatedDate);
             }
             // Also update an older datapoint so that no datapoint's value gets old
             this.UpdateNext_RatingSummaries(this.PendingSuggestions.Count);

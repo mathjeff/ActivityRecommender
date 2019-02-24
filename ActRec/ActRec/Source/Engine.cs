@@ -62,7 +62,7 @@ namespace ActivityRecommendation
                 if (this.unappliedSkips.Count > 0)
                     dates.Add((DateTime)this.unappliedSkips[0].CreationDate);
                 if (this.unappliedSuggestions.Count > 0)
-                    dates.Add(this.unappliedSuggestions[0].GuessCreationDate());
+                    dates.Add(this.unappliedSuggestions[0].CreatedDate);
                 if (dates.Count == 0)
                     break;
                 nextDate = dates[0];
@@ -89,7 +89,7 @@ namespace ActivityRecommendation
                     this.CascadeSkip(this.unappliedSkips[0]);
                     this.unappliedSkips.RemoveAt(0);
                 }
-                while (this.unappliedSuggestions.Count > 0 && ((DateTime)this.unappliedSuggestions[0].GuessCreationDate()).CompareTo(nextDate) == 0)
+                while (this.unappliedSuggestions.Count > 0 && ((DateTime)this.unappliedSuggestions[0].CreatedDate).CompareTo(nextDate) == 0)
                 {
                     this.CascadeSuggestion(this.unappliedSuggestions[0]);
                     this.unappliedSuggestions.RemoveAt(0);
@@ -322,10 +322,11 @@ namespace ActivityRecommendation
         }
         private ActivitySuggestion SuggestActivity(Activity activity, DateTime when)
         {
+            DateTime now = DateTime.Now;
             ActivitySuggestion suggestion = new ActivitySuggestion(activity.MakeDescriptor());
-            ParticipationsSummary participationSummary = activity.SummarizeParticipationsBetween(new DateTime(), DateTime.Now);
+            ParticipationsSummary participationSummary = activity.SummarizeParticipationsBetween(new DateTime(), now);
             double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
-            suggestion.CreatedDate = DateTime.Now;
+            suggestion.CreatedDate = now;
             suggestion.StartDate = when;
             suggestion.EndDate = suggestion.StartDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
             suggestion.ParticipationProbability = this.EstimateParticipationProbability(activity, when).Distribution.Mean;

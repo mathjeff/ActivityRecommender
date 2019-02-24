@@ -359,7 +359,7 @@ namespace ActivityRecommendation
         {
             // make a Skip object holding the needed data
             DateTime considerationDate = this.LatestActionDate;
-            DateTime suggestionCreationDate = suggestion.GuessCreationDate();
+            DateTime suggestionCreationDate = suggestion.CreatedDate;
             ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptor, suggestionCreationDate, considerationDate, DateTime.Now, suggestion.StartDate);
 
             this.AddSkip(skip);

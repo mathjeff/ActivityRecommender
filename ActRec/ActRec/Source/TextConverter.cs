@@ -143,7 +143,7 @@ namespace ActivityRecommendation
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(skip.ActivityDescriptor);
             properties[this.DateTag] = this.ConvertToStringBody(skip.CreationDate);
-            properties[this.SuggestionDateTag] = this.ConvertToStringBody(skip.SuggestionCreationDate);
+            properties[this.SuggestionCreationDate] = this.ConvertToStringBody(skip.SuggestionCreationDate);
             if (skip.SuggestionStartDate != skip.SuggestionCreationDate)
                 properties[this.SuggestionStartDateTag] = this.ConvertToStringBody(skip.SuggestionStartDate);
             if (skip.ConsideredSinceDate != skip.SuggestionCreationDate)
@@ -161,8 +161,8 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(activitySuggestion.ActivityDescriptor);
-            if (activitySuggestion.CreatedDate != null)
-                properties[this.SuggestionDateTag] = this.ConvertToStringBody(activitySuggestion.CreatedDate);
+            if (activitySuggestion.CreatedDate != null && !activitySuggestion.CreatedDate.Equals(activitySuggestion.StartDate))
+                properties[this.SuggestionCreationDate] = this.ConvertToStringBody(activitySuggestion.CreatedDate);
             properties[this.SuggestionStartDateTag] = this.ConvertToStringBody(activitySuggestion.StartDate);
             if (activitySuggestion.EndDate != null)
                 properties[this.SuggestionEndDateTag] = this.ConvertToStringBody(activitySuggestion.EndDate);
@@ -392,7 +392,7 @@ namespace ActivityRecommendation
         private void ProcessSuggestion(XmlNode nodeRepresentation)
         {
             ActivitySuggestion suggestion = this.ReadSuggestion(nodeRepresentation);
-            this.setPendingSkip(null, suggestion.GuessCreationDate());
+            this.setPendingSkip(null, suggestion.CreatedDate);
             this.listener.AddSuggestion(suggestion);
         }
         private void ProcessExperiment(XmlNode nodeRepresentation)
@@ -585,7 +585,7 @@ namespace ActivityRecommendation
                     activityDescriptor = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.SuggestionDateTag)
+                if (currentChild.Name == this.SuggestionCreationDate)
                 {
                     suggestionCreationDate = this.ReadDate(currentChild);
                     continue;
@@ -825,7 +825,7 @@ namespace ActivityRecommendation
                     descriptor = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.SuggestionDateTag)
+                if (currentChild.Name == this.SuggestionCreationDate)
                 {
                     createdDate = this.ReadDate(currentChild);
                     continue;
@@ -847,7 +847,9 @@ namespace ActivityRecommendation
                 }
             }
             ActivitySuggestion suggestion = new ActivitySuggestion(descriptor);
-            suggestion.CreatedDate = createdDate;
+            if (createdDate == null)
+                createdDate = startDate;
+            suggestion.CreatedDate = createdDate.Value;
             suggestion.StartDate = startDate;
             suggestion.EndDate = endDate;
             suggestion.Skippable = skippable;
@@ -1362,7 +1364,7 @@ namespace ActivityRecommendation
                 return "Since";
             }
         }
-        private string SuggestionDateTag
+        private string SuggestionCreationDate
         {
             get
             {

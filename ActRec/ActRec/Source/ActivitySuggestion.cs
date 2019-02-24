@@ -14,13 +14,7 @@ namespace ActivityRecommendation
         public ActivityDescriptor ActivityDescriptor { get; set; }
         public DateTime StartDate { get; set; }                 // the date that we want the user to start the activity
         public DateTime? EndDate { get; set; }                   // the date that we want the user to stop the activity
-        public DateTime? CreatedDate { get; set; }               // the date at which the suggestion was created
-        public DateTime GuessCreationDate()
-        {
-            if (this.CreatedDate != null)
-                return this.CreatedDate.Value;
-            return this.StartDate;
-        }
+        public DateTime CreatedDate { get; set; }               // the date at which the suggestion was created
         public TimeSpan? Duration
         {
             get

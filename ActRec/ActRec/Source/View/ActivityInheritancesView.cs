@@ -70,15 +70,22 @@ namespace ActivityRecommendation.View
     {
         public ActivityListView(string name, List<Activity> activities)
         {
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-            foreach (Activity activity in activities)
+            if (activities.Count > 1)
             {
-                gridBuilder.AddLayout(new TextblockLayout(activity.Name, 16));
+                Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
+                foreach (Activity activity in activities)
+                {
+                    gridBuilder.AddLayout(new TextblockLayout(activity.Name, 16));
+                }
+                LayoutChoice_Set scrollLayout = ScrollLayout.New(gridBuilder.Build());
+                this.SetContent(scrollLayout);
             }
-            LayoutChoice_Set scrollLayout = ScrollLayout.New(gridBuilder.Build());
+            else
+            {
+                this.SetContent(new TextblockLayout(activities[0].Name, 16));
+            }
 
             this.SetTitle(name);
-            this.SetContent(scrollLayout);
         }
     }
 }

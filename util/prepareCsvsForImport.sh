@@ -18,7 +18,7 @@ function concatInputs() {
 		inputFile="$1"
 		actualHeader="$(head -n 1 $inputFile)"
 		if echo $actualHeader | grep "^${expectedHeader}$" > /dev/null; then
-			cat "$inputFile" | grep -v "^${expectedHeader}$" >> "$fullCsvPath"
+			tac "$inputFile" | grep -v "^${expectedHeader}$" >> "$fullCsvPath"
 		else
 			echo "Could not parse file $inputFile."
 			echo "Got header:      '$actualHeader' ($(echo $actualHeader | wc -c) chars)"

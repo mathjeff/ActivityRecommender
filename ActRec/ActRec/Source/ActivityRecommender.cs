@@ -154,7 +154,11 @@ namespace ActivityRecommendation
             GridLayout gridLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
             gridLayout.PutLayout(new LayoutCache(this.layoutStack), 0, 1);
 
+#if true
             this.mainLayout = gridLayout;
+#else
+            this.mainLayout = this.layoutStack;
+#endif
 
             this.mainWindow.BackgroundColor = Color.Black;
 
@@ -625,7 +629,7 @@ namespace ActivityRecommendation
             this.SuspectLatestActionDate(now);
         }
 
-        #region Functions to be called by the TextConverter
+#region Functions to be called by the TextConverter
         // updates the ParticipationEntryView so that the start date is 'when'
         public void SuspectLatestActionDate(DateTime when)
         {
@@ -636,7 +640,7 @@ namespace ActivityRecommendation
                 this.UpdateDefaultParticipationData(when);
             }
         }
-        #endregion
+#endregion
 
         public DateTime LatestActionDate
         {

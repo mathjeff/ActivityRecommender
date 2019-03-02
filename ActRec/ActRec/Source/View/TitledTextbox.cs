@@ -20,7 +20,8 @@ namespace ActivityRecommendation
         {
             // create a text field
             this.textField = textBox;
-            this.SetContent(new TextboxLayout(this.textField));
+            this.contentLayout = new TextboxLayout(this.textField);
+            this.SetContent(this.contentLayout);
         }
 
 
@@ -36,6 +37,12 @@ namespace ActivityRecommendation
             }
         }
 
+        public void EnableLogging()
+        {
+            this.contentLayout.LoggingEnabled = true;
+        }
+
         Editor textField;
+        TextboxLayout contentLayout;
     }
 }

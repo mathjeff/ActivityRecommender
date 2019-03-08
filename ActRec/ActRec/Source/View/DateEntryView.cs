@@ -19,6 +19,12 @@ namespace ActivityRecommendation
                     // allow parsing a 4-digit number as a year
                     text = text + "-01";
                 }
+                if (text.Length == 13)
+                {
+                    // Allow skipping specifying the number of minutes and instead treating them as 0
+                    // For example, "2019-01-02T03" will be treated as "2019-01-02T03:00"
+                    text = text + ":00";
+                }
             }
             return DateTime.TryParse(text, out result);
         }
@@ -192,8 +198,8 @@ namespace ActivityRecommendation
             buttonGrid.AddLayout(this.makeButtonNumber(9));
 
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
-                .AddMessage("This screen enables you to enter " + title + ".")
-                .AddMessage("Press the backspace button to remove any incorrect characters (it will remove several at a time).")
+                .AddMessage("This screen enables you to enter " + title + " using the format " + this.getDateFormatString() + ".")
+                .AddMessage("Press the backspace button (the '<-') to remove any incorrect characters (it will remove several at a time).")
                 .AddMessage("Then use the keypad to enter new digits to use in the date/time.")
                 .AddMessage("Filler characters like '-', 'T', and ':' will be automatically added for you.")
                 .AddMessage("Press your device's Back button when finished.")
@@ -262,7 +268,9 @@ namespace ActivityRecommendation
 
         private void addDigit(int digit)
         {
-            this.DateText = this.addFillerCharacters(this.DateText) + digit.ToString();
+            string newText = this.addFillerCharacters(this.DateText) + digit.ToString();
+            if (newText.Length <= this.dateFormat.Count())
+                this.DateText = newText;
         }
 
         private string addFillerCharacters(string text)

@@ -40,7 +40,7 @@ namespace ActivityRecommendation
             this.ratingBox = new RelativeRatingEntryView();
             middleGrid.AddLayout(this.ratingBox);
             this.commentBox = new Editor();
-            middleGrid.AddLayout(new TitledControl("Comment (optional)", ScrollLayout.New(new TextboxLayout(this.commentBox))));
+            middleGrid.AddLayout(new TitledControl("Comment (optional)", ScrollLayout.New(new TextboxLayout(this.commentBox, 16))));
             
             contents.AddLayout(middleGrid);
             this.todoCompletionCheckbox = new CheckBox("Incomplete", "Complete!");

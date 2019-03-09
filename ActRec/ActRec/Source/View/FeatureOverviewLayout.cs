@@ -1,10 +1,11 @@
-﻿using VisiPlacement;
+﻿using ActivityRecommendation.View;
+using VisiPlacement;
 
 // This file serves two pruposes:
 // #1. It generates the features overview screen in the application, primarily for the purpose of getting users excited
 // #2. It can describe the features to people that don't have the application installed
 
-namespace ActivityRecommendation
+namespace ActivityRecommendation.View
 {
     public class FeatureOverviewLayout
     {
@@ -160,8 +161,9 @@ namespace ActivityRecommendation
                 .AddMessage("3. ActivityRecommender doesn't require any money to keep a server running, because all the data and processing happen on your device.")
                 .Build());
 
-            menuBuilder.AddLayout("Open source", (new HelpWindowBuilder())
-                .AddMessage("Visit https://github.com/mathjeff/ActivityRecommender for more information. If you're thinking about contributing, start by opening an issue. Thanks!")
+            menuBuilder.AddLayout("Open source", new Vertical_GridLayout_Builder()
+                .AddLayout(new TextblockLayout("Visit https://github.com/mathjeff/ActivityRecommender for more information. If you're thinking about contributing, start by opening an issue. Thanks!"))
+                .AddLayout(OpenIssue_Layout.New())
                 .Build());
 
             mainLayout.SetContent(menuBuilder.Build());

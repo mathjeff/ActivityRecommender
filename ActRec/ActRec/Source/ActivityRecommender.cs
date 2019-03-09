@@ -145,7 +145,8 @@ namespace ActivityRecommendation
                 TextblockLayout textLayout = new TextblockLayout(this.error);
                 textLayout.ScoreIfCropped = true;
                 
-                helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayout(textLayout).AddLayout(helpOrStart_menu).Build();
+                helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayout(textLayout).AddLayout(helpOrStart_menu)
+                    .AddLayout(OpenIssue_Layout.New()).Build();
             }
 
 

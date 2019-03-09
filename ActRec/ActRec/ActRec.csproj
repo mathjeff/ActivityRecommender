@@ -193,6 +193,7 @@
     <Compile Include="Source\View\BrowseInheritancesView.cs" />
     <Compile Include="Source\View\InstructionsLayout.cs" />
     <Compile Include="Source\View\MetricEditingLayout.cs" />
+    <Compile Include="Source\View\OpenIssue_Layout.cs" />
     <Compile Include="Source\View\ParticipationComparisonMenu.cs" />
     <Compile Include="Source\View\ParticipationsCommentView.cs" />
     <Compile Include="Source\View\ParticipationView.cs" />

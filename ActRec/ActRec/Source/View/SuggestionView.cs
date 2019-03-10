@@ -53,7 +53,7 @@ namespace ActivityRecommendation
             if (suggestion.EndDate.HasValue)
                 whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
             contentBuilder.AddLayout(this.make_displayField("When:", whenText));
-            if (suggestion.ParticipationProbability != null)
+            if (suggestion.ParticipationProbability != null && suggestion.Skippable)
                 contentBuilder.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability.Value, 3).ToString()));
             if (suggestion.PredictedScoreDividedByAverage != null)
                 contentBuilder.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScoreDividedByAverage.Value, 3).ToString() + " x avg"));

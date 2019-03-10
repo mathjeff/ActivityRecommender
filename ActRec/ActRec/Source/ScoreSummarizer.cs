@@ -32,6 +32,10 @@ namespace ActivityRecommendation
             Distribution additionalDistribution = Distribution.MakeDistribution(score, 0, overallWeight);
             this.AddValue(startDate, additionalDistribution);
         }
+        public void AddParticipationIntensity(DateTime startDate, TimeSpan duration, double intensity)
+        {
+            this.AddParticipationIntensity(startDate, startDate.Add(duration), intensity);
+        }
         // Calling this function declares that user put to good use <intensity> (a fraction) of his/her time between startDate and endDate to some meaningful use
         public void AddParticipationIntensity(DateTime startDate, DateTime endDate, double intensity)
         {

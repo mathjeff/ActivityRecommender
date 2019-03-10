@@ -497,6 +497,24 @@ updated results on 2019-01-14 after making ratingTestingProgressions match ratin
 3.8972 typicalEfficiencyError
 0.5102 typical longtermEfficiencyIfParticipated error
 Computed results in 00:03:02
+
+updated results on 2019-03-10 with new data
+0.0804 typical longtermPredictionIfSuggested error
+0.0420 typical longtermPredictionIfParticipated error
+0.1252 typicalScoreError
+0.9491 equivalentWeightedProbability
+4.3317 typicalEfficiencyError
+0.6912 typical longtermEfficiencyIfParticipated error
+Computed results in 00:04:15
+
+updated results on 2019-03-10 after adding 1 second to ActivitySkip.ThinkingTime
+0.0997 typical longtermPredictionIfSuggested error
+0.0420 typical longtermPredictionIfParticipated error
+0.1252 typicalScoreError
+0.9491 equivalentWeightedProbability
+4.3317 typicalEfficiencyError
+0.6912 typical longtermEfficiencyIfParticipated error
+
 */
 
 namespace ActivityRecommendation
@@ -572,7 +590,7 @@ namespace ActivityRecommendation
             // update the error rate for the participation probability predictor
             this.UpdateParticipationProbabilityError(newSkip.ActivityDescriptor, newSkip.CreationDate, 0);
             // inform the ratingSummarizer that the user wasn't doing anything during this time
-            this.ratingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.CreationDate, 0);
+            this.ratingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.ThinkingTime, 0);
         }
 
         // runs the engine on the given activity at the given date, and keeps track of the overall error

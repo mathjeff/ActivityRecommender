@@ -565,7 +565,7 @@ namespace ActivityRecommendation
         public void AddSkip(ActivitySkip newSkip)
         {
             // update the knowledge of how long the user thinks
-            TimeSpan duration = newSkip.CreationDate.Subtract(newSkip.ConsideredSinceDate);
+            TimeSpan duration = newSkip.ThinkingTime;
             this.thinkingTimes = this.thinkingTimes.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
 
             // keep track of the earliest and latest date at which anything happened

@@ -929,13 +929,13 @@ namespace ActivityRecommendation
 
             if (newSkip.ConsideredSinceDate != null)
             {
-                TimeSpan duration = newSkip.CreationDate.Subtract(newSkip.ConsideredSinceDate);
+                TimeSpan duration = newSkip.ThinkingTime;
                 if (duration.TotalDays > 1)
                     System.Diagnostics.Debug.WriteLine("skip duration > 1 day, this is probably a mistake");
                 // update our estimate of how longer the user spends thinking about what to do
                 this.thinkingTime = this.thinkingTime.Plus(Distribution.MakeDistribution(duration.TotalSeconds, 0, 1));
                 // record the fact that the user wasn't doing anything directly productive at this time
-                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.CreationDate, 0);
+                this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.ThinkingTime, 0);
             }
         }
         public void PutActivityRequestInMemory(ActivityRequest newRequest)

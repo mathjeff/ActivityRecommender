@@ -98,26 +98,10 @@ namespace ActivityRecommendation
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Distribution predictionValue = rawEstimate.Plus(extraError);
 
-            Prediction result = new Prediction();
-            result.Distribution = predictionValue;
-            result.Justification = this.Justification;
+            Prediction result = new Prediction(this.outputProgression.Owner, predictionValue, new DateTime(), this.Justification);
 
             return result;
         }
-        /*public RatingProgression Predictee
-        {
-            get
-            {
-                return this.predicteeProgression;
-            }
-        }*/
-        /*public IProgression Predictor
-        {
-            get
-            {
-                return this.predictorProgression;
-            }
-        }*/
         public bool InputWrapsAround // tells whether really large values should be considered to be close to really small values
         {
             set

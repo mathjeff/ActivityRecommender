@@ -24,8 +24,7 @@ namespace ActivityRecommendation
             ProgressionValue currentInput = this.inputProgression.GetValueAt(when, false);
             Distribution newDistribution = currentInput.Value;
             // create some result objects
-            Prediction prediction = new Prediction();
-            prediction.Justification = this.Justification;
+            Prediction prediction = new Prediction(null, newDistribution, when, this.Justification);
             Distribution currentValue = currentInput.Value;
             Distribution output = currentValue;
             double startingWeight = output.Weight;
@@ -39,7 +38,7 @@ namespace ActivityRecommendation
 
         #endregion
 
-        public string Justification { get; set; }
+        private string Justification { get; set; }
         private IProgression inputProgression;
         private IProgression outputProgression;
     }

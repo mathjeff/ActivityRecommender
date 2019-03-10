@@ -375,13 +375,8 @@ namespace ActivityRecommendation
         }
         public void JustifySuggestion(ActivitySuggestion suggestion)
         {
-            List<string> thoughts = this.engine.JustifySuggestion(suggestion);
-            HelpWindowBuilder builder = new HelpWindowBuilder();
-            foreach (string message in thoughts)
-            {
-                builder.AddMessage(message);
-            }
-            this.layoutStack.AddLayout(builder.Build());
+            ActivitySuggestion_Justification justification = this.engine.JustifySuggestion(suggestion);
+            this.layoutStack.AddLayout(new ActivitySuggestion_Justification_Layout(justification));
         }
 
         private void AddSuggestion_To_SuggestionsView(ActivitySuggestion suggestion)

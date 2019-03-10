@@ -150,6 +150,7 @@
     <Compile Include="Source\Inheritance.cs" />
     <Compile Include="Source\View\ActivityImportLayout.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
+    <Compile Include="Source\View\ActivitySuggestion_Justification_Layout.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
     <Compile Include="Source\View\ExperimentationDifficultySelectionLayout.cs" />
     <Compile Include="Source\View\ExperimentInitializationLayout.cs" />
@@ -157,7 +158,6 @@
     <Compile Include="Source\View\FeatureOverviewLayout.cs" />
     <Compile Include="Source\View\ActivityCreationLayout.cs" />
     <Compile Include="Source\View\InheritanceEditingLayout.cs" />
-    <Compile Include="Source\InterpolatorSuggestionJustification.cs" />
     <Compile Include="Source\IPredictionLink.cs" />
     <Compile Include="Source\IProgression.cs" />
     <Compile Include="Source\LinearProgression.cs" />
@@ -181,7 +181,7 @@
     <Compile Include="Source\ConstantWeightedPredictionLink.cs" />
     <Compile Include="Source\SkipProgression.cs" />
     <Compile Include="Source\SuggestionDatabase.cs" />
-    <Compile Include="Source\SuggestionJustification.cs" />
+    <Compile Include="Source\ActivitySuggestion_Justification.cs" />
     <Compile Include="Source\TextConverter.cs" />
     <Compile Include="Source\TimeProgression.cs" />
     <Compile Include="Source\UserPreferences.cs" />

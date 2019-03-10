@@ -559,9 +559,12 @@ namespace ActivityRecommendation
             double participationProbability = probabilityPrediction.Distribution.Mean;
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            shortTerm_prediction.Justification = "How much you're expected to enjoy " + activity.Name;
+            shortTerm_prediction.Justification.Label = "How much you'll enjoy doing this";
             double shortWeight = 1;
             shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
+            SuggestionJustification shortTermJustification = new Composite_SuggestionJustification(shortTerm_prediction.Distribution, shortTerm_prediction.Justification, probabilityPrediction.Justification);
+            shortTermJustification.Label = "Short-term happiness estimate";
+            shortTerm_prediction.Justification = shortTermJustification;
 
             // When predicting longterm happiness based on the DateTimes of suggestions of (or participations in) this Activity, there are two likely sources of error.
             // One likely source of error is that suggesting this Activity isn't actually what's changing the user's net present happiness. To check the plausibility that
@@ -586,8 +589,15 @@ namespace ActivityRecommendation
 
             List<Prediction> distributions = new List<Prediction>();
             distributions.Add(shortTerm_prediction);
-            distributions.Add(new Prediction(activity, mediumTerm_distribution, when, "How happy you have been after having done this activity"));
-            distributions.Add(new Prediction(activity, longTerm_distribution, when, "How happy you have been after this activity has been suggested"));
+            InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
+                activity, mediumTerm_distribution, activity.GetAverageLongtermValueWhenParticipated(), null);
+            mediumJustification.Label = "Happiness after participated";
+            distributions.Add(new Prediction(activity, mediumTerm_distribution, when, mediumJustification));
+
+            InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
+                activity, longTerm_distribution, activity.GetAverageLongtermValueWhenSuggested(), null);
+            longtermJustification.Label = "Happiness after suggested";
+            distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
 
             // also include parent activities in the prediction if this activity is one that the user hasn't done often
             if (activity.NumConsiderations < 40)
@@ -626,14 +636,14 @@ namespace ActivityRecommendation
         }
 
         // returns a bunch of thoughts telling why <activity> was last rated as it was
-        public List<string> JustifySuggestion(ActivitySuggestion activitySuggestion)
+        public ActivitySuggestion_Justification JustifySuggestion(ActivitySuggestion activitySuggestion)
         {
             // first identify the most important reason for convenience
             Activity activity = this.ActivityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
             DateTime when = this.currentRecommendationsCache.ApplicableDate;
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
             double lowestScore = 1;
-            string bestReason = null;
+            SuggestionJustification bestReason = null;
             foreach (Prediction candidate in predictions)
             {
                 // make a list of all predictions except this one
@@ -647,31 +657,35 @@ namespace ActivityRecommendation
                     bestReason = candidate.Justification;
                 }
             }
+            ActivitySuggestion_Justification justification = new ActivitySuggestion_Justification();
+            justification.Suggestion = activitySuggestion;
+            justification.PrimaryReason = bestReason;
             // also list all of the reasons for clarity
-            List<string> clauses = new List<string>();
-            clauses.Add("Why " + activity + " was suggested to start at " + activitySuggestion.StartDate + ":");
-            clauses.Add("Among " + predictions.Count + " reasons, the biggest reason was \"" + bestReason + "\".");
-            clauses.Add("All reasons:");
+            List<SuggestionJustification> clauses = new List<SuggestionJustification>();
             foreach (Prediction contributor in predictions)
             {
-                clauses.Add(contributor.Justification + ": " + contributor.Distribution.ToString());
+                clauses.Add(contributor.Justification);
             }
-            return clauses;
+            justification.Reasons = clauses;
+            return justification;
         }
         public Prediction CombineRatingPredictions(IEnumerable<Prediction> predictions)
         {
             List<Distribution> distributions = new List<Distribution>();
             DateTime date = new DateTime(0);
+            Activity activity = null;
+            List<SuggestionJustification> justifications = new List<SuggestionJustification>();
             foreach (Prediction prediction in predictions)
             {
                 distributions.Add(prediction.Distribution);
                 if (prediction.ApplicableDate.CompareTo(date) > 0)
                     date = prediction.ApplicableDate;
+                activity = prediction.Activity;
+                justifications.Add(prediction.Justification);
             }
             Distribution distribution = this.CombineRatingDistributions(distributions);
-            Prediction result = new Prediction();
-            result.Distribution = distribution;
-            result.ApplicableDate = date;
+
+            Prediction result = new Prediction(activity, distribution, date, new Composite_SuggestionJustification(distribution, justifications));
             return result;
         }
         public Distribution CombineRatingDistributions(IEnumerable<Distribution> distributions)
@@ -710,20 +724,26 @@ namespace ActivityRecommendation
             sum = sum.CopyAndReweightTo(totalWeight);
             return sum;
         }
-        public Prediction CombineProbabilityPredictions(IEnumerable<Prediction> predictions)
+        public Prediction CombineProbabilityPredictions(List<Prediction> predictions)
         {
+            if (predictions.Count == 1)
+                return predictions[0];
             List<Distribution> distributions = new List<Distribution>();
             DateTime date = new DateTime(0);
+            Activity activity = null;
+            List<SuggestionJustification> justifications = new List<SuggestionJustification>();
             foreach (Prediction prediction in predictions)
             {
                 distributions.Add(prediction.Distribution);
                 if (prediction.ApplicableDate.CompareTo(date) > 0)
                     date = prediction.ApplicableDate;
+                activity = prediction.Activity;
+                justifications.Add(prediction.Justification);
             }
             Distribution distribution = this.CombineProbabilityDistributions(distributions);
-            Prediction result = new Prediction();
-            result.Distribution = distribution;
-            result.ApplicableDate = date;
+            SuggestionJustification justification = new Composite_SuggestionJustification(distribution, justifications);
+            justification.Label = "Overall participation probability";
+            Prediction result = new Prediction(activity, distribution, date, justification);
             return result;
         }
         public Distribution CombineProbabilityDistributions(IEnumerable<Distribution> distributions)
@@ -888,13 +908,21 @@ namespace ActivityRecommendation
 
         private void ActivityDatabase_InheritanceAdded(Inheritance inheritance)
         {
-            Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
-            if (child.Parents.Count > 1)
+            // If we're already planning on recalculating everything then we don't need to do extra recalculations now
+            if (!this.requiresFullUpdate)
             {
-                // this was an existing activity that was given another parent, so we have to cascade ratings, participations, etc
-                this.requiresFullUpdate = true;
+                Activity child = this.activityDatabase.ResolveDescriptor(inheritance.ChildDescriptor);
+                if (child.Parents.Count > 1)
+                {
+                    // this was an existing activity that was given another parent, so we have to cascade ratings, participations, etc
+                    this.requiresFullUpdate = true;
+                }
+                else
+                {
+                    // If this activity was recently added then we can compute a rating for it without recomputing everything else
+                    this.EstimateRating(child, DateTime.Now);
+                }
             }
-            this.EstimateRating(child, DateTime.Now);
         }
 
 
@@ -1707,7 +1735,7 @@ namespace ActivityRecommendation
         private List<ActivitySuggestion> unappliedSuggestions;            // lists all ActivitySuggestions that the Activities don't know about yet
         DateTime firstInteractionDate;
         DateTime latestInteractionDate;
-        bool requiresFullUpdate;
+        bool requiresFullUpdate = true;
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
         ScoreSummarizer weightedRatingSummarizer;
         ScoreSummarizer efficiencySummarizer;

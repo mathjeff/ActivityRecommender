@@ -7,10 +7,11 @@ namespace ActivityRecommendation
 {
     public class Prediction
     {
-        public Prediction()
+        public Prediction(Activity activity, Distribution distribution, DateTime when, string justification)
+            : this(activity, distribution, when, new StringJustification(distribution, justification))
         {
         }
-        public Prediction(Activity activity, Distribution distribution, DateTime when, string justification)
+        public Prediction(Activity activity, Distribution distribution, DateTime when, SuggestionJustification justification)
         {
             this.Activity = activity;
             this.Distribution = distribution;
@@ -18,26 +19,21 @@ namespace ActivityRecommendation
             this.CreationDate = when;
             this.Justification = justification;
         }
-        public string Justification { get; set; }           // the primary reason that the PredictedScore is as high as it is
+        public SuggestionJustification Justification { get; set; } // the primary reason that the PredictedScore is as high as it is
         public Distribution Distribution { get; set; }    // the expected rating that the user would assign to the activity
-        //public Distribution ValueMinusAverage { get; set; } // the expected change in rating caused by doing this activity
-        //public Distribution ParticipationProbability { get; set; }  // the probability that the user will take the suggestion
-        //public Distribution SuggestionValue { get; set; }   // how important it is to suggest this activity
         public Activity Activity { get; set; }              // the Activity that is being suggested
         public DateTime ApplicableDate { get; set; }                  // The date that this Prediction describes
         public DateTime CreationDate { get; set; }
 
         public Prediction Plus(Prediction other)
         {
-            Prediction newPrediction = new Prediction();
-            //newPrediction.Score = this.Score.Plus(other.Score);
-            //newPrediction.ParticipationProbability = this.ParticipationProbability.Plus(other.ParticipationProbability);
-            //newPrediction.SuggestionValue = this.ParticipationProbability.Plus(other.ParticipationProbability);
+            Prediction newPrediction = new Prediction(this.Activity, this.Distribution, this.CreationDate, this.Justification);
             newPrediction.Distribution = this.Distribution.Plus(other.Distribution);
             if (this.ApplicableDate.CompareTo(other.ApplicableDate) > 0)
                 newPrediction.ApplicableDate = this.ApplicableDate;
             else
                 newPrediction.ApplicableDate = other.ApplicableDate;
+            newPrediction.Justification = new Composite_SuggestionJustification(newPrediction.Distribution, this.Justification, other.Justification);
 
             return newPrediction;
         }

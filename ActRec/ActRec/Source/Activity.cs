@@ -642,6 +642,13 @@ namespace ActivityRecommendation
             Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates));            
             return estimate;
         }
+        public Distribution GetAverageLongtermValueWhenSuggested()
+        {
+            this.ApplyPendingParticipationsForLongtermAnalysis();
+            Distribution average = new Distribution(this.longTerm_suggestionValue_interpolator.GetAverage());
+            return average;
+        }
+
         public Distribution Predict_LongtermValue_If_Participated(DateTime when)
         {
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
@@ -688,27 +695,6 @@ namespace ActivityRecommendation
             Distribution average = new Distribution(this.longTerm_efficiency_interpolator.GetAverage());
             return average;
         }
-
-        /*public ActivitySuggestionJustification JustifyInterpolation(ActivitySuggestion suggestion)
-        {
-            DateTime when = suggestion.StartDate;
-            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            // find size of neighborhood
-            HyperBox<Distribution> box = this.longTerm_suggestionValue_interpolator.FindNeighborhoodCoordinates(coordinates);
-            // get predicted value
-            Distribution prediction = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates));
-            InterpolatorSuggestionJustification justification = new InterpolatorSuggestionJustification(suggestion);
-            int i;
-            // copy the coordinates and their labels onto the justification
-            for (i = 0; i < coordinates.Length; i++)
-            {
-                String description = this.ratingTestingProgressions[i].Description;
-                double value = coordinates[i];
-                justification.AddInput(description, value, box.Coordinates[i]);
-            }
-            justification.AddOutput("Score", suggestion.PredictedScore.Mean);
-            return justification;
-        }*/
 
         // returns the coordinates from which a rating prediction is trained
         private double[] Get_Rating_TrainingCoordinates(DateTime when)
@@ -780,9 +766,12 @@ namespace ActivityRecommendation
 
             // add a little bit of uncertainty
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
-            Prediction prediction = new Prediction();
-            prediction.ApplicableDate = when;
-            prediction.Distribution = scaledEstimate.Plus(extraError);
+
+            // also figure out what is a norma result
+            Distribution typicalAverage = new Distribution(this.shortTerm_ratingInterpolator.GetAverage()).Plus(extraError);
+
+            InterpolatorSuggestion_Justification justification = new InterpolatorSuggestion_Justification(this, estimate, typicalAverage, coordinates);
+            Prediction prediction = new Prediction(this, scaledEstimate.Plus(extraError), when, justification);
             results.Add(prediction);
 
             foreach (IPredictionLink link in this.extraRatingPredictionLinks)
@@ -825,9 +814,9 @@ namespace ActivityRecommendation
             // add a little bit of uncertainty
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
-            Prediction prediction = new Prediction();
-            prediction.ApplicableDate = when;
-            prediction.Distribution = finalEstimate;
+            Distribution typicalParticipationProbability = new Distribution(this.participationInterpolator.GetAverage());
+            SuggestionJustification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, typicalParticipationProbability, null);
+            Prediction prediction = new Prediction(this, finalEstimate, when, "Participation probability");
             results.Add(prediction);
 
             // add the results from any extra PredictionLinks

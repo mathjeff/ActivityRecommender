@@ -93,6 +93,7 @@ namespace ActivityRecommendation
             this.suggestionsView.RequestSuggestion += SuggestionsView_RequestSuggestion;
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
+            this.updateExperimentParticipationDemands();
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
@@ -392,9 +393,24 @@ namespace ActivityRecommendation
             {
                 // autofill the participationEntryView with a convenient value
                 this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
+                this.updateExperimentParticipationDemands();
             }
 
             this.PersistSuggestions();
+        }
+
+        private void updateExperimentParticipationDemands()
+        {
+            ActivityDescriptor demand = null;
+            if (this.suggestionsView.GetSuggestions().Count() > 0)
+            {
+                ActivitySuggestion suggestion = this.suggestionsView.GetSuggestions().First();
+                if (!suggestion.Skippable)
+                {
+                    demand = suggestion.ActivityDescriptor;
+                }
+            }
+            this.participationEntryView.DemandNextParticipationBe(demand);
         }
 
         private void PersistSuggestions()
@@ -520,6 +536,7 @@ namespace ActivityRecommendation
             // give the information to the appropriate activities
             this.engine.ApplyParticipationsAndRatings();
 
+            this.updateExperimentParticipationDemands();
         }
         private void MakeEndNow(object sender, EventArgs e)
         {

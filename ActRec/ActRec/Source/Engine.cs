@@ -1097,7 +1097,15 @@ namespace ActivityRecommendation
             }
             if (!experiment.InProgress)
             {
-                // can't estimate effectiveness if the experiment isn't done
+                // can't estimate effectiveness if the experiment isn't in progress
+                return null;
+            }
+            if (!experiment.Later.ActivityDescriptor.Matches(a))
+            {
+                // If this is the second participation to happen but it wasn't the one that we asked to be second,
+                // then the user did the participations out of order and we're not going to compute an efficiency measurement
+                // Alternatively, should we return a score of 0 instead because that's how much progress the user made on the designated activities at
+                // the designated times?
                 return null;
             }
 

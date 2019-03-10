@@ -212,8 +212,6 @@ namespace ActivityRecommendation
             {
                 this.nameBox.Set_NameText(newName);
                 this.Invalidate_FeedbackBlock_Text();
-                //if (newName != "" && newName != null)
-                //    this.setEnddateButton.Highlight();
             }
         }
         public string ActivityName
@@ -312,6 +310,11 @@ namespace ActivityRecommendation
             this.updateTodoCheckboxVisibility();
         }
 
+        public void DemandNextParticipationBe(ActivityDescriptor activityDescriptor)
+        {
+            this.demanded_nextParticipationActivity = activityDescriptor;
+        }
+
         private void Invalidate_FeedbackBlock_Text()
         {
             this.feedbackIsUpToDate = false;
@@ -360,6 +363,17 @@ namespace ActivityRecommendation
         }
 
         private string computeFeedback(Activity chosenActivity, DateTime startDate)
+        {
+            if (this.demanded_nextParticipationActivity != null && !this.demanded_nextParticipationActivity.Matches(chosenActivity))
+            {
+                return "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
+            }
+            else
+            {
+                return this.computeStandardFeedback(chosenActivity, startDate);
+            }
+        }
+        private string computeStandardFeedback(Activity chosenActivity, DateTime startDate)
         {
             double longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
             if (longtermBonusInDays == 0)
@@ -524,5 +538,6 @@ namespace ActivityRecommendation
         Label todoCompletionLabel;
         LayoutChoice_Set todoCompletionCheckboxLayout;
         ContainerLayout todoCompletionCheckboxHolder;
+        ActivityDescriptor demanded_nextParticipationActivity;
     }
 }

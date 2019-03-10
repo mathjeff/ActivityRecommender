@@ -20,6 +20,10 @@ namespace ActRec.Droid
             base.OnCreate(bundle);
 
             global::Xamarin.Forms.Forms.Init(this, bundle);
+            Uniforms.Misc.Droid.ScreenUtils.Init();
+            Uniforms.Misc.Droid.ImageUtils.Init();
+            Uniforms.Misc.Droid.TextUtils.Init();
+
             LoadApplication(new App());
         }
     }

@@ -2276,6 +2276,15 @@
           }
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -2328,6 +2337,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -4652,6 +4662,15 @@
           "lib/netcore50/System.Xml.XmlSerializer.dll": {}
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -4704,6 +4723,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -7064,6 +7084,15 @@
           "runtimes/aot/lib/netcore50/System.Xml.XmlSerializer.dll": {}
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -7116,6 +7145,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -9449,6 +9479,15 @@
           "lib/netcore50/System.Xml.XmlSerializer.dll": {}
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -9501,6 +9540,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -11870,6 +11910,15 @@
           "runtimes/aot/lib/netcore50/System.Xml.XmlSerializer.dll": {}
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -11922,6 +11971,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -14255,6 +14305,15 @@
           "lib/netcore50/System.Xml.XmlSerializer.dll": {}
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -14307,6 +14366,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -16676,6 +16736,15 @@
           "runtimes/aot/lib/netcore50/System.Xml.XmlSerializer.dll": {}
         }
       },
+      "Uniforms.Misc/0.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        },
+        "runtime": {
+          "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll": {}
+        }
+      },
       "Xam.Plugin.FilePicker/1.1.0": {
         "type": "package",
         "compile": {
@@ -16728,6 +16797,7 @@
         "framework": ".NETPortable,Version=v4.6,Profile=Profile44",
         "dependencies": {
           "Statlist": "1.0.0",
+          "Uniforms.Misc": "0.9.1",
           "Xamarin.Forms": "2.4.0.282"
         }
       }
@@ -26413,6 +26483,24 @@
         "runtimes/aot/lib/netcore50/System.Xml.XmlSerializer.dll",
         "system.xml.xmlserializer.4.0.11.nupkg.sha512",
         "system.xml.xmlserializer.nuspec"
+      ]
+    },
+    "Uniforms.Misc/0.9.1": {
+      "sha512": "IfzZ+RHmhm0X+czR+PNsmBoQQWubepprAV12s/jgrFW4f5FWUWASqDO7VDvXvGLkiF+1YEFvB+rC92GxCHA6BQ==",
+      "type": "package",
+      "path": "uniforms.misc/0.9.1",
+      "files": [
+        ".signature.p7s",
+        "lib/MonoAndroid10/Uniforms.Misc.Droid.dll",
+        "lib/MonoAndroid10/Uniforms.Misc.Droid.dll.mdb",
+        "lib/MonoAndroid10/Uniforms.Misc.dll",
+        "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll",
+        "lib/portable-net45+win+wp80+MonoAndroid10+xamarinios10/Uniforms.Misc.dll.mdb",
+        "lib/xamarinios10/Uniforms.Misc.dll",
+        "lib/xamarinios10/Uniforms.Misc.iOS.dll",
+        "lib/xamarinios10/Uniforms.Misc.iOS.dll.mdb",
+        "uniforms.misc.0.9.1.nupkg.sha512",
+        "uniforms.misc.nuspec"
       ]
     },
     "Xam.Plugin.FilePicker/1.1.0": {

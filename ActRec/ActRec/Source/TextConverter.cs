@@ -161,11 +161,20 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
 
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(activitySuggestion.ActivityDescriptor);
-            if (activitySuggestion.CreatedDate != null && !activitySuggestion.CreatedDate.Equals(activitySuggestion.StartDate))
-                properties[this.SuggestionCreationDate] = this.ConvertToStringBody(activitySuggestion.CreatedDate);
-            properties[this.SuggestionStartDateTag] = this.ConvertToStringBody(activitySuggestion.StartDate);
+
+            string startDate_text = this.ConvertToStringBody(activitySuggestion.StartDate);
+            if (activitySuggestion.CreatedDate != null)
+            {
+                // If the suggestion's creation DateTime matches its StartDate, then we don't need to record its creation DateTime
+                // In case the two different DateTime's differ by a negligible amount, we compare the serialized text instead of the dates
+                string createdDate_text = this.ConvertToStringBody(activitySuggestion.CreatedDate);
+                if (createdDate_text != startDate_text)
+                    properties[this.SuggestionCreationDate] = createdDate_text;
+            }
+            properties[this.SuggestionStartDateTag] = startDate_text;
             if (activitySuggestion.EndDate != null)
                 properties[this.SuggestionEndDateTag] = this.ConvertToStringBody(activitySuggestion.EndDate);
+
             if (!activitySuggestion.Skippable)
                 properties[this.SkippableTag] = this.ConvertToStringBody(activitySuggestion.Skippable);
 

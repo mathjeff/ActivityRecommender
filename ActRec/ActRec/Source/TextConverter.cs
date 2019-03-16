@@ -48,8 +48,8 @@ namespace ActivityRecommendation
             if (rating != null)
                 properties[this.RatingTag] = this.ConvertToStringBody(rating);
             string comment = participation.Comment;
-            if (participation.Suggested != null)
-                properties[this.WasSuggestedTag] = this.ConvertToStringBody((bool)participation.Suggested);
+            if (participation.Suggested)
+                properties[this.WasSuggestedTag] = this.ConvertToStringBody(participation.Suggested);
             if (comment != null)
                 properties[this.CommentTag] = this.XmlEscape(comment);
             if (participation.Consideration != null)
@@ -445,7 +445,7 @@ namespace ActivityRecommendation
             DateTime startDate = DateTime.Now;
             DateTime endDate = DateTime.Now;
             string comment = null;
-            bool? suggested = null;
+            bool suggested = false;
             bool successful = false;
             RelativeEfficiencyMeasurement efficiencyMeasurement = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)

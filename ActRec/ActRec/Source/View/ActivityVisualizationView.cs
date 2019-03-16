@@ -285,7 +285,7 @@ namespace ActivityRecommendation
                         numActiveIntervals++;
 
                     // update some data about cumulative num suggestions
-                    if (participation.Suggested.GetValueOrDefault(false))
+                    if (participation.Suggested)
                     {
                         // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
                         suggestionDates.Add(this.GetXCoordinate(participation.StartDate));

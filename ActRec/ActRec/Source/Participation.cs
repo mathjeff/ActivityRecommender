@@ -35,8 +35,7 @@ namespace ActivityRecommendation
             double numSeconds = this.Duration.TotalSeconds;
             if (numSeconds > 0)
                 this.LogActiveTime = Distribution.MakeDistribution(Math.Log(numSeconds), 0, 1);
-            else
-            this.Suggested = null;
+
             this.Hypothetical = false;
         }
 
@@ -44,7 +43,7 @@ namespace ActivityRecommendation
         public DateTime EndDate { get; set; }
         public ActivityDescriptor ActivityDescriptor { get; set; }          // a description of what the user actually did
         public Consideration Consideration { get; set; }            // The user's thoughts that contributed to the fact that they did this activity
-        public bool? Suggested { get; set; }     // tells whether the latest suggestion that the engine made was to do this activity
+        public bool Suggested { get; set; }     // tells whether the latest suggestion that the engine made was to do this activity
         public CompletionEfficiencyMeasurement EffectivenessMeasurement { get; set; }
         public RelativeEfficiencyMeasurement RelativeEfficiencyMeasurement
         {

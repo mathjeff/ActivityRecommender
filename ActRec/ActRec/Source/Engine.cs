@@ -796,7 +796,7 @@ namespace ActivityRecommendation
                     if (newRating.FromUser)
                     {
                         // usual average of the activities that were not suggested
-                        if (participation.Suggested != null && participation.Suggested.Value == false)
+                        if (!participation.Suggested)
                             this.ratingsOfUnpromptedActivities = this.ratingsOfUnpromptedActivities.Plus(newRating.Score);
                     }
                 }
@@ -855,13 +855,10 @@ namespace ActivityRecommendation
         public void PutParticipationInMemory(Participation newParticipation)
         {
             // keep track of an overall summary of the participations that have been entered
-            if (newParticipation.Suggested != null)
-            {
-                if (newParticipation.Suggested.Value)
-                    this.numPromptedParticipations++;
-                else
-                    this.numUnpromptedParticipations++;
-            }
+            if (newParticipation.Suggested)
+                this.numPromptedParticipations++;
+            else
+                this.numUnpromptedParticipations++;
             // keep track of the first and last date at which anything happened
             this.DiscoveredParticipation(newParticipation);
             

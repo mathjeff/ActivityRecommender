@@ -36,7 +36,7 @@ namespace ActivityRecommendation
             if (this.ShouldIncludeParticipation(newParticipation))
             {
                 WillingnessSummary willingness = new WillingnessSummary();
-                if (newParticipation.Suggested == null || newParticipation.Suggested == true)
+                if (newParticipation.Suggested)
                 {
                     willingness.NumPromptedParticipations = newParticipation.TotalIntensity.Mean;
                 }

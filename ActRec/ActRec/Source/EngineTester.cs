@@ -560,7 +560,7 @@ namespace ActivityRecommendation
         {
             // update the error rate for the participation probability predictor
 
-            if (newParticipation.Suggested == null || newParticipation.Suggested.Value == true)
+            if (newParticipation.Suggested)
             {
                 // if the activity was certaintly not suggested, then we don't want to include it in our estimate 
                 // of "the probability that the user would do the activity, given that it was suggested"

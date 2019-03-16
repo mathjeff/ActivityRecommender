@@ -410,7 +410,7 @@ namespace ActivityRecommendation
             if (rating != null && rating.FromUser && rating.Source != null)
             {
                 Participation sourceParticipation = rating.Source.ConvertedAsParticipation;
-                if (sourceParticipation != null && sourceParticipation.Suggested != null && sourceParticipation.Suggested.Value == true)
+                if (sourceParticipation != null && sourceParticipation.Suggested)
                     suggested = true;
             }
             if (suggested)
@@ -511,7 +511,7 @@ namespace ActivityRecommendation
             {
                 // get the coordinates at that time and save them
                 WillingnessSummary willingness = new WillingnessSummary();
-                if (newParticipation.Suggested == null || newParticipation.Suggested == true)
+                if (newParticipation.Suggested)
                     willingness.NumPromptedParticipations = 1;
                 else
                     willingness.NumUnpromptedParticipations = 1;

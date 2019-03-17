@@ -103,9 +103,14 @@ namespace ActivityRecommendation
         {
             this.PreviewMetric(metric);
         }
+        public void Add_ProtoActivity(ProtoActivity protoActivity)
+        {
+            this.Preview_ProtoActivity(protoActivity);
+        }
         public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
         public virtual void PreviewExperiment(PlannedExperiment experiment) { }
         public virtual void PreviewMetric(Metric metric) { }
+        public virtual void Preview_ProtoActivity(ProtoActivity protoActivity) { }
 
         public virtual void PreviewActivityDescriptor(ActivityDescriptor activityDescriptor) { }
 

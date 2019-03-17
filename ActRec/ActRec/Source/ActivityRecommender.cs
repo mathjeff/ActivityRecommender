@@ -25,6 +25,7 @@ namespace ActivityRecommendation
         {
             this.layoutStack = new LayoutStack();
             this.suggestionDatabase = new SuggestionDatabase();
+            this.protoActivities_database = new ProtoActivity_Database();
 
             this.InitializeSettings();
 
@@ -45,10 +46,6 @@ namespace ActivityRecommendation
 
         private void InitializeSettings()
         {
-            this.ratingsFileName = "ActivityRatings.txt";
-            this.inheritancesFileName = "ActivityInheritances.txt";
-            this.recentUserData_fileName = "TemporaryData.txt";
-
             // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
             this.participationEntryView = new ParticipationEntryView(this.layoutStack);
             this.recentUserData = new RecentUserData();
@@ -60,10 +57,13 @@ namespace ActivityRecommendation
             ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
             InheritanceEditingLayout inheritanceCreationView = new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack);
+            ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.layoutStack);
+
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
                 .AddLayout("Import Some Common Activities", activityImportLayout)
+                .AddLayout("Brainstorm New Activities", protoActivitiesLayout)
                 .AddLayout("Enter New Activity", activityCreationView)
                 .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
                 .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
@@ -124,7 +124,7 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("View/Edit Activities", inheritanceEditingView);
+            usageMenu_builder.AddLayout("Activities", inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
             usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
@@ -237,6 +237,7 @@ namespace ActivityRecommendation
                 this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesText);
                 this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryText);
                 this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataText);
+                this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, userData.ProtoActivityText);
             }
             catch (Exception e)
             {
@@ -254,6 +255,7 @@ namespace ActivityRecommendation
             data.InheritancesText = this.internalFileIo.ReadAllText(this.inheritancesFileName);
             data.HistoryText = this.internalFileIo.ReadAllText(this.ratingsFileName);
             data.RecentUserDataText = this.internalFileIo.ReadAllText(this.recentUserData_fileName);
+            data.ProtoActivityText = this.internalFileIo.ReadAllText(this.protoActivities_filename);
             return data;
         }
 
@@ -329,6 +331,7 @@ namespace ActivityRecommendation
             engine = historyReplayer.Finish();
 #endif
             this.engine = engine;
+            this.protoActivities_database = loader.ProtoActivity_Database;
             this.suggestionDatabase = loader.SuggestionDatabase;
             this.latestParticipation = loader.LatestParticipation;
             this.recentUserData = loader.RecentUserData;
@@ -341,6 +344,10 @@ namespace ActivityRecommendation
             engine.ActivityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             engine.ActivityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
             engine.ActivityDatabase.MetricAdded += ActivityDatabase_MetricAdded;
+            // listen for subsequently modified ProtoActivity objects
+            this.protoActivities_database.TextChanged += ProtoActivities_database_TextChanged;
+            this.protoActivities_database.RatingsChanged += ProtoActivities_database_RatingsChanged;
+
 
             engine.FullUpdate();
         }
@@ -356,6 +363,7 @@ namespace ActivityRecommendation
         private void LoadFilesInto(HistoryReplayer historyReplayer)
         {
             PersistentUserData data = this.readPersistentUserData();
+            historyReplayer.ReadText(data.ProtoActivityText);
             historyReplayer.ReadText(data.InheritancesText);
             historyReplayer.ReadText(data.HistoryText);
             historyReplayer.ReadText(data.RecentUserDataText);
@@ -633,6 +641,25 @@ namespace ActivityRecommendation
             this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
 
+        private void ProtoActivities_database_RatingsChanged()
+        {
+            this.write_protoActivities_database();
+        }
+
+        private void ProtoActivities_database_TextChanged()
+        {
+            this.write_protoActivities_database();
+        }
+
+        private void write_protoActivities_database()
+        {
+            string text = this.textConverter.ConvertToString(this.protoActivities_database) + Environment.NewLine;
+            this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, text);
+        }
+
+
+
+
         // writes to a text file saying that the user was is this program now. It gets deleted soon
 
         // updates the ParticipationEntryView so that the start date is DateTime.Now
@@ -763,6 +790,7 @@ namespace ActivityRecommendation
                 return this.engine.ActivityDatabase;
             }
         }
+        
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()
         {
@@ -797,9 +825,10 @@ namespace ActivityRecommendation
         TextConverter textConverter;
         InternalFileIo internalFileIo = new InternalFileIo();
         PublicFileIo publicFileIo = new PublicFileIo();
-        string ratingsFileName;         // the name of the file that stores ratings
-        string inheritancesFileName;    // the name of the file that stores inheritances
-        string recentUserData_fileName;
+        string ratingsFileName = "ActivityRatings.txt";         // the name of the file that stores ratings
+        string inheritancesFileName = "ActivityInheritances.txt";    // the name of the file that stores inheritances
+        string recentUserData_fileName = "TemporaryData.txt";
+        string protoActivities_filename = "ProtoActivities.txt";
         Participation latestParticipation;
         RecentUserData recentUserData;
         LayoutStack layoutStack;
@@ -807,5 +836,6 @@ namespace ActivityRecommendation
         // how long to spend making a suggestion
         TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
         string error = "";
+        ProtoActivity_Database protoActivities_database;
     }
 }

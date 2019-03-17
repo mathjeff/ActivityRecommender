@@ -123,6 +123,16 @@ namespace ActivityRecommendation
 
             return this.ConvertToString(properties, objectName);
         }
+        public string ConvertToString(ProtoActivity_Database database)
+        {
+            List<String> components = new List<string>();
+            foreach (ProtoActivity protoActivity in database.ProtoActivities)
+            {
+                if (protoActivity.Text != null && protoActivity.Text != "")
+                    components.Add(this.ConvertToString(protoActivity));
+            }
+            return string.Join(Environment.NewLine, components);
+        }
 
 
         // converts the DateTime into a string that is ready to write to disk
@@ -216,6 +226,25 @@ namespace ActivityRecommendation
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(metric.ActivityDescriptor);
 
             return this.ConvertToString(properties, this.MetricTag);
+        }
+        public string ConvertToString(ProtoActivity protoActivity)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.ProtoActivity_Text_Tag] = protoActivity.Text;
+            properties[this.ProtoActivity_Ratings_Tag] = this.ConvertToStringBody(protoActivity.Ratings);
+            properties[this.ProtoActivity_LastInteracted_Tag] = this.ConvertToStringBody(protoActivity.LastInteractedWith);
+
+            return this.ConvertToString(properties, this.ProtoActivity_Tag);
+        }
+
+        public string ConvertToStringBody(Distribution distribution)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.DistributionMean_Tag] = this.ConvertToStringBody(distribution.Mean);
+            properties[this.DistributionStdDev_Tag] = this.ConvertToStringBody(distribution.StdDev);
+            properties[this.DistributionWeight_Tag] = this.ConvertToStringBody(distribution.Weight);
+
+            return this.ConvertToStringBody(properties);
         }
 
         // converts the dictionary into a string that is ready to be written to disk
@@ -330,6 +359,11 @@ namespace ActivityRecommendation
                     this.ProcessMetric(node);
                     continue;
                 }
+                if (node.Name == this.ProtoActivity_Tag)
+                {
+                    this.Process_ProtoActivity(node);
+                    continue;
+                }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
             }
         }
@@ -418,6 +452,12 @@ namespace ActivityRecommendation
                 this.listener.AddMetric(metric);
 
             return metric;
+        }
+        private void Process_ProtoActivity(XmlNode nodeRepresentation)
+        {
+            ProtoActivity protoActivity = this.Read_ProtoActivity(nodeRepresentation);
+            if (this.listener != null)
+                this.listener.Add_ProtoActivity(protoActivity);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -940,6 +980,58 @@ namespace ActivityRecommendation
             return metric;
         }
 
+        public ProtoActivity Read_ProtoActivity(XmlNode nodeRepresentation)
+        {
+            string text = null;
+            DateTime lastInteracted = DateTime.Now;
+            Distribution ratings = null;
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.ProtoActivity_LastInteracted_Tag)
+                {
+                    lastInteracted = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.ProtoActivity_Ratings_Tag)
+                {
+                    ratings = this.ReadDistribution(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.ProtoActivity_Text_Tag)
+                {
+                    text = this.ReadText(currentChild);
+                    continue;
+                }
+            }
+            return new ProtoActivity(text, lastInteracted, ratings);
+        }
+
+        public Distribution ReadDistribution(XmlNode nodeRepresentation)
+        {
+            double mean = 0;
+            double stddev = 0;
+            double weight = 0;
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.DistributionMean_Tag)
+                {
+                    mean = this.ReadDouble(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.DistributionStdDev_Tag)
+                {
+                    stddev = this.ReadDouble(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.DistributionWeight_Tag)
+                {
+                    weight = this.ReadDouble(currentChild);
+                    continue;
+                }
+            }
+            return Distribution.MakeDistribution(mean, stddev, weight);
+        }
+
         public PersistentUserData ParseForImport(string contents)
         {
             IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(contents);
@@ -947,6 +1039,7 @@ namespace ActivityRecommendation
             List<string> inheritanceTexts = new List<string>();
             List<string> historyTexts = new List<string>();
             string recentUserDataText = "";
+            List<string> protoActivity_texts = new List<string>();
 
 
             foreach (XmlNode node in nodes)
@@ -1015,6 +1108,12 @@ namespace ActivityRecommendation
                     historyTexts.Add(this.ConvertToString(experiment));
                     continue;
                 }
+                if (node.Name == this.ProtoActivity_Tag)
+                {
+                    ProtoActivity protoActivity = this.Read_ProtoActivity(node);
+                    protoActivity_texts.Add(this.ConvertToString(protoActivity));
+                    continue;
+                }
                 throw new InvalidDataException("Unrecognized node: <" + node.Name + ">");
             }
 
@@ -1023,6 +1122,7 @@ namespace ActivityRecommendation
             result.InheritancesText = String.Join("\n", inheritanceTexts);
             result.HistoryText = string.Join("\n", historyTexts);
             result.RecentUserDataText = recentUserDataText;
+            result.ProtoActivityText = string.Join("\n", protoActivity_texts);
 
             return result;
         }
@@ -1503,6 +1603,56 @@ namespace ActivityRecommendation
                 return "Later";
             }
         }
+        private string ProtoActivity_Tag
+        {
+            get
+            {
+                return "ProtoActivity";
+            }
+        }
+        private string ProtoActivity_Text_Tag
+        {
+            get
+            {
+                return this.CommentTag;
+            }
+        }
+        private string ProtoActivity_LastInteracted_Tag
+        {
+            get
+            {
+                return "LastChecked";
+            }
+        }
+        private string ProtoActivity_Ratings_Tag
+        {
+            get
+            {
+                return this.RatingTag;
+            }
+        }
+
+        private string DistributionMean_Tag
+        {
+            get
+            {
+                return "Mean";
+            }
+        }
+        private string DistributionStdDev_Tag
+        {
+            get
+            {
+                return "StdDev";
+            }
+        }
+        private string DistributionWeight_Tag
+        {
+            get
+            {
+                return "Weight";
+            }
+        }
         #endregion
 
         #region Private Member Variables
@@ -1547,10 +1697,11 @@ namespace ActivityRecommendation
         public String InheritancesText;
         public String HistoryText;
         public String RecentUserDataText;
+        public string ProtoActivityText;
 
         public String serialize()
         {
-            return this.RecentUserDataText + "\n" + this.InheritancesText + "\n" + this.HistoryText;
+            return this.RecentUserDataText + "\n" + this.ProtoActivityText + "\n" + this.InheritancesText + "\n" + this.HistoryText;
         }
     }
 }

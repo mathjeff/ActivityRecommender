@@ -118,6 +118,8 @@
     <Compile Include="Source\FileIo.cs" />
     <Compile Include="Source\EngineLoader.cs" />
     <Compile Include="Source\ExponentiallyWeightedPredictionLink.cs" />
+    <Compile Include="Source\ProtoActivity.cs" />
+    <Compile Include="Source\ProtoActivity_Database.cs" />
     <Compile Include="Source\ToDo.cs" />
     <Compile Include="Source\Activity.cs" />
     <Compile Include="Source\Category.cs" />
@@ -151,6 +153,7 @@
     <Compile Include="Source\View\ActivityImportLayout.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\ActivitySuggestion_Justification_Layout.cs" />
+    <Compile Include="Source\View\Browse_ProtoActivities_Layout.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
     <Compile Include="Source\View\ExperimentationDifficultySelectionLayout.cs" />
     <Compile Include="Source\View\ExperimentInitializationLayout.cs" />
@@ -203,6 +206,8 @@
     <Compile Include="Source\View\PlotView.cs" />
     <Compile Include="Source\View\PreferenceSummaryLayout.cs" />
     <Compile Include="Source\View\ProgressionSelectionView.cs" />
+    <Compile Include="Source\View\ProtoActivities_Layout.cs" />
+    <Compile Include="Source\View\ProtoActivity_Editing_Layout.cs" />
     <Compile Include="Source\View\RatingEntryView.cs" />
     <Compile Include="Source\View\RelativeRatingEntryView.cs" />
     <Compile Include="Source\View\RequestSuggestion_Layout.cs" />

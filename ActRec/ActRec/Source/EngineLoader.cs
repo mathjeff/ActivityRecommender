@@ -9,7 +9,6 @@ namespace ActivityRecommendation
     {
         public EngineLoader()
         {
-            this.SuggestionDatabase = new SuggestionDatabase();
         }
 
         public override Engine Finish()
@@ -37,6 +36,10 @@ namespace ActivityRecommendation
         {
             this.engine.PutActivityDescriptorInMemory(activityDescriptor);
         }
+        public override void Preview_ProtoActivity(ProtoActivity protoActivity)
+        {
+            this.ProtoActivity_Database.Put(protoActivity);
+        }
         public override void SetRecentUserData(RecentUserData recentUserData)
         {
             this.RecentUserData = recentUserData;
@@ -46,7 +49,8 @@ namespace ActivityRecommendation
             this.LatestDate = when;
         }
 
-        public SuggestionDatabase SuggestionDatabase;
+        public SuggestionDatabase SuggestionDatabase = new SuggestionDatabase();
+        public ProtoActivity_Database ProtoActivity_Database = new ProtoActivity_Database();
         public Participation LatestParticipation;
         public RecentUserData RecentUserData = new RecentUserData();
         public DateTime LatestDate;

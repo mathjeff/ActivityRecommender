@@ -48,9 +48,16 @@ namespace ActivityRecommendation.View
             if (todo != null)
             {
                 if (todo.IsCompleted())
-                    gridBuilder.AddLayout(new TextblockLayout("Status: Completed"));
+                {
+                    if (todo.WasCompletedSuccessfully())
+                        gridBuilder.AddLayout(new TextblockLayout("Status: Completed"));
+                    else
+                        gridBuilder.AddLayout(new TextblockLayout("Status: Obsolete"));
+                }
                 else
+                {
                     gridBuilder.AddLayout(new TextblockLayout("Status: Incomplete"));
+                }
             }
 
             foreach (Metric metric in activity.Metrics)

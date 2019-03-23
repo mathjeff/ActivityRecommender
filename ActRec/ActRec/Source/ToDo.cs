@@ -40,11 +40,17 @@ namespace ActivityRecommendation
         {
             return this.complete;
         }
+        public bool WasCompletedSuccessfully()
+        {
+            return this.completedSuccessfully;
+        }
 
         public override void AddParticipation(Participation newParticipation)
         {
-            if (newParticipation.CompletedMetric)
+            if (newParticipation.DismissedActivity)
                 this.complete = true;
+            if (newParticipation.CompletedMetric)
+                this.completedSuccessfully = true;
             base.AddParticipation(newParticipation);
         }
 
@@ -66,6 +72,7 @@ namespace ActivityRecommendation
 
         #region Private Member Variables
         private bool complete = false;
+        private bool completedSuccessfully = false;
         #endregion
 
     }

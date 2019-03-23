@@ -1,6 +1,7 @@
 ﻿using ActivityRecommendation.Effectiveness;
 using ActivityRecommendation.View;
 using System;
+using System.Collections.Generic;
 using VisiPlacement;
 using Xamarin.Forms;
 
@@ -45,13 +46,11 @@ namespace ActivityRecommendation
             middleGrid.AddLayout(new TitledControl("Comment (optional)", ScrollLayout.New(new TextboxLayout(this.commentBox, 16))));
             
             contents.AddLayout(middleGrid);
-            this.todoCompletionCheckbox = new CheckBox("Incomplete", "Complete!");
-            this.todoCompletionCheckboxLayout = ButtonLayout.WithoutBevel(this.todoCompletionCheckbox);
-            this.todoCompletionCheckboxHolder = new ContainerLayout();
+            this.todoCompletionStatusHolder = new ContainerLayout();
             this.todoCompletionLabel = new Label();
             contents.AddLayout(new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(new TextblockLayout(this.todoCompletionLabel))
-                .AddLayout(this.todoCompletionCheckboxHolder)
+                .AddLayout(this.todoCompletionStatusHolder)
                 .Build());
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
@@ -154,7 +153,7 @@ namespace ActivityRecommendation
             this.CommentText = "";
             //this.setEnddateButton.SetDefaultBackground();
             this.predictedRating_block.Text = "";
-            this.todoCompletionCheckbox.Checked = false;
+            //this.todoCompletionStatusPicker.SelectedIndex = 0;
             this.updateTodoCheckboxVisibility();
         }
         public ActivityDatabase ActivityDatabase
@@ -297,7 +296,11 @@ namespace ActivityRecommendation
 
             if (this.EnteringActivityWithMetric)
             {
-                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(this.todoCompletionCheckbox.Checked);
+                string status = this.todoCompletionStatusPicker.SelectedItem.ToString();
+                bool successful = (status == this.TaskCompleted_Text);
+                bool closed = (status != TaskIncomplete_Text);
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful);
+                participation.EffectivenessMeasurement.DismissedActivity = closed;
                 RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
                 participation.EffectivenessMeasurement.Computation = measurement;
             }
@@ -327,13 +330,24 @@ namespace ActivityRecommendation
         {
             if (this.EnteringActivityWithMetric)
             {
-                this.todoCompletionCheckboxHolder.SubLayout = this.todoCompletionCheckboxLayout;
+                SingleSelect singleSelect;
+                Picker picker = new Picker();
+                if (this.EnteringToDo)
+                {
+                    singleSelect = new SingleSelect(new List<String>() { this.TaskIncomplete_Text, this.TaskCompleted_Text, this.TaskObsolete_Text });
+                }
+                else
+                {
+                    singleSelect = new SingleSelect(new List<String>() { this.TaskIncomplete_Text, this.TaskCompleted_Text });
+                }
+                this.todoCompletionStatusPicker = singleSelect;
+                this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
                 // TODO: if there are multiple metrics; figure out how to determine which one to show
                 this.todoCompletionLabel.Text = this.nameBox.Activity.Metrics[0].Name + "?";
             }
             else
             {
-                this.todoCompletionCheckboxHolder.SubLayout = null;
+                this.todoCompletionStatusHolder.SubLayout = null;
                 this.todoCompletionLabel.Text = "";
             }
         }
@@ -345,6 +359,17 @@ namespace ActivityRecommendation
                 Activity activity = this.nameBox.Activity;
                 if (activity != null)
                     return (activity.Metrics.Count > 0);
+                return false;
+            }
+        }
+
+        private bool EnteringToDo
+        {
+            get
+            {
+                Activity activity = this.nameBox.Activity;
+                if (activity != null)
+                    return (activity is ToDo);
                 return false;
             }
         }
@@ -523,6 +548,29 @@ namespace ActivityRecommendation
         }
 
 
+        private string TaskCompleted_Text
+        {
+            get
+            {
+                return "Complete!";
+            }
+        }
+        private string TaskIncomplete_Text
+        {
+            get
+            {
+                return "Incomplete";
+            }
+        }
+        private string TaskObsolete_Text
+        {
+            get
+            {
+                return "Obsolete";
+            }
+        }
+
+
         // private member variables
         ActivityNameEntryBox nameBox;
         RelativeRatingEntryView ratingBox;
@@ -536,10 +584,9 @@ namespace ActivityRecommendation
         Engine engine;
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;
-        CheckBox todoCompletionCheckbox;
         Label todoCompletionLabel;
-        LayoutChoice_Set todoCompletionCheckboxLayout;
-        ContainerLayout todoCompletionCheckboxHolder;
+        SingleSelect todoCompletionStatusPicker;
+        ContainerLayout todoCompletionStatusHolder;
         ActivityDescriptor demanded_nextParticipationActivity;
     }
 }

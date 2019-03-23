@@ -70,6 +70,16 @@ namespace ActivityRecommendation
                 return this.EffectivenessMeasurement.Successful;
             }
         }
+        // Returns true if this Participation was assigned a completion metric that considers its Activity to no longer be doable
+        public bool DismissedActivity
+        {
+            get
+            {
+                if (this.EffectivenessMeasurement == null)
+                    return false;
+                return this.EffectivenessMeasurement.DismissedActivity;
+            }
+        }
 
         public Distribution TotalIntensity // intensity measured in seconds
         {

@@ -15,6 +15,7 @@ namespace ActivityRecommendation.Effectiveness
         public CompletionEfficiencyMeasurement(RelativeEfficiencyMeasurement computation, bool successful) { this.Computation = computation; this.Successful = successful; }
 
         public bool Successful { get; set; }
+        public bool DismissedActivity { get; set; }
         public RelativeEfficiencyMeasurement Computation { get; set; }
     }
 

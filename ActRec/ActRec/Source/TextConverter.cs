@@ -55,7 +55,14 @@ namespace ActivityRecommendation
             if (participation.Consideration != null)
                 properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
             if (participation.CompletedMetric)
+            {
                 properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(true);
+            }
+            else
+            {
+                if (participation.DismissedActivity)
+                    properties[this.DismissedActivity_Tag] = this.ConvertToStringBody(true);
+            }
             if (participation.RelativeEfficiencyMeasurement != null)
                 properties[this.EfficiencyMeasurement_Tag] = this.ConvertToStringBody(participation.RelativeEfficiencyMeasurement);
 
@@ -496,6 +503,7 @@ namespace ActivityRecommendation
             string comment = null;
             bool suggested = false;
             bool successful = false;
+            bool dismissedActivity = false;
             RelativeEfficiencyMeasurement efficiencyMeasurement = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
@@ -541,11 +549,20 @@ namespace ActivityRecommendation
                     successful = this.ReadBool(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.DismissedActivity_Tag)
+                {
+                    dismissedActivity = this.ReadBool(currentChild);
+                    continue;
+                }
                 if (currentChild.Name == this.EfficiencyMeasurement_Tag)
                 {
                     efficiencyMeasurement = this.ReadEfficiencyMeasurement(currentChild);
                     continue;
                 }
+            }
+            if (successful)
+            {
+                dismissedActivity = true;
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             if (rating != null)
@@ -562,9 +579,11 @@ namespace ActivityRecommendation
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
-            if (successful || efficiencyMeasurement != null)
+            if (dismissedActivity || efficiencyMeasurement != null)
             {
-                currentParticipation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful);
+                CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(successful);
+                effectivenessMeasurement.DismissedActivity = dismissedActivity;
+                currentParticipation.EffectivenessMeasurement = effectivenessMeasurement;
                 if (efficiencyMeasurement != null)
                 {
                     efficiencyMeasurement.FillInFromParticipation(currentParticipation);
@@ -1405,6 +1424,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Successful";
+            }
+        }
+        private string DismissedActivity_Tag
+        {
+            get
+            {
+                return "ClosedActivity";
             }
         }
         private string EfficiencyMeasurement_Tag

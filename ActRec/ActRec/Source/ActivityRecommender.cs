@@ -8,17 +8,37 @@ using Xamarin.Forms;
 using Plugin.FilePicker.Abstractions;
 using System.IO;
 using ActivityRecommendation.Effectiveness;
+using System.Threading.Tasks;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
 {
     public class ActivityRecommender
     {
-        public ActivityRecommender(ContentView newMainWindow)
+        public ActivityRecommender(ContentView parentView)
         {
-            this.mainWindow = newMainWindow;
+            this.parentView = parentView;
 
-            this.Initialize();
+            this.setupAsync();
+        }
+
+        private void setupAsync()
+        {
+            this.setupLoadingScreen();
+            Task.Run(() =>
+            {
+                this.Initialize();
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    this.attachParentView();
+                });
+            });
+        }
+
+        private void setupLoadingScreen()
+        {
+            this.parentView.BackgroundColor = Color.Black;
+            ViewManager viewManager = new ViewManager(this.parentView, new TextblockLayout("ActivityRecommender is loading your data..."));
         }
 
         public void Initialize()
@@ -33,15 +53,19 @@ namespace ActivityRecommendation
 
             this.textConverter = new TextConverter(null, this.ActivityDatabase);
 
-            //this.ReadTempFile();
-
             this.SetupDrawing();
+        }
+
+        private void attachParentView()
+        {
+            this.displayManager.SetParent(this.parentView);
         }
 
         public void Reload()
         {
             this.latestParticipation = null;
             this.Initialize();
+            this.attachParentView();
         }
 
         private void InitializeSettings()
@@ -162,12 +186,10 @@ namespace ActivityRecommendation
             this.mainLayout = this.layoutStack;
 #endif
 
-            this.mainWindow.BackgroundColor = Color.Black;
-
-            this.displayManager = new ViewManager(this.mainWindow, this.mainLayout);
+            this.displayManager = new ViewManager(null, this.mainLayout);
             gridLayout.PutLayout(new LayoutDuration_Layout(this.displayManager), 0, 0);
-
         }
+
 
         private void SuggestionsView_RequestSuggestion(ActivityRequest request)
         {
@@ -293,7 +315,9 @@ namespace ActivityRecommendation
 
         public bool GoBack()
         {
-            return this.layoutStack.GoBack();
+            if (this.layoutStack != null)
+                return this.layoutStack.GoBack();
+            return false;
         }
 
 
@@ -812,7 +836,7 @@ namespace ActivityRecommendation
         }
 
 
-        ContentView mainWindow;
+        ContentView parentView;
         ViewManager displayManager;
         LayoutChoice_Set mainLayout;
 

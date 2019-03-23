@@ -96,16 +96,16 @@ namespace ActivityRecommendation
                 this.name = value;
             }
         }
-        // tells whether this Doable is a valid suggestion for the user
-        protected virtual Boolean isChoosable()
+        // tells whether this Activity is a valid suggestion for the user
+        protected virtual Boolean isSuggestible()
         {
             return true;
         } 
-        public bool Choosable
+        public bool Suggestible
         {
             get
             {
-                return this.isChoosable();
+                return this.isSuggestible();
             }
         }
         public override string ToString()

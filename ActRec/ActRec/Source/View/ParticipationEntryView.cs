@@ -30,6 +30,7 @@ namespace ActivityRecommendation
 
             this.nameBox = new ActivityNameEntryBox("Activity Name");
             this.nameBox.AutoAcceptAutocomplete = false;
+            this.nameBox.PreferSuggestibleActivities = true;
             this.nameBox.AddTextChangedHandler(new EventHandler<TextChangedEventArgs>(this.nameBox_TextChanged));
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);

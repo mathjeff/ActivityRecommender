@@ -23,6 +23,7 @@ namespace ActivityRecommendation.View
             this.categoryBox.Database = activityDatabase;
 
             this.desiredActivity_box = new ActivityNameEntryBox("At least as fun as this activity (optional):");
+            this.desiredActivity_box.PreferSuggestibleActivities = true;
             this.desiredActivity_box.Database = activityDatabase;
 
             if (!allowRequestingActivitiesDirectly)

@@ -264,7 +264,7 @@ namespace ActivityRecommendation
                 int index = this.randomGenerator.Next(candidates.Count);
                 Activity candidate = candidates[index];
                 candidates.RemoveAt(index);
-                if (candidate.Choosable)
+                if (candidate.Suggestible)
                 {
                     // estimate how good it is for us to suggest this particular activity
                     this.UpdateSuggestionValue(candidate, when);
@@ -1329,7 +1329,7 @@ namespace ActivityRecommendation
         public SuggestedMetric_Metadata ChooseExperimentOption(ActivityRequest activityRequest, List<SuggestedMetric> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
         {
             // activities that can ever be put in an experiment
-            List<Activity> activitiesHavingMetrics = this.ChooseableActivitiesHavingMetrics;
+            List<Activity> activitiesHavingMetrics = this.SuggestibleActivitiesHavingMetrics;
 
             // activities that are already listed as options can't be re-added as new options
             HashSet<Activity> excludedActivities = new HashSet<Activity>();
@@ -1652,7 +1652,7 @@ namespace ActivityRecommendation
             }
         }
         // returns a list of Activities that are available to be added into a new Experiment
-        private List<Activity> ChooseableActivitiesHavingMetrics
+        private List<Activity> SuggestibleActivitiesHavingMetrics
         {
             get
             {
@@ -1660,7 +1660,7 @@ namespace ActivityRecommendation
                 List<Activity> results = new List<Activity>();
                 foreach (Activity activity in this.activityDatabase.AllActivities)
                 {
-                    if (activity.Choosable)
+                    if (activity.Suggestible)
                     {
                         List<Metric> metrics = activity.Metrics;
                         if (metrics.Count > 0)

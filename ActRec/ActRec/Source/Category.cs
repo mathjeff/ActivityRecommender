@@ -45,33 +45,33 @@ namespace ActivityRecommendation
         {
             ActivityDescriptor descriptor = new ActivityDescriptor();
             descriptor.ActivityName = this.Name;
-            descriptor.Choosable = this.Choosable;
+            descriptor.Suggestible = this.Suggestible;
             return descriptor;
         }
 
-        public void setChooseable(bool chooseable)
+        public void setSuggestible(bool suggestible)
         {
-            this.chooseable = chooseable;
+            this.suggestible = suggestible;
         }
 
-        protected override bool isChoosable()
+        protected override bool isSuggestible()
         {
             foreach (Activity activity in this.children)
             {
                 if (activity is Category)
                 {
-                    this.chooseable = false;
+                    this.suggestible = false;
                     break;
                 }
             }
-            return this.chooseable;
+            return this.suggestible;
         }
         
 
         #endregion
 
         #region Private Member Variables
-        private bool chooseable = true;
+        private bool suggestible = true;
         private List<Activity> children = new List<Activity>();
 
         #endregion

@@ -158,77 +158,6 @@ namespace ActivityRecommendation.View
             }
         }
 
-        string doBackspace(string oldText)
-        {
-            string newText = "";
-            // look for the activity with the longest common substring that is strictly shorter than the current text
-            foreach (Activity activity in this.database.AllActivities)
-            {
-                string prefix = commonPrefix(activity.Name, oldText);
-                if (prefix.Length > newText.Length && prefix.Length < oldText.Length)
-                    newText = prefix;
-            }
-            // if no activity had an characters in common, then we couldn't have gotten to this string via autocomplete, so only remove one character
-            if (newText.Length < 1 && oldText.Length > 1)
-                newText = oldText.Substring(0, oldText.Length - 1);
-            return newText;
-        }
-
-        // fill in more text based on the valid choices
-        string autocomplete(string currentText)
-        {
-            // find the common prefix of all matching activities
-            List<String> matchTexts = new List<string>();
-            foreach (Activity activity in this.database.AllActivities)
-            {
-                if (activity.Name.StartsWith(currentText))
-                    matchTexts.Add(activity.Name);
-            }
-            string prefix = this.commonPrefix(matchTexts);
-            if (prefix.Length < 1)
-            {
-                // there was no case-sensitive match; try a case-insensitive match
-                matchTexts = new List<string>();
-                foreach (Activity activity in this.database.AllActivities)
-                {
-                    if (activity.Name.ToLower().StartsWith(currentText.ToLower()))
-                        matchTexts.Add(activity.Name);
-                }
-                prefix = this.commonPrefix(matchTexts);
-            }
-
-            if (prefix.Length > currentText.Length)
-            {
-                return prefix;
-            }
-            return currentText;
-        }
-
-        string commonPrefix(string a, string b)
-        {
-            int i;
-            int max = Math.Min(a.Length, b.Length);
-            for (i = 0; i < max; i++)
-            {
-                if (a[i] != b[i])
-                    break;
-            }
-            string prefix = a.Substring(0, i);
-            return prefix;
-        }
-
-        string commonPrefix(List<string> texts)
-        {
-            if (texts.Count < 1)
-                return "";
-            string prefix = texts[0];
-            foreach (string text in texts)
-            {
-                prefix = commonPrefix(prefix, text);
-            }
-            return prefix;
-        }
-
         // update the UI based on a change in the text that the user has typed
         void UpdateSuggestions()
         {
@@ -276,6 +205,8 @@ namespace ActivityRecommendation.View
 
         public bool AutoAcceptAutocomplete { get; set; } // Whether to treat a partially entered activity as equivalent to the one recommended by autocomplete
 
+        public bool PreferSuggestibleActivities { get; set; }
+
         // this is the ActivityDescriptor to be returned to outside callers, which represents the selection that the user made
         public ActivityDescriptor ActivityDescriptor
         {
@@ -304,6 +235,8 @@ namespace ActivityRecommendation.View
                 descriptor.ActivityName = text;
                 descriptor.PreferMorePopular = true;
                 descriptor.RequiresPerfectMatch = this.createNewActivity;
+                if (this.PreferSuggestibleActivities)
+                    descriptor.Suggestible = true;
                 return descriptor;
             }
         }
@@ -330,16 +263,6 @@ namespace ActivityRecommendation.View
         bool createNewActivity;
     }
 
-    // Summary:
-    //     Represents the method that will handle the ActivityRecommendation.NameMatchedSuggestion
-    //      routed event.
-    //
-    // Parameters:
-    //   sender:
-    //     The object where the event handler is attached.
-    //
-    //   e:
-    //     The event data.
     public delegate void NameMatchedSuggestionHandler(object sender, TextChangedEventArgs e);
 
 }

@@ -24,7 +24,7 @@ namespace ActivityRecommendation
         #region Public Member Functions
         
         public string ActivityName { get; set; }
-        public bool? Choosable = null;
+        public bool? Suggestible = null; // Whether this activity is allowed to be suggested
         public bool PreferMorePopular = false;   // tells whether this descriptor wants to match the Activity with the best rating
         public bool RequiresPerfectMatch = true;
         public bool CanMatch(ActivityDescriptor other)
@@ -36,9 +36,9 @@ namespace ActivityRecommendation
                 if (!this.ActivityName.Equals(other.ActivityName))
                     return false;
             }
-            if (this.Choosable != null && other.Choosable != null)
+            if (this.Suggestible != null && other.Suggestible != null)
             {
-                if (this.Choosable.Value != other.Choosable.Value)
+                if (this.Suggestible.Value != other.Suggestible.Value)
                     return false;
             }
             return true;

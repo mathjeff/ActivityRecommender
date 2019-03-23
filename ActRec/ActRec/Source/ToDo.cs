@@ -54,7 +54,7 @@ namespace ActivityRecommendation
 
         #region Protected methods
 
-        protected override bool isChoosable()
+        protected override bool isSuggestible()
         {
             if (this.complete)
                 return false;

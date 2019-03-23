@@ -36,10 +36,10 @@ namespace ActivityRecommendation
             this.happinessSummarizer = happinessSummarizer;
             this.efficiencySummarizer = efficiencySummarizer;
             this.rootActivity = new Category("Activity", happinessSummarizer, efficiencySummarizer);
-            this.rootActivity.setChooseable(false);
+            this.rootActivity.setSuggestible(false);
             this.AddActivity(this.rootActivity);
             this.todoCategory = new Category("ToDo", happinessSummarizer, efficiencySummarizer);
-            this.todoCategory.setChooseable(false);
+            this.todoCategory.setSuggestible(false);
             this.AddActivity(this.todoCategory);
         }
 
@@ -177,7 +177,8 @@ namespace ActivityRecommendation
                 return false;
 
         }
-        // returns 0 if there is a discrepancy, otherwise 1 + (the number of fields that match)
+        // If there is a discrepancy, returns 0
+        // Otherwise, returns a number that gets larger if it's more likely that the user meant to match <activity>
         public double MatchQuality(ActivityDescriptor descriptor, Activity activity)
         {
             double matchScore = 0;
@@ -188,7 +189,7 @@ namespace ActivityRecommendation
                     return 0;
                 // make sure the 'Choosable' property matches
                 // require that the 'Choosable' property matches
-                if (descriptor.Choosable != null && descriptor.Choosable.Value != activity.Choosable)
+                if (descriptor.Suggestible != null && descriptor.Suggestible.Value != activity.Suggestible)
                     return 0;
                 return 1;
             }
@@ -196,10 +197,14 @@ namespace ActivityRecommendation
             {
                 // a bunch of points based on string similarity
                 string desiredName = descriptor.ActivityName;
-                // if the user enters a string that it rediculously long, then we don't bother comparing it
                 if (desiredName.Length < 2 * activity.Name.Length)
                 {
                     matchScore = this.stringScore(activity.Name, desiredName);
+                }
+                else
+                {
+                    // if the user enters a string that it rediculously long, then we don't bother comparing it
+                    matchScore = 0;
                 }
                 if (desiredName.Length > 0 && matchScore <= 0)
                 {
@@ -209,8 +214,8 @@ namespace ActivityRecommendation
             }
             // now that we've verified that this activity is allowed to be a match, we calculate its score
 
-            // +1 point if the 'Choosable' property matches
-            if (descriptor.Choosable != null && descriptor.Choosable.Value == activity.Choosable)
+            // +1 point if the 'Suggestible' property matches
+            if (descriptor.Suggestible != null && descriptor.Suggestible.Value == activity.Suggestible)
                 matchScore += 1;
 
 
@@ -218,10 +223,7 @@ namespace ActivityRecommendation
             if (descriptor.PreferMorePopular)
             {
                 // Give better scores to activities that the user has logged more often
-                // Ideally, we would actually only count participations that were directly assigned to this activity to begin with
-                // but that's not information that we often need and this probably isn't enough of a reason to track it for this case
-                if (activity.Choosable)
-                    matchScore += (1.0 - 1.0 / ((double)activity.NumParticipations + 1.0));
+                matchScore += (1.0 - 1.0 / ((double)activity.NumParticipations + 1.0));
             }
             return matchScore;
         }

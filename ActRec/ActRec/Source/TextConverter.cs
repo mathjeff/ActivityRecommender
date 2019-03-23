@@ -811,7 +811,7 @@ namespace ActivityRecommendation
                 }
                 if (currentChild.Name == this.ChoosableTag)
                 {
-                    descriptor.Choosable = this.ReadBool(currentChild);
+                    descriptor.Suggestible = this.ReadBool(currentChild);
                     continue;
                 }
             }

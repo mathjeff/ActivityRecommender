@@ -1,4 +1,5 @@
 ﻿using ActivityRecommendation.Effectiveness;
+using ActivityRecommendation.View;
 using System;
 using VisiPlacement;
 using Xamarin.Forms;

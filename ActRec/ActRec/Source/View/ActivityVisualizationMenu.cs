@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ActivityRecommendation.View;
+using System;
 using VisiPlacement;
 using Xamarin.Forms;
 

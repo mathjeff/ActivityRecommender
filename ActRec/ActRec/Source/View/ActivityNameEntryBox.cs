@@ -4,7 +4,7 @@ using System.ComponentModel;
 using VisiPlacement;
 using Xamarin.Forms;
 
-namespace ActivityRecommendation
+namespace ActivityRecommendation.View
 {
     class ActivityNameEntryBox : TitledControl
     {

@@ -48,16 +48,14 @@ namespace ActivityRecommendation.View
             if (participations.Count > maxCount)
                 participations = participations.GetRange(0, maxCount);
 
+            TitledControl mainView = new TitledControl("Top " + participations.Count + " commented participations in " + activity.Name);
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
-            gridBuilder.AddLayout(new TextblockLayout("Top " + participations.Count + " commented participations in " + activity.Name));
             foreach (Participation participation in participations)
             {
-                TextblockLayout separator = new TextblockLayout("", 8);
-                separator.ScoreIfEmpty = true;
-                gridBuilder.AddLayout(separator);
                 gridBuilder.AddLayout(new ParticipationView(participation));
             }
-            return ScrollLayout.New(gridBuilder.Build());
+            mainView.SetContent(ScrollLayout.New(gridBuilder.Build()));
+            return mainView;
         }
 
         private ActivityDatabase activityDatabase;

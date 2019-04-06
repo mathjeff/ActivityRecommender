@@ -225,6 +225,10 @@ namespace ActivityRecommendation
                 // Give better scores to activities that the user has logged more often
                 matchScore += (1.0 - 1.0 / ((double)activity.NumParticipations + 1.0));
             }
+            else
+            {
+                matchScore += 1;
+            }
             return matchScore;
         }
         public int NumActivities

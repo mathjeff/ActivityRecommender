@@ -216,7 +216,10 @@ namespace ActivityRecommendation.View
                 if (activityDescriptor == null)
                     return null;
                 if (!this.AutoAcceptAutocomplete)
+                {
                     activityDescriptor.RequiresPerfectMatch = true;
+                    activityDescriptor.Suggestible = null;
+                }
                 return activityDescriptor;
             }
         }
@@ -235,7 +238,7 @@ namespace ActivityRecommendation.View
                 descriptor.ActivityName = text;
                 descriptor.PreferMorePopular = true;
                 descriptor.RequiresPerfectMatch = this.createNewActivity;
-                if (this.PreferSuggestibleActivities)
+                if (this.PreferSuggestibleActivities && !descriptor.RequiresPerfectMatch)
                     descriptor.Suggestible = true;
                 return descriptor;
             }

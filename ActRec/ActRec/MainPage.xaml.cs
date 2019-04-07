@@ -9,14 +9,14 @@ namespace ActRec
 {
     public partial class MainPage : ContentPage
     {
-        public MainPage()
+        public MainPage(string version)
         {
             InitializeComponent();
 
             ContentView view = new ContentView();
             this.Content = view;
 
-            this.activityRecommender = new ActivityRecommender(view);
+            this.activityRecommender = new ActivityRecommender(view, version);
         }
 
         protected override bool OnBackButtonPressed()

@@ -9,15 +9,17 @@ using Plugin.FilePicker.Abstractions;
 using System.IO;
 using ActivityRecommendation.Effectiveness;
 using System.Threading.Tasks;
+using System.Reflection;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
 {
     public class ActivityRecommender
     {
-        public ActivityRecommender(ContentView parentView)
+        public ActivityRecommender(ContentView parentView, string version)
         {
             this.parentView = parentView;
+            this.version = version;
 
             this.setupAsync();
         }
@@ -43,6 +45,8 @@ namespace ActivityRecommendation
 
         public void Initialize()
         {
+            this.CheckIfIsNewVersion();
+
             this.layoutStack = new LayoutStack();
             this.suggestionDatabase = new SuggestionDatabase();
             this.protoActivities_database = new ProtoActivity_Database();
@@ -66,6 +70,52 @@ namespace ActivityRecommendation
             this.latestParticipation = null;
             this.Initialize();
             this.attachParentView();
+        }
+
+        private void CheckIfIsNewVersion()
+        {
+            // parse an ApplicationExecution describing the previous version
+            ApplicationExecution oldExecution = new ApplicationExecution();
+            oldExecution.version = this.internalFileIo.ReadAllText(this.versionFilename);
+            string debuggingMarker = "Debug-";
+            if (oldExecution.version.StartsWith(debuggingMarker))
+            {
+                oldExecution.version = oldExecution.version.Substring(debuggingMarker.Length);
+                oldExecution.debuggerAttached = true;
+            }
+
+            // make an ApplicationExecution for this current run
+            ApplicationExecution newExecution = new ApplicationExecution();
+            newExecution.version = this.version;
+            newExecution.debuggerAttached = System.Diagnostics.Debugger.IsAttached;
+
+            // Checkcheck for things to do when the version changes
+            this.OnPossibleVersionChange(oldExecution, newExecution);
+
+            // save new info if out-of-date
+            if (!oldExecution.version.Equals(newExecution.version) || oldExecution.debuggerAttached != newExecution.debuggerAttached)
+            {
+                string text = newExecution.version;
+                if (newExecution.debuggerAttached)
+                    text = debuggingMarker + text;
+                this.internalFileIo.EraseFileAndWriteContent(this.versionFilename, text);
+            }
+        }
+
+        private void OnPossibleVersionChange(ApplicationExecution oldExecution, ApplicationExecution newExecution)
+        {
+            // Whenever ActivityRecommender is updated to a version that's unfamiliar to its user, we'd like to make a backup of the user's data, in case the new version does
+            // something wrong. This is especially true because the entity that updated ActivityRecommender might not have explicitly asked the user before updating it.
+
+            // So, if either this version or the last version didn't run in the debugger, then we should make a backup of the data.
+
+            // However, if both this version and the last version were running in the debugger, then we already have a recent backup (the one from when the debugger was first enabled)
+            // and the developer is probably doing testing that they don't care to back up.
+            if ((!oldExecution.version.Equals(newExecution.version)) && (!oldExecution.debuggerAttached || !newExecution.debuggerAttached))
+            {
+                string status = this.ExportData();
+                this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version + ".\n" + status;
+            }
         }
 
         private void InitializeSettings()
@@ -165,15 +215,24 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout("Start", usageMenu);
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
+            List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>();
+            startLayouts.Add(helpOrStart_menu);
+
             if (this.error != "")
             {
                 TextblockLayout textLayout = new TextblockLayout(this.error);
                 textLayout.ScoreIfCropped = true;
-                
-                helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayout(textLayout).AddLayout(helpOrStart_menu)
-                    .AddLayout(OpenIssue_Layout.New()).Build();
+                startLayouts.Insert(0, textLayout);
+                startLayouts.Add(OpenIssue_Layout.New());
             }
 
+            if (this.welcomeMessage != "")
+            {
+                startLayouts.Insert(0, new TextblockLayout(this.welcomeMessage));
+                this.welcomeMessage = "";
+            }
+
+            helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu);
 
@@ -281,10 +340,9 @@ namespace ActivityRecommendation
             return data;
         }
 
-        public string ExportData()
+        public string ExportData(int maxNumLines = -1)
         {
             string content = this.readPersistentUserData().serialize();
-            int maxNumLines = this.dataExportView.Get_NumLines();
             if (maxNumLines > 0)
             {
                 int startIndex = content.Length - 1;
@@ -326,6 +384,7 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("Starting to read files");
 
             this.error = "";
+
             EngineLoader loader = new EngineLoader();
             Engine engine;
             if (System.Diagnostics.Debugger.IsAttached)
@@ -836,6 +895,8 @@ namespace ActivityRecommendation
         }
 
 
+        string version;
+        string dataVersion;
         ContentView parentView;
         ViewManager displayManager;
         LayoutChoice_Set mainLayout;
@@ -853,6 +914,7 @@ namespace ActivityRecommendation
         string inheritancesFileName = "ActivityInheritances.txt";    // the name of the file that stores inheritances
         string recentUserData_fileName = "TemporaryData.txt";
         string protoActivities_filename = "ProtoActivities.txt";
+        string versionFilename = "version.txt";
         Participation latestParticipation;
         RecentUserData recentUserData;
         LayoutStack layoutStack;
@@ -860,6 +922,13 @@ namespace ActivityRecommendation
         // how long to spend making a suggestion
         TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
         string error = "";
+        string welcomeMessage = "";
         ProtoActivity_Database protoActivities_database;
+    }
+
+    class ApplicationExecution
+    {
+        public string version;
+        public bool debuggerAttached;
     }
 }

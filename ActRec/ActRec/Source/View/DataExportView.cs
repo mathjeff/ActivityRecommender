@@ -44,7 +44,7 @@ namespace ActivityRecommendation
 
         private void ExportButton_Clicked(object sender, EventArgs e)
         {
-            string result = this.activityRecommender.ExportData();
+            string result = this.activityRecommender.ExportData(this.Get_NumLines());
             this.layoutStack.AddLayout(new TextblockLayout(result));
         }
 

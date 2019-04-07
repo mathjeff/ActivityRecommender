@@ -9,11 +9,11 @@ namespace ActRec
 {
     public partial class App : Application
     {
-        public App()
+        public App(string version)
         {
             InitializeComponent();
 
-            MainPage = new MainPage();
+            MainPage = new MainPage(version);
         }
 
         protected override void OnStart()

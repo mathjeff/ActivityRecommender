@@ -6,6 +6,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using System.Reflection;
 
 namespace ActRec.Droid
 {
@@ -24,7 +25,8 @@ namespace ActRec.Droid
             Uniforms.Misc.Droid.ImageUtils.Init();
             Uniforms.Misc.Droid.TextUtils.Init();
 
-            LoadApplication(new App());
+            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            LoadApplication(new App(version));
         }
     }
 }

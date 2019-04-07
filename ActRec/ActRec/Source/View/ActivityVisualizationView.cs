@@ -38,8 +38,6 @@ namespace ActivityRecommendation
 
             fixedGrid.AddLayout(this.Make_StatsView());
 
-
-            this.UpdateParticipationStatsView();
             this.UpdateDrawing();
         }
         private LayoutChoice_Set Make_StatsView()
@@ -241,6 +239,8 @@ namespace ActivityRecommendation
             IEnumerable<Participation> participations = participationProgression.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
             DateTime lastDate = this.queryEndDateDisplay.GetDate();
+            double firstCoordinate = this.GetXCoordinate(firstDate);
+            double lastCoordinate = this.GetXCoordinate(lastDate);
             List<Datapoint> cumulativeParticipationDurations = new List<Datapoint>();
             List<Datapoint> cumulativeSuggestionCounts = new List<Datapoint>();
             List<double> suggestionDates = new List<double>();
@@ -265,30 +265,33 @@ namespace ActivityRecommendation
             List<double> endXs = new List<double>();
 
             // figure out which dates we care about
-            double startX, endX;
+            double participationStartCoordinate, participationEndCoordinate;
             int numActiveIntervals = 0;
             DateTime startDate, endDate;
-            
+
             foreach (Participation participation in participations)
             {
                 // update some data about cumulative participation duration
                 startDate = participation.StartDate;
                 endDate = participation.EndDate;
                 // make sure this participation is relevant
-                if (startDate.CompareTo(firstDate) >= 0 && endDate.CompareTo(lastDate) <= 0)
+                if (endDate.CompareTo(firstDate) >= 0 && startDate.CompareTo(lastDate) <= 0)
                 {
-                    startX = this.GetXCoordinate(participation.StartDate);
-                    endX = this.GetXCoordinate(participation.EndDate);
-                    startXs.Add(startX);
-                    endXs.Add(endX);
-                    if (startX > endX)
+                    participationStartCoordinate = Math.Max(this.GetXCoordinate(startDate), firstCoordinate);
+                    participationEndCoordinate = Math.Min(this.GetXCoordinate(endDate), lastCoordinate);
+                    startXs.Add(participationStartCoordinate);
+                    endXs.Add(participationEndCoordinate);
+                    if (participationStartCoordinate < firstCoordinate)
                         numActiveIntervals++;
 
                     // update some data about cumulative num suggestions
+                    // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
                     if (participation.Suggested)
                     {
-                        // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
-                        suggestionDates.Add(this.GetXCoordinate(participation.StartDate));
+                        // double-check that the participation was suggested more recently than the start DateTime
+                        double suggestionDate = this.GetXCoordinate(startDate);
+                        if (suggestionDate >= firstCoordinate)
+                            suggestionDates.Add(suggestionDate);
                     }
                 }
             }
@@ -301,23 +304,23 @@ namespace ActivityRecommendation
                 {
                     if (endXs.Count > 0)
                     {
-                        startX = startXs[0];
-                        endX = endXs[0];
+                        participationStartCoordinate = startXs[0];
+                        participationEndCoordinate = endXs[0];
                     }
                     else
                     {
-                        startX = startXs[0];
-                        endX = startX + 1;  // something larger that will be ignored
+                        participationStartCoordinate = startXs[0];
+                        participationEndCoordinate = participationStartCoordinate + 1;  // something larger that will be ignored
                     }
                 }
                 else
                 {
-                    endX = endXs[0];
-                    startX = endX + 1;      // something larger that will be ignored
+                    participationEndCoordinate = endXs[0];
+                    participationStartCoordinate = participationEndCoordinate + 1;      // something larger that will be ignored
                 }
-                if (startX < endX)
+                if (participationStartCoordinate < participationEndCoordinate)
                 {
-                    x2 = startX;
+                    x2 = participationStartCoordinate;
                     double weight = x2 - x1;
                     // add a datapoint denoting the start of the interval
                     cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationSeconds, weight));
@@ -329,7 +332,7 @@ namespace ActivityRecommendation
                 }
                 else
                 {
-                    x2 = endX;
+                    x2 = participationEndCoordinate;
                     double weight = x2 - x1;
                     // add a datapoint denoting the start of the interval
                     cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationSeconds, weight));
@@ -412,6 +415,7 @@ namespace ActivityRecommendation
 
             System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " to update partipations plot");
 
+            this.UpdateParticipationStatsView(cumulativeParticipationSeconds);
         }
 
         // Given the size of some range, returns an appropriate interval for separating tick marks on a graph of that size
@@ -436,19 +440,14 @@ namespace ActivityRecommendation
 
         private void DateTextChanged(object sender, TextChangedEventArgs e)
         {
-            this.UpdateParticipationStatsView();
             this.UpdateDrawing();
         }
-        public void UpdateParticipationStatsView()
+        public void UpdateParticipationStatsView(double numSeconds)
         {
-            // make sure that the dates can be parsed before we update the display
-            if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
-                return;
-            // figure out how much time you spent on it between these dates
+            double numHoursSpent = numSeconds / 3600;
             DateTime startDate = this.queryStartDateDisplay.GetDate();
             DateTime endDate = this.queryEndDateDisplay.GetDate();
-            ParticipationsSummary summary = this.yAxisActivity.SummarizeParticipationsBetween(startDate, endDate);
-            double numHoursSpent = summary.CumulativeIntensity.TotalSeconds / 3600;
+
             // figure out how much time there was between these dates
             TimeSpan availableDuration = endDate.Subtract(startDate);
             double totalNumHours = availableDuration.TotalHours;
@@ -459,18 +458,7 @@ namespace ActivityRecommendation
             this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + Math.Round(numHoursSpent, 3) + " hours on " + this.YAxisLabel;
             //this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
             this.timeFractionDisplay.Text = "Or " + Environment.NewLine + Math.Round(participationFraction * 24 * 60, 3).ToString() + " minutes per day";
-            Activity bestChild = null;
-            double bestTotal = 0;
-            foreach (Activity child in this.yAxisActivity.GetChildren())
-            {
-                ParticipationsSummary participation = child.SummarizeParticipationsBetween(startDate, endDate);
-                double currentTotal = participation.CumulativeIntensity.TotalSeconds;
-                if (currentTotal > bestTotal)
-                {
-                    bestChild = child;
-                    bestTotal = currentTotal;
-                }
-            }
+
         }
 
         public string XAxisLabel

@@ -35,6 +35,7 @@ namespace ActivityRecommendation
         {
             this.ApplyParticipationsAndRatings();
             this.requiresFullUpdate = false;
+            System.Diagnostics.Debug.WriteLine("Engine.FullUpdate completed");
         }
         public void EnsureRatingsAreAssociated()
         {
@@ -324,17 +325,21 @@ namespace ActivityRecommendation
         {
             DateTime now = DateTime.Now;
             ActivitySuggestion suggestion = new ActivitySuggestion(activity.MakeDescriptor());
-            ParticipationsSummary participationSummary = activity.SummarizeParticipationsBetween(new DateTime(), now);
-            double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
             suggestion.CreatedDate = now;
             suggestion.StartDate = when;
-            suggestion.EndDate = suggestion.StartDate.Add(TimeSpan.FromSeconds(typicalNumSeconds));
+            suggestion.EndDate = this.GuessParticipationEndDate(activity, when);
             suggestion.ParticipationProbability = this.EstimateParticipationProbability(activity, when).Distribution.Mean;
             double average = this.ActivityDatabase.RootActivity.Ratings.Mean;
             if (average == 0)
                 average = 1;
             suggestion.PredictedScoreDividedByAverage = this.EstimateRating(activity, when).Distribution.Mean / average;
             return suggestion;
+        }
+        public DateTime GuessParticipationEndDate(Activity activity, DateTime start)
+        {
+            ParticipationsSummary participationSummary = activity.SummarizeParticipationsBetween(new DateTime(), start);
+            double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
+            return start.Add(TimeSpan.FromSeconds(typicalNumSeconds));
         }
         // This function essentially addresses the well-known multi-armed bandit problem
         // Given two distributions, we estimate the expected total value from choosing values from them

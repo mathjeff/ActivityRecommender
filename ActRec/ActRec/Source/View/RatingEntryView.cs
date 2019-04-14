@@ -67,11 +67,11 @@ namespace ActivityRecommendation
             //this.relativeRatingEntryView
             this.absoluteRatingEntryView.Text = "";
         }
-        public Rating GetRating(ActivityDatabase activities, Engine engine, Participation participation)
+        public Rating GetRating(Engine engine, Participation participation)
         {
             if (this.ShowRelativeEntryView())
             {
-                return this.relativeRatingEntryView.GetRating(activities, engine, participation);
+                return this.relativeRatingEntryView.GetRating(engine, participation);
             }
             else
             {

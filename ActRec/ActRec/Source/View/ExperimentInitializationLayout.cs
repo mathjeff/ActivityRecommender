@@ -11,7 +11,7 @@ namespace ActivityRecommendation.View
         public event RequestedExperimentHandler RequestedExperiment;
         public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
 
-        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase)
+        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase, Engine engine)
         {
             this.SetTitle("Experiment");
             this.activityRecommender = activityRecommender;
@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
             for (int i = 0; i < this.numChoices; i++)
             {
                 bool allowRequestingActivitiesDirectly = (i == 0);
-                ExperimentOptionLayout child = new ExperimentOptionLayout(this, activityDatabase, allowRequestingActivitiesDirectly);
+                ExperimentOptionLayout child = new ExperimentOptionLayout(this, activityDatabase, allowRequestingActivitiesDirectly, engine, layoutStack);
                 this.children.Add(child);
                 childrenBuilder.AddLayout(child);
                 child.SuggestionDismissed += Child_SuggestionDismissed;
@@ -46,7 +46,7 @@ namespace ActivityRecommendation.View
 
             BoundProperty_List rowHeights = new BoundProperty_List(2);
             rowHeights.BindIndices(0, 1);
-            rowHeights.SetPropertyScale(0, 2);
+            rowHeights.SetPropertyScale(0, 1);
             rowHeights.SetPropertyScale(1, 3);
 
             GridLayout mainGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
@@ -113,6 +113,17 @@ namespace ActivityRecommendation.View
                 this.statusHolder.SubLayout = new TextblockLayout(errorMessage);
             }
         }
+        public Participation LatestParticipation
+        {
+            set
+            {
+                foreach (ExperimentOptionLayout child in this.children)
+                {
+                    child.LatestParticipation = value;
+                }
+            }
+        }
+
         private List<SuggestedMetric> Suggestions
         {
             get

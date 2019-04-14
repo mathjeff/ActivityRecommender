@@ -286,7 +286,7 @@ namespace ActivityRecommendation
 
             try
             {
-                Rating rating = this.ratingBox.GetRating(activities, engine, participation);
+                Rating rating = this.ratingBox.GetRating(engine, participation);
                 participation.RawRating = rating;
             }
             catch (Exception)

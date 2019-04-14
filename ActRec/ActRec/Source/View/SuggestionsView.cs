@@ -21,7 +21,7 @@ namespace ActivityRecommendation.View
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest request);
 
-        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase)
+        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine)
         {
             this.recommender = recommenderToInform;
 
@@ -29,11 +29,8 @@ namespace ActivityRecommendation.View
 
             this.SetTitle("Get Suggestions");
 
-            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, false);
-            requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
-
-            this.requestSuggestion_layout = requestSuggestion_layout;
-
+            this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, false, engine, layoutStack);
+            this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a activity recommendations.")
                 .AddMessage("By default, the recommendation will attempt to maximize your long-term happiness.")
@@ -109,6 +106,13 @@ namespace ActivityRecommendation.View
             this.messageLayout = new TextblockLayout(errorMessage);
             this.UpdateLayout();
         }
+        public Participation LatestParticipation
+        {
+            set
+            {
+                this.requestSuggestion_layout.LatestParticipation = value;
+            }
+        }
         
         private void UpdateSuggestions()
         {
@@ -179,7 +183,7 @@ namespace ActivityRecommendation.View
         }
 
 
-        LayoutChoice_Set requestSuggestion_layout;
+        RequestSuggestion_Layout requestSuggestion_layout;
         LayoutChoice_Set helpButton_layout;
         Button experimentButton;
         LayoutChoice_Set startExperiment_layout;

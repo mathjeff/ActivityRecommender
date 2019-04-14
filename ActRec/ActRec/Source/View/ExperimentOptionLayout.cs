@@ -18,19 +18,14 @@ namespace ActivityRecommendation.View
         public event JustifySuggestionHandler JustifySuggestion;
         public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
 
-        public ExperimentOptionLayout(ExperimentInitializationLayout owner, ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly)
+        public ExperimentOptionLayout(ExperimentInitializationLayout owner, ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, Engine engine, LayoutStack layoutStack)
         {
             this.owner = owner;
 
-            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, allowRequestingActivitiesDirectly, true);
+            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, allowRequestingActivitiesDirectly, true, engine, layoutStack);
             requestSuggestion_layout.RequestSuggestion += RequestSuggestion_Impl;
             this.requestSuggestion_layout = requestSuggestion_layout;
             this.Suggestion = null;
-        }
-
-        private void Layout_RequestSuggestion(ActivityRequest activityRequest)
-        {
-            throw new NotImplementedException();
         }
 
         public SuggestedMetric Suggestion
@@ -57,6 +52,14 @@ namespace ActivityRecommendation.View
             }
         }
 
+        public Participation LatestParticipation
+        {
+            set
+            {
+                this.requestSuggestion_layout.LatestParticipation = value;
+            }
+        }
+
         private void SuggestionLayout_JustifySuggestion()
         {
             this.JustifySuggestion.Invoke(this.suggestion.ActivitySuggestion);
@@ -78,7 +81,7 @@ namespace ActivityRecommendation.View
             }
         }
 
-        private LayoutChoice_Set requestSuggestion_layout;
+        private RequestSuggestion_Layout requestSuggestion_layout;
         private ExperimentInitializationLayout owner;
         private SuggestedMetric suggestion;
     }

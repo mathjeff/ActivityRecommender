@@ -113,6 +113,8 @@ namespace ActivityRecommendation
                 properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(request.FromCategory);
             if (request.ActivityToBeat != null)
                 properties[this.ActivityToBeat_Tag] = this.ConvertToStringBody(request.ActivityToBeat);
+            if (request.UserPredictedRating != null)
+                properties[this.UserPredictedRating_Tag] = this.ConvertToStringBody(request.UserPredictedRating);
             properties[this.DateTag] = this.ConvertToStringBody(request.Date);
 
             return this.ConvertToString(properties, objectName);
@@ -1534,6 +1536,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Beat";
+            }
+        }
+        private string UserPredictedRating_Tag
+        {
+            get
+            {
+                return "RequestPredictedRating";
             }
         }
 

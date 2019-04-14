@@ -21,7 +21,10 @@ namespace ActivityRecommendation
             this.parentView = parentView;
             this.version = version;
 
-            this.setupAsync();
+            if (System.Diagnostics.Debugger.IsAttached)
+                this.setupSynchronously();
+            else
+                this.setupAsync();
         }
 
         private void setupAsync()
@@ -35,6 +38,12 @@ namespace ActivityRecommendation
                     this.attachParentView();
                 });
             });
+        }
+        private void setupSynchronously()
+        {
+            this.setupLoadingScreen();
+            this.Initialize();
+            this.attachParentView();
         }
 
         private void setupLoadingScreen()
@@ -162,11 +171,12 @@ namespace ActivityRecommendation
             this.participationEntryView.LatestParticipation = this.latestParticipation;
             this.UpdateDefaultParticipationData();
 
-            this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase);
+            this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);
             this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
             this.suggestionsView.RequestSuggestion += SuggestionsView_RequestSuggestion;
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
+            this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
@@ -271,7 +281,8 @@ namespace ActivityRecommendation
 
         private void SuggestionsView_ExperimentRequested()
         {
-            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase);
+            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase, this.engine);
+            experimentationLayout.LatestParticipation = this.LatestParticipation;
             this.layoutStack.AddLayout(experimentationLayout);
             experimentationLayout.RequestedExperiment += ExperimentationInitializationLayout_RequestedExperiment;
         }
@@ -638,9 +649,7 @@ namespace ActivityRecommendation
         {
             if (this.latestParticipation == null || newParticipation.EndDate.CompareTo(this.latestParticipation.EndDate) > 0)
             {
-                this.latestParticipation = newParticipation;
-                if (this.participationEntryView != null)
-                    this.participationEntryView.LatestParticipation = this.latestParticipation;
+                this.LatestParticipation = newParticipation;
             }
             this.engine.PutParticipationInMemory(newParticipation);
 
@@ -811,6 +820,22 @@ namespace ActivityRecommendation
                 this.writeRecentUserData_if_needed();
             }
         }
+
+        private Participation LatestParticipation
+        {
+            get
+            {
+                return this.latestParticipation;
+            }
+            set
+            {
+                this.latestParticipation = value;
+                if (this.participationEntryView != null)
+                    this.participationEntryView.LatestParticipation = this.latestParticipation;
+                if (this.suggestionsView != null)
+                    this.suggestionsView.LatestParticipation = this.latestParticipation;
+            }
+        }
         
         private void writeRecentUserData_if_needed()
         {
@@ -896,7 +921,6 @@ namespace ActivityRecommendation
 
 
         string version;
-        string dataVersion;
         ContentView parentView;
         ViewManager displayManager;
         LayoutChoice_Set mainLayout;

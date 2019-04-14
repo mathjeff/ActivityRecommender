@@ -46,7 +46,7 @@ namespace ActivityRecommendation
         {
             return (this.GetRatio() != null);
         }
-        private double? GetRatio()
+        public double? GetRatio()
         {
             string text = this.scaleBlock.Text;
             try
@@ -109,7 +109,7 @@ namespace ActivityRecommendation
             }
         }
         // creates the rating to assign to the given Participation
-        public Rating GetRating(ActivityDatabase activities, Engine engine, Participation participation)
+        public Rating GetRating(Engine engine, Participation participation)
         {
             // abort if null input
             double? maybeScale = this.GetRatio();

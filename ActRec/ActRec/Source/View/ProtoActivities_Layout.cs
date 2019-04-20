@@ -33,7 +33,6 @@ namespace ActivityRecommendation.View
         public StackEntry Get()
         {
             ProtoActivity protoActivity = new ProtoActivity(null, DateTime.Now, new Distribution());
-            this.protoActivity_database.Put(protoActivity);
             ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database);
             return new StackEntry(layout, layout);
         }

@@ -42,7 +42,8 @@ namespace ActivityRecommendation
 
         public void Remove(ProtoActivity activity)
         {
-            this.protoActivities[activity.Id] = null;
+            if (activity.Id >= 0)
+                this.protoActivities[activity.Id] = null;
         }
 
         public IEnumerable<ProtoActivity> ProtoActivities

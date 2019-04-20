@@ -122,14 +122,10 @@ namespace ActivityRecommendation.View
 
         private LayoutChoice_Set summarize(ProtoActivity protoActivity)
         {
-            string text = protoActivity.Text;
-            int maxLength = 100;
-            string elipsis = "...";
-            if (text != null && text.Length > maxLength)
-            {
-                text = text.Substring(0, maxLength - elipsis.Length) + elipsis;
-            }
-            return new TextblockLayout(text);
+            TextblockLayout option1 = new TextblockLayout(protoActivity.Text, 16);
+            option1.ScoreIfCropped = true;
+            TextblockLayout option2 = new TextblockLayout(protoActivity.Text, 30);
+            return new LayoutUnion(option1, option2);
         }
 
         private void Mark1Worse_button_Clicked(object sender, EventArgs e)

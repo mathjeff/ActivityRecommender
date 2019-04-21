@@ -153,7 +153,8 @@
     <Compile Include="Source\View\ActivityImportLayout.cs" />
     <Compile Include="Source\View\ActivityInheritancesView.cs" />
     <Compile Include="Source\View\ActivitySuggestion_Justification_Layout.cs" />
-    <Compile Include="Source\View\Browse_ProtoActivities_Layout.cs" />
+    <Compile Include="Source\View\BrowseAll_ProtoActivities_Layout.cs" />
+    <Compile Include="Source\View\BrowseBest_ProtoActivities_Layout.cs" />
     <Compile Include="Source\View\EngineTesterView.cs" />
     <Compile Include="Source\View\ExperimentationDifficultySelectionLayout.cs" />
     <Compile Include="Source\View\ExperimentInitializationLayout.cs" />

@@ -230,8 +230,7 @@ namespace ActivityRecommendation
 
             if (this.error != "")
             {
-                TextblockLayout textLayout = new TextblockLayout(this.error);
-                textLayout.ScoreIfCropped = true;
+                TextblockLayout textLayout = new TextblockLayout(this.error, true);
                 startLayouts.Insert(0, textLayout);
                 startLayouts.Add(OpenIssue_Layout.New());
             }
@@ -333,8 +332,7 @@ namespace ActivityRecommendation
             }
             catch (Exception e)
             {
-                TextblockLayout textLayout = new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString());
-                textLayout.ScoreIfCropped = true;
+                TextblockLayout textLayout = new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString(), true);
                 this.layoutStack.AddLayout(textLayout);
                 return;
             }

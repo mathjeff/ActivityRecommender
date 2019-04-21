@@ -13,7 +13,8 @@ namespace ActivityRecommendation.View
         {
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
             menuBuilder.AddLayout("Enter new ProtoActivity", new ProtoActivity_LayoutBuilder(database));
-            menuBuilder.AddLayout("Browse ProtoActivities", new Browse_ProtoActivities_Layout(database, layoutStack));
+            menuBuilder.AddLayout("Browse Best ProtoActivities", new BrowseBest_ProtoActivities_Layout(database, layoutStack));
+            menuBuilder.AddLayout("View All ProtoActivities", new BrowseAll_ProtoActivities_Layout(database, layoutStack));
             menuBuilder.AddLayout("Help", new HelpWindowBuilder()
                 .AddMessage("Here you can brainstorm things that you might want to do but that aren't yet formed well enough to be meaningful to suggest.")
                 .AddMessage("Once an idea that you enter here does become worth suggesting, you can promote it from a ProtoActivity to an Activity")

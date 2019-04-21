@@ -8,9 +8,9 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    class Browse_ProtoActivities_Layout : ContainerLayout
+    class BrowseBest_ProtoActivities_Layout : ContainerLayout
     {
-        public Browse_ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
+        public BrowseBest_ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
         {
             this.protoActivity_database = protoActivity_database;
             this.layoutStack = layoutStack;
@@ -40,7 +40,7 @@ namespace ActivityRecommendation.View
             columnWidths.SetPropertyScale(2, 1);
 
             GridLayout grid = GridLayout.New(rowHeights, columnWidths, LayoutScore.Zero);
-            grid.PutLayout(new TextblockLayout("Browse ProtoActivities"), 1, 0);
+            grid.PutLayout(new TextblockLayout("Browse Best ProtoActivities"), 1, 0);
             LayoutChoice_Set helpButton = new HelpButtonLayout(
                 new HelpWindowBuilder()
                 .AddMessage("If you have entered any ProtoActivities (which are ideas that are not yet fully-formed enough for you to want them to be " +
@@ -122,8 +122,7 @@ namespace ActivityRecommendation.View
 
         private LayoutChoice_Set summarize(ProtoActivity protoActivity)
         {
-            TextblockLayout option1 = new TextblockLayout(protoActivity.Text, 16);
-            option1.ScoreIfCropped = true;
+            TextblockLayout option1 = new TextblockLayout(protoActivity.Text, true, 16);
             TextblockLayout option2 = new TextblockLayout(protoActivity.Text, 30);
             return new LayoutUnion(option1, option2);
         }

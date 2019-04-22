@@ -57,15 +57,15 @@ namespace ActivityRecommendation
         {
             return true;
         }
-        public IEnumerable<Participation> Participations
+        public List<Participation> Participations
         {
             get
             {
                 IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.AllItems;
-                LinkedList<Participation> results = new LinkedList<Participation>();
+                List<Participation> results = new List<Participation>(items.Count());
                 foreach (ListItemStats<DateTime, ParticipationAndSummary> stats in items)
                 {
-                    results.AddLast(stats.Value.Participation);
+                    results.Add(stats.Value.Participation);
                 }
                 return results;
             }

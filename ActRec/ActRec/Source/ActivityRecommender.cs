@@ -187,7 +187,7 @@ namespace ActivityRecommendation
             this.statisticsMenu.AddOkClickHandler(new EventHandler(this.VisualizeActivity));
 
             visualizationBuilder.AddLayout("Visualize one Activity", this.statisticsMenu);
-            visualizationBuilder.AddLayout("Browse Favorite Commented Participations", new ParticipationsCommentView(this.ActivityDatabase, this.layoutStack));
+            visualizationBuilder.AddLayout("Browse Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.layoutStack));
             visualizationBuilder.AddLayout("Compute ActivityRecommender's Accuracy (Very Slow)", new EngineTesterView(this, this.layoutStack));
 
             LayoutChoice_Set visualizationMenu = visualizationBuilder.Build();

@@ -525,7 +525,7 @@ namespace ActivityRecommendation
             }
             this.PendingParticipationsForShorttermAnalysis.Clear();
         }
-        public IEnumerable<Participation> Participations
+        public List<Participation> Participations
         {
             get
             {

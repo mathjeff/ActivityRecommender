@@ -11,10 +11,13 @@ namespace ActivityRecommendation.View
     // Allows creating or updating a ProtoActivity
     public class ProtoActivity_Editing_Layout : ContainerLayout, OnBack_Listener
     {
-        public ProtoActivity_Editing_Layout(ProtoActivity protoActivity, ProtoActivity_Database database)
+        public ProtoActivity_Editing_Layout(ProtoActivity protoActivity, ProtoActivity_Database database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.protoActivity = protoActivity;
             this.database = database;
+            this.activityDatabase = activityDatabase;
+            this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
+            this.layoutStack = layoutStack;
             this.textBox = new Editor();
             this.textBox.Text = protoActivity.Text;
 
@@ -27,7 +30,49 @@ namespace ActivityRecommendation.View
             gridBuilder.AddLayout(title);
             gridBuilder.AddLayout(ScrollLayout.New(new TextboxLayout(this.textBox)));
 
+            Button promoteButton = new Button();
+            promoteButton.Text = "Promote to Activity";
+            promoteButton.Clicked += PromoteButton_Clicked;
+            ButtonLayout promoteLayout = new ButtonLayout(promoteButton);
+            gridBuilder.AddLayout(promoteLayout);
+
             this.SubLayout = gridBuilder.Build();
+        }
+
+        private void PromoteButton_Clicked(object sender, EventArgs e)
+        {
+            this.promote();
+        }
+
+        private void promote()
+        {
+            string text = this.textBox.Text;
+            int maxLength = 120;
+            if (text.Length > maxLength)
+            {
+                this.layoutStack.AddLayout(new TextblockLayout("The text of this Protoactivity is too long (" + text.Length + " " +
+                    "characters which is more than the limit of " + maxLength + ") to automatically promote into an Activity. " +
+                    "It's better to have a short Activity name because:\n" +
+                    "#1 It will have to fit onscreen and\n" +
+                    "#2 It will be saved to your device's storage every time you record having done it."));
+            }
+            else
+            {
+                ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
+                creationLayout.SelectedActivityTypeIsCategory = false;
+                creationLayout.ActivityName = this.textBox.Text;
+                this.layoutStack.AddEntry(new StackEntry(creationLayout, this));
+            }
+        }
+
+        private void ActivityDatabase_ActivityAdded(Activity activity)
+        {
+            if (this.layoutStack.Contains(this))
+            {
+                this.delete();
+                this.persist();
+                this.skipWhenGoingBack = true;
+            }
         }
 
         private void DeleteButton_Clicked(object sender, EventArgs e)
@@ -41,7 +86,25 @@ namespace ActivityRecommendation.View
 
         public void OnBack(LayoutChoice_Set layout)
         {
+            if (layout == this)
+            {
+                this.OnHide();
+            }
+            else
+            {
+                this.OnReturnToHere();
+            }
+        }
+        private void OnHide()
+        {
             this.persist();
+        }
+        private void OnReturnToHere()
+        {
+            if (this.skipWhenGoingBack)
+            {
+                this.layoutStack.RemoveLayout();
+            }
         }
         private void persist()
         {
@@ -58,5 +121,8 @@ namespace ActivityRecommendation.View
         private ProtoActivity protoActivity;
         private ProtoActivity_Database database;
         private Editor textBox;
+        private ActivityDatabase activityDatabase;
+        private LayoutStack layoutStack;
+        private bool skipWhenGoingBack;
     }
 }

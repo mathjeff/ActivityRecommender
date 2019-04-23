@@ -32,7 +32,7 @@ namespace ActivityRecommendation.View
             this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, false, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
 
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this page to ask for a activity recommendations.")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to ask for a activity recommendations.")
                 .AddMessage("By default, the recommendation will attempt to maximize your long-term happiness.")
                 .AddMessage("The recommendation may be slightly randomized if ActivityRecommender doesn't have enough time to consider every activity within a couple seconds.")
                 .AddMessage("If you are sure that you want an activity from a certain category, then you can enter its name into the category box, and ActivityRecommender will make sure " +

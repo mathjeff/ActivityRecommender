@@ -10,9 +10,10 @@ namespace ActivityRecommendation.View
 {
     class BrowseAll_ProtoActivities_Layout : ContainerLayout
     {
-        public BrowseAll_ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
+        public BrowseAll_ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.protoActivity_database = protoActivity_database;
+            this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
 
             this.protoActivity_database.TextChanged += ProtoActivity_database_TextChanged;
@@ -78,11 +79,12 @@ namespace ActivityRecommendation.View
 
         private void edit(ProtoActivity protoActivity)
         {
-            ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database);
+            ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack);
             this.layoutStack.AddLayout(layout, layout);
         }
 
         private ProtoActivity_Database protoActivity_database;
+        private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
         private Dictionary<Button, ProtoActivity> protoActivities_by_button;
     }

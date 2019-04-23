@@ -140,7 +140,7 @@ namespace ActivityRecommendation
             ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
             InheritanceEditingLayout inheritanceCreationView = new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack);
-            ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.layoutStack);
+            ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
 
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
@@ -151,8 +151,8 @@ namespace ActivityRecommendation
                 .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
                 .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
                 .AddLayout("Help", (new HelpWindowBuilder()
-                    .AddMessage("This page allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
-                    .AddMessage("This page also allows you to add new types of activities.")
+                    .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
+                    .AddMessage("This screen also allows you to add new types of activities.")
                     .AddMessage("Any recommendation that ActivityRecommdender makes will be one of these activities.")
                     .AddMessage("Additionally, if you plan to ask ActivityRecommender to measure how quickly (your Effectiveness) you complete various Activities, you have to enter a "+
                     "Metric for those activities, so ActivityRecommender can know that it makes sense to measure (for example, it wouldn't make sense to measure how quickly you sleep at "+

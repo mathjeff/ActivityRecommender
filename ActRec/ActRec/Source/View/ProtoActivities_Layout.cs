@@ -9,12 +9,12 @@ namespace ActivityRecommendation.View
 {
     public class ProtoActivities_Layout : ContainerLayout
     {
-        public ProtoActivities_Layout(ProtoActivity_Database database, LayoutStack layoutStack)
+        public ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
-            menuBuilder.AddLayout("Enter new ProtoActivity", new ProtoActivity_LayoutBuilder(database));
-            menuBuilder.AddLayout("Browse Best ProtoActivities", new BrowseBest_ProtoActivities_Layout(database, layoutStack));
-            menuBuilder.AddLayout("View All ProtoActivities", new BrowseAll_ProtoActivities_Layout(database, layoutStack));
+            menuBuilder.AddLayout("Enter new ProtoActivity", new ProtoActivity_LayoutBuilder(protoActivity_database, activityDatabase, layoutStack));
+            menuBuilder.AddLayout("Browse Best ProtoActivities", new BrowseBest_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
+            menuBuilder.AddLayout("View All ProtoActivities", new BrowseAll_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
             menuBuilder.AddLayout("Help", new HelpWindowBuilder()
                 .AddMessage("Here you can brainstorm things that you might want to do but that aren't yet formed well enough to be meaningful to suggest.")
                 .AddMessage("Once an idea that you enter here does become worth suggesting, you can promote it from a ProtoActivity to an Activity")
@@ -26,19 +26,23 @@ namespace ActivityRecommendation.View
 
     public class ProtoActivity_LayoutBuilder : ValueProvider<StackEntry>
     {
-        public ProtoActivity_LayoutBuilder(ProtoActivity_Database activityDatabase)
+        public ProtoActivity_LayoutBuilder(ProtoActivity_Database protoActivity_Database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
-            this.protoActivity_database = activityDatabase;
+            this.protoActivity_database = protoActivity_Database;
+            this.activityDatabase = activityDatabase;
+            this.layoutStack = layoutStack;
         }
 
         public StackEntry Get()
         {
             ProtoActivity protoActivity = new ProtoActivity(null, DateTime.Now, new Distribution());
-            ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database);
+            ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack);
             return new StackEntry(layout, layout);
         }
 
         private ProtoActivity_Database protoActivity_database;
+        private ActivityDatabase activityDatabase;
+        private LayoutStack layoutStack;
     }
 
 }

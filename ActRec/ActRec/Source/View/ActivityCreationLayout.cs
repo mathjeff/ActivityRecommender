@@ -39,7 +39,7 @@ namespace ActivityRecommendation
             this.okButton.Clicked += OkButton_Clicked;
             mainGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities to do, to use as future suggestions.")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This screen is for you to enter activities to do, to use as future suggestions.")
                 .AddMessage("In the left text box, choose a name for the activity.")
                 .AddMessage("In the right text box, specify another activity to assign as its parent.")
                 .AddMessage("For example, you might specify that Gaming is a child activity of the Fun activity. Grouping activities like this is helpful for two reasons. It gives " +
@@ -63,11 +63,27 @@ namespace ActivityRecommendation
         }
 
         // returns true if the type of Activity to create is Category (otherwise the type is ToDo)
-        private bool activityTypeIsCategory
+        public bool SelectedActivityTypeIsCategory
         {
             get
             {
                 return this.typePicker.Checked;
+            }
+            set
+            {
+                this.typePicker.Checked = value;
+            }
+        }
+
+        public string ActivityName
+        {
+            get
+            {
+                return this.childNameBox.NameText;
+            }
+            set
+            {
+                this.childNameBox.NameText = value;
             }
         }
 
@@ -79,7 +95,7 @@ namespace ActivityRecommendation
             inheritance.DiscoveryDate = DateTime.Now;
 
             string error;
-            if (this.activityTypeIsCategory)
+            if (this.SelectedActivityTypeIsCategory)
                 error = this.activityDatabase.CreateCategory(inheritance);
             else
                 error = this.activityDatabase.CreateToDo(inheritance);

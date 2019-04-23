@@ -31,7 +31,7 @@ namespace ActivityRecommendation
             bottomGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
 
 
-            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This page is for you to enter activities, to use as future suggestions.")
+            LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This screen is for you to enter activities, to use as future suggestions.")
                 .AddMessage("The text box on the left is where you type the activity name.")
                 .AddMessage("The text box on the right is where you type another activity that you want to make be a parent of the given activity.")
                 .AddMessage("For example, you might specify that Gaming is a child activity of the Fun activity. Grouping activities like this is helpful for two reasons. It gives " +

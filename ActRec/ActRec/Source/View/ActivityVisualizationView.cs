@@ -67,13 +67,14 @@ namespace ActivityRecommendation
             builder.AddLayout(new TextblockLayout(this.timeFractionDisplay));
 
             // display rating statistics
+            this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating:");
+            this.ratingWhenNotSuggested_Display.Text = Math.Round(this.yAxisActivity.Ratings.Mean, 5).ToString();
+            builder.AddLayout(this.ratingWhenNotSuggested_Display);
+
             this.ratingWhenSuggested_Display = new TitledTextblock("Mean rating when suggested:");
             this.ratingWhenSuggested_Display.Text = Math.Round(this.yAxisActivity.RatingsWhenSuggested.Mean, 5).ToString();
             builder.AddLayout(this.ratingWhenSuggested_Display);
 
-            this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating when not suggested:");
-            this.ratingWhenNotSuggested_Display.Text = Math.Round(this.yAxisActivity.RatingsWhenNotSuggested.Mean, 5).ToString();
-            builder.AddLayout(this.ratingWhenNotSuggested_Display);
 
             builder.AddLayout(this.make_helpLayout());
             

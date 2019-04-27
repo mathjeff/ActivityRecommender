@@ -70,10 +70,15 @@ namespace ActivityRecommendation.Effectiveness
         public static SuggestedMetric_Renderer Instance = new SuggestedMetric_Renderer();
         public LayoutChoice_Set GetLayout(SuggestedMetric metric)
         {
-            Horizontal_GridLayout_Builder gridBuilder = new Horizontal_GridLayout_Builder();
-            gridBuilder.AddLayout(new TextblockLayout(metric.ActivityDescriptor.ActivityName));
-            gridBuilder.AddLayout(new TextblockLayout(metric.PlannedMetric.MetricName));
-            return gridBuilder.Build();
+            BoundProperty_List columnWidths = new BoundProperty_List(2);
+            columnWidths.BindIndices(0, 1);
+            columnWidths.SetPropertyScale(0, 5);
+            columnWidths.SetPropertyScale(1, 2);
+            GridLayout gridLayout = GridLayout.New(new BoundProperty_List(1), columnWidths, LayoutScore.Zero);
+            gridLayout.AddLayout(new TextblockLayout(metric.ActivityDescriptor.ActivityName));
+            gridLayout.AddLayout(new TextblockLayout(metric.PlannedMetric.MetricName));
+            return gridLayout;
+
         }
 
 

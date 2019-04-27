@@ -18,7 +18,7 @@ namespace ActivityRecommendation.View
 
         public ExperimentationDifficultySelectionLayout(List<SuggestedMetric> choices)
         {
-            string instructions = "Rearrange these tasks so they appear in order by increasing difficulty (easiest task at the top).";
+            string instructions = "Rearrange these tasks so they appear in order by increasing difficulty.";
 
             Button okButton = new Button();
             okButton.Clicked += OkButton_Clicked;
@@ -27,11 +27,17 @@ namespace ActivityRecommendation.View
             this.choicesLayout = new ReorderableList<SuggestedMetric>(choices, SuggestedMetric_Renderer.Instance);
 
 
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-            gridBuilder.AddLayout(new TextblockLayout(instructions));
-            gridBuilder.AddLayout(okButtonLayout);
-            gridBuilder.AddLayout(this.choicesLayout);
-            this.SubLayout = gridBuilder.Build();
+            BoundProperty_List rowHeights = new BoundProperty_List(5);
+            rowHeights.BindIndices(1, 3); // Make the size of the Easiest text block match the size of the Hardest text block
+            GridLayout gridLayout = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
+
+            gridLayout.AddLayout(new TextblockLayout(instructions));
+            gridLayout.AddLayout(new TextblockLayout("Easiest", 16).AlignHorizontally(TextAlignment.Center));
+            gridLayout.AddLayout(this.choicesLayout);
+            gridLayout.AddLayout(new TextblockLayout("Hardest", 16).AlignHorizontally(TextAlignment.Center));
+            gridLayout.AddLayout(okButtonLayout);
+
+            this.SubLayout = gridLayout;
         }
 
         private void OkButton_Clicked(object sender, EventArgs e)

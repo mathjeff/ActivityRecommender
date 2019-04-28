@@ -179,6 +179,8 @@ namespace ActivityRecommendation
             set
             {
                 this.ratingBox.LatestParticipation = value;
+                this.previousPrediction = this.currentPrediction;
+                this.currentPrediction = new LongtermPrediction();
             }
             get
             {
@@ -483,13 +485,11 @@ namespace ActivityRecommendation
         private double compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
             Distribution chosenEstimatedDistribution = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, startDate).Distribution;
+            this.currentPrediction.LongtermHappiness = chosenEstimatedDistribution;
             if (chosenEstimatedDistribution.Weight <= 0)
                 return 0;
+            double usualValue = this.previousPrediction.LongtermHappiness.Mean;
             double chosenValue = chosenEstimatedDistribution.Mean;
-
-
-            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
-            double usualValue = rootActivity.GetAverageLongtermValueWhenParticipated().Mean;
 
             double bonusInSeconds = 0;
             double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
@@ -515,15 +515,11 @@ namespace ActivityRecommendation
         // given an activity and a DateTime for its Participation to start, estimates the change in efficiency (measured in hours) in the near future caused by doing it
         private double computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
         {
-            Activity rootActivity = this.ActivityDatabase.RootActivity;
-            Distribution usual = rootActivity.GetAverageEfficiencyWhenParticipated();
-            if (usual.Weight <= 0)
-                return 0;
-            double usualValue = usual.Mean;
-
             Distribution chosenEstimatedDistribution = this.engine.Get_OverallEfficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
+            this.currentPrediction.LongtermEfficiency = chosenEstimatedDistribution;
             if (chosenEstimatedDistribution.Weight <= 0)
                 return 0;
+            double usualValue = this.previousPrediction.LongtermEfficiency.Mean;
             double chosenValue = chosenEstimatedDistribution.Mean;
 
             double bonusInSeconds = 0;
@@ -588,5 +584,18 @@ namespace ActivityRecommendation
         SingleSelect todoCompletionStatusPicker;
         ContainerLayout todoCompletionStatusHolder;
         ActivityDescriptor demanded_nextParticipationActivity;
+        LongtermPrediction previousPrediction = new LongtermPrediction();
+        LongtermPrediction currentPrediction = new LongtermPrediction();
+    }
+
+    class LongtermPrediction
+    {
+        public LongtermPrediction()
+        {
+            this.LongtermHappiness = Distribution.MakeDistribution(0.5, 0, 1);
+            this.LongtermEfficiency = Distribution.MakeDistribution(1, 0, 1);
+        }
+        public Distribution LongtermHappiness;
+        public Distribution LongtermEfficiency;
     }
 }

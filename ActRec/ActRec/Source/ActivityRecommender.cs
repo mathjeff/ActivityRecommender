@@ -16,10 +16,11 @@ namespace ActivityRecommendation
 {
     public class ActivityRecommender
     {
-        public ActivityRecommender(ContentView parentView, string version)
+        public ActivityRecommender(ContentView parentView, string version, ValueProvider<StreamReader> logReader)
         {
             this.parentView = parentView;
             this.version = version;
+            this.LogReader = logReader;
 
             if (System.Diagnostics.Debugger.IsAttached)
                 this.setupSynchronously();
@@ -220,9 +221,13 @@ namespace ActivityRecommendation
             helpMenu_builder.AddLayout("List exciting features", FeatureOverviewLayout.New(this.layoutStack));
             helpMenu_builder.AddLayout("Explain usage", InstructionsLayout.New(this.layoutStack));
 
+            MenuLayoutBuilder debuggingBuilder = new MenuLayoutBuilder(this.layoutStack);
+            debuggingBuilder.AddLayout("View Logs", new LogViewer(this.LogReader));
+
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu_builder.Build());
             introMenu_builder.AddLayout("Start", usageMenu);
+            introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
             List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>();
@@ -896,6 +901,8 @@ namespace ActivityRecommendation
                 return this.engine.ActivityDatabase;
             }
         }
+
+        public ValueProvider<StreamReader> LogReader { get; set; }
         
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()

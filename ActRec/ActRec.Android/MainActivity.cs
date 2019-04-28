@@ -7,6 +7,9 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 using System.Reflection;
+using System.IO;
+using Java.Lang;
+using VisiPlacement;
 
 namespace ActRec.Droid
 {
@@ -26,7 +29,24 @@ namespace ActRec.Droid
             Uniforms.Misc.Droid.TextUtils.Init();
 
             string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            LoadApplication(new App(version));
+            AppParams parameters = new AppParams(version, new LogcatReader());
+            LoadApplication(new App(parameters));
+        }
+
+    }
+
+    public class LogcatReader : ValueProvider<StreamReader>
+    {
+        public StreamReader Get()
+        {
+            Runtime runtime = Runtime.GetRuntime();
+            System.Diagnostics.Debug.WriteLine("ActRec.Android checking for previous errors");
+            string[] parameters = new string[] { "timeout", "4", "logcat", "-d" };
+            Java.Lang.Process process = new ProcessBuilder(parameters).RedirectErrorStream(true).Start();
+            process.WaitFor();
+            System.Diagnostics.Debug.WriteLine("logcat return code = " + process.ExitValue());
+            Stream stream = process.InputStream;
+            return new StreamReader(stream);
         }
     }
 }

@@ -159,6 +159,10 @@
     </AndroidResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj">
+      <Project>{217dd708-6929-48ad-9b43-a469fd251cc7}</Project>
+      <Name>VisiPlacer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ActRec\ActRec.csproj">
       <Project>{537059b1-56ea-43c1-8ae7-84141ca45696}</Project>
       <Name>ActRec</Name>

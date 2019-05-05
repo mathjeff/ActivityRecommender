@@ -297,6 +297,7 @@ namespace ActivityRecommendation
         private void ExperimentDifficultySelectionLayout_Done(List<SuggestedMetric> choices)
         {
             DateTime when = DateTime.Now;
+            this.SuspectLatestActionDate(when);
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);
@@ -308,7 +309,6 @@ namespace ActivityRecommendation
                 this.engine.PutExperimentInMemory(experiment);
                 this.WriteExperiment(experiment);
             }
-            this.SuspectLatestActionDate(when);
 
             this.layoutStack.RemoveLayout();
             this.layoutStack.RemoveLayout();

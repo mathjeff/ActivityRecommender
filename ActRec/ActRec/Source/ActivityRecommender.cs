@@ -72,7 +72,7 @@ namespace ActivityRecommendation
 
         private void attachParentView()
         {
-            this.displayManager.SetParent(this.parentView);
+            this.viewManager.SetParent(this.parentView);
         }
 
         public void Reload()
@@ -137,6 +137,8 @@ namespace ActivityRecommendation
 
         private void SetupDrawing()
         {
+            this.mainLayout = this.layoutStack;
+            this.viewManager = new ViewManager(null, this.mainLayout);
 
             ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
@@ -222,7 +224,8 @@ namespace ActivityRecommendation
             helpMenu_builder.AddLayout("Explain usage", InstructionsLayout.New(this.layoutStack));
 
             MenuLayoutBuilder debuggingBuilder = new MenuLayoutBuilder(this.layoutStack);
-            debuggingBuilder.AddLayout("View Logs", new LogViewer(this.LogReader));
+            debuggingBuilder.AddLayout("View Logs", new MenuLayoutBuilder(this.layoutStack).AddLayout("View Logs", new LogViewer(this.LogReader)).Build());
+            debuggingBuilder.AddLayout("Enable/Disable Layout Debugging", new EnableDebugging_Layout(this.viewManager));
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu_builder.Build());
@@ -249,18 +252,6 @@ namespace ActivityRecommendation
             helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu);
-
-            GridLayout gridLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
-            gridLayout.PutLayout(new LayoutCache(this.layoutStack), 0, 1);
-
-#if true
-            this.mainLayout = gridLayout;
-#else
-            this.mainLayout = this.layoutStack;
-#endif
-
-            this.displayManager = new ViewManager(null, this.mainLayout);
-            gridLayout.PutLayout(new LayoutDuration_Layout(this.displayManager), 0, 0);
         }
 
 
@@ -885,15 +876,6 @@ namespace ActivityRecommendation
             }
         }
 
-        public void ShowMainview(object sender, EventArgs e)
-        {
-            this.ShowMainview();
-        }
-        public void ShowMainview()
-        {
-            this.displayManager.SetLayout(this.mainLayout);
-        }
-
         public ActivityDatabase ActivityDatabase
         {
             get
@@ -927,7 +909,7 @@ namespace ActivityRecommendation
 
         string version;
         ContentView parentView;
-        ViewManager displayManager;
+        ViewManager viewManager;
         LayoutChoice_Set mainLayout;
 
         ParticipationEntryView participationEntryView;

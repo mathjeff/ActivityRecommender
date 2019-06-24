@@ -419,7 +419,7 @@ namespace ActivityRecommendation
             this.UpdateParticipationStatsView(cumulativeParticipationSeconds);
 
             // debugging
-            this.SetContent(this.participationsView.GetContent());
+            //this.SetContent(this.participationsView.GetContent());
         }
 
         // Given the size of some range, returns an appropriate interval for separating tick marks on a graph of that size

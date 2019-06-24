@@ -876,10 +876,7 @@ namespace ActivityRecommendation
                 yAxisActivity.ApplyPendingData();
                 List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
-                LayoutChoice_Set other = new ImageLayout(new PlotView(), LayoutScore.Get_UsedSpace_LayoutScore(1));
-                //LayoutChoice_Set other = new ImageLayout(new ContainerView(), LayoutScore.Get_UsedSpace_LayoutScore(1));
-                this.layoutStack.AddLayout(other);
-                //this.layoutStack.AddLayout(visualizationView);
+                this.layoutStack.AddLayout(visualizationView);
             }
         }
 

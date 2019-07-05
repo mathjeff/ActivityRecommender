@@ -150,15 +150,18 @@ namespace ActivityRecommendation
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
-                .AddLayout("Import Some Common Activities", activityImportLayout)
                 .AddLayout("Brainstorm New Activities", protoActivitiesLayout)
-                .AddLayout("Enter New Activity", activityCreationView)
-                .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
-                .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
+                .AddLayout("Import Some Premade Activities", activityImportLayout)
+                .AddLayout("Add/Edit Activities", (new MenuLayoutBuilder(this.layoutStack)
+                    .AddLayout("Enter New Activity", activityCreationView)
+                    .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
+                    .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
+                    .Build()
+                ))
                 .AddLayout("Help", (new HelpWindowBuilder()
                     .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
                     .AddMessage("This screen also allows you to add new types of activities.")
-                    .AddMessage("Any recommendation that ActivityRecommdender makes will be one of these activities.")
+                    .AddMessage("When you ask ActivityRecommender for a recommendatino later, it will only suggest activities that you have entered here.")
                     .AddMessage("Additionally, if you plan to ask ActivityRecommender to measure how quickly (your Effectiveness) you complete various Activities, you have to enter a "+
                     "Metric for those activities, so ActivityRecommender can know that it makes sense to measure (for example, it wouldn't make sense to measure how quickly you sleep at "+
                     "once: it wouldn't count as twice effective to do two sleeps of half duration each).")

@@ -6,4 +6,8 @@ destDir="ActivityData"
 cd
 cd ActivityData
 adb pull "$fileName" .
-echo copied "$fileName" to "~/$destDir/$(basename $fileName)"
+destPath="$HOME/$destDir/$(basename $fileName)"
+echo
+echo copied "$fileName" to "$destPath"
+echo
+tail -n 10 "$destPath"

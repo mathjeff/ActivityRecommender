@@ -42,9 +42,9 @@ namespace ActivityRecommendation
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
             middleGrid.AddLayout(this.ratingBox);
-            this.commentBox = new Editor();
-            middleGrid.AddLayout(new TitledControl("Comment (optional)", ScrollLayout.New(new TextboxLayout(this.commentBox, 16))));
-            
+            this.commentBox = new PopoutTextbox(layoutStack);
+            middleGrid.AddLayout(new TitledControl("Comment (optional)", this.commentBox));
+
             contents.AddLayout(middleGrid);
             this.todoCompletionStatusHolder = new ContainerLayout();
             this.todoCompletionLabel = new Label();
@@ -570,7 +570,7 @@ namespace ActivityRecommendation
         // private member variables
         ActivityNameEntryBox nameBox;
         RelativeRatingEntryView ratingBox;
-        Editor commentBox;
+        PopoutTextbox commentBox;
         DateEntryView startDateBox;
         DateEntryView endDateBox;
         Button setStartdateButton;

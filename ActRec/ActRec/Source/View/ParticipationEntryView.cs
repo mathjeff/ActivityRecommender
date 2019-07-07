@@ -42,8 +42,8 @@ namespace ActivityRecommendation
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
             middleGrid.AddLayout(this.ratingBox);
-            this.commentBox = new PopoutTextbox(layoutStack);
-            middleGrid.AddLayout(new TitledControl("Comment (optional)", this.commentBox));
+            this.commentBox = new PopoutTextbox("Comment (optional)", layoutStack);
+            middleGrid.AddLayout(this.commentBox);
 
             contents.AddLayout(middleGrid);
             this.todoCompletionStatusHolder = new ContainerLayout();

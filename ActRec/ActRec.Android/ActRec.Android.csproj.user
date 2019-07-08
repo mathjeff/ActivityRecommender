@@ -2,6 +2,6 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SelectedDevice>Google Pixel 2</SelectedDevice>
-    <DefaultDevice>VisualStudio_android-23_arm_phone</DefaultDevice>
+    <DefaultDevice>Nexus_5_API_22_x86</DefaultDevice>
   </PropertyGroup>
 </Project>

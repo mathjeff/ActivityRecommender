@@ -309,7 +309,8 @@ namespace ActivityRecommendation
         // constructs an Activity from the given ActivityDescriptor
         public Category CreateCategory(ActivityDescriptor sourceDescriptor)
         {
-            if (this.ResolveDescriptor(sourceDescriptor) != null)
+            Activity existing = this.ResolveDescriptor(sourceDescriptor);
+            if (existing != null)
             {
                 throw new ArgumentException("Activity " + sourceDescriptor.ActivityName + " already exists");
             }
@@ -320,7 +321,8 @@ namespace ActivityRecommendation
 
         public ToDo CreateToDo(ActivityDescriptor sourceDescriptor)
         {
-            if (this.ResolveDescriptor(sourceDescriptor) != null)
+            Activity existing = this.ResolveDescriptor(sourceDescriptor);
+            if (existing != null)
             {
                 throw new ArgumentException("Activity " + sourceDescriptor.ActivityName + " already exists");
             }
@@ -431,6 +433,11 @@ namespace ActivityRecommendation
         // puts an Activity in the database
         private void AddActivity(Activity newActivity)
         {
+            System.Diagnostics.Debug.WriteLine("Adding " + newActivity);
+            if (newActivity.Name == "Adding  binary trees into Bluejay")
+            {
+                System.Diagnostics.Debug.WriteLine("That's weird");
+            }
             string activityName = newActivity.Name;
             // make a list containing just this Activity
             List<Activity> activityList = new List<Activity>();

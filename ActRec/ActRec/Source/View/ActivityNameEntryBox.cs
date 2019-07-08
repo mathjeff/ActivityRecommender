@@ -50,7 +50,7 @@ namespace ActivityRecommendation.View
 
         private void XButton_Clicked(object sender, EventArgs e)
         {
-            this.Clear();
+            this.NameText = "";
         }
 
         public void AddTextChangedHandler(EventHandler<TextChangedEventArgs> h)
@@ -97,21 +97,21 @@ namespace ActivityRecommendation.View
             }
             if (addedMarker)
             {
-                if (!this.createNewActivity && this.suggestedActivityName != "")
+                if (this.createNewActivity)
                 {
-                    // automatically fill the suggestion text into the box
-                    this.Set_NameText(this.suggestedActivityName);
-                    this.nameBox.Unfocus();
+                    // reject illegal characters
+                    this.NameText = oldText;
                 }
                 else
                 {
-                    // reject illegal characters
-                    this.Set_NameText(oldText);
+                    // automatically fill the suggestion text into the box
+                    this.NameText = this.suggestedActivityName;
+                    this.nameBox.Unfocus();
                 }
             }
             else
             {
-                this.Update_NameText(newText);
+                this.NameText = newText;
             }
         }
         public string NameText
@@ -120,23 +120,28 @@ namespace ActivityRecommendation.View
             {
                 return this.nameText;
             }
+            set
+            {
+                string oldText = this.nameText;
+
+                this.nameText = value;
+                this.nameBox.Text = value;
+                this.UpdateSuggestions();
+
+                if (this.NameMatchesSuggestion)
+                {
+                    if (this.NameMatchedSuggestion != null)
+                        this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
+                }
+            }
         }
         public void Clear()
         {
             this.Set_NameText(null);
         }
-        // Called when we want to programmatically change the box's text
         public void Set_NameText(string text)
         {
-            this.nameText = text;
-            this.nameBox.Text = text;
-            this.UpdateSuggestions();
-        }
-        // Called when we want to make a note of an external change to the box's text
-        private void Update_NameText(string text)
-        {
-            this.nameText = text;
-            this.UpdateSuggestions();
+            this.NameText = text;
         }
         public ReadableActivityDatabase Database
         {
@@ -195,12 +200,6 @@ namespace ActivityRecommendation.View
             if (oldText == null || oldText == "")
             {
                 this.AnnounceChange(true);
-            }
-
-            if (this.NameMatchesSuggestion)
-            {
-                if (this.NameMatchedSuggestion != null)
-                    this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
             }
         }
 

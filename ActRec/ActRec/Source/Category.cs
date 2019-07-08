@@ -21,7 +21,7 @@ namespace ActivityRecommendation
 
         public override string ToString()
         {
-            return "Activity " + base.Name;
+            return "Category " + base.Name;
         }
 
         public List<Activity> Children

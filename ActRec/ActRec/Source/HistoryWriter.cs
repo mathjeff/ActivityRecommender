@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using ActivityRecommendation.Effectiveness;
 
 // The HistoryWriter will resave the user's rating data
@@ -89,7 +90,7 @@ namespace ActivityRecommendation
             // add a new empty line so a newline appears after the last tline
             this.fileContentComponents.Add("");
 
-            this.publicFileIo.ExportFile(fileName, String.Join(Environment.NewLine, this.fileContentComponents));
+            Task.Run(async () => await this.publicFileIo.ExportFile(fileName, String.Join(Environment.NewLine, this.fileContentComponents)));
 
             return null;
         }

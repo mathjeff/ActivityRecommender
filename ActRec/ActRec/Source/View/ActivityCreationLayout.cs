@@ -83,7 +83,7 @@ namespace ActivityRecommendation
             }
             set
             {
-                this.childNameBox.Set_NameText(value);
+                this.childNameBox.NameText = value;
             }
         }
 

@@ -577,15 +577,10 @@ namespace ActivityRecommendation
             //
             // Another likely source of error is that the true net present happiness can't be perfectly computed until after we know how happy the user will be in the future
             // (because net present happiness is defined as the (exponentially) weighted sum of all future happinesses (with larger weights given to sooner ratings).
-            // As more time elapses, we get an increasingly accurate estimate of the user's net present happiness at a given time. To account for this, if an activity doesn't
-            // have many participations that happened long ago, we decrease the weight of its predictions
-            DateTime participationRelevanceStart;
-            if (activity.NumParticipations > 0)
-                participationRelevanceStart = activity.MiddleParticipation.StartDate;
-            else
-                participationRelevanceStart = activity.DiscoveryDate;
-            TimeSpan participationRelevanceDuration = when.Subtract(participationRelevanceStart);
-            double numCompletedHalfLives = participationRelevanceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
+            // As more time elapses, we get an increasingly accurate estimate of the user's net present happiness at a given time. To account for this, we decrease the weight of
+            // the prediction for activities we haven't known about for long
+            TimeSpan existenceDuration = when.Subtract(activity.DiscoveryDate);
+            double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
 
 

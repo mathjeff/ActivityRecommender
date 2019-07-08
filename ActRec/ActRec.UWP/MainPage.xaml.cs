@@ -1,27 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
+using VisiPlacement;
+using Xamarin.Forms;
+using ActivityRecommendation;
 
-namespace ActRec.UWP
+namespace ActRec
 {
-    public sealed partial class MainPage
+    public partial class MainPage : ContentPage
     {
-        public MainPage()
+        public MainPage(AppParams appParams)
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
-            LoadApplication(new ActRec.App());
+            ContentView view = new ContentView();
+            this.Content = view;
+
+            this.activityRecommender = new ActivityRecommender(view, appParams.Version, appParams.LogReader);
         }
+
+        protected override bool OnBackButtonPressed()
+        {
+            return this.activityRecommender.GoBack();
+        }
+
+        private ActivityRecommender activityRecommender;
     }
 }

@@ -1,1 +1,0 @@
-This UnitTests project is for unit tests, which do not require interacting with any views or frameworks and are supposed to be runnable on any platform.

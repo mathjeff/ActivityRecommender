@@ -33,11 +33,11 @@ namespace ActivityRecommendation
         public PlotView()
         {
             this.canvas = new SKCanvasView();
-            this.canvas.PaintSurface += Canvas_PaintSurface;
+            //this.canvas.PaintSurface += Canvas_PaintSurface;
             this.Content = this.canvas;
 
             this.canvas.BackgroundColor = Color.Black;
-            this.canvas.InvalidateSurface();
+            //this.canvas.InvalidateSurface();
         }
 
         public void AddSeries(List<Datapoint> data, bool drawRegressionLine)

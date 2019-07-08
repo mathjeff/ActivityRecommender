@@ -70,11 +70,6 @@ namespace ActivityRecommendation
                 return results;
             }
         }
-        public Participation GetAtIndex(int index)
-        {
-            ListItemStats<DateTime, ParticipationAndSummary> item = this.searchHelper.GetValueAtIndex(index);
-            return item.Value.Participation;
-        }
         public Participation LatestParticipation
         {
             get

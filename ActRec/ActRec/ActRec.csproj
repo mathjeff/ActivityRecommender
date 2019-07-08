@@ -1,228 +1,31 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EBE6C89F-60A7-460D-9DC6-AAF83261F8D7}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ActRec</RootNamespace>
-    <AssemblyName>ActRec</AssemblyName>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile44</TargetFrameworkProfile>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <EmbeddedResource Include="MainPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Include="App.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
+    <Compile Remove="deps\**" />
+    <EmbeddedResource Remove="deps\**" />
+    <None Remove="deps\**" />
   </ItemGroup>
+
   <ItemGroup>
-    <Reference Include="PCLStorage, Version=1.0.2.0, Culture=neutral, PublicKeyToken=286fe515a2c35b64, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\PCLStorage.1.0.2\lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch+Xamarin.iOS+Xamarin.Mac\PCLStorage.dll</HintPath>
-    </Reference>
-    <Reference Include="PCLStorage.Abstractions, Version=1.0.2.0, Culture=neutral, PublicKeyToken=286fe515a2c35b64, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\PCLStorage.1.0.2\lib\portable-net45+wp8+wpa81+win8+monoandroid+monotouch+Xamarin.iOS+Xamarin.Mac\PCLStorage.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Plugin.FilePicker, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Xam.Plugin.FilePicker.1.1.0\lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10+UAP10\Plugin.FilePicker.dll</HintPath>
-    </Reference>
-    <Reference Include="Plugin.FilePicker.Abstractions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Xam.Plugin.FilePicker.1.1.0\lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10+UAP10\Plugin.FilePicker.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="SkiaSharp, Version=1.59.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SkiaSharp.1.59.1\lib\portable-net45+win8+wpa81+wp8\SkiaSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="SkiaSharp.Views.Forms, Version=1.59.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\SkiaSharp.Views.Forms.1.59.1.1\lib\portable-net45+win8+wpa81+wp8\SkiaSharp.Views.Forms.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Forms.Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Xamarin.Forms.2.4.0.282\lib\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Forms.Platform, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Xamarin.Forms.2.4.0.282\lib\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.Platform.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Forms.Xaml, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Xamarin.Forms.2.4.0.282\lib\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.Xaml.dll</HintPath>
-    </Reference>
+    <PackageReference Include="PCLStorage" Version="1.0.2" />
+    <PackageReference Include="Plugin.Permissions" Version="3.0.0.12" />
+    <PackageReference Include="SkiaSharp" Version="1.68.0" />
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.68.0" />
+    <PackageReference Include="Xamarin.Forms" Version="4.0.0.497661" />
+    <PackageReference Include="Xamarin.Plugin.FilePicker" Version="2.0.135" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\deps\AdaptiveInterpolator\AdaptiveInterpolator.csproj">
-      <Project>{eada9628-a4e4-40b0-a362-8fbde4931c22}</Project>
-      <Name>AdaptiveInterpolator</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\deps\StatList\StatList.csproj">
-      <Project>{67f9d3a8-f71e-4428-913f-c37ae82cdb24}</Project>
-      <Name>StatList</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj">
-      <Project>{217dd708-6929-48ad-9b43-a469fd251cc7}</Project>
-      <Name>VisiPlacer</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Source\Icon.ico" />
-    <Content Include="Source\icon.png" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <Import Project="..\..\packages\Xamarin.Forms.2.4.0.282\build\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.targets" Condition="Exists('..\..\packages\Xamarin.Forms.2.4.0.282\build\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Xamarin.Forms.2.4.0.282\build\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Xamarin.Forms.2.4.0.282\build\portable-win+net45+wp80+win81+wpa81\Xamarin.Forms.targets'))" />
-  </Target>
-  <ItemGroup>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="MainPage.xaml.cs">
-      <DependentUpon>MainPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Source\AbsoluteRating.cs" />
-    <Compile Include="Source\AbsoluteRatingEntryView.cs" />
-    <Compile Include="Source\ActivityAverageScoreComparer.cs" />
-    <Compile Include="Source\ActivityRecommendationsAnalysis.cs" />
-    <Compile Include="Source\Effectiveness\EfficiencyMeasurement.cs" />
-    <Compile Include="Source\Effectiveness\Metric.cs" />
-    <Compile Include="Source\Effectiveness\PlannedExperiment.cs" />
-    <Compile Include="Source\FileIo.cs" />
-    <Compile Include="Source\EngineLoader.cs" />
-    <Compile Include="Source\ExponentiallyWeightedPredictionLink.cs" />
-    <Compile Include="Source\ProtoActivity.cs" />
-    <Compile Include="Source\ProtoActivity_Database.cs" />
-    <Compile Include="Source\ToDo.cs" />
-    <Compile Include="Source\Activity.cs" />
-    <Compile Include="Source\Category.cs" />
-    <Compile Include="Source\ActivityDatabase.cs" />
-    <Compile Include="Source\ActivityDescriptor.cs" />
-    <Compile Include="Source\View\ActivityNameEntryBox.cs" />
-    <Compile Include="Source\ActivityRecommender.cs" />
-    <Compile Include="Source\ActivityRequest.cs" />
-    <Compile Include="Source\ActivitySkip.cs" />
-    <Compile Include="Source\ActivitySuggestion.cs" />
-    <Compile Include="Source\AutoSmoothed_ParticipationProgression.cs" />
-    <Compile Include="Source\BinomialDistribution.cs" />
-    <Compile Include="Source\Composite_ActivitySuggestion.cs" />
-    <Compile Include="Source\Consideration.cs" />
-    <Compile Include="Source\ConsiderationProgression.cs" />
-    <Compile Include="Source\Correlator.cs" />
-    <Compile Include="Source\CumulativeParticipationProgression.cs" />
-    <Compile Include="Source\Datapoint.cs" />
-    <Compile Include="Source\DateComparer.cs" />
-    <Compile Include="Source\Distribution.cs" />
-    <Compile Include="Source\DistributionAdder.cs" />
-    <Compile Include="Source\Engine.cs" />
-    <Compile Include="Source\EngineTester.cs" />
-    <Compile Include="Source\ExpectedParticipationProbabilityProgression.cs" />
-    <Compile Include="Source\ExpectedRatingProgression.cs" />
-    <Compile Include="Source\ExponentialRatingSummarizer.cs" />
-    <Compile Include="Source\FloatAdder.cs" />
-    <Compile Include="Source\HistoryWriter.cs" />
-    <Compile Include="Source\IdlenessProgression.cs" />
-    <Compile Include="Source\Inheritance.cs" />
-    <Compile Include="Source\View\ActivityImportLayout.cs" />
-    <Compile Include="Source\View\ActivityInheritancesView.cs" />
-    <Compile Include="Source\View\ActivitySuggestion_Justification_Layout.cs" />
-    <Compile Include="Source\View\BrowseAll_ProtoActivities_Layout.cs" />
-    <Compile Include="Source\View\BrowseBest_ProtoActivities_Layout.cs" />
-    <Compile Include="Source\View\EngineTesterView.cs" />
-    <Compile Include="Source\View\ExperimentationDifficultySelectionLayout.cs" />
-    <Compile Include="Source\View\ExperimentInitializationLayout.cs" />
-    <Compile Include="Source\View\ExperimentOptionLayout.cs" />
-    <Compile Include="Source\View\FeatureOverviewLayout.cs" />
-    <Compile Include="Source\View\ActivityCreationLayout.cs" />
-    <Compile Include="Source\View\InheritanceEditingLayout.cs" />
-    <Compile Include="Source\IPredictionLink.cs" />
-    <Compile Include="Source\IProgression.cs" />
-    <Compile Include="Source\LinearProgression.cs" />
-    <Compile Include="Source\LinearRatingSummarizer.cs" />
-    <Compile Include="Source\LongtermValuePredictor.cs" />
-    <Compile Include="Source\Participation.cs" />
-    <Compile Include="Source\ParticipationsSummary.cs" />
-    <Compile Include="Source\Prediction.cs" />
-    <Compile Include="Source\PredictionLink.cs" />
-    <Compile Include="Source\ProgressionValue.cs" />
-    <Compile Include="Source\Rating.cs" />
-    <Compile Include="Source\RatingProgression.cs" />
-    <Compile Include="Source\RatingRenormalizer.cs" />
-    <Compile Include="Source\HistoryReplayer.cs" />
-    <Compile Include="Source\RatingSource.cs" />
-    <Compile Include="Source\ScoreSummarizer.cs" />
-    <Compile Include="Source\ScoreSummary.cs" />
-    <Compile Include="Source\RecentUserData.cs" />
-    <Compile Include="Source\RelativeRating.cs" />
-    <Compile Include="Source\ScatterPlot.cs" />
-    <Compile Include="Source\ConstantWeightedPredictionLink.cs" />
-    <Compile Include="Source\SkipProgression.cs" />
-    <Compile Include="Source\SuggestionDatabase.cs" />
-    <Compile Include="Source\ActivitySuggestion_Justification.cs" />
-    <Compile Include="Source\TextConverter.cs" />
-    <Compile Include="Source\TimeProgression.cs" />
-    <Compile Include="Source\UserPreferences.cs" />
-    <Compile Include="Source\View\ActivityVisualizationMenu.cs" />
-    <Compile Include="Source\View\ActivityVisualizationView.cs" />
-    <Compile Include="Source\View\DataExportView.cs" />
-    <Compile Include="Source\View\DataImportView.cs" />
-    <Compile Include="Source\View\DateEntryView.cs" />
-    <Compile Include="Source\View\BrowseInheritancesView.cs" />
-    <Compile Include="Source\View\InstructionsLayout.cs" />
-    <Compile Include="Source\View\ListParticipations_Layout.cs" />
-    <Compile Include="Source\View\LogViewer.cs" />
-    <Compile Include="Source\View\MetricEditingLayout.cs" />
-    <Compile Include="Source\View\OpenIssue_Layout.cs" />
-    <Compile Include="Source\View\ParticipationComparisonMenu.cs" />
-    <Compile Include="Source\View\BrowseParticipations_Layout.cs" />
-    <Compile Include="Source\View\ParticipationView.cs" />
-    <Compile Include="Source\View\Participation_BinComparison_View.cs" />
-    <Compile Include="Source\View\ParticipationCorrelationView.cs" />
-    <Compile Include="Source\View\ParticipationEntryView.cs" />
-    <Compile Include="Source\View\PlotView.cs" />
-    <Compile Include="Source\View\PreferenceSummaryLayout.cs" />
-    <Compile Include="Source\View\ProgressionSelectionView.cs" />
-    <Compile Include="Source\View\ProtoActivities_Layout.cs" />
-    <Compile Include="Source\View\ProtoActivity_Editing_Layout.cs" />
-    <Compile Include="Source\View\RatingEntryView.cs" />
-    <Compile Include="Source\View\RelativeRatingEntryView.cs" />
-    <Compile Include="Source\View\RequestSuggestion_Layout.cs" />
-    <Compile Include="Source\View\ResizableButton.cs" />
-    <Compile Include="Source\View\ResizableRadioButton.cs" />
-    <Compile Include="Source\View\ResizableTextBlock.cs" />
-    <Compile Include="Source\View\ResizableTextBox.cs" />
-    <Compile Include="Source\View\SuggestionsView.cs" />
-    <Compile Include="Source\View\SuggestionView.cs" />
-    <Compile Include="Source\View\TitledTextBlock.cs" />
-    <Compile Include="Source\View\TitledTextbox.cs" />
-    <Compile Include="Source\WillingnessSummary.cs" />
-    <Compile Include="Source\XmlDocument.cs" />
+    <ProjectReference Include="..\..\deps\AdaptiveInterpolator\AdaptiveInterpolator.csproj" />
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj" />
   </ItemGroup>
 </Project>

@@ -10,16 +10,19 @@ using System.Reflection;
 using System.IO;
 using Java.Lang;
 using VisiPlacement;
+using Android.Support.V4.App;
+using Android;
+using Plugin.Permissions;
 
 namespace ActRec.Droid
 {
     [Activity(Label = "ActRec", Icon = "@drawable/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-    public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
+    public class MainActivity :  global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
     {
         protected override void OnCreate(Bundle bundle)
         {
-            TabLayoutResource = Resource.Layout.Tabbar;
-            ToolbarResource = Resource.Layout.Toolbar;
+            //TabLayoutResource = Resource.Layout.Tabbar;
+            //ToolbarResource = Resource.Layout.Toolbar;
 
             base.OnCreate(bundle);
 
@@ -30,9 +33,17 @@ namespace ActRec.Droid
 
             string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             AppParams parameters = new AppParams(version, new LogcatReader());
+
             LoadApplication(new App(parameters));
+
+            Plugin.CurrentActivity.CrossCurrentActivity.Current.Init(this, bundle);
         }
 
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+        {
+            PermissionsImplementation.Current.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     public class LogcatReader : ValueProvider<StreamReader>

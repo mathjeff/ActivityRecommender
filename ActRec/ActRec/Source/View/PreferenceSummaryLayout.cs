@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using VisiPlacement;
 using Xamarin.Forms;
 
@@ -49,21 +50,27 @@ namespace ActivityRecommendation.View
             DateTime now = DateTime.Now;
             string nowText = now.ToString("yyyy-MM-dd-HH-mm-ss");
             string fileName = "ActivityPrefSummary-" + nowText + ".txt";
-            bool exported = this.fileIo.ExportFile(fileName, fileText);
-            string title;
-            if (exported)
-                title = "Exported " + fileName + " successfully";
-            else
-                title = "Failed to export " + fileName;
-            gridBuilder.AddLayout(new TextblockLayout("(" + title + ")"));
-            gridBuilder.AddLayout(new TextblockLayout(" avg (count) : name"));
-            foreach (string text in texts)
-            {
-                gridBuilder.AddLayout(new TextblockLayout(text));
-            }
 
-            LayoutChoice_Set newLayout = ScrollLayout.New(gridBuilder.Build());
-            this.layoutStack.AddLayout(newLayout);
+            Task<bool> export = this.fileIo.ExportFile(fileName, fileText);
+
+            export.ContinueWith(task =>
+            {
+                string title;
+                if (task.Result)
+                    title = "Exported " + fileName + " successfully";
+                else
+                    title = "Failed to export " + fileName;
+                gridBuilder.AddLayout(new TextblockLayout("(" + title + ")"));
+                gridBuilder.AddLayout(new TextblockLayout(" avg (count) : name"));
+                foreach (string text in texts)
+                {
+                    gridBuilder.AddLayout(new TextblockLayout(text));
+                }
+
+                LayoutChoice_Set newLayout = ScrollLayout.New(gridBuilder.Build());
+                this.layoutStack.AddLayout(newLayout);
+            });
+
         }
 
         private Engine engine;

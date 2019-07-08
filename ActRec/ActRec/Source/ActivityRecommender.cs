@@ -22,10 +22,12 @@ namespace ActivityRecommendation
             this.version = version;
             this.LogReader = logReader;
 
-            if (System.Diagnostics.Debugger.IsAttached)
+            this.setupSynchronously();
+            /*if (System.Diagnostics.Debugger.IsAttached)
                 this.setupSynchronously();
             else
                 this.setupAsync();
+                */
         }
 
         private void setupAsync()
@@ -123,8 +125,8 @@ namespace ActivityRecommendation
             // and the developer is probably doing testing that they don't care to back up.
             if ((!oldExecution.version.Equals(newExecution.version)) && (!oldExecution.debuggerAttached || !newExecution.debuggerAttached))
             {
-                string status = this.ExportData();
-                this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version + ".\n" + status;
+                //string status = this.ExportData();
+                //this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version + ".\n" + status;
             }
         }
 
@@ -345,7 +347,7 @@ namespace ActivityRecommendation
             return data;
         }
 
-        public string ExportData(int maxNumLines = -1)
+        public async Task ExportData(int maxNumLines = -1)
         {
             string content = this.readPersistentUserData().serialize();
             if (maxNumLines > 0)
@@ -368,12 +370,14 @@ namespace ActivityRecommendation
             string fileName = "ActivityData-" + nowText + ".txt";
 
             // TODO make it possible for the user to control the file path
-            bool success = this.publicFileIo.ExportFile(fileName, content);
+            bool successful = await this.publicFileIo.ExportFile(fileName, content);
 
-            if (success)
-                return "Saved " + fileName;
+            string message;
+            if (successful)
+                message = "Saved " + fileName;
             else
-                return "Failed to save " + fileName;
+                message = "Failed to save " + fileName;
+            this.layoutStack.AddLayout(new TextblockLayout(message));
         }
 
         public bool GoBack()
@@ -392,7 +396,7 @@ namespace ActivityRecommendation
 
             EngineLoader loader = new EngineLoader();
             Engine engine;
-            if (System.Diagnostics.Debugger.IsAttached)
+            if (System.Diagnostics.Debugger.IsAttached && false)
             {
                 this.LoadFilesInto(loader);
             }
@@ -872,7 +876,10 @@ namespace ActivityRecommendation
                 yAxisActivity.ApplyPendingData();
                 List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
-                this.layoutStack.AddLayout(visualizationView);
+                LayoutChoice_Set other = new ImageLayout(new PlotView(), LayoutScore.Get_UsedSpace_LayoutScore(1));
+                //LayoutChoice_Set other = new ImageLayout(new ContainerView(), LayoutScore.Get_UsedSpace_LayoutScore(1));
+                this.layoutStack.AddLayout(other);
+                //this.layoutStack.AddLayout(visualizationView);
             }
         }
 

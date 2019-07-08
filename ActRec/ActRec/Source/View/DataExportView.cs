@@ -42,10 +42,9 @@ namespace ActivityRecommendation
             this.layoutStack = layoutStack;
         }
 
-        private void ExportButton_Clicked(object sender, EventArgs e)
+        private async void ExportButton_Clicked(object sender, EventArgs e)
         {
-            string result = this.activityRecommender.ExportData(this.Get_NumLines());
-            this.layoutStack.AddLayout(new TextblockLayout(result));
+            await this.activityRecommender.ExportData(this.Get_NumLines());
         }
 
         public int Get_NumLines()

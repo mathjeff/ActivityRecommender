@@ -110,7 +110,7 @@ namespace ActivityRecommendation
         }
         public override string ToString()
         {
-            return "Doable " + this.name;
+            return "Activity " + this.name;
         }
 
         public LinkedList<AbsoluteRating> PendingRatings = new LinkedList<AbsoluteRating>();
@@ -119,14 +119,8 @@ namespace ActivityRecommendation
         public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
         public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
         public List<EfficiencyMeasurement> PendingEfficiencyMeasurements = new List<EfficiencyMeasurement>();
-        public ConsiderationProgression ConsiderationProgression { get { return this.considerationProgression; } }
-        public int NumParticipations
-        {
-            get
-            {
-                return this.participationProgression.NumItems + this.PendingParticipationsForShorttermAnalysis.Count;
-            }
-        }
+        public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
+        public int NumParticipations { get { return (int)this.participationDurations.Weight; } }
 
         public void AddParentDescriptor(ActivityDescriptor newParent)
         {
@@ -537,14 +531,6 @@ namespace ActivityRecommendation
             {
                 this.ApplyPendingParticipations();
                 return this.participationProgression.Participations;
-            }
-        }
-        public Participation MiddleParticipation
-        {
-            get
-            {
-                this.ApplyPendingParticipations();
-                return this.ParticipationProgression.GetAtIndex(this.ParticipationProgression.NumItems / 2);
             }
         }
 

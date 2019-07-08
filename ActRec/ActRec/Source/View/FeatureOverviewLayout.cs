@@ -83,7 +83,7 @@ namespace ActivityRecommendation.View
                 .AddMessage("Because you explicitly tell ActivityRecommender how happy you are to have done various activities, that's what it optimizes. Its goal is not to maximize the " +
                 "amount of time you spend using ActivityRecommender.")
                 .AddMessage("In fact, any time you spend using ActivityRecommender is time that you don't spend doing something else.")
-                .AddMessage("So, on the Suggestions screen, if you ever push the X button, then ActivityRecommender assumes that while that activity was onscreen, that you were spending all" +
+                .AddMessage("So, on the Suggestions screen, if you ever push the X button, then ActivityRecommender assumes that while that activity was onscreen, that you were spending all " +
                 "of your brainpower contemplating whethre to do that activity, and that that time was worth 0 happiness to you.")
                 .AddMessage("ActivityRecommender will only attempt to use more of your time when it estimates that your resultant increase in happiness will be enough to compensate.")
                 .Build());

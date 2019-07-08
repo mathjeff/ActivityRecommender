@@ -93,8 +93,8 @@ namespace ActivityRecommendation.View
                     .AddMessage("Before ActivityRecommender can give you any suggestions or can record your progress, it needs to know what kinds of things you like to do.")
                     .AddMessage("This screen helps you to get started in entering new activities you may want to do.")
                     .AddMessage("If you don't want to think of and type every activity and instead want to start with a bunch of pre-made activities, you can accept the ideas on this screen.")
-                    .AddMessage("When you see an entry on this screen of the form 'parent <- child', then pressing that entry is the same as" +
-                    " declaring that you believe that the parent activity encompasses the child activity and that the child activity is relevant to you.")
+                    .AddMessage("When you see an entry on this screen of the form 'parent <- child', then pressing that entry is the same as " +
+                    "declaring that you believe that the parent activity encompasses the child activity and that the child activity is relevant to you.")
                     .AddMessage("For example, pressing an entry that says 'Game <- Board/Card Game' means that you think that board and card games are games, and it also means " +
                     "that you think board and card games are relevant to you")
                     .Build();

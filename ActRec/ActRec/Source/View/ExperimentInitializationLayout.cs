@@ -1,5 +1,4 @@
-﻿using ActivityRecommendation;
-using ActivityRecommendation.Effectiveness;
+﻿using ActivityRecommendation.Effectiveness;
 using System.Collections.Generic;
 using VisiPlacement;
 using Xamarin.Forms;
@@ -44,13 +43,16 @@ namespace ActivityRecommendation.View
             }
             GridLayout bottomGrid = childrenBuilder.Build();
 
-            BoundProperty_List rowHeights = new BoundProperty_List(2);
+            BoundProperty_List rowHeights = new BoundProperty_List(3);
             rowHeights.BindIndices(0, 1);
+            rowHeights.BindIndices(0, 2);
             rowHeights.SetPropertyScale(0, 1);
-            rowHeights.SetPropertyScale(1, 3);
+            rowHeights.SetPropertyScale(1, 1);
+            rowHeights.SetPropertyScale(2, 3);
 
             GridLayout mainGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(topGrid);
+            mainGrid.AddLayout(new HelpButtonLayout("List Open ToDos", new ListOpenTodosView(activityDatabase), layoutStack));
             mainGrid.AddLayout(bottomGrid);
 
             string statusMessage = "(" + experimentsStatus.NumExperimentParticipationsRemaining + " experiment";

@@ -70,6 +70,16 @@ namespace ActivityRecommendation
                 return results;
             }
         }
+        public List<Participation> GetParticipationsSince(DateTime when)
+        {
+            IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> stats = this.searchHelper.ItemsAfterKey(when, true);
+            List<Participation> participations = new List<Participation>();
+            foreach (ListItemStats<DateTime, ParticipationAndSummary> entry in stats)
+            {
+                participations.Add(entry.Value.Participation);
+            }
+            return participations;
+        }
         public Participation LatestParticipation
         {
             get

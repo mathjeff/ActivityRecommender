@@ -27,16 +27,7 @@ namespace ActivityRecommendation
             this.exportButton.Clicked += ExportButton_Clicked;
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
 
-            this.lineCount_box = new Editor();
-
-            TextblockLayout numLines_label = new TextblockLayout("Max num lines to include (default all)");
-
-            LayoutChoice_Set entryLayout = new Horizontal_GridLayout_Builder().AddLayout(numLines_label).AddLayout(new TextboxLayout(this.lineCount_box)).Build();
-
-            this.lineCount_box.Keyboard = Keyboard.Numeric;
-            this.lineCount_box.TextChanged += lineCount_box_TextChanged;
-
-            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(entryLayout).AddLayout(buttonLayout).Build());
+            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(buttonLayout).Build());
 
             this.activityRecommender = activityRecommender;
             this.layoutStack = layoutStack;
@@ -44,44 +35,10 @@ namespace ActivityRecommendation
 
         private async void ExportButton_Clicked(object sender, EventArgs e)
         {
-            await this.activityRecommender.ExportData(this.Get_NumLines());
-        }
-
-        public int Get_NumLines()
-        {
-            string text = this.lineCount_box.Text;
-            if (text == "")
-            {
-                return 0;
-            }
-            long numLines = -1;
-            if (!Int64.TryParse(text, out numLines)) {
-                numLines = -1;
-            }
-            return (int)numLines;
-        }
-
-        private void lineCount_box_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            this.update_linecountBox_appearance();
-        }
-
-        private void update_linecountBox_appearance()
-        {
-            Color backgroundColor;
-            if (this.Get_NumLines() >= 0)
-            {
-                backgroundColor = Color.LightGray;
-            }
-            else
-            {
-                backgroundColor = Color.Red;
-            }
-            this.lineCount_box.BackgroundColor = backgroundColor;
+            await this.activityRecommender.ExportData();
         }
 
         Button exportButton;
-        Editor lineCount_box;
         ActivityRecommender activityRecommender;
         LayoutStack layoutStack;
     }

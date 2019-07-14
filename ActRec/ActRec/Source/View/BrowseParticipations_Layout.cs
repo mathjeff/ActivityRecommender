@@ -22,6 +22,10 @@ namespace ActivityRecommendation.View
             categoryBox.Database = activityDatabase;
             this.categoryBox = categoryBox;
 
+            this.sinceDate_box = new DateEntryView("Since (Optional)", layoutStack);
+            DateTime oneWeekAgo = DateTime.Today.Date.Subtract(TimeSpan.FromDays(7));
+            this.sinceDate_box.SetDay(DateTime.Today.Subtract(TimeSpan.FromDays(7)));
+
             this.displayRatings_box = new CheckBox("No", "Yes");
             this.displayRatings_box.Checked = true;
             LayoutChoice_Set displayRatings_layout = new Horizontal_GridLayout_Builder()
@@ -29,10 +33,22 @@ namespace ActivityRecommendation.View
                 .AddLayout(new TextblockLayout("Show ratings?"))
                 .AddLayout(new ButtonLayout(this.displayRatings_box))
                 .BuildAnyLayout();
+            this.requireComments_box = new CheckBox("No", "Yes");
+            this.requireComments_box.Checked = true;
+            LayoutChoice_Set requireComments_layout = new Horizontal_GridLayout_Builder()
+                .Uniform()
+                .AddLayout(new TextblockLayout("Require comments?"))
+                .AddLayout(new ButtonLayout(this.requireComments_box))
+                .BuildAnyLayout();
 
-            Button browseTopActivities_button = new Button();
-            ButtonLayout browseTopActivities_layout = new ButtonLayout(browseTopActivities_button, "Browse top " + this.maxNumTopParticipationsToShow + " highest rated participations");
-            browseTopActivities_button.Clicked += BrowseTopActivities_Button_Clicked;
+            Button browseTopParticipations_button = new Button();
+            ButtonLayout browseTopParticipations_layout = new ButtonLayout(browseTopParticipations_button, "Browse top " + this.maxNumTopParticipationsToShow + " highest rated participations");
+            browseTopParticipations_button.Clicked += BrowseTopParticipations_Button_Clicked;
+
+            Button browseExtremeParticipations_button = new Button();
+            ButtonLayout browseExtremeParticipations_layout = new ButtonLayout(browseExtremeParticipations_button, "Browse " + this.maxNumTopParticipationsToShow + " best/worst participations");
+            browseExtremeParticipations_button.Clicked += BrowseExtremeParticipations_button_Clicked;
+            
 
             Button seeGoodRandomParticipation_button = new Button();
             ButtonLayout seeGoodRandomParticipation_layout = new ButtonLayout(seeGoodRandomParticipation_button, "See one good participation (better participations appear more often)");
@@ -45,11 +61,14 @@ namespace ActivityRecommendation.View
             this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(helpLayout)
                 .AddLayout(categoryBox)
+                .AddLayout(sinceDate_box)
                 .AddLayout(displayRatings_layout)
+                .AddLayout(requireComments_layout)
                 .AddLayout(
                     new Horizontal_GridLayout_Builder()
                     .Uniform()
-                    .AddLayout(browseTopActivities_layout)
+                    .AddLayout(browseTopParticipations_layout)
+                    .AddLayout(browseExtremeParticipations_layout)
                     .AddLayout(seeGoodRandomParticipation_layout)
                     .AddLayout(seeRandomParticipations_layout)
                     .BuildAnyLayout()
@@ -79,58 +98,159 @@ namespace ActivityRecommendation.View
 
         private void SeeRandomParticipations_button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_randomParticipations_layout(this.Category, this.ShowRatings));
+            this.layoutStack.AddLayout(this.make_randomParticipations_layout());
         }
 
         private void SeeGoodRandomParticipation_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_goodRandomParticipation_layout(this.Category, this.ShowRatings));
+            this.layoutStack.AddLayout(this.make_goodRandomParticipation_layout());
         }
 
-        private void BrowseTopActivities_Button_Clicked(object sender, EventArgs e)
+        private void BrowseTopParticipations_Button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_topParticipations_layout(this.Category, this.ShowRatings));
+            this.layoutStack.AddLayout(this.make_topParticipations_layout());
         }
 
-        private LayoutChoice_Set Get_NoParticipations_Layout(Activity activity)
+        private void BrowseExtremeParticipations_button_Clicked(object sender, EventArgs e)
         {
-            return new TextblockLayout("No matching participations exist for " + activity.Name + "! First record a participation.");
+            this.layoutStack.AddLayout(this.make_extremeParticipations_layout());
         }
 
-        private LayoutChoice_Set make_topParticipations_layout(Activity activity, bool showRatings)
+        private LayoutChoice_Set Get_NoParticipations_Layout()
         {
-            List<Participation> participations = activity.CommentedParticipationsSortedByDecreasingScore;
+            return new TextblockLayout("No matching participations exist for " + this.Category.Name + "! First record a participation.");
+        }
+
+        // returns the participations specified by the user
+        private List<Participation> Participations
+        {
+            get
+            {
+                // choose activity to ask
+                Activity activity = this.Category;
+                List<Participation> participationsSinceDate;
+                // filter by date
+                if (this.sinceDate_box.IsDateValid())
+                    participationsSinceDate = activity.getParticipationsSince(this.sinceDate_box.GetDate());
+                else
+                    participationsSinceDate = activity.Participations;
+                // filter uncommented participations
+                List<Participation> commentedParticipations;
+                if (this.requireComments_box.Checked)
+                {
+                    commentedParticipations = new List<Participation>();
+                    foreach (Participation participation in participationsSinceDate)
+                    {
+                        if (participation.Comment != null)
+                            commentedParticipations.Add(participation);
+                    }
+                }
+                else
+                {
+                    commentedParticipations = participationsSinceDate;
+                }
+                return commentedParticipations;
+            }
+        }
+
+        private void SortByDecreasingScore(List<Participation> participations)
+        {
+            participations.Sort(new ParticipationScoreComparer());
+            participations.Reverse();
+        }
+
+
+        private List<Participation> ParticipationsSortedByDecreasingScore
+        {
+            get
+            {
+                List<Participation> participations = this.Participations;
+                this.SortByDecreasingScore(participations);
+                return participations;
+            }
+        }
+
+        private LayoutChoice_Set make_topParticipations_layout()
+        {
+            List<Participation> participations = this.ParticipationsSortedByDecreasingScore;
             int availableCount = participations.Count;
             if (participations.Count < 1)
-                return this.Get_NoParticipations_Layout(activity);
+                return this.Get_NoParticipations_Layout();
 
             if (participations.Count > this.maxNumTopParticipationsToShow)
                 participations = participations.GetRange(0, this.maxNumTopParticipationsToShow);
 
-            TitledControl mainView = new TitledControl("Top " + participations.Count + " (of " + availableCount + ") matching participations in " + activity.Name);
-            mainView.SetContent(new ListParticipations_Layout(participations, showRatings, this.randomGenerator));
+            TitledControl mainView = new TitledControl("Top " + participations.Count + " (of " + availableCount + ") matching participations in " + this.Category.Name);
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.randomGenerator));
             return mainView;
         }
 
-        private LayoutChoice_Set make_goodRandomParticipation_layout(Activity activity, bool showRatings)
+        private LayoutChoice_Set make_extremeParticipations_layout()
         {
-            List<Participation> participations = activity.CommentedParticipationsSortedByDecreasingScore;
+            List<Participation> participations = this.ParticipationsSortedByDecreasingScore;
+            int availableCount = participations.Count;
+            if (participations.Count < 1)
+                return this.Get_NoParticipations_Layout();
+
+            double averageScore = this.activityDatabase.RootActivity.Ratings.Mean;
+
+            int lowIndex = 0;
+            int highIndex = participations.Count - 1;
+            List<Participation> chosenParticipations = new List<Participation>();
+            while (chosenParticipations.Count < this.maxNumTopParticipationsToShow && lowIndex <= highIndex)
+            {
+                Participation low = participations[lowIndex];
+                AbsoluteRating lowRating = low.GetAbsoluteRating();
+                if (lowRating == null)
+                {
+                    lowIndex++;
+                    continue;
+                }
+                double lowDifference = Math.Abs(lowRating.Score - averageScore);
+                Participation high = participations[highIndex];
+                AbsoluteRating highRating = high.GetAbsoluteRating();
+                if (highRating == null)
+                {
+                    highIndex--;
+                    continue;
+                }
+                double highDifference = Math.Abs(highRating.Score - averageScore);
+                if (lowDifference > highDifference)
+                {
+                    chosenParticipations.Add(low);
+                    lowIndex++;
+                }
+                else
+                {
+                    chosenParticipations.Add(high);
+                    highIndex--;
+                }
+            }
+
+            TitledControl mainView = new TitledControl("" + chosenParticipations.Count + " most extreme (of " + availableCount + ") matching participations in " + this.Category.Name);
+            mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.randomGenerator));
+            return mainView;
+        }
+
+        private LayoutChoice_Set make_goodRandomParticipation_layout()
+        {
+            List<Participation> participations = this.ParticipationsSortedByDecreasingScore;
             Participation participation = this.chooseInterestingParticipation(participations);
             if (participation == null)
-                return this.Get_NoParticipations_Layout(activity);
+                return this.Get_NoParticipations_Layout();
 
             TitledControl result = new TitledControl("Remember this?");
-            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, showRatings, this.randomGenerator));
+            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, this.ShowRatings, this.randomGenerator));
             return result;
         }
 
-        private LayoutChoice_Set make_randomParticipations_layout(Activity activity, bool showRatings)
+        private LayoutChoice_Set make_randomParticipations_layout()
         {
-            List<Participation> participations = activity.CommentedParticipations;
+            List<Participation> participations = this.Participations;
 
             int availableCount = participations.Count;
             if (participations.Count < 1)
-                return this.Get_NoParticipations_Layout(activity);
+                return this.Get_NoParticipations_Layout();
 
             // randomize the first few participations
             int numParticipationsToShow = Math.Min(this.maxNumRandomActivitiesToShow, participations.Count);
@@ -145,8 +265,8 @@ namespace ActivityRecommendation.View
             if (participations.Count > numParticipationsToShow)
                 participations = participations.GetRange(0, numParticipationsToShow);
 
-            TitledControl mainView = new TitledControl("" + participations.Count + " random participations (of " + availableCount + " matches) in " + activity.Name);
-            mainView.SetContent(new ListParticipations_Layout(participations, showRatings, this.randomGenerator));
+            TitledControl mainView = new TitledControl("" + participations.Count + " random participations (of " + availableCount + " matches) in " + this.Category.Name);
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.randomGenerator));
             return mainView;
         }
 
@@ -175,5 +295,7 @@ namespace ActivityRecommendation.View
         private int maxNumTopParticipationsToShow = 10;
         private int maxNumRandomActivitiesToShow = 2;
         private CheckBox displayRatings_box;
+        private CheckBox requireComments_box;
+        private DateEntryView sinceDate_box;
     }
 }

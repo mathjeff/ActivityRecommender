@@ -1069,6 +1069,11 @@ namespace ActivityRecommendation
                 return candidates;
             }
         }
+        public List<Participation> getParticipationsSince(DateTime when)
+        {
+            this.ApplyPendingParticipations();
+            return this.ParticipationProgression.GetParticipationsSince(when);
+        }
         #endregion
 
         #region Private Member Functions

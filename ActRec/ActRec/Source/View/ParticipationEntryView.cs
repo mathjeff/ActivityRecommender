@@ -404,22 +404,27 @@ namespace ActivityRecommendation
         }
         private string computeStandardFeedback(Activity chosenActivity, DateTime startDate)
         {
-            double longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
-            if (longtermBonusInDays == 0)
+            Distribution longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
+            if (longtermBonusInDays.Mean == 0)
             {
                 // no data
                 return "";
             }
-            double shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
-            double efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
+            Distribution shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
+            Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
 
-            double roundedLongtermBonus = Math.Round(longtermBonusInDays, 3);
-            double roundedShorttermRatio = Math.Round(shorttermValueRatio, 3);
-            double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours, 3);
+            double roundedLongtermBonus = Math.Round(longtermBonusInDays.Mean, 3);
+            double roundedLongtermStddev = Math.Round(longtermBonusInDays.StdDev, 3);
 
-            bool fun = (shorttermValueRatio > 1);
-            bool soothing = (longtermBonusInDays >= 0);
-            bool efficient = (efficiencyBonusInHours >= 0);
+            double roundedShorttermRatio = Math.Round(shorttermValueRatio.Mean, 3);
+            double roundedShortTermStddev = Math.Round(shorttermValueRatio.StdDev, 3);
+
+            double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours.Mean, 3);
+            double roundedEfficiencyStddev = Math.Round(efficiencyBonusInHours.StdDev, 3);
+
+            bool fun = (shorttermValueRatio.Mean > 1);
+            bool soothing = (longtermBonusInDays.Mean >= 0);
+            bool efficient = (efficiencyBonusInHours.Mean >= 0);
 
             string remark;
             string message;
@@ -458,88 +463,90 @@ namespace ActivityRecommendation
                 }
             }
             message = remark + " I predict: \n";
-            message += roundedShorttermRatio + " * avg fun while doing it\n";
+            message += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")\n";
             if (roundedLongtermBonus > 0)
                 message += "+";
-            message += roundedLongtermBonus + " days fun over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n";
+            message += roundedLongtermBonus + " days fun (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n";
             if (roundedEfficiencyBonus > 0)
                 message += "+";
-            message += roundedEfficiencyBonus + " hours effectiveness over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
+            message += roundedEfficiencyBonus + " hours effectiveness (+/- " + roundedEfficiencyStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
             return message;
         }
 
-        private double compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
+        private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
         {
             Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
             Prediction prediction = this.engine.EstimateRating(chosenActivity, startDate);
 
-            double expectedShortermRating = prediction.Distribution.Mean;
+            Distribution expectedShortermRating = prediction.Distribution;
             double overallAverageRating = rootActivity.Ratings.Mean;
-            double shorttermRatio = expectedShortermRating / overallAverageRating;
+            Distribution shorttermRatio = expectedShortermRating.CopyAndStretchBy(1.0 / overallAverageRating);
 
             return shorttermRatio;
         }
 
         // given an activity and a DateTime for its Participation to start, estimates the change in longterm happiness (measured in days) caused by doing it
-        private double compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
+        private Distribution compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
             Distribution chosenEstimatedDistribution = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, startDate).Distribution;
             this.currentPrediction.LongtermHappiness = chosenEstimatedDistribution;
             if (chosenEstimatedDistribution.Weight <= 0)
-                return 0;
-            double usualValue = this.previousPrediction.LongtermHappiness.Mean;
-            double chosenValue = chosenEstimatedDistribution.Mean;
+                return new Distribution();
+            Distribution previousValue = this.previousPrediction.LongtermHappiness.CopyAndReweightTo(1);
+            Distribution chosenValue = chosenEstimatedDistribution.CopyAndReweightTo(1);
 
-            double bonusInSeconds = 0;
-            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
-            if (usualValue != 0)
+            Distribution bonusInDays = new Distribution();
+            // relWeight(x) = 2^(-x/halflife)
+            // integral(relWeight) = -(log(e)/log(2))*halfLife*2^(-x/halflife)
+            // totalWeight = (log(e)/log(2))*halflife
+            // absWeight(x) = relWeight(x) / totalWeight
+            // absWeight(x) = 2^(-x/halflife) / ((log(e)/log(2))*halflife)
+            // absWeight(0) = log(2)/log(e)/halflife = log(2)/halflife
+            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalDays;
+            if (previousValue.Mean > 0)
             {
-                // relWeight(x) = 1 * 2^(-x/halfLife)
-                // totalWeight = integral(relWeight) = (log(e)/log(2))*halfLife
-                // absWeight(x) = 2^(-x/halfLife)/((log(e)/log(2))*halfLife)
-                // absWeight(0) = 1/((log(e)/log(2))*halfLife)
-                // absWeight(0) = log(2)/log(e)/halflife
-                // absWeight(0) = log(2)/halflife
+                Distribution combined = previousValue.Plus(chosenValue);
+                double overallAverage = combined.Mean;
 
-                double overallImprovment = (chosenValue / usualValue) - 1;
+                double overallImprovement = (chosenValue.Mean - previousValue.Mean) / overallAverage;
+                double overallVariance = (chosenValue.Variance + previousValue.Variance) / (overallAverage * overallAverage);
+                Distribution difference = Distribution.MakeDistribution(overallImprovement, Math.Sqrt(overallVariance), 1);
 
-                bonusInSeconds = overallImprovment / weightOfThisMoment;
+                bonusInDays = difference.CopyAndStretchBy(1.0 / weightOfThisMoment);
             }
-            if (bonusInSeconds == 0)
-                return 0;
-            double bonusInDays = bonusInSeconds / 60 / 60 / 24;
             return bonusInDays;
         }
 
         // given an activity and a DateTime for its Participation to start, estimates the change in efficiency (measured in hours) in the near future caused by doing it
-        private double computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
+        private Distribution computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
         {
             Distribution chosenEstimatedDistribution = this.engine.Get_OverallEfficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
             this.currentPrediction.LongtermEfficiency = chosenEstimatedDistribution;
             if (chosenEstimatedDistribution.Weight <= 0)
-                return 0;
-            double usualValue = this.previousPrediction.LongtermEfficiency.Mean;
-            double chosenValue = chosenEstimatedDistribution.Mean;
+                return new Distribution();
+            Distribution previousValue = this.previousPrediction.LongtermEfficiency.CopyAndReweightTo(1);
+            Distribution chosenValue = chosenEstimatedDistribution.CopyAndReweightTo(1);
 
-            double bonusInSeconds = 0;
-            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalSeconds;
-            if (usualValue != 0)
+            Distribution bonusInHours = new Distribution();
+            // relWeight(x) = 2^(-x/halflife)
+            // integral(relWeight) = -(log(e)/log(2))*halfLife*2^(-x/halflife)
+            // totalWeight = (log(e)/log(2))*halflife
+            // absWeight(x) = relWeight(x) / totalWeight
+            // absWeight(x) = 2^(-x/halflife) / ((log(e)/log(2))*halflife)
+            // absWeight(0) = log(2)/log(e)/halflife = log(2)/halflife
+            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalHours;
+            if (previousValue.Mean > 0)
             {
-                // relWeight(x) = 1 * 2^(-x/halfLife)
-                // totalWeight = integral(relWeight) = (log(e)/log(2))*halfLife
-                // absWeight(x) = 2^(-x/halfLife)/((log(e)/log(2))*halfLife)
-                // absWeight(0) = 1/((log(e)/log(2))*halfLife)
-                // absWeight(0) = log(2)/log(e)/halflife
-                // absWeight(0) = log(2)/halflife
+                Distribution combined = previousValue.Plus(chosenValue);
+                double overallAverage = combined.Mean;
 
-                double overallImprovment = (chosenValue / usualValue) - 1;
+                double overallImprovement = (chosenValue.Mean - previousValue.Mean) / overallAverage;
+                double overallVariance = (chosenValue.Variance + previousValue.Variance) / (overallAverage * overallAverage);
+                Distribution difference = Distribution.MakeDistribution(overallImprovement, Math.Sqrt(overallVariance), 1);
 
-                bonusInSeconds = overallImprovment / weightOfThisMoment;
+                bonusInHours = difference.CopyAndStretchBy(1.0 / weightOfThisMoment);
             }
-            if (bonusInSeconds == 0)
-                return 0;
-            double bonusInHours = bonusInSeconds / 60 / 60;
             return bonusInHours;
         }
 

@@ -47,7 +47,7 @@ namespace ActivityRecommendation
                 }
             }
         }
-        public double StdDev
+        public double Variance
         {
             get
             {
@@ -56,16 +56,20 @@ namespace ActivityRecommendation
                     // no data
                     return 0;
                 }
-                double temp = (this.sumSquaredValue - this.sumValue * this.sumValue / this.sumWeight) / sumWeight;
-                if (temp < 0)
+                double variance = (this.sumSquaredValue - this.sumValue * this.sumValue / this.sumWeight) / sumWeight;
+                if (variance < 0)
                 {
                     // rounding error
                     return 0;
                 }
-                else
-                {
-                    return Math.Sqrt(temp);
-                }
+                return variance;
+            }
+        }
+        public double StdDev
+        {
+            get
+            {
+                return Math.Sqrt(this.Variance);
             }
         }
         public double Weight

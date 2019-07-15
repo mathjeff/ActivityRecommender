@@ -22,16 +22,15 @@ namespace ActivityRecommendation
             this.version = version;
             this.LogReader = logReader;
 
-            this.setupSynchronously();
-            /*if (System.Diagnostics.Debugger.IsAttached)
+            if (System.Diagnostics.Debugger.IsAttached)
                 this.setupSynchronously();
             else
                 this.setupAsync();
-                */
         }
 
         private void setupAsync()
         {
+            this.loadPersona();
             this.setupLoadingScreen();
             Task.Run(() =>
             {
@@ -44,15 +43,24 @@ namespace ActivityRecommendation
         }
         private void setupSynchronously()
         {
+            this.loadPersona();
             this.setupLoadingScreen();
             this.Initialize();
             this.attachParentView();
         }
 
+        private void loadPersona()
+        {
+            EngineLoader loader = new EngineLoader();
+            string personaText = this.internalFileIo.ReadAllText(this.personaFileName);
+            loader.ReadText(personaText);
+            this.persona = loader.Persona;
+        }
+
         private void setupLoadingScreen()
         {
             this.parentView.BackgroundColor = Color.Black;
-            ViewManager viewManager = new ViewManager(this.parentView, new TextblockLayout("ActivityRecommender is loading your data..."));
+            ViewManager viewManager = new ViewManager(this.parentView, new TextblockLayout(this.persona.Name + " is loading your data..."));
         }
 
         public void Initialize()
@@ -80,6 +88,7 @@ namespace ActivityRecommendation
         public void Reload()
         {
             this.latestParticipation = null;
+            this.loadPersona();
             this.Initialize();
             this.attachParentView();
         }
@@ -102,7 +111,7 @@ namespace ActivityRecommendation
             newExecution.debuggerAttached = System.Diagnostics.Debugger.IsAttached;
 
             // Checkcheck for things to do when the version changes
-            this.OnPossibleVersionChange(oldExecution, newExecution);
+            this.OnDeterminedVersion(oldExecution, newExecution);
 
             // save new info if out-of-date
             if (!oldExecution.version.Equals(newExecution.version) || oldExecution.debuggerAttached != newExecution.debuggerAttached)
@@ -114,7 +123,8 @@ namespace ActivityRecommendation
             }
         }
 
-        private void OnPossibleVersionChange(ApplicationExecution oldExecution, ApplicationExecution newExecution)
+        // gets called after determining the version
+        private void OnDeterminedVersion(ApplicationExecution oldExecution, ApplicationExecution newExecution)
         {
             // Whenever ActivityRecommender is updated to a version that's unfamiliar to its user, we'd like to make a backup of the user's data, in case the new version does
             // something wrong. This is especially true because the entity that updated ActivityRecommender might not have explicitly asked the user before updating it.
@@ -123,10 +133,16 @@ namespace ActivityRecommendation
 
             // However, if both this version and the last version were running in the debugger, then we already have a recent backup (the one from when the debugger was first enabled)
             // and the developer is probably doing testing that they don't care to back up.
-            if ((!oldExecution.version.Equals(newExecution.version)) && (!oldExecution.debuggerAttached || !newExecution.debuggerAttached))
+            if ((!oldExecution.version.Equals(newExecution.version)))
             {
-                //string status = this.ExportData();
-                //this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version + ".\n" + status;
+                if (this.persona.Name != "ActivityRecommender")
+                    this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version;
+                else
+                    this.welcomeMessage += "Hi! I'm now a version " + newExecution.version + " ActivityRecommender! Sincerely, " + this.persona.Name + ".";
+                if (!oldExecution.debuggerAttached || !newExecution.debuggerAttached)
+                {
+                    //string status = this.ExportData();
+                }
             }
         }
 
@@ -232,9 +248,12 @@ namespace ActivityRecommendation
             debuggingBuilder.AddLayout("View Logs", new MenuLayoutBuilder(this.layoutStack).AddLayout("View Logs", new LogViewer(this.LogReader)).Build());
             debuggingBuilder.AddLayout("Enable/Disable Layout Debugging", new EnableDebugging_Layout(this.viewManager));
 
+            PersonaCustomizationView personaCustomizationView = new PersonaCustomizationView(this.persona);
+
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu_builder.Build());
             introMenu_builder.AddLayout("Start", usageMenu);
+            introMenu_builder.AddLayout("Customization", new StackEntry(personaCustomizationView, personaCustomizationView));
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
@@ -326,6 +345,7 @@ namespace ActivityRecommendation
             {
                 TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
                 PersistentUserData userData = importer.ParseForImport(content);
+                this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, userData.PersonaText);
                 this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesText);
                 this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryText);
                 this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataText);
@@ -340,9 +360,10 @@ namespace ActivityRecommendation
             this.Reload();
         }
 
-        private PersistentUserData readPersistentUserData()
+        private PersistentUserData getPersistentUserData()
         {
             PersistentUserData data = new PersistentUserData();
+            data.PersonaText = this.internalFileIo.ReadAllText(this.personaFileName);
             data.InheritancesText = this.internalFileIo.ReadAllText(this.inheritancesFileName);
             data.HistoryText = this.internalFileIo.ReadAllText(this.ratingsFileName);
             data.RecentUserDataText = this.internalFileIo.ReadAllText(this.recentUserData_fileName);
@@ -352,7 +373,7 @@ namespace ActivityRecommendation
 
         public async Task ExportData(int maxNumLines = -1)
         {
-            string content = this.readPersistentUserData().serialize();
+            string content = this.getPersistentUserData().serialize();
             if (maxNumLines > 0)
             {
                 int startIndex = content.Length - 1;
@@ -399,15 +420,15 @@ namespace ActivityRecommendation
 
             EngineLoader loader = new EngineLoader();
             Engine engine;
-            if (System.Diagnostics.Debugger.IsAttached && false)
+            if (System.Diagnostics.Debugger.IsAttached)
             {
-                this.LoadFilesInto(loader);
+                this.loadDataFilesInto(loader);
             }
             else
             {
                 try
                 {
-                    this.LoadFilesInto(loader);
+                    this.loadDataFilesInto(loader);
                 }
                 catch (Exception e)
                 {
@@ -426,6 +447,7 @@ namespace ActivityRecommendation
             engine = historyReplayer.Finish();
 #endif
             this.engine = engine;
+            this.persona.NameChanged += Persona_NameChanged;
             this.protoActivities_database = loader.ProtoActivity_Database;
             this.suggestionDatabase = loader.SuggestionDatabase;
             this.latestParticipation = loader.LatestParticipation;
@@ -447,17 +469,24 @@ namespace ActivityRecommendation
             engine.FullUpdate();
         }
 
+        private void Persona_NameChanged(string newName)
+        {
+            this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, this.textConverter.ConvertToString(this.persona));
+            // TODO: just update a few screens
+            this.Reload();
+        }
+
         public EngineTesterResults TestEngine()
         {
             EngineTester engineTester = new EngineTester();
-            this.LoadFilesInto(engineTester);
+            this.loadDataFilesInto(engineTester);
             engineTester.Finish();
             return engineTester.Results;
         }
 
-        private void LoadFilesInto(HistoryReplayer historyReplayer)
+        private void loadDataFilesInto(HistoryReplayer historyReplayer)
         {
-            PersistentUserData data = this.readPersistentUserData();
+            PersistentUserData data = this.getPersistentUserData();
             historyReplayer.ReadText(data.ProtoActivityText);
             historyReplayer.ReadText(data.InheritancesText);
             historyReplayer.ReadText(data.HistoryText);
@@ -933,6 +962,7 @@ namespace ActivityRecommendation
         string recentUserData_fileName = "TemporaryData.txt";
         string protoActivities_filename = "ProtoActivities.txt";
         string versionFilename = "version.txt";
+        string personaFileName = "persona.txt";
         Participation latestParticipation;
         RecentUserData recentUserData;
         LayoutStack layoutStack;
@@ -942,6 +972,7 @@ namespace ActivityRecommendation
         string error = "";
         string welcomeMessage = "";
         ProtoActivity_Database protoActivities_database;
+        Persona persona;
     }
 
     class ApplicationExecution

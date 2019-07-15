@@ -245,6 +245,14 @@ namespace ActivityRecommendation
 
             return this.ConvertToString(properties, this.ProtoActivity_Tag);
         }
+        public string ConvertToString(Persona persona)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.PersonaName_Tag] = persona.Name;
+
+            return this.ConvertToString(properties, this.PersonaTag);
+        }
+
 
         public string ConvertToStringBody(Distribution distribution)
         {
@@ -373,6 +381,11 @@ namespace ActivityRecommendation
                     this.Process_ProtoActivity(node);
                     continue;
                 }
+                if (node.Name == this.PersonaTag)
+                {
+                    this.ProcessPersona(node);
+                    continue;
+                }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
             }
         }
@@ -467,6 +480,12 @@ namespace ActivityRecommendation
             ProtoActivity protoActivity = this.Read_ProtoActivity(nodeRepresentation);
             if (this.listener != null)
                 this.listener.Add_ProtoActivity(protoActivity);
+        }
+        private void ProcessPersona(XmlNode nodeRepresentation)
+        {
+            Persona persona = this.ReadPersona(nodeRepresentation);
+            if (this.listener != null)
+                this.listener.SetPersona(persona);
         }
         // reads the Inheritance represented by nodeRepresentation
         private Inheritance ReadInheritance(XmlNode nodeRepresentation)
@@ -1027,6 +1046,20 @@ namespace ActivityRecommendation
             return new ProtoActivity(text, lastInteracted, ratings);
         }
 
+        public Persona ReadPersona(XmlNode nodeRepresentation)
+        {
+            Persona persona = new Persona();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.PersonaName_Tag)
+                {
+                    persona.Name = this.ReadText(currentChild);
+                    continue;
+                }
+            }
+            return persona;
+        }
+
         public Distribution ReadDistribution(XmlNode nodeRepresentation)
         {
             double mean = 0;
@@ -1057,6 +1090,7 @@ namespace ActivityRecommendation
         {
             IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(contents);
 
+            string personaText = "";
             List<string> inheritanceTexts = new List<string>();
             List<string> historyTexts = new List<string>();
             string recentUserDataText = "";
@@ -1135,12 +1169,18 @@ namespace ActivityRecommendation
                     protoActivity_texts.Add(this.ConvertToString(protoActivity));
                     continue;
                 }
+                if (node.Name == this.PersonaTag)
+                {
+                    Persona persona = this.ReadPersona(node);
+                    personaText = this.ConvertToString(persona);
+                    continue;
+                }
                 throw new InvalidDataException("Unrecognized node: <" + node.Name + ">");
             }
 
             PersistentUserData result = new PersistentUserData();
-
-            result.InheritancesText = String.Join("\n", inheritanceTexts);
+            result.PersonaText = personaText;
+            result.InheritancesText = string.Join("\n", inheritanceTexts);
             result.HistoryText = string.Join("\n", historyTexts);
             result.RecentUserDataText = recentUserDataText;
             result.ProtoActivityText = string.Join("\n", protoActivity_texts);
@@ -1667,6 +1707,21 @@ namespace ActivityRecommendation
             }
         }
 
+        private string PersonaTag
+        {
+            get
+            {
+                return "Persona";
+            }
+        }
+        private string PersonaName_Tag
+        {
+            get
+            {
+                return "Name";
+            }
+        }
+
         private string DistributionMean_Tag
         {
             get
@@ -1729,14 +1784,15 @@ namespace ActivityRecommendation
 
     public class PersistentUserData
     {
-        public String InheritancesText;
-        public String HistoryText;
-        public String RecentUserDataText;
+        public string InheritancesText;
+        public string HistoryText;
+        public string RecentUserDataText;
         public string ProtoActivityText;
+        public string PersonaText;
 
-        public String serialize()
+        public string serialize()
         {
-            return this.RecentUserDataText + "\n" + this.ProtoActivityText + "\n" + this.InheritancesText + "\n" + this.HistoryText;
+            return this.PersonaText + "\n" + this.RecentUserDataText + "\n" + this.ProtoActivityText + "\n" + this.InheritancesText + "\n" + this.HistoryText;
         }
     }
 }

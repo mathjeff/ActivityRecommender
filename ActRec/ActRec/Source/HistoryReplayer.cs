@@ -107,6 +107,7 @@ namespace ActivityRecommendation
         {
             this.Preview_ProtoActivity(protoActivity);
         }
+        public virtual void SetPersona(Persona persona) { }
         public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
         public virtual void PreviewExperiment(PlannedExperiment experiment) { }
         public virtual void PreviewMetric(Metric metric) { }

@@ -48,11 +48,16 @@ namespace ActivityRecommendation
         {
             this.LatestDate = when;
         }
+        public override void SetPersona(Persona persona)
+        {
+            this.Persona = persona;
+        }
 
         public SuggestionDatabase SuggestionDatabase = new SuggestionDatabase();
         public ProtoActivity_Database ProtoActivity_Database = new ProtoActivity_Database();
         public Participation LatestParticipation;
         public RecentUserData RecentUserData = new RecentUserData();
         public DateTime LatestDate;
+        public Persona Persona = new Persona();
     }
 }

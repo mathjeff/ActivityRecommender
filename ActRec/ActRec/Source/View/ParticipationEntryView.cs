@@ -36,8 +36,14 @@ namespace ActivityRecommendation
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
-            this.predictedRating_block = new Label();
-            contents.AddLayout(new TextblockLayout(this.predictedRating_block));
+            this.shortFeedback_box = new Label();
+            this.longFeedback_box = new Label();
+            LayoutChoice_Set feedbackContainer = new Horizontal_GridLayout_Builder()
+                .AddLayout(new TextblockLayout(this.shortFeedback_box))
+                .AddLayout(new TextblockLayout(this.longFeedback_box))
+                .Build();
+            contents.AddLayout(feedbackContainer);
+
             
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
@@ -57,7 +63,6 @@ namespace ActivityRecommendation
 
             this.startDateBox = new DateEntryView("Start Time", this.layoutStack);
             this.startDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.DateText_Changed));
-            this.startDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.StartDateText_Changed));
             grid3.AddLayout(this.startDateBox);
             this.endDateBox = new DateEntryView("End Time", this.layoutStack);
             this.endDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.DateText_Changed));
@@ -102,6 +107,7 @@ namespace ActivityRecommendation
 
         public void DateText_Changed(object sender, TextChangedEventArgs e)
         {
+            this.Invalidate_FeedbackBlock_Text();
             if (this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid())
             {
                 bool startValid = true;
@@ -137,10 +143,6 @@ namespace ActivityRecommendation
             }
         }
 
-        public void StartDateText_Changed(object sender, TextChangedEventArgs e)
-        {
-            this.Invalidate_FeedbackBlock_Text();
-        }
         void nameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             //this.setEnddateButton.Highlight();
@@ -151,9 +153,8 @@ namespace ActivityRecommendation
             this.ratingBox.Clear();
             this.nameBox.Clear();
             this.CommentText = "";
-            //this.setEnddateButton.SetDefaultBackground();
-            this.predictedRating_block.Text = "";
-            //this.todoCompletionStatusPicker.SelectedIndex = 0;
+            this.shortFeedback_box.Text = "";
+            this.longFeedback_box.Text = "";
             this.updateTodoCheckboxVisibility();
         }
         public ActivityDatabase ActivityDatabase
@@ -378,37 +379,36 @@ namespace ActivityRecommendation
 
         private void Update_FeedbackBlock_Text()
         {
-            if (this.startDateBox.IsDateValid() && this.nameBox.ActivityDescriptor != null)
+            if (this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid() && this.nameBox.ActivityDescriptor != null)
             {
                 DateTime startDate = this.startDateBox.GetDate();
+                DateTime endDate = this.endDateBox.GetDate();
                 Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
                 if (activity != null)
-                {
-                    string text = this.computeFeedback(activity, startDate);
-                    this.predictedRating_block.Text = text;
-                }
+                    this.computeFeedback(activity, startDate, endDate);
             }
             this.feedbackIsUpToDate = true;
         }
 
-        private string computeFeedback(Activity chosenActivity, DateTime startDate)
+        private void computeFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
             if (this.demanded_nextParticipationActivity != null && !this.demanded_nextParticipationActivity.Matches(chosenActivity))
             {
-                return "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
+                this.shortFeedback_box.Text = "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
+                this.longFeedback_box.Text = "";
             }
             else
             {
-                return this.computeStandardFeedback(chosenActivity, startDate);
+                this.computeStandardFeedback(chosenActivity, startDate, endDate);
             }
         }
-        private string computeStandardFeedback(Activity chosenActivity, DateTime startDate)
+        private void computeStandardFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
             Distribution longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
             if (longtermBonusInDays.Mean == 0)
             {
                 // no data
-                return "";
+                return;
             }
             Distribution shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
             Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
@@ -422,55 +422,113 @@ namespace ActivityRecommendation
             double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours.Mean, 3);
             double roundedEfficiencyStddev = Math.Round(efficiencyBonusInHours.StdDev, 3);
 
+            // compute how long the user spent doing this and how long they usually spend doing it
+            // TODO: do we want to change this calculation to use Math.Exp(LogActiveTime) like Engine.GuessParticipationEndDate does?
+            double typicalNumSeconds = chosenActivity.MeanParticipationDuration;
+            double actualNumSeconds = endDate.Subtract(startDate).TotalSeconds;
+            double durationRatio;
+            if (typicalNumSeconds != 0)
+                durationRatio = Math.Round(actualNumSeconds / typicalNumSeconds, 3);
+            else
+                durationRatio = 0;
+
+            bool fast = (actualNumSeconds <= typicalNumSeconds);
             bool fun = (shorttermValueRatio.Mean > 1);
             bool soothing = (longtermBonusInDays.Mean >= 0);
             bool efficient = (efficiencyBonusInHours.Mean >= 0);
 
             string remark;
-            string message;
-            if (fun)
+
+            if (fast)
             {
-                if (soothing)
+                if (fun)
                 {
-                    if (efficient)
-                        remark = "Nice!";
+                    if (soothing)
+                    {
+                        if (efficient)
+                            remark = "Great!";
+                        else
+                            remark = "A brief respite.";
+                    }
                     else
-                        remark = "Pleasant.";
+                    {
+                        if (efficient)
+                            remark = "You can do it!";
+                        else
+                            remark = "Thanks for stopping early.";
+                    }
                 }
                 else
                 {
-                    if (efficient)
-                        remark = "A good break?";
+                    if (soothing)
+                    {
+                        if (efficient)
+                            remark = "So fast!";
+                        else
+                            remark = "Find happiness?";
+                    }
                     else
-                        remark = "Indulgent.";
+                    {
+                        if (efficient)
+                            remark = "Power break.";
+                        else
+                            remark = "Oops!";
+                    }
                 }
             }
             else
             {
-                if (soothing)
+                if (fun)
                 {
-                    if (efficient)
-                        remark = "Awesome work.";
+                    if (soothing)
+                    {
+                        if (efficient)
+                            remark = "Phenomenal!";
+                        else
+                            remark = "Pleasant.";
+                    }
                     else
-                        remark = "Lazy.";
+                    {
+                        if (efficient)
+                            remark = "A good break?";
+                        else
+                            remark = "That's pretty indulgent.";
+                    }
                 }
                 else
                 {
-                    if (efficient)
-                        remark = "Power break.";
+                    if (soothing)
+                    {
+                        if (efficient)
+                            remark = "Good work.";
+                        else
+                            remark = "Lazy.";
+                    }
                     else
-                        remark = "Oops!";
+                    {
+                        if (efficient)
+                            remark = "You'll get some rest eventually.";
+                        else
+                            remark = "Oh dear. Don't do that.";
+                    }
                 }
+
             }
-            message = remark + " I predict: \n";
-            message += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")\n";
+
+            string detailsMessage = "";
+            if (durationRatio != 1)
+                detailsMessage = "You spent " + durationRatio + " as long as average. ";
+            detailsMessage  += "I predict: \n";
+            detailsMessage += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")\n";
             if (roundedLongtermBonus > 0)
-                message += "+";
-            message += roundedLongtermBonus + " days fun (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n";
+                detailsMessage += "+";
+            detailsMessage += roundedLongtermBonus + " days fun (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n";
             if (roundedEfficiencyBonus > 0)
-                message += "+";
-            message += roundedEfficiencyBonus + " hours effectiveness (+/- " + roundedEfficiencyStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
-            return message;
+                detailsMessage += "+";
+            detailsMessage += roundedEfficiencyBonus + " hours effectiveness (+/- " + roundedEfficiencyStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
+
+            this.shortFeedback_box.Text = remark;
+            this.longFeedback_box.Text = detailsMessage;
         }
 
         private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
@@ -583,7 +641,8 @@ namespace ActivityRecommendation
         Button setStartdateButton;
         Button setEnddateButton;
         Button okButton;
-        Label predictedRating_block;
+        Label shortFeedback_box;
+        Label longFeedback_box;
         Engine engine;
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;

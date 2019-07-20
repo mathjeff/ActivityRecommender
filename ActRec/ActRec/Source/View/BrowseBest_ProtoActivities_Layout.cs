@@ -41,6 +41,10 @@ namespace ActivityRecommendation.View
             columnWidths.SetPropertyScale(2, 1);
 
             GridLayout grid = GridLayout.New(rowHeights, columnWidths, LayoutScore.Zero);
+
+            this.numProtoactivitiesTextblock = new Label();
+            grid.PutLayout(new TextblockLayout(this.numProtoactivitiesTextblock), 0, 0);
+            
             grid.PutLayout(new TextblockLayout("Browse Best ProtoActivities"), 1, 0);
             LayoutChoice_Set helpButton = new HelpButtonLayout(
                 new HelpWindowBuilder()
@@ -105,6 +109,7 @@ namespace ActivityRecommendation.View
                 else
                 {
                     this.SubLayout = this.multiActivitiesLayout;
+                    this.numProtoactivitiesTextblock.Text = "" + top_protoActivities.Count + "/" + this.protoActivity_database.Count;
                     this.setActivity1(top_protoActivities[0]);
                     this.setActivity2(top_protoActivities[1]);
                 }
@@ -157,6 +162,7 @@ namespace ActivityRecommendation.View
         private ActivityDatabase activityDatabase;
         private ContainerLayout activity1Holder;
         private ContainerLayout activity2Holder;
+        private Label numProtoactivitiesTextblock;
         private LayoutChoice_Set multiActivitiesLayout;
         private ProtoActivity activity1;
         private ProtoActivity activity2;

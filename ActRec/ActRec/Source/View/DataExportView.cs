@@ -15,22 +15,37 @@ namespace ActivityRecommendation
 {
     class DataExportView : TitledControl
     {
-        public DataExportView(ActivityRecommender activityRecommender, LayoutStack layoutStack)
+        public DataExportView(ActivityRecommender activityRecommender, Persona persona, LayoutStack layoutStack)
         {
             this.SetTitle("Export Data");
+
+            this.persona = persona;
             
-            HelpWindowBuilder helper = new HelpWindowBuilder();
-            helper.AddMessage("This this txt file contains most of what you've entered into this application, and so it may become large.");
-            LayoutChoice_Set help = helper.Build();
 
             this.exportButton = new Button();
             this.exportButton.Clicked += ExportButton_Clicked;
-            ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
-
-            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(buttonLayout).Build());
 
             this.activityRecommender = activityRecommender;
             this.layoutStack = layoutStack;
+
+            this.SetupView();
+            this.persona.NameChanged += Persona_NameChanged;
+        }
+
+        private void Persona_NameChanged(string newName)
+        {
+            this.SetupView();
+        }
+
+        private void SetupView()
+        {
+
+            HelpWindowBuilder helper = new HelpWindowBuilder();
+            helper.AddMessage("This this txt file contains most of what you've provided to " + this.persona.Name + ", and so it may become large.");
+            LayoutChoice_Set help = helper.Build();
+            ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
+
+            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(buttonLayout).Build());
         }
 
         private async void ExportButton_Clicked(object sender, EventArgs e)
@@ -40,6 +55,7 @@ namespace ActivityRecommendation
 
         Button exportButton;
         ActivityRecommender activityRecommender;
+        Persona persona;
         LayoutStack layoutStack;
     }
 }

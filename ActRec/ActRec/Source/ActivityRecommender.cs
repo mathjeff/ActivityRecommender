@@ -222,7 +222,7 @@ namespace ActivityRecommendation
             this.dataImportView.RequestImport += this.ImportData;
 
 
-            this.dataExportView = new DataExportView(this, this.layoutStack);
+            this.dataExportView = new DataExportView(this, this.persona, this.layoutStack);
 
             LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Import", this.dataImportView)
@@ -472,8 +472,6 @@ namespace ActivityRecommendation
         private void Persona_NameChanged(string newName)
         {
             this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, this.textConverter.ConvertToString(this.persona));
-            // TODO: just update a few screens
-            this.Reload();
         }
 
         public EngineTesterResults TestEngine()

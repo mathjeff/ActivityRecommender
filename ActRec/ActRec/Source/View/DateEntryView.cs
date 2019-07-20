@@ -118,9 +118,9 @@ namespace ActivityRecommendation
             return Parse(this.getDateText(), out result);
         }
 
-        private String getDateFormatString()
+        private string getDateFormatString()
         {
-            String format = "";
+            string format = "";
             foreach (DateCharacter character in this.dateFormat)
             {
                 format += character.Character;
@@ -226,11 +226,14 @@ namespace ActivityRecommendation
         }
 
 
-        public String DateText
+        public string DateText
         {
             get
             {
-                return this.dateBlock.Text;
+                string text = this.dateBlock.Text;
+                if (text == null)
+                    text = "";
+                return text;
             }
             set
             {

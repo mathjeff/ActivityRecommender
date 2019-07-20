@@ -227,7 +227,11 @@ namespace ActivityRecommendation
             LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Import", this.dataImportView)
                 .AddLayout("Export", this.dataExportView)
-                .AddLayout("Summarize", new PreferenceSummaryLayout(engine, layoutStack, publicFileIo))
+                .AddLayout("Summarize",
+                    new MenuLayoutBuilder(this.layoutStack)
+                    .AddLayout("Summarize Preferences", new PreferenceSummaryLayout(engine, layoutStack, publicFileIo))
+                    .AddLayout("Summarize Participations", new ParticipationSummarizerLayout(engine, persona, layoutStack))
+                    .Build())
                 .Build();
 
 

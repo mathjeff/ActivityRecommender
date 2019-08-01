@@ -240,20 +240,22 @@ namespace ActivityRecommendation
             // Now we determine which activity is most important to suggest
             // That requires first finding the one with the highest mean
             Activity bestActivity = null;
+            Activity mostFunActivity = null;
             if (activityToBeat != null)
             {
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
                 this.UpdateSuggestionValue(activityToBeat, when);
-                recommendationsCache.utilities[activityToBeat] = activityToBeat.Ratings.Mean; // if they're asking for us to beat this activity then it means they want to do it
-                Prediction participationPrediction = new Prediction(activityToBeat, Distribution.MakeDistribution(1, 0, 1), when, "You asked for an activity at least as fun as this one");
-                recommendationsCache.participationProbabilities[activityToBeat] = participationPrediction;
+                recommendationsCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "You asked for an activity at least as fun as this one");
+                //recommendationsCache.utilities[activityToBeat] = 0; // if they're asking for us to beat this activity then it means they would rather do something else
+                //Prediction participationPrediction = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "You asked for an activity at least as fun as this one");
+                //recommendationsCache.participationProbabilities[activityToBeat] = participationPrediction;
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);
                 }
                 // Here we add the activityToBeat as a candidate so that if activityToBeat is the best activity, then we still have give a suggestion
-                bestActivity = activityToBeat;
+                //bestActivity = activityToBeat;
                 consideredCandidates.Add(activityToBeat);
             }
             while (candidates.Count > 0)
@@ -272,21 +274,34 @@ namespace ActivityRecommendation
                     Distribution currentRating = recommendationsCache.suggestionValues[candidate].Distribution;
                     bool better = false;
                     if (activityToBeat != null && recommendationsCache.utilities[candidate] < recommendationsCache.utilities[activityToBeat])
+                    {
                         better = false; // user doesn't have enough will power to do this activity
+                    }
                     else
                     {
-                        consideredCandidates.Add(candidate);
                         if (bestActivity == null || recommendationsCache.suggestionValues[candidate].Distribution.Mean >= recommendationsCache.suggestionValues[bestActivity].Distribution.Mean)
                             better = true; // found a better activity
                     }
                     if (better)
                     {
-                        /*if (bestActivity != null)
+                        if (bestActivity != null)
                         {
-                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + bestActivity.SuggestionValue.Distribution.Mean + " as highest-value suggestion");
-                        }*/
+                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + recommendationsCache.suggestionValues[candidate].Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + recommendationsCache.suggestionValues[bestActivity].Distribution.Mean + " as highest-value suggestion");
+                        }
                         bestActivity = candidate;
                     }
+                    if (activityToBeat != null)
+                    {
+                        if (mostFunActivity == null || recommendationsCache.utilities[candidate] >= recommendationsCache.utilities[mostFunActivity])
+                        {
+                            if (mostFunActivity != null)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with utility value " + recommendationsCache.utilities[candidate] + " replaced " + mostFunActivity + " with suggestion value " + recommendationsCache.utilities[mostFunActivity] + " as most-fun suggestion");
+                            }
+                            mostFunActivity = candidate;
+                        }
+                    }
+                    consideredCandidates.Add(candidate);
                     if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
                     {
                         // check whether we've used up all of our processing time, but always consider at least two activities
@@ -300,6 +315,13 @@ namespace ActivityRecommendation
                         }
                     }
                 }
+            }
+            // some fallbacks in case no activity matched
+            if (bestActivity == null)
+            {
+                bestActivity = mostFunActivity;
+                if (bestActivity == null)
+                    bestActivity = activityToBeat;
             }
             // After finding the activity with the highest expected rating, we need to check for other activities having high variance but almost-as-good values
             Activity bestActivityToPairWith = bestActivity;

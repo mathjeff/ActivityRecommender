@@ -55,13 +55,7 @@ namespace ActivityRecommendation.View
             Button button = new Button();
             button.Clicked += Button_Clicked;
 
-            string fullText = protoActivity.Text.Trim();
-            int newlineIndex = fullText.IndexOf("\n");
-            string summary;
-            if (newlineIndex >= 0)
-                summary = fullText.Substring(0, newlineIndex) + "...";
-            else
-                summary = fullText;
+            string summary = protoActivity.Summarize();
             this.protoActivities_by_button[button] = protoActivity;
             return new ButtonLayout(button, summary, 16);
         }

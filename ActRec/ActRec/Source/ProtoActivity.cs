@@ -46,6 +46,22 @@ namespace ActivityRecommendation
                 }
             }
         }
+
+        public string Summarize()
+        {
+            string text = this.Text.Trim();
+            int originalLength = text.Length;
+            int maxLength = 300;
+            if (text.Length > maxLength)
+                text = text.Substring(0, maxLength);
+            int newlineIndex = text.IndexOf("\n");
+            if (newlineIndex >= 0)
+                text = text.Substring(0, newlineIndex);
+            if (text.Length < originalLength)
+                text = text + "...";
+            return text;
+        }
+
         public DateTime LastInteractedWith { get; set; }
         public Distribution Ratings { get; set; }
         private string text;

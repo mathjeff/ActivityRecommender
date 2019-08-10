@@ -109,7 +109,25 @@ namespace ActivityRecommendation
             }
             return results;
         }
-        List<ProtoActivity> protoActivities = new List<ProtoActivity>();
+
+        public ProtoActivity TextSearch(string query)
+        {
+            int bestScore = 0;
+            ProtoActivity bestProtoActivity = null;
+            foreach (ProtoActivity protoActivity in this.ProtoActivities)
+            {
+                int score = this.stringQueryMatcher.StringScore(protoActivity.Text, query);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestProtoActivity = protoActivity;
+                }
+            }
+            return bestProtoActivity;
+        }
+
+        private List<ProtoActivity> protoActivities = new List<ProtoActivity>();
+        private StringQueryMatcher stringQueryMatcher = new StringQueryMatcher();
     }
 
     class ProtoActivity_InterestComparer : IComparer<ProtoActivity>

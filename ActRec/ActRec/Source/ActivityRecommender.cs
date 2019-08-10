@@ -135,7 +135,7 @@ namespace ActivityRecommendation
             // and the developer is probably doing testing that they don't care to back up.
             if ((!oldExecution.version.Equals(newExecution.version)))
             {
-                if (this.persona.Name != "ActivityRecommender")
+                if (this.persona.Name == "ActivityRecommender")
                     this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version;
                 else
                     this.welcomeMessage += "Hi! I'm now a version " + newExecution.version + " ActivityRecommender! Sincerely, " + this.persona.Name + ".";

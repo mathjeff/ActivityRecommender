@@ -1,0 +1,9 @@
+[submodule "deps/AdaptiveInterpolator"]
+	path = deps/AdaptiveInterpolator
+	url = ../AdaptiveInterpolator
+[submodule "deps/StatList"]
+	path = deps/StatList
+	url = ../StatList
+[submodule "deps/VisiPlacer"]
+	path = deps/VisiPlacer
+	url = ../VisiPlacer

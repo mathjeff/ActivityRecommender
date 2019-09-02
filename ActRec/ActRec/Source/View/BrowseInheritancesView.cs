@@ -151,8 +151,7 @@ namespace ActivityRecommendation.View
         public ActivitySearchView(ActivityDatabase activityDatabase, string name, LayoutStack layoutStack)
         {
             this.SetTitle("");
-            nameBox = new ActivityNameEntryBox("Activity", layoutStack);
-            nameBox.Database = activityDatabase;
+            nameBox = new ActivityNameEntryBox("Activity", activityDatabase, layoutStack);
 
             Button button = new Button();
             button.Clicked += Button_Clicked;

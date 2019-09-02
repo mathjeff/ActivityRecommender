@@ -9,12 +9,12 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationMenu : TitledControl
     {
-        public ActivityVisualizationMenu(LayoutStack layoutStack)
+        public ActivityVisualizationMenu(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.SetTitle("View Statistics");
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
 
-            this.yAxisNameBox = new ActivityNameEntryBox("Activity", layoutStack);
+            this.yAxisNameBox = new ActivityNameEntryBox("Activity", activityDatabase, layoutStack);
             gridBuilder.AddLayout(this.yAxisNameBox);
 
             this.okButton = new Button();
@@ -30,15 +30,6 @@ namespace ActivityRecommendation
         public void AddOkClickHandler(EventHandler e)
         {
             this.okButton.Clicked += e;
-        }
-        public ActivityDatabase ActivityDatabase
-        {
-            set
-            {
-                //this.xAxisNameBox.Database = value;
-                //this.xAxisProgressionSelector.ActivityDatabase = value;
-                this.yAxisNameBox.Database = value;
-            }
         }
         /*
         public string XAxisActivityName

@@ -21,16 +21,14 @@ namespace ActivityRecommendation.View
 
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
 
-            this.activityToPredict_box = new ActivityNameEntryBox("Activity:", layoutStack);
-            this.activityToPredict_box.Database = activityDatabase;
+            this.activityToPredict_box = new ActivityNameEntryBox("Activity:", activityDatabase, layoutStack);
             builder.AddLayout(this.activityToPredict_box);
 
             builder.AddLayout(new TextblockLayout("Window duration:"));
             this.durationBox = new DurationEntryView();
             builder.AddLayout(this.durationBox);
 
-            this.activityToPredictFrom_box = new ActivityNameEntryBox("Predictor Activity (default = all):", layoutStack);
-            this.activityToPredictFrom_box.Database = activityDatabase;
+            this.activityToPredictFrom_box = new ActivityNameEntryBox("Predictor Activity (default = all):", activityDatabase, layoutStack);
             builder.AddLayout(this.activityToPredictFrom_box);
 
             builder.AddLayout(new TextblockLayout("Comparison Type:"));

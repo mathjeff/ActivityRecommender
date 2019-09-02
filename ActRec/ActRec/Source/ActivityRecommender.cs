@@ -148,8 +148,6 @@ namespace ActivityRecommendation
 
         private void InitializeSettings()
         {
-            // allocate memory here so we don't have null references when we try to update it in response to the engine making changes
-            this.participationEntryView = new ParticipationEntryView(this.layoutStack);
             this.recentUserData = new RecentUserData();
         }
 
@@ -186,9 +184,8 @@ namespace ActivityRecommendation
                     .Build()))
                 .Build();
 
-            // this gets taken care of earlier so we don't get a null reference when we try to update it in response to the engine making changes
+            this.participationEntryView = new ParticipationEntryView(this.engine.ActivityDatabase, this.layoutStack);
             this.participationEntryView.Engine = this.engine;
-            this.participationEntryView.ActivityDatabase = this.engine.ActivityDatabase;
             this.participationEntryView.AddOkClickHandler(new EventHandler(this.SubmitParticipation));
             this.participationEntryView.AddSetenddateHandler(new EventHandler(this.MakeEndNow));
             this.participationEntryView.AddSetstartdateHandler(new EventHandler(this.MakeStartNow));
@@ -206,8 +203,7 @@ namespace ActivityRecommendation
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
-            this.statisticsMenu = new ActivityVisualizationMenu(layoutStack);
-            this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
+            this.statisticsMenu = new ActivityVisualizationMenu(this.engine.ActivityDatabase, layoutStack);
             this.statisticsMenu.AddOkClickHandler(new EventHandler(this.VisualizeActivity));
 
             visualizationBuilder.AddLayout("Visualize one Activity", this.statisticsMenu);

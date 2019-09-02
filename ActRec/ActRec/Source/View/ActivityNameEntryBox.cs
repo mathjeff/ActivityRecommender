@@ -8,11 +8,12 @@ namespace ActivityRecommendation.View
 {
     class ActivityNameEntryBox : TitledControl
     {
-        public ActivityNameEntryBox(string startingTitle, LayoutStack layoutStack, bool createNewActivity = false) : base(startingTitle)
+        public ActivityNameEntryBox(string startingTitle, ReadableActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false) : base(startingTitle)
         {
             // some settings
             this.AutoAcceptAutocomplete = true;
             this.createNewActivity = createNewActivity;
+            this.database = activityDatabase;
 
             // the box the user is typing in
             this.nameBox = new Editor();
@@ -178,13 +179,6 @@ namespace ActivityRecommendation.View
         public void Set_NameText(string text)
         {
             this.NameText = text;
-        }
-        public ReadableActivityDatabase Database
-        {
-            set
-            {
-                this.database = value;
-            }
         }
         bool NameMatchesSuggestion
         {

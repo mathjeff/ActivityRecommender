@@ -18,8 +18,7 @@ namespace ActivityRecommendation.View
 
             TextblockLayout helpLayout = new TextblockLayout("Browse participations");
 
-            ActivityNameEntryBox categoryBox = new ActivityNameEntryBox("From category (Optional)", layoutStack);
-            categoryBox.Database = activityDatabase;
+            ActivityNameEntryBox categoryBox = new ActivityNameEntryBox("From category (Optional)", activityDatabase, layoutStack);
             this.categoryBox = categoryBox;
 
             this.sinceDate_box = new DateEntryView("Since (Optional)", layoutStack);

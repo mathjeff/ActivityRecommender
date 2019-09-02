@@ -10,7 +10,7 @@ namespace ActivityRecommendation
 {
     class ParticipationEntryView : TitledControl
     {
-        public ParticipationEntryView(LayoutStack layoutStack) : base("Type What You've Been Doing")
+        public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack) : base("Type What You've Been Doing")
         {
             this.layoutStack = layoutStack;
 
@@ -29,7 +29,7 @@ namespace ActivityRecommendation
 
             GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
-            this.nameBox = new ActivityNameEntryBox("Activity Name", layoutStack);
+            this.nameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack);
             this.nameBox.AutoAcceptAutocomplete = false;
             this.nameBox.PreferSuggestibleActivities = true;
             this.nameBox.AddTextChangedHandler(new EventHandler<TextChangedEventArgs>(this.nameBox_TextChanged));
@@ -156,17 +156,6 @@ namespace ActivityRecommendation
             this.shortFeedback_box.Text = "";
             this.longFeedback_box.Text = "";
             this.updateTodoCheckboxVisibility();
-        }
-        public ActivityDatabase ActivityDatabase
-        {
-            set
-            {
-                this.nameBox.Database = value;
-            }
-            get
-            {
-                return this.engine.ActivityDatabase;
-            }
         }
         public Engine Engine
         {

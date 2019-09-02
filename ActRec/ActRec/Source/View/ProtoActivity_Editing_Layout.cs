@@ -30,13 +30,30 @@ namespace ActivityRecommendation.View
             gridBuilder.AddLayout(title);
             gridBuilder.AddLayout(ScrollLayout.New(new TextboxLayout(this.textBox)));
 
+            Button saveButton = new Button();
+            saveButton.Text = "Save";
+            saveButton.Clicked += SaveButton_Clicked;
+
             Button promoteButton = new Button();
             promoteButton.Text = "Promote to Activity";
             promoteButton.Clicked += PromoteButton_Clicked;
-            ButtonLayout promoteLayout = new ButtonLayout(promoteButton);
-            gridBuilder.AddLayout(promoteLayout);
+
+            LayoutChoice_Set buttonsLayout = new Horizontal_GridLayout_Builder()
+                .AddLayout(new ButtonLayout(saveButton))
+                .AddLayout(new ButtonLayout(promoteButton))
+                .BuildAnyLayout();
+            gridBuilder.AddLayout(buttonsLayout);
 
             this.SubLayout = gridBuilder.Build();
+        }
+
+        private void SaveButton_Clicked(object sender, EventArgs e)
+        {
+            // We don't want the protoactivity in the text file to differ from the protoactivity in memory,
+            // so we save the protoactivity whenever we go back.
+            // Also, once a user saves the protoactivity, they probably want to go back.
+            // So, the save button just goes back
+            this.layoutStack.GoBack();
         }
 
         private void PromoteButton_Clicked(object sender, EventArgs e)
@@ -48,6 +65,8 @@ namespace ActivityRecommendation.View
         {
             string text = this.textBox.Text;
             int maxLength = 120;
+            if (text == null || text == "")
+                return;
             if (text.Length > maxLength)
             {
                 this.layoutStack.AddLayout(new TextblockLayout("The text of this Protoactivity is too long (" + text.Length + " " +

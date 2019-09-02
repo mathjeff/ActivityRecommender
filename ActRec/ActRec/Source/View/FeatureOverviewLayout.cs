@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
                 "creative but you often find it difficult to start. Even if you dismiss the first suggestion, ActivityRecommender may give the same suggestion a few times until either " +
                 "it's decided that you're truly unwilling to do it, or you realize that ActivityRecommender has a good point and you do the activity anyway.")
                 .Build());
-            convenientLayout_builder.AddLayout("Graphs", (new HelpWindowBuilder())
+            convenientLayout_builder.AddLayout("Graphs your data", (new HelpWindowBuilder())
                 .AddMessage("As soon as you record a participation or a rating, the time spent or rating assigned will immediately show up in the respective graph for that activity, " +
                 "acknowledging and visualizing the time that you spent or enjoyment you received.")
                 .AddMessage("You can inspect graphs to look for patterns.")
@@ -44,14 +44,6 @@ namespace ActivityRecommendation.View
             menuBuilder.AddLayout("Easy to start using", convenientLayout_builder.Build());
 
             MenuLayoutBuilder benevolentLayoutBuilder = new MenuLayoutBuilder(layoutStack);
-            benevolentLayoutBuilder.AddLayout("Doesn't try to maximize its own usage", (new HelpWindowBuilder())
-                .AddMessage("Because you explicitly tell ActivityRecommender how happy you are to have done various activities, that's what it optimizes. Its goal is not to maximize the " +
-                "amount of time you spend using ActivityRecommender.")
-                .AddMessage("In fact, any time you spend using ActivityRecommender is time that you don't spend doing something else.")
-                .AddMessage("So, on the Suggestions screen, if you ever push the X button, then ActivityRecommender assumes that while that activity was onscreen, that you were spending all " +
-                "of your brainpower contemplating whethre to do that activity, and that that time was worth 0 happiness to you.")
-                .AddMessage("ActivityRecommender will only attempt to use more of your time when it estimates that your resultant increase in happiness will be enough to compensate.")
-                .Build());
             benevolentLayoutBuilder.AddLayout("No fees or ads", (new HelpWindowBuilder())
                 .AddMessage("There are no advertisements in ActivityRecommender, and there is no fee to install it either.")
                 .AddMessage("Why?")
@@ -64,11 +56,22 @@ namespace ActivityRecommendation.View
                 .AddMessage("Among other things, this means that it should encourage you towards entertainment that recharges rather than frustrates you.")
                 .AddMessage("The way that this works is you gradually enter more and more data about things you've done and how happy they have made you.")
                 .AddMessage("In the meanwhile, ActivityRecommender builds an increasingly accurate model of your happiness.")
-                .AddMessage("At any given time, it uses this model to predict and attempt to maximize the net present value (in the economic sense) of how much happiness you'll experience " +
+                .AddMessage("At any given time, it uses this model to predict and attempt to maximize the net present value (an economics term) of how much happiness you'll experience " +
                 "in the future. This is approximately equivalent to maximizing the amount of happiness that you'll experience over the next " +
                 (UserPreferences.DefaultPreferences.HalfLife.TotalDays / 365) + " years.")
                 .AddMessage("So even if you don't like doing chores, if ActivityRecommender notices that doing chores from time to time enables you to have more time to do other fun " +
                 "things, it will recommend chores from time to time anyway.")
+                .Build());
+            benevolentLayoutBuilder.AddLayout("Not trying to make you use it more", (new HelpWindowBuilder())
+                .AddMessage("Because you explicitly tell ActivityRecommender how happy you are to have done various activities, that's what it " +
+                "optimizes. ActivityRecommender does not assume that using ActivityRecommender more is a sign of being happier.")
+                .AddMessage("In fact, any time you spend using ActivityRecommender is time that you don't spend doing something else.")
+                .AddMessage("So, on the Suggestions screen, if you ever push the X button, then ActivityRecommender assumes that while that " +
+                "activity was onscreen, you were spending all of your brainpower contemplating whethre to do that activity, and that that " +
+                "time was worth 0 happiness to you.")
+                .AddMessage("ActivityRecommender will only attempt to use more of your time when it estimates that your resultant increase in " +
+                "happiness will be enough to compensate (for example, when you ask for a suggestion, it may suggest that you do your chores even " +
+                "if it thinks there is only a small chance that you will take the suggestion).")
                 .Build());
             benevolentLayoutBuilder.AddLayout("All runs on the device", (new HelpWindowBuilder())
                 .AddMessage("No internet is required.")

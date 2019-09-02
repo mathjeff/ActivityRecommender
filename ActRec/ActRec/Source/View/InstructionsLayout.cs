@@ -15,7 +15,12 @@ namespace ActivityRecommendation
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
 
             menuBuilder.AddLayout("Navigation", (new HelpWindowBuilder())
-                .AddMessage("Your device should have a Back button. Press it from any screen to go back.")
+                .AddMessage("Your device should have Back button. Press it from any screen to go back.")
+                .AddMessage("")
+                .AddMessage("Screens in ActivityRecommender are arranged hierarchically by topic.")
+                .AddMessage("This means that each screen in ActivityRecommender provides less detail but a larger breadth of information than any " +
+                "of the screens inside it. Consequently, if you are looking for a particular piece of information on one screen but nothing on " +
+                "that screen seems related, then you should press Back to return to a more general page and continue looking.")
                 .Build());
 
             menuBuilder.AddLayout("Overview", (new HelpWindowBuilder())
@@ -34,13 +39,8 @@ namespace ActivityRecommendation
                 .AddMessage("Step 4c: Explore! ActivityRecommender has more features than are mentioned here :)")
                 .Build());
 
-            menuBuilder.AddLayout("Typing Activity Names", (new HelpWindowBuilder())
-                .AddMessage("Have you seen those white boxes asking you to enter an activity name? They know what all of the valid activity names are and they support autocomplete.")
-                .AddMessage("Press Enter to accept the suggestion.")
-                .AddMessage("If your activity name consists of multiple words, it may be adequate to type just the first letter or two of each word.")
-                .Build());
-
             mainLayout.SetContent(menuBuilder.Build());
+
             return mainLayout;
         }
     }

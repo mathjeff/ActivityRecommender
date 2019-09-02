@@ -19,7 +19,7 @@ namespace ActivityRecommendation.View
             suggestionButton.Clicked += SuggestionButton_Clicked;
             ButtonLayout buttonLayout = new ButtonLayout(suggestionButton, "Suggest");
 
-            this.categoryBox = new ActivityNameEntryBox("From category (optional):");
+            this.categoryBox = new ActivityNameEntryBox("From category (optional):", layoutStack);
             this.categoryBox.Database = activityDatabase;
             this.activityDatabase = activityDatabase;
             this.engine = engine;
@@ -141,7 +141,7 @@ namespace ActivityRecommendation.View
                 .Build();
             LayoutChoice_Set helpLayout = new HelpButtonLayout(helpWindow, layoutStack);
 
-            this.desiredActivity_box = new ActivityNameEntryBox("I want an activity at least as fun as this one:");
+            this.desiredActivity_box = new ActivityNameEntryBox("I want an activity at least as fun as this one:", layoutStack);
             this.desiredActivity_box.PreferSuggestibleActivities = true;
             this.desiredActivity_box.Database = activityDatabase;
 

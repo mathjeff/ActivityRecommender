@@ -25,12 +25,12 @@ namespace ActivityRecommendation
             this.feedbackView = new Label();
             mainGrid.AddLayout(new TextblockLayout(this.feedbackView));
 
-            this.childNameBox = new ActivityNameEntryBox("Activity Name", true);
+            this.childNameBox = new ActivityNameEntryBox("Activity Name", layoutStack, true);
             this.childNameBox.Database = activityDatabase;
             this.childNameBox.AutoAcceptAutocomplete = false;
             mainGrid.AddLayout(this.childNameBox);
 
-            this.parentNameBox = new ActivityNameEntryBox("Parent Name");
+            this.parentNameBox = new ActivityNameEntryBox("Parent Name", layoutStack);
             this.parentNameBox.Database = activityDatabase;
             this.parentNameBox.AutoAcceptAutocomplete = false;
             mainGrid.AddLayout(this.parentNameBox);

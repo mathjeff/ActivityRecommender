@@ -29,7 +29,7 @@ namespace ActivityRecommendation
 
             GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
-            this.nameBox = new ActivityNameEntryBox("Activity Name");
+            this.nameBox = new ActivityNameEntryBox("Activity Name", layoutStack);
             this.nameBox.AutoAcceptAutocomplete = false;
             this.nameBox.PreferSuggestibleActivities = true;
             this.nameBox.AddTextChangedHandler(new EventHandler<TextChangedEventArgs>(this.nameBox_TextChanged));

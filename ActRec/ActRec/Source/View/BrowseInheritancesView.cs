@@ -11,7 +11,7 @@ namespace ActivityRecommendation.View
         {
             ListInheritancesView listView = new ListAllActivitiesView(activityDatabase);
             ListInheritancesView todosView = new ListOpenTodosView(activityDatabase);
-            ActivitySearchView searchView = new ActivitySearchView(activityDatabase, "View Activity Inheritances");
+            ActivitySearchView searchView = new ActivitySearchView(activityDatabase, "View Activity Inheritances", layoutStack);
             listView.ActivityChosen += this.activityChosen;
             todosView.ActivityChosen += this.activityChosen;
             searchView.ActivityChosen += this.activityChosen;
@@ -148,10 +148,10 @@ namespace ActivityRecommendation.View
         public delegate void ActivityChosenHandler(object sender, Activity activity);
 
 
-        public ActivitySearchView(ActivityDatabase activityDatabase, string name)
+        public ActivitySearchView(ActivityDatabase activityDatabase, string name, LayoutStack layoutStack)
         {
             this.SetTitle("");
-            nameBox = new ActivityNameEntryBox("Activity");
+            nameBox = new ActivityNameEntryBox("Activity", layoutStack);
             nameBox.Database = activityDatabase;
 
             Button button = new Button();

@@ -9,12 +9,12 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationMenu : TitledControl
     {
-        public ActivityVisualizationMenu()
+        public ActivityVisualizationMenu(LayoutStack layoutStack)
         {
             this.SetTitle("View Statistics");
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
 
-            this.yAxisNameBox = new ActivityNameEntryBox("Activity");
+            this.yAxisNameBox = new ActivityNameEntryBox("Activity", layoutStack);
             gridBuilder.AddLayout(this.yAxisNameBox);
 
             this.okButton = new Button();

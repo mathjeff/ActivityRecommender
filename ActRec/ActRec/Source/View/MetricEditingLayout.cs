@@ -15,7 +15,7 @@ namespace ActivityRecommendation.View
         public MetricEditingLayout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
-            this.nameBox = new ActivityNameEntryBox("Activity");
+            this.nameBox = new ActivityNameEntryBox("Activity", layoutStack);
             this.nameBox.Database = activityDatabase;
             Button okButton = new Button();
             okButton.Clicked += OkButton_Clicked;

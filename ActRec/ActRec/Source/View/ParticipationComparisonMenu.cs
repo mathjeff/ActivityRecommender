@@ -21,7 +21,7 @@ namespace ActivityRecommendation.View
 
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
 
-            this.activityToPredict_box = new ActivityNameEntryBox("Activity:");
+            this.activityToPredict_box = new ActivityNameEntryBox("Activity:", layoutStack);
             this.activityToPredict_box.Database = activityDatabase;
             builder.AddLayout(this.activityToPredict_box);
 
@@ -29,7 +29,7 @@ namespace ActivityRecommendation.View
             this.durationBox = new DurationEntryView();
             builder.AddLayout(this.durationBox);
 
-            this.activityToPredictFrom_box = new ActivityNameEntryBox("Predictor Activity (default = all):");
+            this.activityToPredictFrom_box = new ActivityNameEntryBox("Predictor Activity (default = all):", layoutStack);
             this.activityToPredictFrom_box.Database = activityDatabase;
             builder.AddLayout(this.activityToPredictFrom_box);
 

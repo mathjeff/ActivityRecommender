@@ -206,7 +206,7 @@ namespace ActivityRecommendation
             MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
             visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
-            this.statisticsMenu = new ActivityVisualizationMenu();
+            this.statisticsMenu = new ActivityVisualizationMenu(layoutStack);
             this.statisticsMenu.ActivityDatabase = this.engine.ActivityDatabase;
             this.statisticsMenu.AddOkClickHandler(new EventHandler(this.VisualizeActivity));
 

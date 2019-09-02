@@ -8,14 +8,18 @@ namespace ActivityRecommendation.View
 {
     class ActivityNameEntryBox : TitledControl
     {
-        public ActivityNameEntryBox(string startingTitle, bool createNewActivity = false) : base(startingTitle)
+        public ActivityNameEntryBox(string startingTitle, LayoutStack layoutStack, bool createNewActivity = false) : base(startingTitle)
         {
+            // some settings
+            this.AutoAcceptAutocomplete = true;
+            this.createNewActivity = createNewActivity;
+
+            // the box the user is typing in
             this.nameBox = new Editor();
             this.nameBox.TextChanged += NameBox_TextChanged;
             this.nameBox_layout = new TextboxLayout(this.nameBox);
 
-            this.AutoAcceptAutocomplete = true;
-
+            // button for clearing the box's text
             Button xButton = new Button();
             xButton.Text = "X";
             xButton.Clicked += XButton_Clicked;
@@ -24,26 +28,58 @@ namespace ActivityRecommendation.View
             this.nameBoxWithX = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
             this.nameBoxWithX.AddLayout(this.nameBox_layout);
 
-            this.suggestionBlock = new Label();
+            // the autocomplete above the text box
+            this.autocompleteBlock = new Label();
+            this.autocompleteLayout = new TextblockLayout(this.autocompleteBlock);
+
+            // button that gives help with autocomplete
+            this.autocomplete_helpLayout = new HelpButtonLayout(new HelpWindowBuilder()
+                .AddMessage("This screen explains how you can enter " + startingTitle + ". " +
+                "Your input must match an activity that you have previously entered.")
+                .AddMessage("The most basic way to input an activity name is to type it in using the letters on the keyboard.")
+                .AddMessage("However, while you type the activity name, ActivityRecommender will try to guess which activity you mean, and " +
+                "that guess will appear above. If the autocomplete suggestion is what you want, then you can press " +
+                "[enter] to use the autocomplete suggestion.")
+                .AddMessage("Autocomplete does not require you to type full words but it does require spaces between words.")
+                .AddMessage("Autocomplete does not require that you type letters using the correct case but it is more effective if you do.")
+                .AddMessage("If autocomplete encounters a misspelled word, autocomplete will ignore the misspelled word.")
+                .AddMessage("Consider the following example.")
+                .AddMessage("If you have already entered an activity named \"Taking out the Garbage\", " +
+                "here are some things you can type that might cause it to become the autocomplete suggestion:")
+                .AddMessage("Taking out the")
+                .AddMessage("Taking out the MisspelledWord")
+                .AddMessage("Taking")
+                .AddMessage("out")
+                .AddMessage("Garbage")
+                .AddMessage("garbage")
+                .AddMessage("Taking o t G")
+                .AddMessage("T o t G")
+                .AddMessage("T")
+                .AddMessage("G")
+                .AddMessage("t")
+                .AddMessage("")
+                .AddMessage("Note, of course, that the longer and more unique your text, the more likely that it will be matched with the activity that you intend.")
+                .Build()
+                , layoutStack);
+
+            // the main layout that contains everything
             LayoutChoice_Set content;
-            this.createNewActivity = createNewActivity;
-
-
             if (createNewActivity)
             {
                 content = nameBoxWithX;
             }
             else
             {
-                GridLayout contentWithSuggestion = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
-                contentWithSuggestion.AddLayout(new TextblockLayout(this.suggestionBlock));
-                contentWithSuggestion.AddLayout(this.nameBoxWithX);
+                GridLayout contentWithFeedback = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
+                contentWithFeedback.AddLayout(this.responseLayout);
+                contentWithFeedback.AddLayout(this.nameBoxWithX);
 
-                content = new LayoutCache(contentWithSuggestion);
+                content = new LayoutCache(contentWithFeedback);
+
+                this.UpdateFeedback();
             }
 
             this.updateXButton();
-            this.UpdateSuggestions();
 
             base.SetContent(content);
         }
@@ -126,7 +162,7 @@ namespace ActivityRecommendation.View
 
                 this.nameText = value;
                 this.nameBox.Text = value;
-                this.UpdateSuggestions();
+                this.UpdateFeedback();
 
                 if (this.NameMatchesSuggestion)
                 {
@@ -159,14 +195,16 @@ namespace ActivityRecommendation.View
         }
 
         // update the UI based on a change in the text that the user has typed
-        void UpdateSuggestions()
+        void UpdateFeedback()
         {
             ActivityDescriptor descriptor = this.WorkInProgressActivityDescriptor;
             string oldText = this.suggestedActivityName;
             if (descriptor == null)
             {
                 this.suggestedActivityName = "";
-                this.suggestionBlock.Text = "";
+                this.autocompleteBlock.Text = "";
+                // hide the Help button if it's there
+                this.responseLayout.SubLayout = this.autocompleteLayout;
             }
             else
             {
@@ -178,7 +216,7 @@ namespace ActivityRecommendation.View
                     if (activity.Name == descriptor.ActivityName)
                     {
                         // perfect match, so display nothing
-                        this.suggestionBlock.Text = "";
+                        this.autocompleteBlock.Text = "";
                     }
                     else
                     {
@@ -188,13 +226,17 @@ namespace ActivityRecommendation.View
                             suggestionText = this.suggestedActivityName;
                         else
                             suggestionText = this.suggestedActivityName + "?";
-                        this.suggestionBlock.Text = suggestionText;
+                        this.autocompleteBlock.Text = suggestionText;
                     }
+
+                    // make the autocomplete suggestion appear
+                    this.responseLayout.SubLayout = this.autocompleteLayout;
                 }
                 else
                 {
                     this.suggestedActivityName = "";
-                    this.suggestionBlock.Text = "";
+                    // show a help button
+                    this.responseLayout.SubLayout = this.autocomplete_helpLayout;
                 }
             }
             if (oldText == null || oldText == "")
@@ -260,7 +302,10 @@ namespace ActivityRecommendation.View
         TextboxLayout nameBox_layout;
         string nameText;
         Editor nameBox;
-        Label suggestionBlock;
+        Label autocompleteBlock;
+        LayoutChoice_Set autocomplete_helpLayout;
+        TextblockLayout autocompleteLayout;
+        ContainerLayout responseLayout = new ContainerLayout();
         ReadableActivityDatabase database;
         string suggestedActivityName = "";
         bool createNewActivity;

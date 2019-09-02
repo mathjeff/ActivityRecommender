@@ -16,12 +16,12 @@ namespace ActivityRecommendation
 
             GridLayout bottomGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            this.childNameBox = new ActivityNameEntryBox("Activity Name");
+            this.childNameBox = new ActivityNameEntryBox("Activity Name", layoutStack);
             this.childNameBox.Database = activityDatabase;
             this.childNameBox.AutoAcceptAutocomplete = false;
             bottomGrid.AddLayout(this.childNameBox);
 
-            this.parentNameBox = new ActivityNameEntryBox("Parent Name");
+            this.parentNameBox = new ActivityNameEntryBox("Parent Name", layoutStack);
             this.parentNameBox.Database = activityDatabase;
             this.parentNameBox.AutoAcceptAutocomplete = false;
             bottomGrid.AddLayout(this.parentNameBox);

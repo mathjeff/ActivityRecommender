@@ -31,6 +31,8 @@ namespace ActivityRecommendation
 
             this.parentNameBox = new ActivityNameEntryBox("Parent Name", activityDatabase, layoutStack);
             this.parentNameBox.AutoAcceptAutocomplete = false;
+            // for first-time users, make it extra obvious that the root activity exists
+            this.parentNameBox.autoselectRootActivity_if_noCustomActivities();
             mainGrid.AddLayout(this.parentNameBox);
 
             this.okButton = new Button();

@@ -172,6 +172,13 @@ namespace ActivityRecommendation.View
                 }
             }
         }
+        public void autoselectRootActivity_if_noCustomActivities()
+        {
+            if (!this.database.ContainsCustomActivity())
+            {
+                this.NameText = this.database.GetRootActivity().Name;
+            }
+        }
         public void Clear()
         {
             this.Set_NameText(null);

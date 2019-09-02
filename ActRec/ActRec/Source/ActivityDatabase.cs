@@ -13,6 +13,8 @@ namespace ActivityRecommendation
     {
         Activity ResolveDescriptor(ActivityDescriptor activityDescriptor);
         IEnumerable<Activity> AllActivities { get; }
+        Boolean ContainsCustomActivity();
+        Activity GetRootActivity();
     }
 
     public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>, ReadableActivityDatabase
@@ -289,6 +291,10 @@ namespace ActivityRecommendation
                 return this.rootActivity;
             }
         }
+        public Activity GetRootActivity()
+        {
+            return this.RootActivity;
+        }
         public List<Activity> LeafActivities
         {
             get
@@ -364,6 +370,11 @@ namespace ActivityRecommendation
             child.AddParent(parent);
             if (this.InheritanceAdded != null)
                 this.InheritanceAdded.Invoke(inheritance);
+        }
+
+        public bool ContainsCustomActivity()
+        {
+            return this.NumActivities > 2;
         }
 
         #region Functions for ICombiner<List<Activity>>

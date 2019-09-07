@@ -27,7 +27,7 @@ namespace ActivityRecommendation
                 .AddLayout(buttonLayout)
                 .Build();
 
-            this.SetContent(buttonLayout);
+            this.SetContent(content);
         }
 
         private async void ChooseFile(object sender, EventArgs e)

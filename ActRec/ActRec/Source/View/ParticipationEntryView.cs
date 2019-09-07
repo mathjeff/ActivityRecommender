@@ -12,6 +12,7 @@ namespace ActivityRecommendation
     {
         public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack) : base("Type What You've Been Doing")
         {
+            this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
 
             BoundProperty_List rowHeights = new BoundProperty_List(6);
@@ -95,14 +96,33 @@ namespace ActivityRecommendation
             grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now"));
             contents.AddLayout(grid4);
 
-            this.SetContent(contents);
+            this.mainLayout = contents;
+
+            this.noActivities_explanationLayout = new TextblockLayout(
+                "This screen is where you will be able to record having participated in an activity.\n" +
+                "Before you can record a participation in an activity, ActivityRecommender needs to know what activities are relevant to you.\n" +
+                "You should go back and create at least one activity first (press the button that says \"Activities\" and proceed from there)."
+                );
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
+            if (this.hasActivities)
+                this.SetContent(this.mainLayout);
+            else
+                this.SetContent(this.noActivities_explanationLayout);
+
             if (!this.feedbackIsUpToDate)
                 this.Update_FeedbackBlock_Text();
             return base.GetBestLayout(query);
+        }
+
+        private bool hasActivities
+        {
+            get
+            {
+                return this.activityDatabase.ContainsCustomActivity();
+            }
         }
 
         public void DateText_Changed(object sender, TextChangedEventArgs e)
@@ -622,6 +642,9 @@ namespace ActivityRecommendation
 
 
         // private member variables
+        LayoutChoice_Set mainLayout;
+        LayoutChoice_Set noActivities_explanationLayout;
+        ActivityDatabase activityDatabase;
         ActivityNameEntryBox nameBox;
         RelativeRatingEntryView ratingBox;
         PopoutTextbox commentBox;

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using VisiPlacement;
 using Xamarin.Forms;
 
+// A RequestSuggestion_Layout shows a user interface for the user to request a suggestion.
+// It doesn't also show the suggestions themselves; that's done in a SuggestionsView or a SuggestionView
 namespace ActivityRecommendation.View
 {
     public class RequestSuggestion_Layout: ContainerLayout, OnBack_Listener

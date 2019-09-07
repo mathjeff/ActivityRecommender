@@ -278,8 +278,8 @@ namespace ActivityRecommendation
 
         private IEnumerable<XmlNode> ParseToXmlNodes(string text)
         {
-            if (text.Length <= 0)
-                return null;
+            if (text == null || text.Length <= 0)
+                return new List<XmlNode>();
             text = "<root>" + text + "</root>";
             XmlDocument document = new XmlDocument();
             try

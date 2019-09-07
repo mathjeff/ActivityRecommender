@@ -7,7 +7,7 @@ using System.Windows;
 using VisiPlacement;
 using Xamarin.Forms;
 
-// a SuggestionsView provides a user interface for requesting and receiving suggestions for which Activity to do
+// A SuggestionsView provides a user interface for requesting and receiving suggestions for which Activity to do
 namespace ActivityRecommendation.View
 {
     class SuggestionsView : TitledControl
@@ -23,6 +23,7 @@ namespace ActivityRecommendation.View
 
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine)
         {
+            this.activityDatabase = activityDatabase;
             this.recommender = recommenderToInform;
 
             this.layoutStack = layoutStack;
@@ -59,7 +60,33 @@ namespace ActivityRecommendation.View
             this.experimentButton.Clicked += ExperimentButton_Clicked;
             this.topLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
 
+            this.noActivities_explanationLayout = new TextblockLayout(
+                "This screen is where you will be able to ask for suggestions of what to do.\n" +
+                "Before you can ask for a suggestion, ActivityRecommender needs to know what activities are relevant to you.\n" +
+                "You should go back and create at least one activity first (press the button that says \"Activities\" and proceed from there)."
+                );
+
             this.UpdateSuggestions();
+        }
+
+        public override SpecificLayout GetBestLayout(LayoutQuery query)
+        {
+            // show/hide the noActivities_explanationLayout as needed
+            bool shouldShowActivityCreationHelp = !this.activityDatabase.ContainsCustomActivity();
+            if (shouldShowActivityCreationHelp)
+            {
+                this.SetContent(this.noActivities_explanationLayout);
+            }
+            else
+            {
+                bool doesShowActivityCreationHelp = (this.GetContent() == this.noActivities_explanationLayout);
+                if (doesShowActivityCreationHelp)
+                {
+                    this.UpdateLayout_From_Suggestions();
+                }
+            }
+            // call parent
+            return base.GetBestLayout(query);
         }
 
         private void RequestSuggestion_layout_RequestSuggestion(ActivityRequest activityRequest)
@@ -104,7 +131,7 @@ namespace ActivityRecommendation.View
         public void SetErrorMessage(string errorMessage)
         {
             this.messageLayout = new TextblockLayout(errorMessage);
-            this.UpdateLayout();
+            this.UpdateLayout_From_Suggestions();
         }
         public Participation LatestParticipation
         {
@@ -118,7 +145,7 @@ namespace ActivityRecommendation.View
         {
             this.Update_Suggestion_StartTimes();
             this.messageLayout = null;
-            this.UpdateLayout();
+            this.UpdateLayout_From_Suggestions();
         }
         private void Update_Suggestion_StartTimes()
         {
@@ -131,7 +158,7 @@ namespace ActivityRecommendation.View
                 suggestion.EndDate = start = start.Add(duration);
             }
         }
-        private void UpdateLayout()
+        private void UpdateLayout_From_Suggestions()
         {
             LinkedList<LayoutChoice_Set> layouts = new LinkedList<LayoutChoice_Set>();
             if (this.suggestions.Count == 0)
@@ -179,7 +206,7 @@ namespace ActivityRecommendation.View
             double numSecondsThinking = skip.ThinkingTime.TotalSeconds;
             this.messageLayout = new TextblockLayout("Recorded " + (int)numSecondsThinking + " seconds (wasted) considering " + suggestion.ActivityDescriptor.ActivityName);
             this.Update_Suggestion_StartTimes();
-            this.UpdateLayout();
+            this.UpdateLayout_From_Suggestions();
         }
 
 
@@ -193,5 +220,7 @@ namespace ActivityRecommendation.View
         int maxNumSuggestions = 4;
         ActivityRecommender recommender;
         LayoutChoice_Set messageLayout;
+        LayoutChoice_Set noActivities_explanationLayout;
+        ActivityDatabase activityDatabase;
     }
 }

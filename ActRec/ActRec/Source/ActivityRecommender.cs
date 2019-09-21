@@ -16,10 +16,11 @@ namespace ActivityRecommendation
 {
     public class ActivityRecommender
     {
-        public ActivityRecommender(ContentView parentView, string version, ValueProvider<StreamReader> logReader)
+        public ActivityRecommender(ContentView parentView, string version, bool addSoftwareBackButton, ValueProvider<StreamReader> logReader)
         {
             this.parentView = parentView;
             this.version = version;
+            this.addSoftwareBackButton = addSoftwareBackButton;
             this.LogReader = logReader;
 
             if (System.Diagnostics.Debugger.IsAttached)
@@ -67,7 +68,7 @@ namespace ActivityRecommendation
         {
             this.CheckIfIsNewVersion();
 
-            this.layoutStack = new LayoutStack();
+            this.layoutStack = new LayoutStack(this.addSoftwareBackButton);
             this.suggestionDatabase = new SuggestionDatabase();
             this.protoActivities_database = new ProtoActivity_Database();
 
@@ -919,6 +920,7 @@ namespace ActivityRecommendation
         }
 
         public ValueProvider<StreamReader> LogReader { get; set; }
+        private bool addSoftwareBackButton;
         
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()

@@ -27,7 +27,7 @@ namespace ActRec.iOS
             Uniforms.Misc.iOS.ImageUtils.Init();
             Uniforms.Misc.iOS.KeyboardUtils.Init();
             Uniforms.Misc.iOS.TextUtils.Init();
-            LoadApplication(new App(new AppParams("unspecified", null)));
+            LoadApplication(new App(new AppParams("0", true, null)));
 
             return base.FinishedLaunching(app, options);
         }

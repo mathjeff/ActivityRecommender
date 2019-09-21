@@ -35,12 +35,14 @@ namespace ActRec
 
     public class AppParams
     {
-        public AppParams(string version, ValueProvider<StreamReader> logReader)
+        public AppParams(string version, bool addSoftwareBackButton, ValueProvider<StreamReader> logReader)
         {
             this.Version = version;
+            this.AddSoftwareBackButton = addSoftwareBackButton;
             this.LogReader = logReader;
         }
         public string Version;
+        public bool AddSoftwareBackButton;
         public ValueProvider<StreamReader> LogReader;
     }
 }

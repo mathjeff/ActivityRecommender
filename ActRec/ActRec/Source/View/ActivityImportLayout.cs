@@ -14,6 +14,7 @@ namespace ActivityRecommendation.View
     {
         private static List<Inheritance> defaultInheritances = null;
         private static string inheritancesText = @"
+<Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Sleeping</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Buying Something</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Fun</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Interesting</Name></Child></Inheritance>

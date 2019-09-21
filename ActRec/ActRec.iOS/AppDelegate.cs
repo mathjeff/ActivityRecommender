@@ -23,7 +23,7 @@ namespace ActRec.iOS
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             global::Xamarin.Forms.Forms.Init();
-            LoadApplication(new App(null));
+            LoadApplication(new App(new AppParams("unspecified", null)));
 
             return base.FinishedLaunching(app, options);
         }

@@ -1,4 +1,5 @@
 ﻿using ActivityRecommendation.Effectiveness;
+using ActivityRecommendation.TextSummary;
 using ActivityRecommendation.View;
 using System;
 using System.Collections.Generic;
@@ -37,14 +38,9 @@ namespace ActivityRecommendation
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
-            this.shortFeedback_box = new Label();
-            this.longFeedback_box = new Label();
-            LayoutChoice_Set feedbackContainer = new Horizontal_GridLayout_Builder()
-                .AddLayout(new TextblockLayout(this.shortFeedback_box))
-                .AddLayout(new TextblockLayout(this.longFeedback_box))
-                .Build();
-            contents.AddLayout(feedbackContainer);
-
+            this.feedbackButton = new Button();
+            this.feedbackButton.Clicked += FeedbackButton_Clicked;
+            contents.AddLayout(ButtonLayout.HideIfEmpty(new ButtonLayout(this.feedbackButton)));
             
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
@@ -103,6 +99,12 @@ namespace ActivityRecommendation
                 "Before you can record a participation in an activity, ActivityRecommender needs to know what activities are relevant to you.\n" +
                 "You should go back and create at least one activity first (press the button that says \"Activities\" and proceed from there)."
                 );
+        }
+
+        private void FeedbackButton_Clicked(object sender, EventArgs e)
+        {
+            string detailsText = this.participationFeedback.Details;
+            this.layoutStack.AddLayout(new TextblockLayout(detailsText));
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -173,8 +175,7 @@ namespace ActivityRecommendation
             this.ratingBox.Clear();
             this.nameBox.Clear();
             this.CommentText = "";
-            this.shortFeedback_box.Text = "";
-            this.longFeedback_box.Text = "";
+            this.feedbackButton.Text = "";
             this.updateTodoCheckboxVisibility();
         }
         public Engine Engine
@@ -394,30 +395,47 @@ namespace ActivityRecommendation
                 DateTime endDate = this.endDateBox.GetDate();
                 Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
                 if (activity != null)
-                    this.computeFeedback(activity, startDate, endDate);
+                {
+                    ParticipationFeedback participationFeedback = this.computeFeedback(activity, startDate, endDate);
+                    if (participationFeedback != null)
+                    {
+                        this.feedbackButton.Text = participationFeedback.Summary;
+                        this.participationFeedback = participationFeedback;
+                    }
+                    else
+                    {
+                        this.feedbackButton.Text = "";
+                    }
+                }
             }
             this.feedbackIsUpToDate = true;
         }
 
-        private void computeFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
+        private ParticipationFeedback computeFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
             if (this.demanded_nextParticipationActivity != null && !this.demanded_nextParticipationActivity.Matches(chosenActivity))
             {
-                this.shortFeedback_box.Text = "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
-                this.longFeedback_box.Text = "";
+                string summary = "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
+                string details = "You previously initiated an experiment where you promised that you would be willing to do " +
+                    this.demanded_nextParticipationActivity.ActivityName + ". Instead you did " + chosenActivity.Name + ". If you " +
+                    "don't follow through on your promises, then your data might be skewed in strange ways. For example, it's possible that " +
+                    "in the evening that you may choose to skip doing difficult tasks and save them for the morning. This could cause you to " +
+                    "take more time working on any individual task in the morning than in the evening, which could incorrectly suggest that " +
+                    "your efficiency is lower in the morning than in the evening.";
+                return new ParticipationFeedback(chosenActivity, summary, details);
             }
             else
             {
-                this.computeStandardFeedback(chosenActivity, startDate, endDate);
+                return this.computeStandardFeedback(chosenActivity, startDate, endDate);
             }
         }
-        private void computeStandardFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
+        private ParticipationFeedback computeStandardFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
             Distribution longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
             if (longtermBonusInDays.Mean == 0)
             {
                 // no data
-                return;
+                return null;
             }
             Distribution shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
             Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
@@ -524,20 +542,19 @@ namespace ActivityRecommendation
 
             }
 
-            string detailsMessage = "";
-            if (durationRatio != 1)
-                detailsMessage = "You spent " + durationRatio + " as long as average. ";
-            detailsMessage  += "I predict: \n";
-            detailsMessage += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")\n";
+            string detailsMessage = chosenActivity.Name + "\n";
+            detailsMessage += TimeFormatter.summarizeTimespan(startDate, endDate) + "\n";
+            detailsMessage += "You spent " + durationRatio + " as long as average.\n\n";
+            detailsMessage  += "I predict: \n\n";
+            detailsMessage += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")\n\n";
             if (roundedLongtermBonus > 0)
                 detailsMessage += "+";
-            detailsMessage += roundedLongtermBonus + " days fun (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n";
+            detailsMessage += roundedLongtermBonus + " days fun (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n\n";
             if (roundedEfficiencyBonus > 0)
                 detailsMessage += "+";
             detailsMessage += roundedEfficiencyBonus + " hours effectiveness (+/- " + roundedEfficiencyStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
 
-            this.shortFeedback_box.Text = remark;
-            this.longFeedback_box.Text = detailsMessage;
+            return new ParticipationFeedback(chosenActivity, remark, detailsMessage);
         }
 
         private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
@@ -653,8 +670,7 @@ namespace ActivityRecommendation
         Button setStartdateButton;
         Button setEnddateButton;
         Button okButton;
-        Label shortFeedback_box;
-        Label longFeedback_box;
+        Button feedbackButton;
         Engine engine;
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;
@@ -664,6 +680,7 @@ namespace ActivityRecommendation
         ActivityDescriptor demanded_nextParticipationActivity;
         LongtermPrediction previousPrediction = new LongtermPrediction();
         LongtermPrediction currentPrediction = new LongtermPrediction();
+        ParticipationFeedback participationFeedback;
     }
 
     class LongtermPrediction

@@ -1,9 +1,8 @@
 ﻿using StatLists;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace ActivityRecommendation
+namespace ActivityRecommendation.TextSummary
 {
 
     // a LifeSummarizer creates a text description of how the user's life has been going during a certain time
@@ -59,7 +58,7 @@ namespace ActivityRecommendation
             double qualityRatio = thisQuality.Mean / baselineQuality.Mean;
             double randomizedQualityRatio = qualityRatio + this.generator.NextDouble() * 0.05 - 0.025;
 
-            string during = this.summarizeTimespan(startDate, endDate);
+            string during = TimeFormatter.summarizeTimespan(startDate, endDate);
             string subject = this.randomString(new List<string>() { "life has been", "life was", "things have been", "things were" });
             string obj = this.summarizeQuality(randomizedQualityRatio);
 
@@ -103,31 +102,10 @@ namespace ActivityRecommendation
             return "phenomenal!";
         }
 
-        private string summarizeTimespan(DateTime startDate, DateTime endDate)
-        {
-            DateTime now = DateTime.Now;
-            if (endDate.Day.Equals(now.Day))
-            {
-                return this.summarizeTimespanSince(startDate, now);
-            }
-            if (startDate.Day.Equals(endDate.Day))
-            {
-                return "On " + startDate.ToString("MM/dd/yyyy") + " from " + startDate.ToString("HH:mm") + " to " + endDate.ToString("HH:mm");
-            }
-            return "Between " + startDate + " and " + endDate;
-        }
-
-        private string summarizeTimespanSince(DateTime startDate, DateTime now)
-        {
-            if (startDate.Day != now.Day)
-                return "Since " + startDate.ToString("MM/dd/yyyy");
-            else
-                return "From " + startDate.ToString("HH:mm") + " to " + now.ToString("HH:mm");
-        }
 
         private LifeSummaryItem summarizeParticipation(Participation participation)
         {
-            string timespan = this.summarizeTimespan(participation.StartDate, participation.EndDate);
+            string timespan = TimeFormatter.summarizeTimespan(participation.StartDate, participation.EndDate);
             string activityName = participation.ActivityDescriptor.ActivityName;
             double score;
             AbsoluteRating rating = participation.GetAbsoluteRating();

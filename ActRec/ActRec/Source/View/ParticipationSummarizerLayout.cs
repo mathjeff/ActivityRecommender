@@ -1,10 +1,11 @@
-﻿using System;
+﻿using ActivityRecommendation.TextSummary;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using VisiPlacement;
 using Xamarin.Forms;
 
-namespace ActivityRecommendation
+namespace ActivityRecommendation.View
 {
     class ParticipationSummarizerLayout : ContainerLayout
     {

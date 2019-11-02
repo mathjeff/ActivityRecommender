@@ -1449,8 +1449,8 @@ namespace ActivityRecommendation
                     }
                     else
                     {
-                        int preWeight = availablePostActivities.Count - min_pendingPostTasks_pool_size;
-                        int postWeight = minTotalPoolSize - availablePostActivities.Count;
+                        int postWeight = availablePostActivities.Count - min_pendingPostTasks_pool_size;
+                        int preWeight = minTotalPoolSize - availablePostActivities.Count;
                         considerPostActivities = (this.randomGenerator.Next(preWeight + postWeight) >= preWeight);
                     }
                 }
@@ -1490,7 +1490,8 @@ namespace ActivityRecommendation
 
 
             // Now that we've identified some activities that are reasonable to add to the experiment, choose the one that we think will provide the most longterm value to the user
-            Activity bestActivity = this.activityDatabase.ResolveDescriptor(this.MakeRecommendation(recommendableActivities, activityToBeat, DateTime.Now, requestedProcessingTime).ActivityDescriptor);
+            ActivitySuggestion activitySuggestion = this.MakeRecommendation(recommendableActivities, activityToBeat, DateTime.Now, requestedProcessingTime);
+            Activity bestActivity = this.activityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
 
             // chose a random metric for this activity
             List<Metric> metrics = bestActivity.Metrics;

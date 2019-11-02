@@ -9,3 +9,5 @@ temp
 .vs
 packages
 *.user
+*.csproj.user
+*csproj~

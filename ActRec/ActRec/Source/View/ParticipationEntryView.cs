@@ -284,16 +284,19 @@ namespace ActivityRecommendation
             if (descriptor.ActivityName == null || descriptor.ActivityName.Length == 0)
                 return null;
 
-            Participation participation;
-            try
+            if (!this.startDateBox.IsDateValid())
+                return null;
+            if (!this.endDateBox.IsDateValid())
+                return null;
+            if (this.EndDate.CompareTo(this.StartDate) <= 0)
             {
-                participation = new Participation(this.StartDate, this.EndDate, descriptor);
-            }
-            catch (FormatException)
-            {
-                // if the dates are invalid, then give up
+                // If the user is trying to submit a participation with misordered dates, then point the out to them
+                // Although we could've highlighted this to the user sooner, in most cases this would just distract them and they wouldn't want to think about it
+                this.startDateBox.appearInvalid();
+                this.endDateBox.appearInvalid();
                 return null;
             }
+            Participation participation = new Participation(this.StartDate, this.EndDate, descriptor);
             if (this.CommentText != "" && this.CommentText != null)
                 participation.Comment = this.CommentText;
 

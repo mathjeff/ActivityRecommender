@@ -17,10 +17,16 @@ namespace ActivityRecommendation
         }
 
         // returns the cumulative weight for all dates through the given date
-        protected override double GetWeightThroughDate(DateTime when)
+        protected override double GetWeightBetweenDates(DateTime startDate, DateTime endDate)
         {
-            TimeSpan duration = when.Subtract(this.firstDate);
-            return 1 - Math.Pow(2, -duration.TotalSeconds / this.halfLife.TotalSeconds);
+            TimeSpan duration = endDate.Subtract(startDate);
+            double durationWeight = 1 - Math.Pow(2, -duration.TotalSeconds / this.halfLife.TotalSeconds);
+
+            TimeSpan wait = startDate.Subtract(this.firstDate);
+            double waitMultiplier = Math.Pow(2, -wait.TotalSeconds / this.halfLife.TotalSeconds);
+
+            double result = durationWeight * waitMultiplier;
+            return result;
         }
 
         private TimeSpan halfLife;

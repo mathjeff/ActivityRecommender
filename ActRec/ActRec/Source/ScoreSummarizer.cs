@@ -23,12 +23,7 @@ namespace ActivityRecommendation
         {
             if (this.valuesByDate.NumItems == 0)
                 this.firstDate = startDate;
-            // the integral through startDate
-            double startingWeight = this.GetWeightThroughDate(startDate);
-            // the integral through endDate
-            double endingWeight = this.GetWeightThroughDate(endDate);
-            // the total weight between the starting and ending dates
-            double overallWeight = endingWeight - startingWeight;
+            double overallWeight = this.GetWeightBetweenDates(startDate, endDate);
             Distribution additionalDistribution = Distribution.MakeDistribution(score, 0, overallWeight);
             this.AddValue(startDate, additionalDistribution);
         }
@@ -42,12 +37,8 @@ namespace ActivityRecommendation
             if (this.valuesByDate.NumItems == 0)
                 return; // any Skip or Participation before the first Rating is ignored (because the weight of each Skip is so small, and we don't want it to accidentally dominate)
 
-            // the integral through startDate
-            double startingWeight = this.GetWeightThroughDate(startDate);
-            // the integral through endDate
-            double endingWeight = this.GetWeightThroughDate(endDate);
             // the total weight between the starting and ending dates
-            double maxPossibleWeight = endingWeight - startingWeight;
+            double maxPossibleWeight = this.GetWeightBetweenDates(startDate, endDate);
             // We record the total time the user declared to have put to good use (by giving a rating in this.AddRating)
             // We record the total time the user declared to have put to bad use (by giving a rating, or by skipping)
             // The rating contributes both a good and a bad portion; the skip contributes only a bad portion
@@ -99,7 +90,7 @@ namespace ActivityRecommendation
             }
         }
         // returns the cumulative weight for all dates through the given date
-        protected abstract double GetWeightThroughDate(DateTime when);
+        protected abstract double GetWeightBetweenDates(DateTime startDate, DateTime endDate);
 
         private StatList<DateTime, Distribution> valuesByDate;
         protected DateTime firstDate;

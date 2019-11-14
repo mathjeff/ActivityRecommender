@@ -46,9 +46,10 @@ namespace ActivityRecommendation.View
                 .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, " +
                 "and an estimate of the rating that you'd be expected to give to that activity.")
                 .AddMessage("If you don't like a suggestion, press the X button next to it. The duration between when you ask for a suggestion and when you press the X is considered to " +
-                "be worth 0 happiness to you, so ActivityRecommender tries to avoid giving you too many suggestions that you don't take. However, if there's a certain activity that " +
-                "ActivityRecommender thinks would be awesome for you despite your current disinterest, then ActivityRecommender may repeat its suggestions a few times, in an effort to " +
-                "get you to reconsider.")
+                "be worth 0 happiness to you (unless you already recorded having done a participation during that time, in which case the duration between your latest completed participation and " +
+                "when you press the X is considered to be worth 0 happiness to you), so ActivityRecommender tries to avoid giving you too many suggestions that you don't take. However, if there's " +
+                "a certain activity that ActivityRecommender thinks would be awesome for you despite your current disinterest, then ActivityRecommender may repeat its suggestions a few times, in " +
+                "an effort to get you to reconsider.")
                 .AddMessage("You can also plan out several participations in a row by pressing the Suggest button multiple times in a row.")
                 .AddMessage("Whenever you record a participation matching the first suggestion in the list, then that suggestion will be removed.")
                 .AddMessage("Enjoy!")

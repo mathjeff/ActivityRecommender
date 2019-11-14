@@ -14,7 +14,7 @@ namespace ActivityRecommendation
 
             this.SetTitle("Relate Two Existing Activities");
 
-            GridLayout bottomGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout bottomGrid = GridLayout.New(new BoundProperty_List(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
             this.childNameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack);
             this.childNameBox.AutoAcceptAutocomplete = false;

@@ -14,7 +14,7 @@ namespace ActivityRecommendation
 
             this.SetTitle("Add New Activity to Choose From");
 
-            GridLayout mainGrid = GridLayout.New(BoundProperty_List.Uniform(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
             CheckBox checkbox = new CheckBox("Type = ToDo", "Type = Category");
             checkbox.Checked = true;

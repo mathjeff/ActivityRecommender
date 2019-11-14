@@ -34,13 +34,7 @@ namespace ActivityRecommendation.View
                 .AddMessage("Also note that any Activity of type ToDo already starts with a built-in metric, which is to complete the ToDo.")
                 .Build();
             
-            BoundProperty_List rowHeights = new BoundProperty_List(3);
-            rowHeights.BindIndices(0, 1);
-            rowHeights.BindIndices(0, 2);
-            rowHeights.SetPropertyScale(0, 1);
-            rowHeights.SetPropertyScale(1, 1);
-            rowHeights.SetPropertyScale(2, 2);
-            GridLayout mainGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(new TextblockLayout("Add Metric to Existing Activity"));
             mainGrid.AddLayout(new TextblockLayout(this.errorMessageHolder));
 

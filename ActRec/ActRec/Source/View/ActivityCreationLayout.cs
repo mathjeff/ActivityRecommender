@@ -16,7 +16,7 @@ namespace ActivityRecommendation
 
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            CheckBox checkbox = new CheckBox("Type = ToDo", "Type = Category");
+            CheckBox checkbox = new CheckBox("Type = ToDo", Color.FromRgb(179, 172, 166), "Type = Category", Color.FromRgb(181, 255, 254));
             checkbox.Checked = true;
 
             this.typePicker = checkbox;

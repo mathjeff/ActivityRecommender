@@ -1,9 +1,8 @@
-﻿using System;
+﻿using ActivityRecommendation.Effectiveness;
+using StatLists;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using ActivityRecommendation.Effectiveness;
-using StatLists;
 
 // An ActivityDatabase class stores all of the known Activities, for the purpose of resolving a name into an Activity
 namespace ActivityRecommendation
@@ -15,6 +14,7 @@ namespace ActivityRecommendation
         IEnumerable<Activity> AllActivities { get; }
         Boolean ContainsCustomActivity();
         Activity GetRootActivity();
+        IEnumerable<Activity> FindBestMatches(ActivityDescriptor activityDescriptor, int count);
     }
 
     public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>, ReadableActivityDatabase
@@ -106,8 +106,55 @@ namespace ActivityRecommendation
         // finds the Activity indicated by the ActivityDescriptor
         public Activity ResolveDescriptor(ActivityDescriptor descriptor)
         {
+            IEnumerable<Activity> candidates = this.GetCandidateMatches(descriptor);
+            Activity result = null;
+            double bestMatchScore = 0;
+            // figure out which activity matches best
+            foreach (Activity activity in candidates)
+            {
+                double matchScore = this.MatchQuality(descriptor, activity);
+                if (matchScore > bestMatchScore)
+                {
+                    result = activity;
+                    bestMatchScore = matchScore;
+                }
+            }
+            // now we've found the activity that is indicated by that descriptor
+            return result;
+        }
+
+        // Find the top few matching activities
+        public IEnumerable<Activity> FindBestMatches(ActivityDescriptor descriptor, int count)
+        {
+            if (count == 1)
+            {
+                Activity best = this.ResolveDescriptor(descriptor);
+                if (best != null)
+                    return new List<Activity>() { best };
+                return new List<Activity>() { };
+            }
+            IEnumerable<Activity> activities = this.GetCandidateMatches(descriptor);
+            StatList<double, Activity> sortedItems = new StatList<double, Activity>(new ReverseDoubleComparer(), new NoopCombiner<Activity>());
+            foreach (Activity activity in activities)
+            {
+                double quality = this.MatchQuality(descriptor, activity);
+                if (quality > 0)
+                    sortedItems.Add(quality, activity);
+            }
+            List<Activity> top = new List<Activity>();
+            count = Math.Min(count, sortedItems.NumItems);
+            for (int i = 0; i < count; i++)
+            {
+                top.Add(sortedItems.GetValueAtIndex(i).Value);
+            }
+            return top;
+        }
+
+        // Returns a list of Activity that might be considered to match <descriptor>
+        private IEnumerable<Activity> GetCandidateMatches(ActivityDescriptor descriptor)
+        {
             if (descriptor == null)
-                return null;
+                return new List<Activity>();
             IEnumerable<Activity> activities = null;
             if (descriptor.RequiresPerfectMatch)
             {
@@ -119,20 +166,7 @@ namespace ActivityRecommendation
                 // if we allow approximate string matches, then we have to check all activities
                 activities = this.activitiesByName.CombineAll();
             }
-            Activity result = null;
-            double bestMatchScore = 0;
-            // figure out which activity matches best
-            foreach (Activity activity in activities)
-            {
-                double matchScore = this.MatchQuality(descriptor, activity);
-                if (matchScore > bestMatchScore)
-                {
-                    result = activity;
-                    bestMatchScore = matchScore;
-                }
-            }
-            // now we've found the activity that is indicated by that descriptor
-            return result;
+            return activities;
         }
 
         public bool HasActivity(ActivityDescriptor descriptor)

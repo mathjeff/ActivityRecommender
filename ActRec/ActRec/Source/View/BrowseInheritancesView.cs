@@ -152,6 +152,7 @@ namespace ActivityRecommendation.View
         {
             this.SetTitle("");
             nameBox = new ActivityNameEntryBox("Activity", activityDatabase, layoutStack);
+            nameBox.NumAutocompleteRowsToShow = 2;
 
             Button button = new Button();
             button.Clicked += Button_Clicked;

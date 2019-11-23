@@ -14,6 +14,7 @@ namespace ActivityRecommendation.View
             this.AutoAcceptAutocomplete = true;
             this.createNewActivity = createNewActivity;
             this.database = activityDatabase;
+            this.numAutocompleteRowsToShow = 1;
 
             // the box the user is typing in
             this.nameBox = new Editor();
@@ -209,12 +210,19 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                Activity activity = this.database.ResolveDescriptor(descriptor);
-                if (activity != null)
+                IEnumerable<Activity> autocompletes = this.Autocompletes;
+
+                List<String> autocompleteNames = new List<string>();
+                foreach (Activity suggestion in autocompletes)
                 {
-                    // Also consider using color to prompt users to accept the suggestion
-                    this.suggestedActivityName = activity.Name;
-                    if (activity.Name == descriptor.ActivityName)
+                    autocompleteNames.Add(suggestion.Name);
+                }
+                if (autocompleteNames.Count > 0)
+                {
+                    String firstActivity_name = autocompleteNames[0];
+                    this.suggestedActivityName = firstActivity_name;
+
+                    if (firstActivity_name == descriptor.ActivityName)
                     {
                         // perfect match, so display nothing
                         this.autocompleteBlock.Text = "";
@@ -222,23 +230,29 @@ namespace ActivityRecommendation.View
                     else
                     {
                         // Update suggestion
-                        string suggestionText;
-                        if (this.AutoAcceptAutocomplete)
-                            suggestionText = this.suggestedActivityName;
-                        else
-                            suggestionText = this.suggestedActivityName + "?";
+                        if (!this.AutoAcceptAutocomplete)
+                        {
+                            // Not auto-accepting the autocomplete; remind the user that they have to push enter
+                            for (int i = 0; i < autocompleteNames.Count; i++)
+                            {
+                                autocompleteNames[i] = autocompleteNames[i] + "?";
+                            }
+                        }
+                        string suggestionText = String.Join("\n\n", autocompleteNames);
                         this.autocompleteBlock.Text = suggestionText;
                     }
-
                     // make the autocomplete suggestion appear
                     this.responseLayout.SubLayout = this.autocompleteLayout;
                 }
                 else
                 {
+                    // no matches
                     this.suggestedActivityName = "";
                     // show a help button
                     this.responseLayout.SubLayout = this.autocomplete_helpLayout;
+
                 }
+
             }
             if (oldText == null || oldText == "")
             {
@@ -249,6 +263,19 @@ namespace ActivityRecommendation.View
         public bool AutoAcceptAutocomplete { get; set; } // Whether to treat a partially entered activity as equivalent to the one recommended by autocomplete
 
         public bool PreferSuggestibleActivities { get; set; }
+
+        public int NumAutocompleteRowsToShow
+        {
+            get
+            {
+                return this.numAutocompleteRowsToShow;
+            }
+            set
+            {
+                this.numAutocompleteRowsToShow = value;
+            }
+        }
+        private int numAutocompleteRowsToShow;
 
         // this is the ActivityDescriptor to be returned to outside callers, which represents the selection that the user made
         public ActivityDescriptor ActivityDescriptor
@@ -294,6 +321,17 @@ namespace ActivityRecommendation.View
                 if (descriptor == null)
                     return null;
                 return this.database.ResolveDescriptor(descriptor);
+            }
+        }
+        public IEnumerable<Activity> Autocompletes
+        {
+            get
+            {
+                ActivityDescriptor descriptor = this.WorkInProgressActivityDescriptor;
+                if (descriptor == null)
+                    return new List<Activity>();
+                IEnumerable<Activity> matches = this.database.FindBestMatches(descriptor, this.numAutocompleteRowsToShow);
+                return matches;
             }
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;

@@ -21,16 +21,8 @@ namespace ActivityRecommendation
             this.scaleBlock.Keyboard = Keyboard.Numeric;
             this.scaleBlock.TextChanged += this.ScaleBlock_TextChanged;
 
-            //InputScope inputScope = new InputScope();
-            //InputScopeName inputScopeName = new InputScopeName();
-            //inputScopeName.NameValue = InputScopeNameValue.Number;
-            //inputScope.Names.Add(inputScopeName);
-            //this.scaleBlock.InputScope = inputScope;
-
-
             this.Clear();
             this.mainDisplayGrid.AddLayout(new TextboxLayout(this.scaleBlock));
-
 
             this.nameBlock = new Label();
             this.mainDisplayGrid.AddLayout(new TextblockLayout(this.nameBlock));

@@ -1168,12 +1168,8 @@ namespace ActivityRecommendation
             double predictedDifficulty2 = 1.0 / experiment.Later.DifficultyEstimate.EstimatedSuccessesPerSecond;
             double duration1 = participation1.Duration.TotalSeconds;
             double duration2 = participation2.Duration.TotalSeconds;
-            double numSuccesses1 = 0;
-            if (participation1.CompletedMetric)
-                numSuccesses1 = 1;
-            double numSuccesses2 = 0;
-            if (participation2.CompletedMetric)
-                numSuccesses2 = 1;
+            double numSuccesses1 = participation1.CompletionFraction;
+            double numSuccesses2 = participation2.CompletionFraction;
             if (numSuccesses1 == 0 && numSuccesses2 == 0)
             {
                 // if neither participation was successful, then we don't have enough information to update our efficiency estimates

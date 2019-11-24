@@ -11,10 +11,23 @@ namespace ActivityRecommendation.Effectiveness
     // a CompletionEffectivenessMeasurement records whether the Participation completed its ToDo
     public class CompletionEfficiencyMeasurement
     {
-        public CompletionEfficiencyMeasurement(bool successful) { this.Successful = successful; }
-        public CompletionEfficiencyMeasurement(RelativeEfficiencyMeasurement computation, bool successful) { this.Computation = computation; this.Successful = successful; }
+        public CompletionEfficiencyMeasurement(bool successful, double helpFraction)
+        {
+            this.Successful = successful;
+            this.HelpFraction = helpFraction;
+        }
+        public CompletionEfficiencyMeasurement(RelativeEfficiencyMeasurement computation, bool successful, double helpFraction)
+        {
+            this.Computation = computation;
+            this.Successful = successful;
+            this.HelpFraction = helpFraction;
+        }
 
+        // Whether this task was completed
         public bool Successful { get; set; }
+        // What fraction of the total effort came from an entity other than the user
+        public double HelpFraction { get; set; }
+        // Whether the task should be dismissed
         public bool DismissedActivity { get; set; }
         public RelativeEfficiencyMeasurement Computation { get; set; }
     }

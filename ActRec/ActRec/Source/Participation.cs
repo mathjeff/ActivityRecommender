@@ -56,7 +56,14 @@ namespace ActivityRecommendation
             set
             {
                 if (this.EffectivenessMeasurement == null)
-                    this.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(value.RecomputedEfficiency.Mean > 0);
+                {
+                    bool successful = value.RecomputedEfficiency.Mean > 0;
+                    double helpFraction = 0;
+                    if (successful)
+                        helpFraction = 1 - value.RecomputedEfficiency.Mean;
+
+                    this.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful, helpFraction);
+                }
                 this.EffectivenessMeasurement.Computation = value;
             }
         }
@@ -68,6 +75,24 @@ namespace ActivityRecommendation
                 if (this.EffectivenessMeasurement == null)
                     return false;
                 return this.EffectivenessMeasurement.Successful;
+            }
+        }
+        public double CompletionFraction
+        {
+            get
+            {
+                if (!this.CompletedMetric)
+                    return 0;
+                return 1 - this.EffectivenessMeasurement.HelpFraction;
+            }
+        }
+        public double HelpFraction
+        {
+            get
+            {
+                if (this.EffectivenessMeasurement == null)
+                    return 0;
+                return this.EffectivenessMeasurement.HelpFraction;
             }
         }
         // Returns true if this Participation was assigned a completion metric that considers its Activity to no longer be doable

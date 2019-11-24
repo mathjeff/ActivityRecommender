@@ -24,9 +24,9 @@ namespace ActivityRecommendation
             rowHeights.BindIndices(0, 5);
             rowHeights.SetPropertyScale(0, 2);
             rowHeights.SetPropertyScale(1, 1);
-            rowHeights.SetPropertyScale(2, 2);
+            rowHeights.SetPropertyScale(2, 1.5);
             rowHeights.SetPropertyScale(3, 1);
-            rowHeights.SetPropertyScale(4, 1.5);
+            rowHeights.SetPropertyScale(4, 1.15);
             rowHeights.SetPropertyScale(5, 1);
 
             GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
@@ -51,10 +51,16 @@ namespace ActivityRecommendation
             contents.AddLayout(middleGrid);
             this.todoCompletionStatusHolder = new ContainerLayout();
             this.todoCompletionLabel = new Label();
-            contents.AddLayout(new Horizontal_GridLayout_Builder().Uniform()
+
+            Horizontal_GridLayout_Builder todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
+            todoInfo_builder.AddLayout(new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(new TextblockLayout(this.todoCompletionLabel))
                 .AddLayout(this.todoCompletionStatusHolder)
                 .Build());
+            this.helpStatusHolder = new ContainerLayout();
+            todoInfo_builder.AddLayout(this.helpStatusHolder);
+
+            contents.AddLayout(todoInfo_builder.Build());
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
@@ -86,10 +92,10 @@ namespace ActivityRecommendation
                 .Build();
 
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
-            grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now"));
+            grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now", 16));
             grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));
             grid4.AddLayout(new HelpButtonLayout(helpWindow, this.layoutStack));
-            grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now"));
+            grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now", 16));
             contents.AddLayout(grid4);
 
             this.mainLayout = contents;
@@ -312,10 +318,12 @@ namespace ActivityRecommendation
 
             if (this.EnteringActivityWithMetric)
             {
+                // Record the success/failure status of the participation
                 string status = this.todoCompletionStatusPicker.SelectedItem.ToString();
                 bool successful = (status == this.TaskCompleted_Text);
                 bool closed = (status != TaskIncomplete_Text);
-                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful);
+                double helpFraction = this.helpStatusPicker.GetHelpFraction(participation.Duration);
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful, helpFraction);
                 participation.EffectivenessMeasurement.DismissedActivity = closed;
                 RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
                 participation.EffectivenessMeasurement.Computation = measurement;
@@ -358,6 +366,8 @@ namespace ActivityRecommendation
                 }
                 this.todoCompletionStatusPicker = singleSelect;
                 this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
+                this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
+                this.helpStatusHolder.SubLayout = this.helpStatusPicker;
                 // TODO: if there are multiple metrics; figure out how to determine which one to show
                 this.todoCompletionLabel.Text = this.nameBox.Activity.Metrics[0].Name + "?";
             }
@@ -365,6 +375,7 @@ namespace ActivityRecommendation
             {
                 this.todoCompletionStatusHolder.SubLayout = null;
                 this.todoCompletionLabel.Text = "";
+                this.helpStatusHolder.SubLayout = null;
             }
         }
 
@@ -680,6 +691,8 @@ namespace ActivityRecommendation
         Label todoCompletionLabel;
         SingleSelect todoCompletionStatusPicker;
         ContainerLayout todoCompletionStatusHolder;
+        HelpDurationInput_Layout helpStatusPicker;
+        ContainerLayout helpStatusHolder;
         ActivityDescriptor demanded_nextParticipationActivity;
         LongtermPrediction previousPrediction = new LongtermPrediction();
         LongtermPrediction currentPrediction = new LongtermPrediction();

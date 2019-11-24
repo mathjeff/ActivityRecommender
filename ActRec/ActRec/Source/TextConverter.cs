@@ -57,6 +57,8 @@ namespace ActivityRecommendation
             if (participation.CompletedMetric)
             {
                 properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(true);
+                if (participation.HelpFraction > 0)
+                    properties[this.HelpFraction_Tag] = this.ConvertToStringBody(participation.HelpFraction);
             }
             else
             {
@@ -526,6 +528,7 @@ namespace ActivityRecommendation
             bool successful = false;
             bool dismissedActivity = false;
             RelativeEfficiencyMeasurement efficiencyMeasurement = null;
+            double helpFraction = 0;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
@@ -570,6 +573,11 @@ namespace ActivityRecommendation
                     successful = this.ReadBool(currentChild);
                     continue;
                 }
+                if (currentChild.Name == HelpFraction_Tag)
+                {
+                    helpFraction = this.ReadDouble(currentChild);
+                    continue;
+                }
                 if (currentChild.Name == this.DismissedActivity_Tag)
                 {
                     dismissedActivity = this.ReadBool(currentChild);
@@ -602,7 +610,7 @@ namespace ActivityRecommendation
             currentParticipation.Suggested = suggested;
             if (dismissedActivity || efficiencyMeasurement != null)
             {
-                CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(successful);
+                CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(successful, helpFraction);
                 effectivenessMeasurement.DismissedActivity = dismissedActivity;
                 currentParticipation.EffectivenessMeasurement = effectivenessMeasurement;
                 if (efficiencyMeasurement != null)
@@ -1466,6 +1474,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Successful";
+            }
+        }
+        private string HelpFraction_Tag
+        {
+            get
+            {
+                return "HelpFraction";
             }
         }
         private string DismissedActivity_Tag

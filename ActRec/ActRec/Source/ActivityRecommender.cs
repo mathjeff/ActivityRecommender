@@ -241,9 +241,7 @@ namespace ActivityRecommendation
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();
 
 
-            MenuLayoutBuilder helpMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            helpMenu_builder.AddLayout("List exciting features", FeatureOverviewLayout.New(this.layoutStack));
-            helpMenu_builder.AddLayout("Explain usage", InstructionsLayout.New(this.layoutStack));
+            LayoutChoice_Set helpMenu = InstructionsLayout.New(this.layoutStack);
 
             MenuLayoutBuilder debuggingBuilder = new MenuLayoutBuilder(this.layoutStack);
             debuggingBuilder.AddLayout("View Logs", new MenuLayoutBuilder(this.layoutStack).AddLayout("View Logs", new LogViewer(this.LogReader)).Build());
@@ -252,7 +250,7 @@ namespace ActivityRecommendation
             PersonaCustomizationView personaCustomizationView = new PersonaCustomizationView(this.persona);
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            introMenu_builder.AddLayout("Intro", helpMenu_builder.Build());
+            introMenu_builder.AddLayout("Intro", helpMenu);
             introMenu_builder.AddLayout("Start", usageMenu);
             introMenu_builder.AddLayout("Customization", new StackEntry(personaCustomizationView, personaCustomizationView));
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());

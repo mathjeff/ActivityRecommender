@@ -4,15 +4,17 @@
 // #1. It generates the instructions screen in the application
 // #2. It can describe the usage instructions to people that don't have the application installed
 
-namespace ActivityRecommendation
+namespace ActivityRecommendation.View
 {
     public class InstructionsLayout
     {
         public static LayoutChoice_Set New(LayoutStack layoutStack)
         {
-            TitledControl mainLayout = new TitledControl("ActivityRecommender Usage:");
+            TitledControl mainLayout = new TitledControl("ActivityRecommender Intro:");
 
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
+
+            menuBuilder.AddLayout("List exciting features", FeatureOverviewLayout.New(layoutStack));
 
             menuBuilder.AddLayout("Navigation", (new HelpWindowBuilder())
                 .AddMessage("Your device should have Back button. Press it from any screen to go back.")
@@ -23,7 +25,7 @@ namespace ActivityRecommendation
                 "that screen seems related, then you should press Back to return to a more general page and continue looking.")
                 .Build());
 
-            menuBuilder.AddLayout("Overview", (new HelpWindowBuilder())
+            menuBuilder.AddLayout("Usage Overview", (new HelpWindowBuilder())
                 .AddMessage("Step 1: Get excited. To see a list of key features of ActivityRecommender so you can decide whether they interest you, go back and choose \"Get Excited\". Everything " +
                 "else mentioned here is under the \"Start\" menu option.")
                 .AddMessage("Step 2: Add some activities. Everything that ActivityRecommender does is based on the activities that you tell it about. Think of some activities that you like to do, " +

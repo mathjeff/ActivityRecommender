@@ -112,6 +112,8 @@ namespace ActivityRecommendation
 
         public ProtoActivity TextSearch(string query)
         {
+            if (query == null || query == "")
+                return null;
             int bestScore = 0;
             ProtoActivity bestProtoActivity = null;
             foreach (ProtoActivity protoActivity in this.ProtoActivities)

@@ -48,14 +48,15 @@ namespace ActivityRecommendation.View
             grid.PutLayout(new TextblockLayout("Browse Best ProtoActivities"), 1, 0);
             LayoutChoice_Set helpButton = new HelpButtonLayout(
                 new HelpWindowBuilder()
-                .AddMessage("If you have entered any ProtoActivities (which are ideas that are not yet fully-formed enough for you to want them to be " +
-                "suggested), then you can browse them here.")
-                .AddMessage("The ProtoActivities you see more often will be ones that seem most interesting to you")
-                .AddMessage("If you want to modify a ProtoActivity, press its Edit button.")
-                .AddMessage("If you want to see different ProtoActivities, then first you have to choose which one you like less. Press the button marked " +
-                "'Worse' next to the ProtoActivity you like less. This will not only dismiss both ProtoActivities, but will also change the frequence of " +
-                "the two ProtoActivities that were showing. The one you marked 'Worse' will show up on this screen less often and the other one will show " +
-                "up more often.")
+                .AddMessage("If you have entered any ProtoActivities (which are ideas that are not yet fully-formed enough for you to want them to be suggested), then you can browse them here.")
+                .AddMessage("This screen allows you to see the ProtoActivites that ActivityRecommender thinks you consider to be most interesting, and also asks you to choose which one of the top " +
+                "two is most interesting to you.")
+                .AddMessage("If you want to modify a ProtoActivity, press its Edit button (note that if you make any changes, then this will temporarily dismiss it (by resetting its interest score)).")
+                .AddMessage("If you want to see different ProtoActivities, then first you should choose which one (of the two visible ProtoActivities) you like less. Press the button marked " +
+                "'Worse' next to the ProtoActivity that you like less. This will cause two new ProtoActivities to appear (by resetting the interest scores of the two currently visible " +
+                "ProtoActivities to 0). This will also cause the one you marked 'Worse' to return less often (by decreasing the rate at which its interest score grows over time) and " +
+                "the other one to return more often (by increasing the rate at which its interest score grows over time).")
+                .AddMessage("Enjoy!")
                 .Build(), 
                 layoutStack);
             grid.PutLayout(helpButton, 2, 0);

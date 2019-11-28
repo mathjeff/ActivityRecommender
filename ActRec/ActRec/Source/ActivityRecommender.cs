@@ -154,7 +154,7 @@ namespace ActivityRecommendation
 
         private void SetupDrawing()
         {
-            this.mainLayout = this.layoutStack;
+            this.mainLayout = ContainerLayout.SameSize_Scroller(new ScrollView(), this.layoutStack);
             this.viewManager = new ViewManager(null, this.mainLayout);
 
             ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);

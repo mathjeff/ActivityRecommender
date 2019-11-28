@@ -1528,7 +1528,7 @@ namespace ActivityRecommendation
                 b.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser;
             int difficultyDifference = b.DifficultyEstimate.NumHarders - a.DifficultyEstimate.NumHarders;
             int absDifficultyDifference = Math.Abs(difficultyDifference);
-            double maxDiffIndices = 2;
+            double maxDiffIndices = 3;
             double easierWeight, harderWeight;
             if (absDifficultyDifference == 0)
             {
@@ -1538,9 +1538,9 @@ namespace ActivityRecommendation
             {
                 if (absDifficultyDifference > maxDiffIndices)
                 {
-                    throw new InvalidOperationException("Unsupported difference (" + difficultyDifference + ") , must be one of [-2,-1,1,2]");
+                    throw new InvalidOperationException("Unsupported difference (" + difficultyDifference + ") , must be from -" + maxDiffIndices + " to " + maxDiffIndices + " (inclusive)");
                 }
-                double maxMultiplier = 3;
+                double maxMultiplier = 4;
                 double minEasierWeight = Math.Pow(maxMultiplier, (double)(absDifficultyDifference - 1) / maxDiffIndices);
                 double maxEasierWeight = Math.Pow(maxMultiplier, (double)absDifficultyDifference / maxDiffIndices);
                 easierWeight = (minEasierWeight + maxEasierWeight) / 2;

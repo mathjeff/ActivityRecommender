@@ -9,10 +9,13 @@ namespace ActivityRecommendation
 {
     class ScoreSummary : IDatapoint<Distribution>
     {
-        public ScoreSummary(DateTime when)
+        // If useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint is false, then this summary won't update if `when` is before the RatingSummarizer's first datapoint
+        // The reason someone might want this would be if they want to make a bunch of ScoreSummary objects and don't want lots of repeats all saying the same thing
+        public ScoreSummary(DateTime when, bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint = false)
         {
             this.earliestKnownDate = when;
             this.latestKnownDate = when;
+            this.useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint = useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;
         }
 
         // Pulls all newer ratings from the RatingSummarizer
@@ -26,6 +29,13 @@ namespace ActivityRecommendation
         // Pulls new ratings from the RatingSummarizer within a certain date range and updates metadata (min/max)
         public void Update(ScoreSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
         {
+            if (!this.useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint)
+            {
+                bool earlierThanFirstDatapoint = this.earliestKnownDate.CompareTo(summarizer.EarliestKnownDate) < 0;
+                if (earlierThanFirstDatapoint)
+                    return;
+            }
+
             if (earliestDateToInclude.CompareTo(this.earliestKnownDate) < 0)
             {
                 bool endInclusive = (this.values.Weight <= 0);
@@ -48,6 +58,7 @@ namespace ActivityRecommendation
             this.values = this.values.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, latestDateToInclude, startInclusive, endInclusive));
         }
 
+
         #region Required for IDatapoint
 
         public double[] InputCoordinates { get; set; }
@@ -64,6 +75,8 @@ namespace ActivityRecommendation
         {
             get
             {
+                if (this.values.Weight == 0)
+                    return this.values;
                 return this.values.CopyAndReweightTo(1);
             }
         }
@@ -79,6 +92,7 @@ namespace ActivityRecommendation
         
         DateTime earliestKnownDate;  // the date that this RatingSummary describes
         DateTime latestKnownDate;   // the date of the latest rating known to this RatingSummary
+        bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;
         Distribution values = new Distribution();
     }
 }

@@ -194,6 +194,8 @@ namespace ActivityRecommendation
                 {
                     TimeSpan currentDuration = new TimeSpan((long)((double)totalDuration.Ticks * (double)i));
                     DateTime when = startDate.Add(currentDuration);
+                    if (when.CompareTo(ratingSummarizer.EarliestKnownDate) < 0)
+                        break;
                     ratingSummary.Update(ratingSummarizer, when, endDate);
                     double x = this.GetXCoordinate(when);
                     double y = ratingSummary.Item.Mean;

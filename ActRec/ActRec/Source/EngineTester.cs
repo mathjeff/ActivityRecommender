@@ -515,6 +515,24 @@ updated results on 2019-03-10 after adding 1 second to ActivitySkip.ThinkingTime
 4.3317 typicalEfficiencyError
 0.6912 typical longtermEfficiencyIfParticipated error
 
+updated results on 2019-11-29 with new data:
+0.1044 typical longtermPredictionIfSuggested error
+0.0289 typical longtermPredictionIfParticipated error
+0.1277 typicalScoreError
+0.9604 equivalentWeightedProbability
+3.8010 typicalEfficiencyError =
+0.9207 typical longtermEfficiencyIfParticipated error
+Computed results in 00:05:09
+
+Updated results after ignoring predictions that are earlier in time than the first point in time known to the corresponding ScoreSummarizer:
+(Note that I have several more years of participation and rating data than efficiency data, making it not that interesting to repeatedly use lots of data from years ago to predict what my efficiency was going to become once I started measuring it)
+0.0912 typical longtermPredictionIfSuggested error
+0.0289 typical longtermPredictionIfParticipated error
+0.1277 typicalScoreError
+0.9604 equivalentWeightedProbability
+3.8010 typicalEfficiencyError
+1.8448 typical longtermEfficiencyIfParticipated
+
 */
 
 namespace ActivityRecommendation

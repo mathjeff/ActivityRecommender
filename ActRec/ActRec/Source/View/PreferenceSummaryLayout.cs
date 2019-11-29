@@ -68,7 +68,7 @@ namespace ActivityRecommendation.View
                 }
 
                 LayoutChoice_Set newLayout = ScrollLayout.New(gridBuilder.Build());
-                this.layoutStack.AddLayout(newLayout);
+                this.layoutStack.AddLayout(newLayout, "Preferences");
             });
 
         }

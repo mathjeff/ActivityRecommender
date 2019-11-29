@@ -49,7 +49,7 @@ namespace ActivityRecommendation.View
             // Show the summary in a text box so the user can copy the text. If the user wants to change the text, that's ok too
             Editor textBox = new Editor();
             textBox.Text = summary;
-            this.layoutStack.AddLayout(ScrollLayout.New(new TextboxLayout(textBox), true));
+            this.layoutStack.AddLayout(ScrollLayout.New(new TextboxLayout(textBox), true), "Summary");
         }
 
         private LifeSummarizer lifeSummarizer;

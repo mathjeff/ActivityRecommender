@@ -88,7 +88,7 @@ namespace ActivityRecommendation
         {
             this.layoutStack.AddLayout(new TextblockLayout("This suggestion is part of an experiment, so you're not allowed to skip it. " +
                 "After spending some time on it, if you haven't completed it, then go to the participations page to record having worked on it. " +
-                "That's where you can specify that you didn't complete it."));
+                "That's where you can specify that you didn't complete it."), "Help");
         }
 
         private void ExperimentButton_Clicked(object sender, EventArgs e)

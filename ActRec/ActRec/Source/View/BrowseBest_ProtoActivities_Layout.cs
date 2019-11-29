@@ -156,7 +156,7 @@ namespace ActivityRecommendation.View
         private void edit(ProtoActivity protoActivity)
         {
             ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack);
-            this.layoutStack.AddLayout(layout, layout);
+            this.layoutStack.AddLayout(layout, "Proto", layout);
         }
 
         private ProtoActivity_Database protoActivity_database;

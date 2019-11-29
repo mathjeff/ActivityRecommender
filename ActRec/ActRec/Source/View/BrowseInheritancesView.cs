@@ -29,7 +29,7 @@ namespace ActivityRecommendation.View
 
         private void activityChosen(object sender, Activity activity)
         {
-            this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase));
+            this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase), "Activity");
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)

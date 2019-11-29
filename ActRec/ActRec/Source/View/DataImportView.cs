@@ -37,7 +37,7 @@ namespace ActivityRecommendation
                 return; // cancelled
 
             ImportConfirmationView confirmationView = new ImportConfirmationView(fileData);
-            this.layoutStack.AddLayout(confirmationView);
+            this.layoutStack.AddLayout(confirmationView, "Confirm Import");
             confirmationView.RequestImport += ConfirmationView_RequestImport;
         }
 

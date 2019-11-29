@@ -73,14 +73,14 @@ namespace ActivityRecommendation.View
                     "characters which is more than the limit of " + maxLength + ") to automatically promote into an Activity. " +
                     "It's better to have a short Activity name because:\n" +
                     "#1 It will have to fit onscreen and\n" +
-                    "#2 It will be saved to your device's storage every time you record having done it."));
+                    "#2 It will be saved to your device's storage every time you record having done it."), "Name too long");
             }
             else
             {
                 ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
                 creationLayout.SelectedActivityTypeIsCategory = false;
                 creationLayout.ActivityName = this.textBox.Text;
-                this.layoutStack.AddEntry(new StackEntry(creationLayout, this));
+                this.layoutStack.AddLayout(new StackEntry(creationLayout, "Proto", this));
             }
         }
 

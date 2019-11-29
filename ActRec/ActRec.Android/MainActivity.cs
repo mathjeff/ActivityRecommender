@@ -32,7 +32,7 @@ namespace ActRec.Droid
             Uniforms.Misc.Droid.TextUtils.Init();
 
             string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            AppParams parameters = new AppParams(version, false, new LogcatReader());
+            AppParams parameters = new AppParams(version, new LogcatReader());
 
             LoadApplication(new App(parameters));
 

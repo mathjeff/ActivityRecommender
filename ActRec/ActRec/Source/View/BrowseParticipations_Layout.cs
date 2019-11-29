@@ -97,22 +97,22 @@ namespace ActivityRecommendation.View
 
         private void SeeRandomParticipations_button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_randomParticipations_layout());
+            this.layoutStack.AddLayout(this.make_randomParticipations_layout(), "Some Times");
         }
 
         private void SeeGoodRandomParticipation_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_goodRandomParticipation_layout());
+            this.layoutStack.AddLayout(this.make_goodRandomParticipation_layout(), "Good Times");
         }
 
         private void BrowseTopParticipations_Button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_topParticipations_layout());
+            this.layoutStack.AddLayout(this.make_topParticipations_layout(), "Best Times");
         }
 
         private void BrowseExtremeParticipations_button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.make_extremeParticipations_layout());
+            this.layoutStack.AddLayout(this.make_extremeParticipations_layout(), "Significant Times");
         }
 
         private LayoutChoice_Set Get_NoParticipations_Layout()

@@ -27,7 +27,7 @@ namespace ActivityRecommendation.View
 
         private void Button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.detailsLayout, this);
+            this.layoutStack.AddLayout(this.detailsLayout, "Have help?", this);
         }
 
         public void OnBack(LayoutChoice_Set other)

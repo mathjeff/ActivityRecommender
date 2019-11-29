@@ -110,7 +110,7 @@ namespace ActivityRecommendation
         private void FeedbackButton_Clicked(object sender, EventArgs e)
         {
             string detailsText = this.participationFeedback.Details;
-            this.layoutStack.AddLayout(new TextblockLayout(detailsText));
+            this.layoutStack.AddLayout(new TextblockLayout(detailsText), "Feedback");
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)

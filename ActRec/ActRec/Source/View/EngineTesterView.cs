@@ -49,7 +49,7 @@ namespace ActivityRecommendation
                 .AddMessage("Computed results in " + duration)
                 .Build();
 
-            this.layoutStack.AddLayout(resultsView);
+            this.layoutStack.AddLayout(resultsView, "Test Results");
         }
 
         ActivityRecommender activityRecommender;

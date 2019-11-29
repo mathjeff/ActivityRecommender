@@ -64,7 +64,7 @@ namespace ActivityRecommendation
         private void ChooseDate_button_Clicked(object sender, EventArgs e)
         {
             this.implView.DateText = this.getDateText();
-            this.layoutStack.AddLayout(this.implView, this);
+            this.layoutStack.AddLayout(this.implView, this.GetTitle(), this);
         }
 
         public void Add_TextChanged_Handler(EventHandler<TextChangedEventArgs> h)

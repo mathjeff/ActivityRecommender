@@ -73,7 +73,7 @@ namespace ActivityRecommendation.View
 
         private void RequestAsFunAs_Button_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddEntry(new StackEntry(this.specify_AtLeastAsFunAs_Layout, this));
+            this.layoutStack.AddLayout(new StackEntry(this.specify_AtLeastAsFunAs_Layout, ">Fun", this));
         }
 
         private void SuggestionButton_Clicked(object sender, EventArgs e)

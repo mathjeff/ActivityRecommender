@@ -16,7 +16,7 @@ namespace ActRec
             ContentView view = new ContentView();
             this.Content = view;
 
-            this.activityRecommender = new ActivityRecommender(view, appParams.Version, appParams.AddSoftwareBackButton, appParams.LogReader);
+            this.activityRecommender = new ActivityRecommender(view, appParams.Version, appParams.LogReader);
         }
 
         protected override bool OnBackButtonPressed()

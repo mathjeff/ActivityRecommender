@@ -51,9 +51,9 @@ namespace ActivityRecommendation.View
             if (this.durationBox.IsDurationValid() && this.activityToPredict_box.Activity != null)
             {
                 if (this.typebox.Checked)
-                    this.layoutStack.AddLayout(new Participation_BinComparison_View(this.engine, this.ActivitiesToPredictFrom, this.activityToPredict_box.Activity, this.durationBox.GetDuration()));
+                    this.layoutStack.AddLayout(new Participation_BinComparison_View(this.engine, this.ActivitiesToPredictFrom, this.activityToPredict_box.Activity, this.durationBox.GetDuration()), "Bin Comparison");
                 else
-                    this.layoutStack.AddLayout(new ParticipationCorrelationView(this.engine, this.ActivitiesToPredictFrom, this.activityToPredict_box.Activity, this.durationBox.GetDuration()));
+                    this.layoutStack.AddLayout(new ParticipationCorrelationView(this.engine, this.ActivitiesToPredictFrom, this.activityToPredict_box.Activity, this.durationBox.GetDuration()), "Correlation");
             }
         }
 

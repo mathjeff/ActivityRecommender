@@ -16,11 +16,10 @@ namespace ActivityRecommendation
 {
     public class ActivityRecommender
     {
-        public ActivityRecommender(ContentView parentView, string version, bool addSoftwareBackButton, ValueProvider<StreamReader> logReader)
+        public ActivityRecommender(ContentView parentView, string version, ValueProvider<StreamReader> logReader)
         {
             this.parentView = parentView;
             this.version = version;
-            this.addSoftwareBackButton = addSoftwareBackButton;
             this.LogReader = logReader;
 
             if (System.Diagnostics.Debugger.IsAttached)
@@ -68,7 +67,7 @@ namespace ActivityRecommendation
         {
             this.CheckIfIsNewVersion();
 
-            this.layoutStack = new LayoutStack(this.addSoftwareBackButton);
+            this.layoutStack = new LayoutStack();
             this.suggestionDatabase = new SuggestionDatabase();
             this.protoActivities_database = new ProtoActivity_Database();
 
@@ -252,7 +251,7 @@ namespace ActivityRecommendation
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu);
             introMenu_builder.AddLayout("Start", usageMenu);
-            introMenu_builder.AddLayout("Customization", new StackEntry(personaCustomizationView, personaCustomizationView));
+            introMenu_builder.AddLayout(new StackEntry(personaCustomizationView, "Customization", personaCustomizationView));
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
@@ -274,7 +273,7 @@ namespace ActivityRecommendation
 
             helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
-            this.layoutStack.AddLayout(helpOrStart_menu);
+            this.layoutStack.AddLayout(helpOrStart_menu, "Home");
         }
 
 
@@ -301,7 +300,7 @@ namespace ActivityRecommendation
         {
             ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase, this.engine);
             experimentationLayout.LatestParticipation = this.LatestParticipation;
-            this.layoutStack.AddLayout(experimentationLayout);
+            this.layoutStack.AddLayout(experimentationLayout, "Experiment");
             experimentationLayout.RequestedExperiment += ExperimentationInitializationLayout_RequestedExperiment;
         }
 
@@ -314,7 +313,7 @@ namespace ActivityRecommendation
         {
             ExperimentationDifficultySelectionLayout layout = new ExperimentationDifficultySelectionLayout(choices);
             layout.Done += this.ExperimentDifficultySelectionLayout_Done;
-            this.layoutStack.AddLayout(layout);
+            this.layoutStack.AddLayout(layout, "Difficulty");
         }
 
         private void ExperimentDifficultySelectionLayout_Done(List<SuggestedMetric> choices)
@@ -353,7 +352,7 @@ namespace ActivityRecommendation
             catch (Exception e)
             {
                 TextblockLayout textLayout = new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString(), true);
-                this.layoutStack.AddLayout(textLayout);
+                this.layoutStack.AddLayout(textLayout, "Import Error");
                 return;
             }
             this.Reload();
@@ -400,7 +399,7 @@ namespace ActivityRecommendation
                 message = "Saved " + fileName;
             else
                 message = "Failed to save " + fileName;
-            this.layoutStack.AddLayout(new TextblockLayout(message));
+            this.layoutStack.AddLayout(new TextblockLayout(message), "Error");
         }
 
         public bool GoBack()
@@ -505,7 +504,7 @@ namespace ActivityRecommendation
         public void JustifySuggestion(ActivitySuggestion suggestion)
         {
             ActivitySuggestion_Justification justification = this.engine.JustifySuggestion(suggestion);
-            this.layoutStack.AddLayout(new ActivitySuggestion_Justification_Layout(justification));
+            this.layoutStack.AddLayout(new ActivitySuggestion_Justification_Layout(justification), "Why");
         }
 
         private void AddSuggestion_To_SuggestionsView(ActivitySuggestion suggestion)
@@ -905,7 +904,7 @@ namespace ActivityRecommendation
                 yAxisActivity.ApplyPendingData();
                 List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
-                this.layoutStack.AddLayout(visualizationView);
+                this.layoutStack.AddLayout(visualizationView, "Graph");
             }
         }
 
@@ -918,7 +917,6 @@ namespace ActivityRecommendation
         }
 
         public ValueProvider<StreamReader> LogReader { get; set; }
-        private bool addSoftwareBackButton;
         
         // fills in some default data for the ParticipationEntryView
         private void UpdateDefaultParticipationData()

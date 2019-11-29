@@ -356,14 +356,13 @@ namespace ActivityRecommendation
             {
                 SingleSelect singleSelect;
                 Picker picker = new Picker();
+                SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
+                SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Color.Green);
+                SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
                 if (this.EnteringToDo)
-                {
-                    singleSelect = new SingleSelect(new List<String>() { this.TaskIncomplete_Text, this.TaskCompleted_Text, this.TaskObsolete_Text });
-                }
+                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { incomplete, complete, obsolete });
                 else
-                {
-                    singleSelect = new SingleSelect(new List<String>() { this.TaskIncomplete_Text, this.TaskCompleted_Text });
-                }
+                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { incomplete, complete });
                 this.todoCompletionStatusPicker = singleSelect;
                 this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
                 this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);

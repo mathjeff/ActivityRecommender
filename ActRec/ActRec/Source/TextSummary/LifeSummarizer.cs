@@ -31,7 +31,7 @@ namespace ActivityRecommendation.TextSummary
             // find the most interesting summaries and remove the rest
             components.Sort(new LifeSummaryItem_InterestComparer());
             components.Reverse();
-            int maxCount = 6;
+            int maxCount = 10;
             if (components.Count > maxCount)
                 components = components.GetRange(0, maxCount);
             // reorder the summaries based on the order we want to display them

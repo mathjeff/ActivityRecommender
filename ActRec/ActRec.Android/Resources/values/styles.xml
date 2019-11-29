@@ -39,7 +39,7 @@
   </style>
 
   <style name="EditTextStyle" parent="android:Widget.EditText">
-    <item name="android:imeOptions">flagNoExtractUi</item>
+    <item name="android:imeOptions">actionDone</item>
     <item name="android:includeFontPadding">false</item>
   </style>
 

@@ -250,7 +250,7 @@ namespace ActivityRecommendation
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu);
-            introMenu_builder.AddLayout("Start", usageMenu);
+            introMenu_builder.AddLayout("Start", new StackEntry(usageMenu, "Home", null));
             introMenu_builder.AddLayout(new StackEntry(personaCustomizationView, "Customization", personaCustomizationView));
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
@@ -273,7 +273,7 @@ namespace ActivityRecommendation
 
             helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
-            this.layoutStack.AddLayout(helpOrStart_menu, "Home");
+            this.layoutStack.AddLayout(helpOrStart_menu, "Welcome");
         }
 
 

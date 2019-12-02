@@ -17,8 +17,8 @@ namespace ActivityRecommendation.View
             searchView.ActivityChosen += this.activityChosen;
 
             this.menuLayout = new MenuLayoutBuilder(layoutStack)
-                .AddLayout("List All Activities", listView)
-                .AddLayout("List Open ToDos", todosView)
+                .AddLayout(new StackEntry(listView, "List All Activities", listView))
+                .AddLayout(new StackEntry(todosView, "List Open ToDos", todosView))
                 .AddLayout("Find Activity By Name", searchView)
                 .Build();
 
@@ -43,7 +43,7 @@ namespace ActivityRecommendation.View
 
     }
 
-    abstract class ListInheritancesView : TitledControl
+    abstract class ListInheritancesView : TitledControl, OnBack_Listener
     {
         public event ActivityChosenHandler ActivityChosen;
         public delegate void ActivityChosenHandler(object sender, Activity activity);
@@ -60,9 +60,16 @@ namespace ActivityRecommendation.View
             this.invalidateChildren();
         }
 
+        public void OnBack(LayoutChoice_Set layout)
+        {
+            if (!this.isCacheable())
+            {
+                this.invalidateChildren();
+            }
+        }
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
-            if (!this.isCacheable() || this.GetContent() == null)
+            if (this.GetContent() == null)
                 this.generateChildren();
             return base.GetBestLayout(query);
         }

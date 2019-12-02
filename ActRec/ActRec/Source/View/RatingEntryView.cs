@@ -24,7 +24,7 @@ namespace ActivityRecommendation
             this.UpdateSubview();
 
 
-            this.mainDisplay.SetContent(new LayoutCache(this.displayGrid));
+            this.mainDisplay.SetContent(this.displayGrid);
             this.SetContent(this.mainDisplay);
         }
 #if false

@@ -19,12 +19,12 @@ namespace ActivityRecommendation
 
             this.okButton = new Button();
 
-            gridBuilder.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "Visualize")));
+            gridBuilder.AddLayout(new ButtonLayout(this.okButton, "Visualize"));
 
             //this.xAxisNameBox = new ActivityNameEntryBox("X-Axis Activity (optional)");
             //this.xAxisProgressionSelector = new ProgressionSelectionView("X-Axis");
 
-            this.SetContent(new LayoutCache(gridBuilder.Build()));
+            this.SetContent(gridBuilder.Build());
         }
 
         public void AddOkClickHandler(EventHandler e)

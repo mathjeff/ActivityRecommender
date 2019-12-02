@@ -26,7 +26,7 @@ namespace ActivityRecommendation
 
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Clicked;
-            bottomGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
+            bottomGrid.AddLayout(new ButtonLayout(this.okButton, "OK"));
 
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This screen is for you to enter activities, to use as future suggestions.")

@@ -76,7 +76,7 @@ namespace ActivityRecommendation.View
                 contentWithFeedback.AddLayout(this.responseLayout);
                 contentWithFeedback.AddLayout(this.nameBoxWithX);
 
-                content = new LayoutCache(contentWithFeedback);
+                content = contentWithFeedback;
 
                 this.UpdateFeedback();
             }
@@ -88,7 +88,7 @@ namespace ActivityRecommendation.View
 
         private void XButton_Clicked(object sender, EventArgs e)
         {
-            this.NameText = "";
+            this.Set_NameText("");
         }
 
         public void AddTextChangedHandler(EventHandler<TextChangedEventArgs> h)
@@ -106,7 +106,14 @@ namespace ActivityRecommendation.View
             if (newText != this.nameText)
                 this.userEnteredText(oldText, newText);
 
+            this.UpdateFeedback();
             this.updateXButton();
+
+            if (this.NameMatchesSuggestion)
+            {
+                if (this.NameMatchedSuggestion != null)
+                    this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
+            }
         }
 
         private void updateXButton()
@@ -123,6 +130,7 @@ namespace ActivityRecommendation.View
 
         private void userEnteredText(string oldText, string newText)
         {
+            // System.Diagnostics.Debug.WriteLine("User entered text. Old text = '" + oldText + "', new text = '" + newText + "'");
             List<String> markers = new List<string> { "\n", "\t" };
             bool addedMarker = false;
             foreach (String marker in markers)
@@ -138,18 +146,18 @@ namespace ActivityRecommendation.View
                 if (this.createNewActivity)
                 {
                     // reject illegal characters
-                    this.NameText = oldText;
+                    this.Set_NameText(oldText);
                 }
                 else
                 {
                     // automatically fill the suggestion text into the box
-                    this.NameText = this.suggestedActivityName;
+                    this.Set_NameText(this.suggestedActivityName);
                     this.nameBox.Unfocus();
                 }
             }
             else
             {
-                this.NameText = newText;
+                this.nameText = newText;
             }
         }
         public string NameText
@@ -158,26 +166,12 @@ namespace ActivityRecommendation.View
             {
                 return this.nameText;
             }
-            set
-            {
-                string oldText = this.nameText;
-
-                this.nameText = value;
-                this.nameBox.Text = value;
-                this.UpdateFeedback();
-
-                if (this.NameMatchesSuggestion)
-                {
-                    if (this.NameMatchedSuggestion != null)
-                        this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
-                }
-            }
         }
         public void autoselectRootActivity_if_noCustomActivities()
         {
             if (!this.database.ContainsCustomActivity())
             {
-                this.NameText = this.database.GetRootActivity().Name;
+                this.Set_NameText(this.database.GetRootActivity().Name);
             }
         }
         public void Clear()
@@ -186,7 +180,9 @@ namespace ActivityRecommendation.View
         }
         public void Set_NameText(string text)
         {
-            this.NameText = text;
+            this.nameText = text;
+            if (this.nameBox.Text != text)
+                this.nameBox.Text = text;
         }
         bool NameMatchesSuggestion
         {
@@ -206,7 +202,7 @@ namespace ActivityRecommendation.View
                 this.suggestedActivityName = "";
                 this.autocompleteBlock.Text = "";
                 // hide the Help button if it's there
-                this.responseLayout.SubLayout = this.autocompleteLayout;
+                this.responseLayout.SubLayout = null;
             }
             else
             {
@@ -250,7 +246,6 @@ namespace ActivityRecommendation.View
                     this.suggestedActivityName = "";
                     // show a help button
                     this.responseLayout.SubLayout = this.autocomplete_helpLayout;
-
                 }
 
             }

@@ -37,7 +37,7 @@ namespace ActivityRecommendation
 
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Clicked;
-            mainGrid.AddLayout(new LayoutCache(new ButtonLayout(this.okButton, "OK")));
+            mainGrid.AddLayout(new ButtonLayout(this.okButton, "OK"));
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This screen is for you to enter activities to do, to use as future suggestions.")
                 .AddMessage("In the left text box, choose a name for the activity.")
@@ -83,7 +83,7 @@ namespace ActivityRecommendation
             }
             set
             {
-                this.childNameBox.NameText = value;
+                this.childNameBox.Set_NameText(value);
             }
         }
 

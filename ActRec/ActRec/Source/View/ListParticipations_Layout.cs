@@ -22,7 +22,7 @@ namespace ActivityRecommendation.View
             if (!showRatings)
                 this.orderRandomly(participations);
 
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             foreach (Participation participation in participations)
             {
                 gridBuilder.AddLayout(new ParticipationView(participation, showRatings));

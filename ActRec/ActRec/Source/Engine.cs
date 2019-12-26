@@ -572,6 +572,11 @@ namespace ActivityRecommendation
             return prediction;
         }
 
+        public Distribution GetAverageLongtermValueWhenParticipated(Activity activity)
+        {
+            return activity.GetAverageLongtermValueWhenParticipated();
+        }
+
         // returns a Prediction of the value of suggesting the given activity at the given time
         private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, DateTime when)
         {
@@ -653,6 +658,11 @@ namespace ActivityRecommendation
         {
             Distribution distribution = activity.Predict_LongtermEfficiency_If_Participated(when);
             return new Prediction(activity, distribution, when, "How efficient you tend to be after doing " + activity.Name);
+        }
+
+        public Distribution Get_AverageEfficiency_WhenParticipated(Activity activity)
+        {
+            return activity.GetAverageEfficiencyWhenParticipated();
         }
 
         // returns the average efficiency after having participated in <activity>

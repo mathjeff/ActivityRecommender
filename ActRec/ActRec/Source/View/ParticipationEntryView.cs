@@ -450,17 +450,25 @@ namespace ActivityRecommendation
                 // no data
                 return null;
             }
+            Distribution averageBonusInDays = this.compute_longtermValue_increase(chosenActivity);
             Distribution shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
             Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
+            Distribution averageEfficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity);
+            Distribution averageValueRatio = this.compute_estimatedRating_ratio(chosenActivity);
 
             double roundedLongtermBonus = Math.Round(longtermBonusInDays.Mean, 3);
             double roundedLongtermStddev = Math.Round(longtermBonusInDays.StdDev, 3);
+
+            double roundedAverageLongtermBonus = Math.Round(averageBonusInDays.Mean, 3);
 
             double roundedShorttermRatio = Math.Round(shorttermValueRatio.Mean, 3);
             double roundedShortTermStddev = Math.Round(shorttermValueRatio.StdDev, 3);
 
             double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours.Mean, 3);
             double roundedEfficiencyStddev = Math.Round(efficiencyBonusInHours.StdDev, 3);
+
+            double roundedAverageRatio = Math.Round(averageValueRatio.Mean, 3);
+            double roundedAverageEfficiencyLongtermBonus = Math.Round(averageEfficiencyBonusInHours.Mean, 3);
 
             // compute how long the user spent doing this and how long they usually spend doing it
             // TODO: do we want to change this calculation to use Math.Exp(LogActiveTime) like Engine.GuessParticipationEndDate does?
@@ -558,14 +566,36 @@ namespace ActivityRecommendation
             string detailsMessage = chosenActivity.Name + "\n";
             detailsMessage += TimeFormatter.summarizeTimespan(startDate, endDate) + "\n";
             detailsMessage += "You spent " + durationRatio + " as long as average.\n\n";
-            detailsMessage  += "I predict: \n\n";
-            detailsMessage += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")\n\n";
+
+            detailsMessage  += "I predict:\n\n";
+
+            detailsMessage += roundedShorttermRatio + " * avg fun while doing it (+/- " + roundedShortTermStddev + ")";
+            detailsMessage += " (";
+            if (roundedShorttermRatio > roundedAverageRatio)
+                detailsMessage += "up";
+            else
+                detailsMessage += "down";
+            detailsMessage += " from an average of " + roundedAverageRatio + ")\n\n";
+
             if (roundedLongtermBonus > 0)
                 detailsMessage += "+";
-            detailsMessage += roundedLongtermBonus + " days fun (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days\n\n";
+            detailsMessage += roundedLongtermBonus + " days value (+/- " + roundedLongtermStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days ";
+            detailsMessage += "(";
+            if (roundedLongtermBonus > roundedAverageLongtermBonus)
+                detailsMessage += "up";
+            else
+                detailsMessage += "down";
+            detailsMessage += " from an average of " + roundedAverageLongtermBonus + " days)\n\n";
+
             if (roundedEfficiencyBonus > 0)
                 detailsMessage += "+";
-            detailsMessage += roundedEfficiencyBonus + " hours effectiveness (+/- " + roundedEfficiencyStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days";
+            detailsMessage += roundedEfficiencyBonus + " hours effectiveness (+/- " + roundedEfficiencyStddev + ") over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days ";
+            detailsMessage += "(";
+            if (roundedEfficiencyBonus > roundedAverageEfficiencyLongtermBonus)
+                detailsMessage += "up";
+            else
+                detailsMessage += "down";
+            detailsMessage += " from an average of " + roundedAverageEfficiencyLongtermBonus + " days)\n\n";
 
             return new ParticipationFeedback(chosenActivity, remark, detailsMessage);
         }
@@ -575,9 +605,17 @@ namespace ActivityRecommendation
             Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
             this.engine.EstimateSuggestionValue(chosenActivity, startDate);
             Prediction prediction = this.engine.EstimateRating(chosenActivity, startDate);
-
-            Distribution expectedShortermRating = prediction.Distribution;
-            double overallAverageRating = rootActivity.Ratings.Mean;
+            return this.compute_estimatedRating_ratio(prediction.Distribution, rootActivity.Ratings);
+        }
+        private Distribution compute_estimatedRating_ratio(Activity chosenActivity)
+        {
+            Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
+            return this.compute_estimatedRating_ratio(chosenActivity.Ratings, rootActivity.Ratings);
+        }
+        private Distribution compute_estimatedRating_ratio(Distribution value, Distribution rootValue)
+        {
+            Distribution expectedShortermRating = value;
+            double overallAverageRating = rootValue.Mean;
             Distribution shorttermRatio = expectedShortermRating.CopyAndStretchBy(1.0 / overallAverageRating);
 
             return shorttermRatio;
@@ -586,8 +624,18 @@ namespace ActivityRecommendation
         // given an activity and a DateTime for its Participation to start, estimates the change in longterm happiness (measured in days) caused by doing it
         private Distribution compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
-            Distribution chosenEstimatedDistribution = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, startDate).Distribution;
-            this.currentPrediction.LongtermHappiness = chosenEstimatedDistribution;
+            Distribution endValue = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, startDate).Distribution;
+            this.currentPrediction.LongtermHappiness = endValue;
+            return this.compute_longtermValue_increase(endValue);
+        }
+        private Distribution compute_longtermValue_increase(Activity chosenActivity)
+        {
+            Distribution endValue = this.engine.GetAverageLongtermValueWhenParticipated(chosenActivity);
+            return this.compute_longtermValue_increase(endValue);
+        }
+        private Distribution compute_longtermValue_increase(Distribution endValue)
+        {
+            Distribution chosenEstimatedDistribution = endValue;
             if (chosenEstimatedDistribution.Weight <= 0)
                 return new Distribution();
             Distribution previousValue = this.previousPrediction.LongtermHappiness.CopyAndReweightTo(1);
@@ -620,10 +668,19 @@ namespace ActivityRecommendation
         {
             Distribution chosenEstimatedDistribution = this.engine.Get_OverallEfficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
             this.currentPrediction.LongtermEfficiency = chosenEstimatedDistribution;
-            if (chosenEstimatedDistribution.Weight <= 0)
+            return this.computeEfficiencyIncrease(chosenEstimatedDistribution);
+        }
+        private Distribution computeEfficiencyIncrease(Activity chosenActivity)
+        {
+            Distribution endValue = this.engine.Get_AverageEfficiency_WhenParticipated(chosenActivity);
+            return this.computeEfficiencyIncrease(endValue);
+        }
+        private Distribution computeEfficiencyIncrease(Distribution endValue)
+        {
+            if (endValue.Weight <= 0)
                 return new Distribution();
             Distribution previousValue = this.previousPrediction.LongtermEfficiency.CopyAndReweightTo(1);
-            Distribution chosenValue = chosenEstimatedDistribution.CopyAndReweightTo(1);
+            Distribution chosenValue = endValue.CopyAndReweightTo(1);
 
             Distribution bonusInHours = new Distribution();
             // relWeight(x) = 2^(-x/halflife)

@@ -1,5 +1,5 @@
 ﻿<forms:WindowsPage
-    x:Class="ActRec.UWP.MainPage"
+    x:Class="ActRec.UWP.UWPMainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:forms="using:Xamarin.Forms.Platform.UWP"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,4 +12,5 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     </Grid>
+
 </forms:WindowsPage>

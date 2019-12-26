@@ -4,26 +4,18 @@ using System.Linq;
 using VisiPlacement;
 using Xamarin.Forms;
 using ActivityRecommendation;
+using System.IO;
+using Windows.UI.Xaml;
 
-namespace ActRec
+namespace ActRec.UWP
 {
-    public partial class MainPage : ContentPage
+    public partial class UWPMainPage
     {
-        public MainPage(AppParams appParams)
+        public UWPMainPage()
         {
             InitializeComponent();
-
-            ContentView view = new ContentView();
-            this.Content = view;
-
-            this.activityRecommender = new ActivityRecommender(view, appParams.Version, appParams.LogReader);
+            AppParams appParams = new AppParams("", new ConstantValueProvider<StreamReader>(null));
+            LoadApplication(new ActRec.App(appParams));
         }
-
-        protected override bool OnBackButtonPressed()
-        {
-            return this.activityRecommender.GoBack();
-        }
-
-        private ActivityRecommender activityRecommender;
     }
 }

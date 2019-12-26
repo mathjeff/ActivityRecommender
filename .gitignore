@@ -11,3 +11,4 @@ packages
 *.user
 *.csproj.user
 *csproj~
+*.xaml~

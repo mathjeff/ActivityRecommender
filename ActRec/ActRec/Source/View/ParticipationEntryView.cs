@@ -481,86 +481,704 @@ namespace ActivityRecommendation
                 durationRatio = 0;
 
             bool fast = (actualNumSeconds <= typicalNumSeconds);
-            bool fun = (shorttermValueRatio.Mean > 1);
-            bool soothing = (longtermBonusInDays.Mean >= 0);
-            bool efficient = (efficiencyBonusInHours.Mean >= 0);
+            bool funActivity = (shorttermValueRatio.Mean >= 1);
+            bool funTime = (shorttermValueRatio.Mean >= averageValueRatio.Mean);
+            bool soothingActivity = (longtermBonusInDays.Mean >= 0);
+            bool soothingTime = (longtermBonusInDays.Mean > averageBonusInDays.Mean);
+            bool efficientActivity = (efficiencyBonusInHours.Mean >= 0);
+            bool efficientTime = (efficiencyBonusInHours.Mean >= averageEfficiencyBonusInHours.Mean);
 
             string remark;
 
-            if (fast)
+            if (funActivity)
             {
-                if (fun)
+                if (funTime)
                 {
-                    if (soothing)
+                    if (soothingActivity)
                     {
-                        if (efficient)
-                            remark = "Great!";
-                        else
-                            remark = "A brief respite.";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Incredible!";
+                                    else
+                                        remark = "Spectacular!!!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Like fireworks!";
+                                    else
+                                        remark = "Solid work!";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "A good time for a party!";
+                                    else
+                                        remark = "So much fun! Don't forget to work too :p";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "A short, fun distraction";
+                                    else
+                                        remark = "So much fun! Don't forget to work though";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Good work!";
+                                    else
+                                        remark = "Great work!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good job! But could you choose a different time?";
+                                    else
+                                        remark = "Great job! But could you choose a different time?";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // This activity is soothing but this time is not
+                                    // This time is efficient but this activity is not
+                                    if (fast)
+                                        remark = "Super crazy schedule?";
+                                    else
+                                        remark = "Crazy schedule?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Maybe choose another time with fewer interruptions?";
+                                    else
+                                        remark = "Any chance that you could choose a different time?";
+                                }
+                            }
+                        }
                     }
-                    else
+                    else // !soothingActivity
                     {
-                        if (efficient)
-                            remark = "You can do it!";
-                        else
-                            remark = "Thanks for stopping early.";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Good job!";
+                                    else
+                                        remark = "Strong work!";
+                                }
+                                else // !efficientTime
+                                {
+                                    // a soothing time but not a soothing activity
+                                    // an efficient activity but not an efficient time
+                                    if (fast)
+                                        remark = "A fun time for a little work";
+                                    else
+                                        remark = "A fun time for some work";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // it's not a soothing activity but it is a soothing time
+                                    // it's not an efficient activity but it is an efficient time
+                                    if (fast)
+                                        remark = "Good idea, but something else might be more wholesome";
+                                    else
+                                        remark = "Good timing, but something else might be more wholesome";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good job on stopping early";
+                                    else
+                                        remark = "That's a bit indulgent :p";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "So fast!";
+                                    else
+                                        remark = "What a hard worker!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good work! You might burn out less if you choose another time though";
+                                    else
+                                        remark = "Good job! You might burn out less if you choose another time though";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // this activity isn't soothing and the time wasn't soothing
+                                    // this activity isn't efficient but the time is efficient
+                                    if (fast)
+                                        remark = "Try doing something more wholesome next?";
+                                    else
+                                        remark = "Have you tried looking for a more wholesome thing to do?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good call on stopping early";
+                                    else
+                                        remark = "Are you sure you're not burning out?";
+                                }
+                            }
+                        }
                     }
                 }
-                else
+                else // !funTime
                 {
-                    if (soothing)
+                    if (soothingActivity)
                     {
-                        if (efficient)
-                            remark = "So fast!";
-                        else
-                            remark = "Find happiness?";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Nice!";
+                                    else
+                                        remark = "Well done!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Pretty good! I think you'd be better off rescheduling though";
+                                    else
+                                        remark = "Not bad! I think you'd be better off rescheduling though";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // Fun activity but not a fun time
+                                    // Soothing activity and also a soothing time
+                                    // Not an efficient activity, but an efficient time
+                                    if (fast)
+                                        remark = "A turbocharged break!";
+                                    else
+                                        remark = "Not bad for a break";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "A short party!";
+                                    else
+                                        remark = "Nice party :p";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    // fun but not a fun time
+                                    // soothing but not a soothing time
+                                    // efficient and an efficient time
+                                    if (fast)
+                                        remark = "Solid work! Hope you this doesn't drain on you";
+                                    else
+                                        remark = "Solid work! Hope you this doesn't make you tired";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good work, but you should choose a different time";
+                                    else
+                                        remark = "Good work, but please choose a different time";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // fun but not a fun time
+                                    // soothing but not a soothing time
+                                    // not an efficient activity, but an efficient time
+                                    if (fast)
+                                        remark = "Maybe do something else?";
+                                    else
+                                        remark = "Could you do something else?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "I recommend rescheduling";
+                                    else
+                                        remark = "I strongly recommend rescheduling";
+                                }
+                            }
+                        }
                     }
-                    else
+                    else // !soothingActivity
                     {
-                        if (efficient)
-                            remark = "Power break.";
-                        else
-                            remark = "Oops!";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    // fun but not a fun time
+                                    // not soothing, but a soothing time
+                                    // efficent and an efficient time
+                                    if (fast)
+                                        remark = "Nice! But this might tire you out";
+                                    else
+                                        remark = "Nice! But watch out for whether this tires you out";
+                                }
+                                else // !efficientTime
+                                {
+                                    // fun but not a fun time
+                                    // not soothing, but a soothing time
+                                    // efficent but not efficient time
+                                    if (fast)
+                                        remark = "Isn't there a better time for this? :p";
+                                    else
+                                        remark = "Can you find a better time for this?";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // it's not a soothing activity but it is a soothing time
+                                    // it's not an efficient activity but it is an efficient time
+                                    if (fast)
+                                        remark = "Decent timing, but is there something better you could do?";
+                                    else
+                                        remark = "Decent timing, but is there something better you could be doing?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Is there anything better you could do?";
+                                    else
+                                        remark = "There must be something better you could be doing";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Working hard!";
+                                    else
+                                        remark = "Really hard work! Are you doing ok?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Are you sure that now is the right time?";
+                                    else
+                                        remark = "Are you sure it's worth doing this now?";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // this activity isn't soothing and the time wasn't soothing
+                                    // this activity isn't efficient but the time is efficient
+                                    if (fast)
+                                        remark = "Really?";
+                                    else
+                                        remark = "Why?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Thank goodness that you stopped";
+                                    else
+                                        remark = "That must be the biggest indulgence ever";
+                                }
+                            }
+                        }
                     }
                 }
             }
             else
             {
-                if (fun)
+                // start
+                if (funTime)
                 {
-                    if (soothing)
+                    if (soothingActivity)
                     {
-                        if (efficient)
-                            remark = "Phenomenal!";
-                        else
-                            remark = "Pleasant.";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Wow!";
+                                    else
+                                        remark = "Awesome!!!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Impressive!";
+                                    else
+                                        remark = "Impressive!!!";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Good scheduling! Maybe do something different next though?";
+                                    else
+                                        remark = "Good scheduling! Maybe do something different though?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "A short distraction";
+                                    else
+                                        remark = "Preparing for some rest";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "You can do it!";
+                                    else
+                                        remark = "Kep it up!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good job! But I recommend another time if possible";
+                                    else
+                                        remark = "Great job! But I recommend another time if possible";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // This activity is soothing but this time is not
+                                    // This time is efficient but this activity is not
+                                    if (fast)
+                                        remark = "Super insane schedule?";
+                                    else
+                                        remark = "Insane schedule?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Maybe choose another time to avoid being interrupted?";
+                                    else
+                                        remark = "I think another time would be less chaotic";
+                                }
+                            }
+                        }
                     }
-                    else
+                    else // !soothingActivity
                     {
-                        if (efficient)
-                            remark = "A good break?";
-                        else
-                            remark = "That's pretty indulgent.";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Efficiency!";
+                                    else
+                                        remark = "Impressive! Do you this is sustainable?";
+                                }
+                                else // !efficientTime
+                                {
+                                    // a soothing time but not a soothing activity
+                                    // an efficient activity but not an efficient time
+                                    if (fast)
+                                        remark = "Not bad";
+                                    else
+                                        remark = "Not bad, but you might prefer something else";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // it's not a soothing activity but it is a soothing time
+                                    // it's not an efficient activity but it is an efficient time
+                                    if (fast)
+                                        remark = "Good idea, but something else might be more enjoyable";
+                                    else
+                                        remark = "Good timing, but something else might be more enjoyable";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Probably don't want to do that for too long";
+                                    else
+                                        remark = "How'd you decide on that?";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Way to go!";
+                                    else
+                                        remark = "Such hard work!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good work! Something else might more fulfilling though";
+                                    else
+                                        remark = "Good job! Something else might more fulfilling though";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // this activity isn't soothing and the time wasn't soothing
+                                    // this activity isn't efficient but the time is efficient
+                                    if (fast)
+                                        remark = "Glad that that's over";
+                                    else
+                                        remark = "Do you have to do that?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Feel free not to do that";
+                                    else
+                                        remark = "Oops";
+                                }
+                            }
+                        }
                     }
                 }
-                else
+                else // !funTime
                 {
-                    if (soothing)
+                    if (soothingActivity)
                     {
-                        if (efficient)
-                            remark = "Good work.";
-                        else
-                            remark = "Lazy.";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "All right!";
+                                    else
+                                        remark = "I believe in you!";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Pretty good! But have you considered any other times?";
+                                    else
+                                        remark = "Not bad! But have you considered any other times?";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // not a fun activity, not a fun time
+                                    // Soothing activity and also a soothing time
+                                    // Not an efficient activity, but an efficient time
+                                    if (fast)
+                                        remark = "You fixed it?";
+                                    else
+                                        remark = "Ok, a little bit of laziness might be fine :p";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Did you fix it?";
+                                    else
+                                        remark = "Don't celebrate too much!";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    // not fun, not a fun time
+                                    // soothing but not a soothing time
+                                    // efficient and an efficient time
+                                    if (fast)
+                                        remark = "Solid work! It's ok to take breaks if you need to";
+                                    else
+                                        remark = "Solid work! Remember to take breaks if you need them";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Good work, but you can choose a different time";
+                                    else
+                                        remark = "Good work, but you'd be better off choosing a different time";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // not fun, not a fun time
+                                    // soothing but not a soothing time
+                                    // not an efficient activity, but an efficient time
+                                    if (fast)
+                                        remark = "Not bad, but I don't think you had to do this now";
+                                    else
+                                        remark = "Not bad, but I don't think you have to do this now";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "I think you would prefer another time";
+                                    else
+                                        remark = "I definitely recommend rescheduling";
+                                }
+                            }
+                        }
                     }
-                    else
+                    else // !soothingActivity
                     {
-                        if (efficient)
-                            remark = "You'll get some rest eventually.";
-                        else
-                            remark = "Oh dear. Don't do that.";
+                        if (soothingTime)
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    // not fun, not a fun time
+                                    // not soothing, but a soothing time
+                                    // efficent and an efficient time
+                                    if (fast)
+                                        remark = "Great progress! Is this a project you care about?";
+                                    else
+                                        remark = "Solid progress. Is this a project you care about?";
+                                }
+                                else // !efficientTime
+                                {
+                                    // not fun, not a fun time
+                                    // not soothing, but a soothing time
+                                    // efficent but not efficient time
+                                    if (fast)
+                                        remark = "Hmm. Are you sure?";
+                                    else
+                                        remark = "Is this something you care about and is this the best time for it?";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // it's not a soothing activity but it is a soothing time
+                                    // it's not an efficient activity but it is an efficient time
+                                    if (fast)
+                                        remark = "I don't think you have to do that, but that was a good time for it";
+                                    else
+                                        remark = "I don't think you have to do that, but this is a good time for it";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Come on!";
+                                    else
+                                        remark = "Seriously?";
+                                }
+                            }
+                        }
+                        else // !soothingTime
+                        {
+                            if (efficientActivity)
+                            {
+                                if (efficientTime)
+                                {
+                                    if (fast)
+                                        remark = "Hard work!";
+                                    else
+                                        remark = "Very hard work! Are you ok?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Maybe write this down and do it later?";
+                                    else
+                                        remark = "Can this wait?";
+                                }
+                            }
+                            else // !efficientActivity
+                            {
+                                if (efficientTime)
+                                {
+                                    // this activity isn't soothing and the time wasn't soothing
+                                    // this activity isn't efficient but the time is efficient
+                                    if (fast)
+                                        remark = "Yeah, don't do that";
+                                    else
+                                        remark = "What are you sacrificing for a little efficiency?";
+                                }
+                                else // !efficientTime
+                                {
+                                    if (fast)
+                                        remark = "Oops!";
+                                    else
+                                        remark = "Oh no!";
+                                }
+                            }
+                        }
                     }
                 }
-
+                // stop
             }
 
             string detailsMessage = chosenActivity.Name + "\n";

@@ -163,7 +163,7 @@ namespace ActivityRecommendation
 
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.layoutStack))
+                .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack))
                 .AddLayout("Brainstorm ProtoActivities", protoActivitiesLayout)
                 .AddLayout("Import Some Premade Activities", activityImportLayout)
                 .AddLayout("Add/Edit Activities", (new MenuLayoutBuilder(this.layoutStack)

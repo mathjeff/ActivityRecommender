@@ -7,14 +7,15 @@ namespace ActivityRecommendation.View
 {
     public class BrowseInheritancesView : ContainerLayout
     {
-        public BrowseInheritancesView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
+        public BrowseInheritancesView(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
         {
             ListInheritancesView listView = new ListAllActivitiesView(activityDatabase);
             ListInheritancesView todosView = new ListOpenTodosView(activityDatabase);
-            ActivitySearchView searchView = new ActivitySearchView(activityDatabase, "View Activity Inheritances", layoutStack);
+            ActivitySearchView searchView = new ActivitySearchView(activityDatabase, protoActivity_database, layoutStack);
             listView.ActivityChosen += this.activityChosen;
             todosView.ActivityChosen += this.activityChosen;
             searchView.ActivityChosen += this.activityChosen;
+            searchView.ProtoActivity_Chosen += this.protoActivity_chosen;
 
             this.menuLayout = new MenuLayoutBuilder(layoutStack)
                 .AddLayout(new StackEntry(listView, "List All Activities", listView))
@@ -25,11 +26,17 @@ namespace ActivityRecommendation.View
             this.SubLayout = this.menuLayout;
             this.layoutStack = layoutStack;
             this.activityDatabase = activityDatabase;
+            this.protoActivity_database = protoActivity_database;
         }
 
         private void activityChosen(object sender, Activity activity)
         {
             this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase), "Activity");
+        }
+
+        private void protoActivity_chosen(object sender, ProtoActivity protoActivity)
+        {
+            this.layoutStack.AddLayout(new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack), "Proto");
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -40,7 +47,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set menuLayout;
         LayoutStack layoutStack;
         ActivityDatabase activityDatabase;
-
+        ProtoActivity_Database protoActivity_database;
     }
 
     abstract class ListInheritancesView : TitledControl, OnBack_Listener
@@ -149,35 +156,138 @@ namespace ActivityRecommendation.View
         }
     }
 
-    class ActivitySearchView : TitledControl
+    class ActivitySearchView : ContainerLayout
     {
         public event ActivityChosenHandler ActivityChosen;
         public delegate void ActivityChosenHandler(object sender, Activity activity);
 
+        public event ProtoActivityChosen_Handler ProtoActivity_Chosen;
+        public delegate void ProtoActivityChosen_Handler(object sender, ProtoActivity protoActivity);
 
-        public ActivitySearchView(ActivityDatabase activityDatabase, string name, LayoutStack layoutStack)
+
+        public ActivitySearchView(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
         {
-            this.SetTitle("");
-            nameBox = new ActivityNameEntryBox("Activity", activityDatabase, layoutStack);
-            nameBox.NumAutocompleteRowsToShow = 2;
-
-            Button button = new Button();
-            button.Clicked += Button_Clicked;
-            ButtonLayout buttonLayout = new ButtonLayout(button, name);
-
-            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(nameBox).AddLayout(buttonLayout).Build());
+            this.activityDatabase = activityDatabase;
+            this.protoActivity_database = protoActivity_database;
+            //this.resultsContainer = new ContainerLayout();
+            this.textBox = new Editor();
+            this.textBox.TextChanged += TextBox_TextChanged;
+            this.autocompleteGridlayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(this.autocompleteGridlayout).AddLayout(new TextboxLayout(this.textBox)).BuildAnyLayout();
         }
 
-        private void Button_Clicked(object sender, EventArgs e)
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (this.ActivityChosen != null)
+            this.updateAutocomplete();
+        }
+        private void updateAutocomplete()
+        {
+            string query = this.textBox.Text;
+            List<ProtoActivity> protoActivities = new List<ProtoActivity>();
+            List<Activity> activities = new List<Activity>();
+            if (query != null && query != "")
             {
-                Activity activity = this.nameBox.Activity;
-                if (activity != null)
-                    this.ActivityChosen.Invoke(this, activity);
+                ActivityDescriptor activityDescriptor = new ActivityDescriptor(query);
+                activityDescriptor.RequiresPerfectMatch = false;
+                ProtoActivity protoActivity = this.protoActivity_database.TextSearch(query);
+                if (protoActivity != null)
+                    protoActivities.Add(protoActivity);
+
+                activities = this.activityDatabase.FindBestMatches(activityDescriptor, 2 - protoActivities.Count);
+            }
+
+            this.putAutocomplete(activities, protoActivities);
+        }
+        private void putAutocomplete(List<Activity> activities, List<ProtoActivity> protoActivities)
+        {
+            bool changed = true;
+            if (activities.Count == this.activitiesByButton.Count && protoActivities.Count == this.protoActivities_byButton.Count)
+            {
+                changed = false;
+                foreach (Activity activity in this.activitiesByButton.Values)
+                {
+                    if (!activities.Contains(activity))
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                foreach (ProtoActivity protoActivity in this.protoActivities_byButton.Values)
+                {
+                    if (!protoActivities.Contains(protoActivity))
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            if (!changed)
+                return;
+            this.activitiesByButton = new Dictionary<Button, Activity>();
+            this.protoActivities_byButton = new Dictionary<Button, ProtoActivity>();
+
+            List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
+
+            for (int i = 0; i < this.autocompleteGridlayout.NumRows; i++)
+            {
+                this.autocompleteGridlayout.PutLayout(null, 0, i);
+            }
+
+            for (int i = 0; i < activities.Count; i++)
+            {
+                Activity activity = activities[i];
+                Button button = this.getButton(i);
+                string text = "Activity: " + activity.Name;
+                this.activitiesByButton[button] = activity;
+                this.autocompleteGridlayout.PutLayout(new ButtonLayout(button, text), 0, i);
+            }
+            for (int i = 0; i < protoActivities.Count; i++)
+            {
+                int y = i + activities.Count;
+                ProtoActivity protoActivity = protoActivities[i];
+                Button button = this.getButton(y);
+                string text = "ProtoActivity: " + protoActivity.Summarize();
+                this.protoActivities_byButton[button] = protoActivity;
+                autocompleteGridlayout.PutLayout(new ButtonLayout(button, text), 0, y);
+            }
+        }
+        private Button getButton(int index)
+        {
+            while (this.buttons.Count <= index)
+            {
+                Button button = new Button();
+                button.Clicked += Button_Click;
+                this.buttons.Add(button);
+            }
+            return this.buttons[index];
+        }
+
+        private void Button_Click(object sender, EventArgs e)
+        {
+            Button button = sender as Button;
+            if (button != null)
+            {
+                Activity activity;
+                if (this.activitiesByButton.TryGetValue(button, out activity))
+                {
+                    if (this.ActivityChosen != null)
+                        this.ActivityChosen.Invoke(this, activity);
+                }
+                else
+                {
+                    ProtoActivity protoActivity = this.protoActivities_byButton[button];
+                    if (this.ProtoActivity_Chosen != null)
+                        this.ProtoActivity_Chosen.Invoke(this, protoActivity);
+                }
             }
         }
 
-        ActivityNameEntryBox nameBox;
+        Editor textBox;
+        ActivityDatabase activityDatabase;
+        ProtoActivity_Database protoActivity_database;
+        Dictionary<Button, Activity> activitiesByButton = new Dictionary<Button, Activity>();
+        Dictionary<Button, ProtoActivity> protoActivities_byButton = new Dictionary<Button, ProtoActivity>();
+        List<Button> buttons = new List<Button>();
+        GridLayout autocompleteGridlayout;
     }
 }

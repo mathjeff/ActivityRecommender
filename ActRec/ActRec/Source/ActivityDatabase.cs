@@ -14,7 +14,7 @@ namespace ActivityRecommendation
         IEnumerable<Activity> AllActivities { get; }
         Boolean ContainsCustomActivity();
         Activity GetRootActivity();
-        IEnumerable<Activity> FindBestMatches(ActivityDescriptor activityDescriptor, int count);
+        List<Activity> FindBestMatches(ActivityDescriptor activityDescriptor, int count);
     }
 
     public class ActivityDatabase : IComparer<string>, ICombiner<IEnumerable<Activity>>, ReadableActivityDatabase
@@ -124,7 +124,7 @@ namespace ActivityRecommendation
         }
 
         // Find the top few matching activities
-        public IEnumerable<Activity> FindBestMatches(ActivityDescriptor descriptor, int count)
+        public List<Activity> FindBestMatches(ActivityDescriptor descriptor, int count)
         {
             if (count == 1)
             {

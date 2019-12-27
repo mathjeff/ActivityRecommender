@@ -273,7 +273,7 @@ namespace ActivityRecommendation
 
             helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
-            this.layoutStack.AddLayout(helpOrStart_menu, "Welcome");
+            this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
 
 

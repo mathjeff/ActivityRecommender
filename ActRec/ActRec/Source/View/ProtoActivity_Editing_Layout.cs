@@ -22,12 +22,12 @@ namespace ActivityRecommendation.View
             this.textBox.Text = protoActivity.Text;
 
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-            TextblockLayout title;
+            string titleText;
             if (protoActivity.Id >= 0)
-                title = new TextblockLayout("Protoactivity #" + protoActivity.Id);
+                titleText = "ProtoActivity #" + protoActivity.Id;
             else
-                title = new TextblockLayout("New Protoactivity");
-            gridBuilder.AddLayout(title);
+                titleText = "New ProtoActivity";
+            gridBuilder.AddLayout(new TextblockLayout(titleText));
             gridBuilder.AddLayout(ScrollLayout.New(new TextboxLayout(this.textBox)));
 
             Button saveButton = new Button();
@@ -38,9 +38,20 @@ namespace ActivityRecommendation.View
             promoteButton.Text = "Promote to Activity";
             promoteButton.Clicked += PromoteButton_Clicked;
 
+            HelpButtonLayout helpButtonLayout = new HelpButtonLayout(new HelpWindowBuilder()
+                .AddMessage("This screen allows you to edit " + titleText + ".")
+                .AddMessage("Enter as much text as you like.")
+                .AddMessage("To save your entry, either press Save or simply go back to another screen.")
+                .AddMessage("  After you go back, if you later want to return to this same ProtoActivity, you will have to go to one of the screens for browsing existing ProtoActivities and then search for it.")
+                .AddMessage("To turn this ProtoActivity into an Activity, press Promote to Activity.")
+                .AddMessage("To delete this ProtoActivity, delete all of the text in the box and then either press Save or go back to a previous screen.")
+                .Build()
+                , layoutStack);
+
             LayoutChoice_Set buttonsLayout = new Horizontal_GridLayout_Builder()
                 .AddLayout(new ButtonLayout(saveButton))
                 .AddLayout(new ButtonLayout(promoteButton))
+                .AddLayout(helpButtonLayout)
                 .BuildAnyLayout();
             gridBuilder.AddLayout(buttonsLayout);
 

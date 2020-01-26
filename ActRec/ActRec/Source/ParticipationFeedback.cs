@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using VisiPlacement;
 
 namespace ActivityRecommendation
 {
     class ParticipationFeedback
     {
-        public ParticipationFeedback(Activity activity, string summary, string details)
+        public ParticipationFeedback(Activity activity, string summary, LayoutChoice_Set details)
         {
             this.Activity = activity;
             this.Summary = summary;
@@ -15,6 +16,6 @@ namespace ActivityRecommendation
         public Activity Activity { get; set; }
 
         public string Summary { get; set; }
-        public string Details { get; set; }
+        public LayoutChoice_Set Details { get; set; }
     }
 }

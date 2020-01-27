@@ -434,7 +434,7 @@ namespace ActivityRecommendation
                     "in the evening that you may choose to skip doing difficult tasks and save them for the morning. This could cause you to " +
                     "take more time working on any individual task in the morning than in the evening, which could incorrectly suggest that " +
                     "your efficiency is lower in the morning than in the evening.";
-                return new ParticipationFeedback(chosenActivity, summary, new TextblockLayout(details));
+                return new ParticipationFeedback(chosenActivity, summary, new ConstantValueProvider<LayoutChoice_Set>(new TextblockLayout(details)));
             }
             else
             {
@@ -1182,83 +1182,26 @@ namespace ActivityRecommendation
                 // stop
             }
 
-            BoundProperty_List rowHeights = new BoundProperty_List(7);
-            rowHeights.BindIndices(1, 3);
-            rowHeights.BindIndices(1, 5);
-            rowHeights.BindIndices(2, 4);
-            rowHeights.BindIndices(2, 6);
-            GridLayout detailsGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero); ;
-            detailsGrid.AddLayout(new TextblockLayout(chosenActivity.Name + " " +
-                TimeFormatter.summarizeTimespan(startDate, endDate) + ": " +
-                "You spent " + durationRatio + " as long as average. I predict:"
-                ));
+            ParticipationNumericFeedback detailsProvider = new ParticipationNumericFeedback();
+            detailsProvider.engine = this.engine;
+            detailsProvider.ActivityDatabase = this.activityDatabase;
+            detailsProvider.StartDate = startDate;
+            detailsProvider.EndDate = endDate;
+            detailsProvider.ParticipationDurationDividedByAverage = durationRatio;
+            detailsProvider.ChosenActivity = chosenActivity;
+            
+            detailsProvider.ExpectedEfficiencyAfterDoingThisActivityNow = roundedAverageEfficiencyLongtermBonus;
+            detailsProvider.ExpectedEfficiencyAfterDoingThisActivitySometime = roundedEfficiencyBonus;
+            detailsProvider.ExpectedEfficiencyStddev = roundedEfficiencyStddev;
+            
+            detailsProvider.ExpectedFutureFunAfterDoingThisActivityNow = roundedAverageLongtermBonus;
+            detailsProvider.ExpectedFutureFunAfterDoingThisActivitySometime = roundedLongtermBonus;
+            detailsProvider.ExpectedFutureFunStddev = roundedLongtermStddev;
 
-            detailsGrid.AddLayout(new TextblockLayout("Current fun:"));
-            GridLayout funWhileDoingIt_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
-            funWhileDoingIt_layout.AddLayout(coloredRatio(roundedShorttermRatio));
-            funWhileDoingIt_layout.AddLayout(new TextblockLayout("* avg fun while doing it at this time"));
-            funWhileDoingIt_layout.AddLayout(new TextblockLayout("" + roundedShortTermStddev));
-            funWhileDoingIt_layout.AddLayout(new TextblockLayout("stddev"));
-            funWhileDoingIt_layout.AddLayout(coloredRatio(roundedAverageRatio));
-            funWhileDoingIt_layout.AddLayout(new TextblockLayout("overall average for this activity"));
-            detailsGrid.AddLayout(funWhileDoingIt_layout);
+            detailsProvider.PredictedCurrentValueForThisActivity = roundedShorttermRatio;
+            detailsProvider.PredictedAverageValueForThisActivity = roundedAverageRatio;
 
-            detailsGrid.AddLayout(new TextblockLayout("Future fun:"));
-            GridLayout futureFun_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
-            futureFun_layout.AddLayout(signedColoredValue(roundedLongtermBonus));
-            futureFun_layout.AddLayout(new TextblockLayout("days future fun (over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days)"));
-            futureFun_layout.AddLayout(new TextblockLayout("" + roundedLongtermStddev));
-            futureFun_layout.AddLayout(new TextblockLayout("stddev (days)"));
-            futureFun_layout.AddLayout(signedColoredValue(roundedAverageLongtermBonus));
-            futureFun_layout.AddLayout(new TextblockLayout("overall average (days) after having done this activity"));
-            detailsGrid.AddLayout(futureFun_layout);
-
-            detailsGrid.AddLayout(new TextblockLayout("Future efficiency:"));
-            GridLayout futureEfficiency_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
-            futureEfficiency_layout.AddLayout(signedColoredValue(roundedEfficiencyBonus));
-            futureEfficiency_layout.AddLayout(new TextblockLayout("hours future efficiency (over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days) "));
-            futureEfficiency_layout.AddLayout(new TextblockLayout("" + roundedEfficiencyStddev));
-            futureEfficiency_layout.AddLayout(new TextblockLayout("stddev (hours)"));
-            futureEfficiency_layout.AddLayout(signedColoredValue(roundedAverageEfficiencyLongtermBonus));
-            futureEfficiency_layout.AddLayout(new TextblockLayout("overall average (hours) after having done this activity"));
-            detailsGrid.AddLayout(futureEfficiency_layout);
-
-            return new ParticipationFeedback(chosenActivity, remark, detailsGrid);
-        }
-        static TextblockLayout signedColoredValue(double value)
-        {
-            Label label = new Label();
-            TextblockLayout layout = new TextblockLayout(label);
-            if (value > 0)
-            {
-                label.TextColor = Color.Green;
-                label.Text = "+" + value;
-            }
-            else
-            {
-                if (value < 0)
-                    label.TextColor = Color.Red;
-                label.Text = "" + value;
-            }
-            return layout;
-        }
-
-        static TextblockLayout coloredRatio(double value)
-        {
-            Label label = new Label();
-            TextblockLayout layout = new TextblockLayout(label);
-            if (value > 1)
-            {
-                label.TextColor = Color.Green;
-            }
-            else
-            {
-                if (value < 1)
-                    label.TextColor = Color.Red;
-            }
-            label.Text = "" + value;
-            return layout;
-
+            return new ParticipationFeedback(chosenActivity, remark, detailsProvider);
         }
 
         private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)

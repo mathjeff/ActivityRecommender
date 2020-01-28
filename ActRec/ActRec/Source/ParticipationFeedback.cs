@@ -57,31 +57,31 @@ namespace ActivityRecommendation
 
             detailsGrid.AddLayout(new TextblockLayout("Current fun:"));
             GridLayout funWhileDoingIt_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
-            funWhileDoingIt_layout.AddLayout(coloredRatio(PredictedCurrentValueForThisActivity));
+            funWhileDoingIt_layout.AddLayout(coloredRatio(PredictedCurrentValueForThisActivity, PredictedAverageValueForThisActivity));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("* avg fun while doing it at this time"));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("" + PredictedCurrentValueForThisActivity));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("stddev"));
-            funWhileDoingIt_layout.AddLayout(coloredRatio(PredictedAverageValueForThisActivity));
+            funWhileDoingIt_layout.AddLayout(coloredRatio(PredictedAverageValueForThisActivity, 1));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("overall average for this activity"));
             detailsGrid.AddLayout(funWhileDoingIt_layout);
 
             detailsGrid.AddLayout(new TextblockLayout("Future fun:"));
             GridLayout futureFun_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
-            futureFun_layout.AddLayout(signedColoredValue(ExpectedFutureFunAfterDoingThisActivityNow));
+            futureFun_layout.AddLayout(signedColoredValue(ExpectedFutureFunAfterDoingThisActivityNow, ExpectedFutureFunAfterDoingThisActivitySometime));
             futureFun_layout.AddLayout(new TextblockLayout("days future fun (over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days)"));
             futureFun_layout.AddLayout(new TextblockLayout("" + ExpectedFutureFunStddev));
             futureFun_layout.AddLayout(new TextblockLayout("stddev (days)"));
-            futureFun_layout.AddLayout(signedColoredValue(ExpectedFutureFunAfterDoingThisActivitySometime));
+            futureFun_layout.AddLayout(signedColoredValue(ExpectedFutureFunAfterDoingThisActivitySometime, 0));
             futureFun_layout.AddLayout(new TextblockLayout("overall average (days) after having done this activity"));
             detailsGrid.AddLayout(futureFun_layout);
 
             detailsGrid.AddLayout(new TextblockLayout("Future efficiency:"));
             GridLayout futureEfficiency_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
-            futureEfficiency_layout.AddLayout(signedColoredValue(ExpectedEfficiencyAfterDoingThisActivityNow));
+            futureEfficiency_layout.AddLayout(signedColoredValue(ExpectedEfficiencyAfterDoingThisActivityNow, ExpectedEfficiencyAfterDoingThisActivitySometime));
             futureEfficiency_layout.AddLayout(new TextblockLayout("hours future efficiency (over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days) "));
             futureEfficiency_layout.AddLayout(new TextblockLayout("" + ExpectedEfficiencyStddev));
             futureEfficiency_layout.AddLayout(new TextblockLayout("stddev (hours)"));
-            futureEfficiency_layout.AddLayout(signedColoredValue(ExpectedEfficiencyAfterDoingThisActivitySometime));
+            futureEfficiency_layout.AddLayout(signedColoredValue(ExpectedEfficiencyAfterDoingThisActivitySometime, 0));
             futureEfficiency_layout.AddLayout(new TextblockLayout("overall average (hours) after having done this activity"));
             detailsGrid.AddLayout(futureEfficiency_layout);
 
@@ -105,40 +105,54 @@ namespace ActivityRecommendation
             return detailsGrid;
         }
 
-        static TextblockLayout signedColoredValue(double value)
+        static TextblockLayout signedColoredValue(double value, double neutralColorThreshold)
         {
             Label label = new Label();
             TextblockLayout layout = new TextblockLayout(label);
             if (value > 0)
-            {
-                label.TextColor = Color.Green;
                 label.Text = "+" + value;
-            }
             else
-            {
-                if (value < 0)
-                    label.TextColor = Color.Red;
                 label.Text = "" + value;
-            }
+            label.TextColor = chooseColor(value, 0, neutralColorThreshold);
             return layout;
         }
 
-        static TextblockLayout coloredRatio(double value)
+        static TextblockLayout coloredRatio(double value, double neutralColorThreshold)
         {
             Label label = new Label();
             TextblockLayout layout = new TextblockLayout(label);
-            if (value > 1)
-            {
-                label.TextColor = Color.Green;
-            }
-            else
-            {
-                if (value < 1)
-                    label.TextColor = Color.Red;
-            }
+            label.TextColor = chooseColor(value, 1, neutralColorThreshold);
             label.Text = "" + value;
             return layout;
 
+        }
+
+        static Color chooseColor(double value, double cutoffA, double cutoffB)
+        {
+            if (cutoffA > cutoffB)
+            {
+                double temp = cutoffA;
+                cutoffA = cutoffB;
+                cutoffB = temp;
+            }
+            if (value >= cutoffA)
+            {
+                if (value >= cutoffB)
+                {
+                    if (value == cutoffA)
+                        return Color.White;
+                    else
+                        return Color.Green;
+                }
+                else
+                {
+                    return Color.Yellow;
+                }
+            }
+            else
+            {
+                return Color.Red;
+            }
         }
 
 

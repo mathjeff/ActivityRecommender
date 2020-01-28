@@ -68,7 +68,7 @@ namespace ActivityRecommendation
             detailsGrid.AddLayout(new TextblockLayout("Future fun:"));
             GridLayout futureFun_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
             futureFun_layout.AddLayout(signedColoredValue(ExpectedFutureFunAfterDoingThisActivityNow, ExpectedFutureFunAfterDoingThisActivitySometime));
-            futureFun_layout.AddLayout(new TextblockLayout("days future fun (over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days)"));
+            futureFun_layout.AddLayout(new TextblockLayout("days future fun (over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days) from doing this now"));
             futureFun_layout.AddLayout(new TextblockLayout("" + ExpectedFutureFunStddev));
             futureFun_layout.AddLayout(new TextblockLayout("stddev (days)"));
             futureFun_layout.AddLayout(signedColoredValue(ExpectedFutureFunAfterDoingThisActivitySometime, 0));
@@ -78,7 +78,7 @@ namespace ActivityRecommendation
             detailsGrid.AddLayout(new TextblockLayout("Future efficiency:"));
             GridLayout futureEfficiency_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
             futureEfficiency_layout.AddLayout(signedColoredValue(ExpectedEfficiencyAfterDoingThisActivityNow, ExpectedEfficiencyAfterDoingThisActivitySometime));
-            futureEfficiency_layout.AddLayout(new TextblockLayout("hours future efficiency (over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days) "));
+            futureEfficiency_layout.AddLayout(new TextblockLayout("hours future efficiency (over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days) from doing this now"));
             futureEfficiency_layout.AddLayout(new TextblockLayout("" + ExpectedEfficiencyStddev));
             futureEfficiency_layout.AddLayout(new TextblockLayout("stddev (hours)"));
             futureEfficiency_layout.AddLayout(signedColoredValue(ExpectedEfficiencyAfterDoingThisActivitySometime, 0));

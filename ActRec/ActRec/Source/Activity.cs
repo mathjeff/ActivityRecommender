@@ -32,9 +32,9 @@ namespace ActivityRecommendation
         private void Initialize(string activityName, ScoreSummarizer overallRatings_summarizer, ScoreSummarizer overallEfficiency_summarizer)
         {
             this.name = activityName;
-            this.parents = new List<Activity>();
-            this.parentsUsedForPrediction = new List<Activity>();
-            this.parentDescriptors = new List<ActivityDescriptor>();
+            this.parents = new List<Activity>(1);
+            this.parentsUsedForPrediction = new List<Activity>(1);
+            this.parentDescriptors = new List<ActivityDescriptor>(1);
             this.overallRatings_summarizer = overallRatings_summarizer;
             this.overallEfficiency_summarizer = overallEfficiency_summarizer;
 
@@ -113,11 +113,11 @@ namespace ActivityRecommendation
             return "Activity " + this.name;
         }
 
-        public LinkedList<AbsoluteRating> PendingRatings = new LinkedList<AbsoluteRating>();
-        public LinkedList<Participation> PendingParticipationsForShorttermAnalysis = new LinkedList<Participation>();
-        public LinkedList<Participation> PendingParticipationsForLongtermAnalysis = new LinkedList<Participation>();
-        public LinkedList<ActivitySkip> PendingSkips = new LinkedList<ActivitySkip>();
-        public LinkedList<ActivitySuggestion> PendingSuggestions = new LinkedList<ActivitySuggestion>();
+        public List<AbsoluteRating> PendingRatings = new List<AbsoluteRating>();
+        public List<Participation> PendingParticipationsForShorttermAnalysis = new List<Participation>();
+        public List<Participation> PendingParticipationsForLongtermAnalysis = new List<Participation>();
+        public List<ActivitySkip> PendingSkips = new List<ActivitySkip>();
+        public List<ActivitySuggestion> PendingSuggestions = new List<ActivitySuggestion>();
         public List<EfficiencyMeasurement> PendingEfficiencyMeasurements = new List<EfficiencyMeasurement>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
         public int NumParticipations { get { return (int)this.participationDurations.Weight; } }
@@ -176,7 +176,7 @@ namespace ActivityRecommendation
         }
         public List<Activity> GetParticipationPredictionActivities()
         {
-            List<Activity> activities = new List<Activity>();
+            List<Activity> activities = new List<Activity>(1);
             activities.Add(this);
             /*
             foreach (Doable parent in this.parents)
@@ -368,9 +368,9 @@ namespace ActivityRecommendation
                 this.SetupParticipationProbabilityInterpolator();
             }
 
-            List<IProgression> progressions = new List<IProgression>();
-            progressions.Add(this.timeOfDayProgression);
             List<Activity> activities = this.GetParticipationPredictionActivities();
+            List<IProgression> progressions = new List<IProgression>(activities.Count + 1);
+            progressions.Add(this.timeOfDayProgression);
             foreach (Activity Doable in activities)
             {
                 foreach (IProgression progression in Doable.participationTrainingProgressions)
@@ -401,7 +401,7 @@ namespace ActivityRecommendation
             // keep track of the latest date at which anything happened
             if (newRating.Date != null)
                 this.ApplyKnownInteractionDate((DateTime)newRating.Date);
-            this.PendingRatings.AddLast(newRating);
+            this.PendingRatings.Add(newRating);
 
 
             // keep track of the ratings when suggested
@@ -471,8 +471,8 @@ namespace ActivityRecommendation
                 this.participationDurations = this.participationDurations.Plus(Distribution.MakeDistribution(newParticipation.Duration.TotalSeconds, 0, 1));
             }
 
-            this.PendingParticipationsForLongtermAnalysis.AddLast(newParticipation);
-            this.PendingParticipationsForShorttermAnalysis.AddLast(newParticipation);
+            this.PendingParticipationsForLongtermAnalysis.Add(newParticipation);
+            this.PendingParticipationsForShorttermAnalysis.Add(newParticipation);
         }
         public void AddEfficiencyMeasurement(EfficiencyMeasurement efficiencyMeasurement)
         {
@@ -571,7 +571,7 @@ namespace ActivityRecommendation
             // keep track of the earliest and latest date at which anything happened
             this.ApplyKnownInteractionDate(newSkip.CreationDate);
 
-            this.PendingSkips.AddLast(newSkip);
+            this.PendingSkips.Add(newSkip);
         }
 
         // Returns (the amount of time that the user spends doing this Doable) divided (by the amount of time that the user is either doing this Doable or considering doing it)
@@ -611,7 +611,7 @@ namespace ActivityRecommendation
         public void AddSuggestion(ActivitySuggestion newSuggestion)
         {
             this.numSuggestions++;
-            this.PendingSuggestions.AddLast(newSuggestion);
+            this.PendingSuggestions.Add(newSuggestion);
         }
         private void ApplyPendingSuggestions()
         {
@@ -759,7 +759,7 @@ namespace ActivityRecommendation
                 else
                     coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange().Middle;
             }
-            List<Prediction> results = new List<Prediction>();
+            List<Prediction> results = new List<Prediction>(this.extraRatingPredictionLinks.Count + 1);
             Distribution estimate = new Distribution(this.shortTerm_ratingInterpolator.Interpolate(coordinates));
             double weight = this.NumRatings * 4;
             Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
@@ -787,14 +787,14 @@ namespace ActivityRecommendation
         {
             // get the current coordinates
             List<Activity> activities = this.GetParticipationPredictionActivities();
-            List<double> coordinateList = new List<double>();
+            List<double> coordinateList = new List<double>(activities.Count * this.participationTestingProgressions.Count + 1);
             // concatenate all coordinates from all supercategories
             coordinateList.Add(this.timeOfDayProgression.GetValueAt(when, false).Value.Mean);
-            foreach (Activity Doable in activities)
+            foreach (Activity doable in activities)
             {
-                Doable.ApplyPendingSkips();
-                Doable.ApplyPendingParticipationsForShorttermAnalysis();
-                foreach (IProgression progression in Doable.participationTestingProgressions)
+                doable.ApplyPendingSkips();
+                doable.ApplyPendingParticipationsForShorttermAnalysis();
+                foreach (IProgression progression in doable.participationTestingProgressions)
                 {
                     ProgressionValue value = progression.GetValueAt(when, false);
                     if (value != null)
@@ -806,7 +806,7 @@ namespace ActivityRecommendation
             double[] coordinates = coordinateList.ToArray();
 
             // have the interpolator make an estimate for these coordinates
-            List<Prediction> results = new List<Prediction>();
+            List<Prediction> results = new List<Prediction>(this.extraRatingPredictionLinks.Count + 1);
             Distribution estimate = this.QueryParticipationProbabilityInterpolator(coordinates);
             double weight = this.NumConsiderations;
             Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
@@ -992,7 +992,6 @@ namespace ActivityRecommendation
         // The input coordinates are measured in seconds (spend on this activity during the window)
         public List<Datapoint> compareParticipations(TimeSpan smoothingWindowDuration, LinearProgression progressionToPredict, DateTime cutoffDate)
         {
-            List<Datapoint> results = new List<Datapoint>();
             this.ApplyPendingData();
 
             // smoothing with a short duration is a hacky way of getting a LinearProgression that models the instantaneous rate of participation
@@ -1015,6 +1014,7 @@ namespace ActivityRecommendation
             DateTime prevDate = union.GetFirstValue().Key;
             double x1 = 0;
             double y1 = 0;
+            List<Datapoint> results = new List<Datapoint>();
             foreach (ListItemStats<DateTime, bool> item in union.AllItems)
             {
                 DateTime nextDate = item.Key;
@@ -1171,12 +1171,12 @@ namespace ActivityRecommendation
         }
         private void SetupParticipationProbabilityInterpolator()
         {
-            List<IProgression> progressions = new List<IProgression>();
-            progressions.Add(this.timeOfDayProgression);
             List<Activity> activities = this.GetParticipationPredictionActivities();
-            foreach (Activity Doable in activities)
+            List<IProgression> progressions = new List<IProgression>(activities.Count * this.participationTrainingProgressions.Count + 1);
+            progressions.Add(this.timeOfDayProgression);
+            foreach (Activity activity in activities)
             {
-                foreach (IProgression progression in Doable.participationTrainingProgressions)
+                foreach (IProgression progression in activity.participationTrainingProgressions)
                 {
                     progressions.Add(progression);
                 }

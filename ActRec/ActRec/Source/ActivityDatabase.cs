@@ -141,8 +141,8 @@ namespace ActivityRecommendation
                 if (quality > 0)
                     sortedItems.Add(quality, activity);
             }
-            List<Activity> top = new List<Activity>();
             count = Math.Min(count, sortedItems.NumItems);
+            List<Activity> top = new List<Activity>(count);
             for (int i = 0; i < count; i++)
             {
                 top.Add(sortedItems.GetValueAtIndex(i).Value);
@@ -154,7 +154,7 @@ namespace ActivityRecommendation
         private IEnumerable<Activity> GetCandidateMatches(ActivityDescriptor descriptor)
         {
             if (descriptor == null)
-                return new List<Activity>();
+                return new List<Activity>(0);
             IEnumerable<Activity> activities = null;
             if (descriptor.RequiresPerfectMatch)
             {
@@ -418,7 +418,7 @@ namespace ActivityRecommendation
         }
         public IEnumerable<Activity> Default()
         {
-            return new List<Activity>();
+            return new List<Activity>(0);
         }
         #endregion
 
@@ -440,7 +440,7 @@ namespace ActivityRecommendation
         {
             string activityName = newActivity.Name;
             // make a list containing just this Activity
-            List<Activity> activityList = new List<Activity>();
+            List<Activity> activityList = new List<Activity>(1);
             activityList.Add(newActivity);
             // add it to the database
             this.activitiesByName.Add(newActivity.Name, activityList);

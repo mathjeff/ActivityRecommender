@@ -75,7 +75,7 @@ namespace ActivityRecommendation
         }
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
-            return new List<ProgressionValue>();
+            return new List<ProgressionValue>(0);
         }
         public int NumItems
         {

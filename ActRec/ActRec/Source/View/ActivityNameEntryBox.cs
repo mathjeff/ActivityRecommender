@@ -324,7 +324,7 @@ namespace ActivityRecommendation.View
             {
                 ActivityDescriptor descriptor = this.WorkInProgressActivityDescriptor;
                 if (descriptor == null)
-                    return new List<Activity>();
+                    return new List<Activity>(0);
                 IEnumerable<Activity> matches = this.database.FindBestMatches(descriptor, this.numAutocompleteRowsToShow);
                 return matches;
             }

@@ -45,13 +45,13 @@ namespace ActivityRecommendation.View
             IEnumerable<ListItemStats<double, Activity>> resultList = results.AllItems;
 
             Vertical_GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
-            LinkedList<ListItemStats<double, Activity>> mostPositivelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
-            LinkedList<ListItemStats<double, Activity>> mostNegativelyCorrelated = new LinkedList<ListItemStats<double, Activity>>();
+            List<ListItemStats<double, Activity>> mostPositivelyCorrelated = new List<ListItemStats<double, Activity>>();
+            List<ListItemStats<double, Activity>> mostNegativelyCorrelated = new List<ListItemStats<double, Activity>>();
             int i = 0;
             int numPositives = Math.Min(4, resultList.Count());
             foreach (ListItemStats<double, Activity> result in resultList.Reverse())
             {
-                mostPositivelyCorrelated.AddLast(result);
+                mostPositivelyCorrelated.Add(result);
                 i++;
                 if (i > numPositives)
                     break;
@@ -60,7 +60,7 @@ namespace ActivityRecommendation.View
             int numNegatives = Math.Min(4, resultList.Count() - numPositives);
             foreach (ListItemStats<double, Activity> result in resultList)
             {
-                mostNegativelyCorrelated.AddLast(result);
+                mostNegativelyCorrelated.Add(result);
                 i++;
                 if (i > numNegatives)
                     break;

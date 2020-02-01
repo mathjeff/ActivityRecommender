@@ -161,7 +161,7 @@ namespace ActivityRecommendation
         }
 
 
-        List<EventHandler<TextChangedEventArgs>> textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>();
+        List<EventHandler<TextChangedEventArgs>> textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>(2);
         private LayoutStack layoutStack;
         List<DateCharacter> dateFormat = new List<DateCharacter>();
         Button chooseDate_button;
@@ -372,7 +372,7 @@ namespace ActivityRecommendation
         Label dateBlock;
         List<Button> buttons = new List<Button>();
         List<DateCharacter> dateFormat = new List<DateCharacter>();
-        List<EventHandler<TextChangedEventArgs>> textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>();
+        List<EventHandler<TextChangedEventArgs>> textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>(2);
     }
 
 
@@ -384,8 +384,6 @@ namespace ActivityRecommendation
     {
         public TextBoxDateEntryView(string startingTitle)
         {
-            this.textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>();
-
             // create the title
             this.SetTitle(startingTitle);
 
@@ -605,7 +603,7 @@ namespace ActivityRecommendation
         //Label titleBox;
         //Editor dateBox;
         Entry dateBox;
-        List<EventHandler<TextChangedEventArgs>> textChanged_handlers;
+        List<EventHandler<TextChangedEventArgs>> textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>(2);
         //String dateFormat = "yyyy-MM-ddTHH:mm:ss";
         List<DateCharacter> dateFormat = new List<DateCharacter>();
         //string latestText = null;

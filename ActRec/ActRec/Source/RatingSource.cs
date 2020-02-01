@@ -36,11 +36,13 @@ namespace ActivityRecommendation
         {
             get
             {
-                List<RatingSource> sources = new List<RatingSource>();
-                sources.Add(RatingSource.FromParticipation(null));
-                sources.Add(RatingSource.FromSkip(null));
-                sources.Add(RatingSource.FromRequest(null));
-                sources.Add(RatingSource.DirectRating(null));
+                List<RatingSource> sources = new List<RatingSource>()
+                {
+                    RatingSource.FromParticipation(null),
+                    RatingSource.FromSkip(null),
+                    RatingSource.FromRequest(null),
+                    RatingSource.DirectRating(null)
+                };
                 return sources;
             }
         }

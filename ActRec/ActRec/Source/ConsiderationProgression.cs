@@ -14,7 +14,6 @@ namespace ActivityRecommendation
         public ConsiderationProgression(Activity newOwner)
         {
             this.searchHelper = new StatList<DateTime, WillingnessSummary>(this, this);
-            //this.valuesInDiscoveryOrder = new List<ProgressionValue>();
             this.owner = newOwner;
         }
         // tells whether we care about this participation at all

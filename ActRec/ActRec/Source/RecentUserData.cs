@@ -38,7 +38,7 @@ namespace ActivityRecommendation
         public bool Synchronized { get; set; }  // tells whether the information on disk matches the information in memory
 
         private DateTime? latestActionDate;
-        private IEnumerable<ActivitySuggestion> suggestions = new LinkedList<ActivitySuggestion>();
+        private IEnumerable<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
 
     }
 }

@@ -161,17 +161,17 @@ namespace ActivityRecommendation.View
         }
         private void UpdateLayout_From_Suggestions()
         {
-            LinkedList<LayoutChoice_Set> layouts = new LinkedList<LayoutChoice_Set>();
+            List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
             if (this.suggestions.Count == 0)
-                layouts.AddLast(this.topLayout);
+                layouts.Add(this.topLayout);
             if (this.messageLayout != null)
-                layouts.AddFirst(messageLayout);
+                layouts.Insert(0, messageLayout);
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
-                layouts.AddLast(this.makeLayout(suggestion));
+                layouts.Add(this.makeLayout(suggestion));
             }
             if (this.suggestions.Count < this.maxNumSuggestions)
-                layouts.AddLast(this.requestSuggestion_layout);
+                layouts.Add(this.requestSuggestion_layout);
 
             GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(layouts.Count), new BoundProperty_List(1), LayoutScore.Zero);
             foreach (LayoutChoice_Set layout in layouts)

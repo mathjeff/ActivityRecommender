@@ -121,15 +121,13 @@ namespace ActivityRecommendation
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
             //int i = indexInclusive;
-            List<ProgressionValue> results = new List<ProgressionValue>();
-            foreach (AbsoluteRating rating in this.ratingsInDiscoveryOrder.GetRange(indexInclusive, this.ratingsInDiscoveryOrder.Count - indexInclusive))
+            List<AbsoluteRating> ratings = this.ratingsInDiscoveryOrder.GetRange(indexInclusive, this.ratingsInDiscoveryOrder.Count - indexInclusive);
+            List<ProgressionValue> results = new List<ProgressionValue>(ratings.Count);
+            foreach (AbsoluteRating rating in ratings)
             {
                 Distribution distribution = Distribution.MakeDistribution(rating.Score, 0, 1);
                 ProgressionValue value = new ProgressionValue((DateTime)rating.Date, distribution);
                 results.Add(value);
-                //i++;
-                //ProgressionValue value = new ProgressionValue(
-                //results.Add((DateTime)this.ratingsInDiscoveryOrder[i].Date);
             }
             return results;
         }

@@ -15,22 +15,22 @@ namespace ActivityRecommendation
             if (maybeKey != null) // Some old skips might not know their creation date but we're mostly concerned with recent ones that do know
             {
                 DateTime key = maybeKey.GetValueOrDefault();
-                LinkedList<ActivitySuggestion> nearbySkips;
+                List<ActivitySuggestion> nearbySkips;
                 if (!this.skipsByDate.ContainsKey(key))
                 {
-                    nearbySkips = new LinkedList<ActivitySuggestion>();
+                    nearbySkips = new List<ActivitySuggestion>(1);
                     this.skipsByDate[key] = nearbySkips;
                 }
                 else
                 {
                     nearbySkips = this.skipsByDate[key];
                 }
-                nearbySkips.AddLast(skip);
+                nearbySkips.Add(skip);
             }
         }
         public ActivitySuggestion GetSuggestion(ActivityDescriptor activityDescriptor, DateTime skipCreationDate)
         {
-            LinkedList<ActivitySuggestion> candidates;
+            List<ActivitySuggestion> candidates;
             if (!this.skipsByDate.TryGetValue(skipCreationDate, out candidates))
                 return null;
             foreach (ActivitySuggestion skip in candidates)
@@ -42,6 +42,6 @@ namespace ActivityRecommendation
             }
             return null;
         }
-        private Dictionary<DateTime, LinkedList<ActivitySuggestion>> skipsByDate = new Dictionary<DateTime, LinkedList<ActivitySuggestion>>();
+        private Dictionary<DateTime, List<ActivitySuggestion>> skipsByDate = new Dictionary<DateTime, List<ActivitySuggestion>>();
     }
 }

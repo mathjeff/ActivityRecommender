@@ -239,7 +239,7 @@ namespace ActivityRecommendation
                 return;
             // draw the ParticipationProgression
             AutoSmoothed_ParticipationProgression participationProgression = this.yAxisActivity.ParticipationProgression;
-            IEnumerable<Participation> participations = participationProgression.Participations;
+            List<Participation> participations = participationProgression.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
             DateTime lastDate = this.queryEndDateDisplay.GetDate();
             double firstCoordinate = this.GetXCoordinate(firstDate);
@@ -264,8 +264,8 @@ namespace ActivityRecommendation
 
 
             double maxXPlotted = 0;
-            List<double> startXs = new List<double>();
-            List<double> endXs = new List<double>();
+            List<double> startXs = new List<double>(participations.Count);
+            List<double> endXs = new List<double>(participations.Count);
 
             // figure out which dates we care about
             double participationStartCoordinate, participationEndCoordinate;

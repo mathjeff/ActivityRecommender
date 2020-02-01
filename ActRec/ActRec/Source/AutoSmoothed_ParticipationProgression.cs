@@ -73,7 +73,7 @@ namespace ActivityRecommendation
         public List<Participation> GetParticipationsSince(DateTime when)
         {
             IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> stats = this.searchHelper.ItemsAfterKey(when, true);
-            List<Participation> participations = new List<Participation>();
+            List<Participation> participations = new List<Participation>(stats.Count());
             foreach (ListItemStats<DateTime, ParticipationAndSummary> entry in stats)
             {
                 participations.Add(entry.Value.Participation);
@@ -108,7 +108,7 @@ namespace ActivityRecommendation
         public IEnumerable<ProgressionValue> GetValuesAfter(int indexInclusive)
         {
             IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.ItemsFromIndex(indexInclusive);
-            List<ProgressionValue> results = new List<ProgressionValue>();
+            List<ProgressionValue> results = new List<ProgressionValue>(items.Count());
             foreach (ListItemStats<DateTime, ParticipationAndSummary> item in items)
             {
                 DateTime when = item.Key;
@@ -119,7 +119,7 @@ namespace ActivityRecommendation
         }
         public LinearProgression Smoothed(TimeSpan windowSize)
         {
-            // make a LinkedList of the cumulative time spent
+            // make a List of the cumulative time spent
             DateTime minDate = this.Owner.DiscoveryDate;
             IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> items = this.searchHelper.AllItems;
             LinearProgression cumulatives = new LinearProgression();

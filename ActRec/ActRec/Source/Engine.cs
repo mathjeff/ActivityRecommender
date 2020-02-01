@@ -55,7 +55,7 @@ namespace ActivityRecommendation
             while (true)
             {
                 // find the next date at which something happened
-                List<DateTime> dates = new List<DateTime>();
+                List<DateTime> dates = new List<DateTime>(4);
                 if (this.unappliedRatings.Count > 0)
                     dates.Add((DateTime)this.unappliedRatings[0].Date);
                 if (this.unappliedParticipations.Count > 0)
@@ -698,7 +698,7 @@ namespace ActivityRecommendation
             justification.Suggestion = activitySuggestion;
             justification.PrimaryReason = bestReason;
             // also list all of the reasons for clarity
-            List<SuggestionJustification> clauses = new List<SuggestionJustification>();
+            List<SuggestionJustification> clauses = new List<SuggestionJustification>(predictions.Count);
             foreach (Prediction contributor in predictions)
             {
                 clauses.Add(contributor.Justification);

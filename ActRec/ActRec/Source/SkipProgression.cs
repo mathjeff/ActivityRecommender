@@ -13,14 +13,10 @@ namespace ActivityRecommendation
         public SkipProgression(Activity newOwner)
         {
             this.searchHelper = new StatList<DateTime, ActivitySkip>(new DateComparer(), this);
-            this.valuesInDiscoveryOrder = new List<ActivitySkip>();
             this.owner = newOwner;
         }
         public void AddSkip(ActivitySkip newSkip)
         {
-            // keep track of the skips in the order they were discovered
-            this.valuesInDiscoveryOrder.Add(newSkip);
-
             // keep track of the skips in chronological order
             this.searchHelper.Add(newSkip.SuggestionStartDate, newSkip);
         }
@@ -46,7 +42,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.valuesInDiscoveryOrder.Count;
+                return this.searchHelper.NumItems;
             }
         }
         public Activity Owner
@@ -90,7 +86,6 @@ namespace ActivityRecommendation
         #endregion
 
         private StatList<DateTime, ActivitySkip> searchHelper;
-        private List<ActivitySkip> valuesInDiscoveryOrder;
         private Activity owner;
     }
 }

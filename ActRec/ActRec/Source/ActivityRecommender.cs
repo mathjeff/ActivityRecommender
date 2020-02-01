@@ -258,7 +258,7 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
-            List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>();
+            List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>(1);
             startLayouts.Add(helpOrStart_menu);
 
             if (this.error != "")
@@ -556,13 +556,6 @@ namespace ActivityRecommendation
                 this.AddActivityRequest(request);
             }
 
-            List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
-            DateTime suggestionDate;
-            if (existingSuggestions.Count() > 0)
-                suggestionDate = existingSuggestions.Last().EndDate.Value;
-            else
-                suggestionDate = now;
-
             // have the engine pretend that the user did everything we've suggested
             IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
 
@@ -603,14 +596,14 @@ namespace ActivityRecommendation
 
         private IEnumerable<Participation> SupposeHypotheticalSuggestions(IEnumerable<ActivitySuggestion> suggestions)
         {
-            LinkedList<Participation> fakeParticipations = new LinkedList<Participation>();
+            List<Participation> fakeParticipations = new List<Participation>(suggestions.Count());
             foreach (ActivitySuggestion suggestion in suggestions)
             {
                 // pretend that the user took our suggestion and tell that to the engine
                 Participation fakeParticipation = new Participation(suggestion.StartDate, suggestion.EndDate.Value, suggestion.ActivityDescriptor);
                 fakeParticipation.Hypothetical = true;
                 this.engine.PutParticipationInMemory(fakeParticipation);
-                fakeParticipations.AddLast(fakeParticipation);
+                fakeParticipations.Add(fakeParticipation);
             }
             return fakeParticipations;
         }
@@ -905,7 +898,6 @@ namespace ActivityRecommendation
             if (yAxisActivity != null)
             {
                 yAxisActivity.ApplyPendingData();
-                List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
                 ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
                 this.layoutStack.AddLayout(visualizationView, "Graph");
             }

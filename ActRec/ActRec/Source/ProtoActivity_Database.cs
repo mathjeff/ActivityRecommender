@@ -50,7 +50,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                List<ProtoActivity> results = new List<ProtoActivity>();
+                List<ProtoActivity> results = new List<ProtoActivity>(this.protoActivities.Count);
                 foreach (ProtoActivity activity in this.protoActivities)
                 {
                     if (activity != null)
@@ -98,7 +98,7 @@ namespace ActivityRecommendation
             int minIndex = candidates.Count - count;
             if (minIndex < 0)
                 minIndex = 0;
-            List<ProtoActivity> results = new List<ProtoActivity>();
+            List<ProtoActivity> results = new List<ProtoActivity>(count);
             for (int i = candidates.Count - 1; i >= minIndex; i--)
             {
                 results.Add(candidates[i]);

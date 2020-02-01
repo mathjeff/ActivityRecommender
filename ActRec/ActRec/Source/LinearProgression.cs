@@ -76,10 +76,10 @@ namespace ActivityRecommendation
         {
             get
             {
-                LinkedList<DateTime> keys = new LinkedList<DateTime>();
+                List<DateTime> keys = new List<DateTime>();
                 foreach (ListItemStats<DateTime, double> item in this.searchHelper.AllItems)
                 {
-                    keys.AddLast(item.Key);
+                    keys.Add(item.Key);
                 }
                 return keys;
             }

@@ -540,6 +540,7 @@ updated results on 2020-02-01 with more data:
 0.9605 equivalentWeightedProbability
 3.6634 typicalEfficiencyError
 1.7822 typical longtermEfficiencyIfParticipated error
+EngineTester completed in 00:08:32.9351070 // when running in the debugger
 
 */
 

@@ -281,7 +281,7 @@ namespace ActivityRecommendation
         private IEnumerable<XmlNode> ParseToXmlNodes(string text)
         {
             if (text == null || text.Length <= 0)
-                return new List<XmlNode>();
+                return new List<XmlNode>(0);
             text = "<root>" + text + "</root>";
             XmlDocument document = new XmlDocument();
             try
@@ -898,13 +898,13 @@ namespace ActivityRecommendation
             }
             return data;
         }
-        private LinkedList<ActivitySuggestion> ReadSuggestions(XmlNode nodeRepresentation)
+        private List<ActivitySuggestion> ReadSuggestions(XmlNode nodeRepresentation)
         {
-            LinkedList<ActivitySuggestion> suggestions = new LinkedList<ActivitySuggestion>();
+            List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>(nodeRepresentation.ChildNodes.Count);
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 ActivitySuggestion suggestion = this.ReadSuggestion(currentChild);
-                suggestions.AddLast(suggestion);
+                suggestions.Add(suggestion);
             }
             return suggestions;
         }

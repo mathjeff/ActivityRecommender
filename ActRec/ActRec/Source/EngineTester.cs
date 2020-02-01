@@ -531,7 +531,15 @@ Updated results after ignoring predictions that are earlier in time than the fir
 0.1277 typicalScoreError
 0.9604 equivalentWeightedProbability
 3.8010 typicalEfficiencyError
-1.8448 typical longtermEfficiencyIfParticipated
+1.8448 typical longtermEfficiencyIfParticipated error
+
+updated results on 2020-02-01 with more data:
+0.0900 typical longtermPredictionIfSuggested error
+0.0267 typical longtermPredictionIfParticipated error
+0.1321 typicalScoreError
+0.9605 equivalentWeightedProbability
+3.6634 typicalEfficiencyError
+1.7822 typical longtermEfficiencyIfParticipated error
 
 */
 

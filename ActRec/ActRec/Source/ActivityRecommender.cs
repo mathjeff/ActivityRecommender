@@ -65,6 +65,7 @@ namespace ActivityRecommendation
 
         public void Initialize()
         {
+            DateTime start = DateTime.Now;
             this.CheckIfIsNewVersion();
 
             this.layoutStack = new LayoutStack();
@@ -78,6 +79,8 @@ namespace ActivityRecommendation
             this.textConverter = new TextConverter(null, this.ActivityDatabase);
 
             this.SetupDrawing();
+            DateTime end = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender.Initialize completed in " + (end - start));
         }
 
         private void attachParentView()

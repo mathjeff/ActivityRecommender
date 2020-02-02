@@ -25,11 +25,6 @@ namespace ActivityRecommendation
             this.EndDate = endDate;
             this.ActivityDescriptor = activityDescriptor;
             this.RawRating = null;
-            this.LogIdleTime = new Distribution(0, 0, 0);
-            double numSeconds = this.Duration.TotalSeconds;
-            if (numSeconds > 0)
-                this.LogActiveTime = Distribution.MakeDistribution(Math.Log(numSeconds), 0, 1);
-
             this.Hypothetical = false;
         }
 
@@ -110,9 +105,7 @@ namespace ActivityRecommendation
         public string Comment { get; set; }
         public bool Hypothetical { get; set; }  // false if it actually happened, true if we are supposing that it might happen
 
-        public Distribution LogIdleTime { get; set; }   // the log of the time (in seconds) between sub-participations
-        public Distribution LogActiveTime { get; set; } // the log of the duration (in seconds) of each sub-participation
-
+        
         // returns the exact rating that was given to this Participation
         public Rating RawRating 
         {

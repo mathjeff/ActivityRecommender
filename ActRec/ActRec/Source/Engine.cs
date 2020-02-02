@@ -33,9 +33,11 @@ namespace ActivityRecommendation
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
         public void FullUpdate()
         {
+            DateTime start = DateTime.Now;
             this.ApplyParticipationsAndRatings();
             this.requiresFullUpdate = false;
-            System.Diagnostics.Debug.WriteLine("Engine.FullUpdate completed");
+            DateTime end = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine("Engine.FullUpdate completed in " + (end - start));
         }
         public void EnsureRatingsAreAssociated()
         {
@@ -52,18 +54,22 @@ namespace ActivityRecommendation
         {
             DateTime nextDate;
             int numRatingsNewlyApplied = this.unappliedRatings.Count;
+            int ratingIndex = 0;
+            int participationIndex = 0;
+            int skipIndex = 0;
+            int suggestionIndex = 0;
             while (true)
             {
                 // find the next date at which something happened
                 List<DateTime> dates = new List<DateTime>(4);
-                if (this.unappliedRatings.Count > 0)
-                    dates.Add((DateTime)this.unappliedRatings[0].Date);
-                if (this.unappliedParticipations.Count > 0)
-                    dates.Add((DateTime)this.unappliedParticipations[0].StartDate);
-                if (this.unappliedSkips.Count > 0)
-                    dates.Add((DateTime)this.unappliedSkips[0].CreationDate);
-                if (this.unappliedSuggestions.Count > 0)
-                    dates.Add(this.unappliedSuggestions[0].CreatedDate);
+                if (this.unappliedRatings.Count > ratingIndex)
+                    dates.Add((DateTime)this.unappliedRatings[ratingIndex].Date);
+                if (this.unappliedParticipations.Count > participationIndex)
+                    dates.Add((DateTime)this.unappliedParticipations[participationIndex].StartDate);
+                if (this.unappliedSkips.Count > skipIndex)
+                    dates.Add((DateTime)this.unappliedSkips[skipIndex].CreationDate);
+                if (this.unappliedSuggestions.Count > suggestionIndex)
+                    dates.Add(this.unappliedSuggestions[suggestionIndex].CreatedDate);
                 if (dates.Count == 0)
                     break;
                 nextDate = dates[0];
@@ -75,27 +81,31 @@ namespace ActivityRecommendation
                 // apply any data for the next date            
                 // Optimization opportunity for the future: cache the lists of superCategories
                 // finally, cascade all of the ratings and participations to each activity
-                while (this.unappliedRatings.Count > 0 && ((DateTime)this.unappliedRatings[0].Date).CompareTo(nextDate) == 0)
+                while (this.unappliedRatings.Count > ratingIndex && ((DateTime)this.unappliedRatings[ratingIndex].Date).CompareTo(nextDate) == 0)
                 {
-                    this.CascadeRating(this.unappliedRatings[0]);
-                    this.unappliedRatings.RemoveAt(0);
+                    this.CascadeRating(this.unappliedRatings[ratingIndex]);
+                    ratingIndex++;
                 }
-                while (this.unappliedParticipations.Count > 0 && ((DateTime)this.unappliedParticipations[0].StartDate).CompareTo(nextDate) == 0)
+                while (this.unappliedParticipations.Count > participationIndex && ((DateTime)this.unappliedParticipations[participationIndex].StartDate).CompareTo(nextDate) == 0)
                 {
-                    this.CascadeParticipation(this.unappliedParticipations[0]);
-                    this.unappliedParticipations.RemoveAt(0);
+                    this.CascadeParticipation(this.unappliedParticipations[participationIndex]);
+                    participationIndex++;
                 }
-                while (this.unappliedSkips.Count > 0 && ((DateTime)this.unappliedSkips[0].CreationDate).CompareTo(nextDate) == 0)
+                while (this.unappliedSkips.Count > skipIndex && ((DateTime)this.unappliedSkips[skipIndex].CreationDate).CompareTo(nextDate) == 0)
                 {
-                    this.CascadeSkip(this.unappliedSkips[0]);
-                    this.unappliedSkips.RemoveAt(0);
+                    this.CascadeSkip(this.unappliedSkips[skipIndex]);
+                    skipIndex++;
                 }
-                while (this.unappliedSuggestions.Count > 0 && ((DateTime)this.unappliedSuggestions[0].CreatedDate).CompareTo(nextDate) == 0)
+                while (this.unappliedSuggestions.Count > suggestionIndex && ((DateTime)this.unappliedSuggestions[suggestionIndex].CreatedDate).CompareTo(nextDate) == 0)
                 {
-                    this.CascadeSuggestion(this.unappliedSuggestions[0]);
-                    this.unappliedSuggestions.RemoveAt(0);
+                    this.CascadeSuggestion(this.unappliedSuggestions[suggestionIndex]);
+                    suggestionIndex++;
                 }
             }
+            this.unappliedRatings.Clear();
+            this.unappliedParticipations.Clear();
+            this.unappliedSkips.Clear();
+            this.unappliedSuggestions.Clear();
             this.Update_RatingSummaries(numRatingsNewlyApplied);
         }
 

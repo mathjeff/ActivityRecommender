@@ -172,8 +172,8 @@ namespace ActivityRecommendation.View
             //this.resultsContainer = new ContainerLayout();
             this.textBox = new Editor();
             this.textBox.TextChanged += TextBox_TextChanged;
-            this.autocompleteGridlayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
-            this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(this.autocompleteGridlayout).AddLayout(new TextboxLayout(this.textBox)).BuildAnyLayout();
+            this.autocompleteGridlayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
+            this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(ScrollLayout.New(this.autocompleteGridlayout)).AddLayout(new TextboxLayout(this.textBox)).BuildAnyLayout();
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -189,11 +189,13 @@ namespace ActivityRecommendation.View
             {
                 ActivityDescriptor activityDescriptor = new ActivityDescriptor(query);
                 activityDescriptor.RequiresPerfectMatch = false;
-                ProtoActivity protoActivity = this.protoActivity_database.TextSearch(query);
-                if (protoActivity != null)
-                    protoActivities.Add(protoActivity);
-
-                activities = this.activityDatabase.FindBestMatches(activityDescriptor, 2 - protoActivities.Count);
+                // search for some protoactivities
+                protoActivities = this.protoActivity_database.TextSearch(query, this.maxNumResults / 2);
+                // try to fill out the results with activities
+                activities = this.activityDatabase.FindBestMatches(activityDescriptor, this.maxNumResults - protoActivities.Count);
+                // if we didn't find enough activities, try to fill out the rest with protoactivities
+                if (activities.Count + protoActivities.Count < this.maxNumResults)
+                    protoActivities = this.protoActivity_database.TextSearch(query, this.maxNumResults - activities.Count);
             }
 
             this.putAutocomplete(activities, protoActivities);
@@ -289,5 +291,6 @@ namespace ActivityRecommendation.View
         Dictionary<Button, ProtoActivity> protoActivities_byButton = new Dictionary<Button, ProtoActivity>();
         List<Button> buttons = new List<Button>();
         GridLayout autocompleteGridlayout;
+        private int maxNumResults = 6;
     }
 }

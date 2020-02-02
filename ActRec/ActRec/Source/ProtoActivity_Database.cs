@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StatLists;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,20 +113,31 @@ namespace ActivityRecommendation
 
         public ProtoActivity TextSearch(string query)
         {
-            if (query == null || query == "")
-                return null;
-            int bestScore = 0;
-            ProtoActivity bestProtoActivity = null;
+            List<ProtoActivity> matches = this.TextSearch(query, 1);
+            if (matches.Count > 0)
+                return matches[0];
+            return null;
+        }
+
+        public List<ProtoActivity> TextSearch(string query, int count)
+        {
+            if (query == null || query == "" || count < 1)
+                return new List<ProtoActivity>(0);
+
+            StatList<double, ProtoActivity> sortedItems = new StatList<double, ProtoActivity>(new ReverseDoubleComparer(), new NoopCombiner<ProtoActivity>());
             foreach (ProtoActivity protoActivity in this.ProtoActivities)
             {
-                int score = this.stringQueryMatcher.StringScore(protoActivity.Text, query);
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestProtoActivity = protoActivity;
-                }
+                double quality = this.stringQueryMatcher.StringScore(protoActivity.Text, query);
+                if (quality > 0)
+                    sortedItems.Add(quality, protoActivity);
             }
-            return bestProtoActivity;
+            count = Math.Min(count, sortedItems.NumItems);
+            List<ProtoActivity> top = new List<ProtoActivity>(count);
+            for (int i = 0; i < count; i++)
+            {
+                top.Add(sortedItems.GetValueAtIndex(i).Value);
+            }
+            return top;
         }
 
         private List<ProtoActivity> protoActivities = new List<ProtoActivity>();

@@ -148,6 +148,8 @@ namespace ActivityRecommendation
         // Find the top few matching activities
         public List<Activity> FindBestMatches(ActivityDescriptor descriptor, int count)
         {
+            if (count < 1)
+                return new List<Activity>(0);
             if (count == 1)
             {
                 Activity best = this.ResolveDescriptor(descriptor);

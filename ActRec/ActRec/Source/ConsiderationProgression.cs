@@ -37,11 +37,11 @@ namespace ActivityRecommendation
                 WillingnessSummary willingness = new WillingnessSummary();
                 if (newParticipation.Suggested)
                 {
-                    willingness.NumPromptedParticipations = newParticipation.TotalIntensity.Mean;
+                    willingness.NumPromptedParticipations = newParticipation.Duration.TotalSeconds;
                 }
                 else
                 {
-                    willingness.NumUnpromptedParticipations = newParticipation.TotalIntensity.Mean;
+                    willingness.NumUnpromptedParticipations = newParticipation.Duration.TotalSeconds;
                 }
                 //Distribution distribution = newParticipation.TotalIntensity.CopyAndReweightTo(1);
                 this.AddValue(newParticipation.StartDate, willingness);

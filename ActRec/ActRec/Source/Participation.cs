@@ -13,23 +13,17 @@ namespace ActivityRecommendation
         #region Public Member functions
         public Participation()
         {
-            this.Initialize(new DateTime(0), new DateTime(0), null, 0);
-        }
-        public Participation(DateTime startDate, DateTime endDate, ActivityDescriptor activityDescriptor, double averageIntensity)
-        {
-            this.Initialize(startDate, endDate, activityDescriptor, averageIntensity);
+            this.Initialize(new DateTime(0), new DateTime(0), null);
         }
         public Participation(DateTime startDate, DateTime endDate, ActivityDescriptor activityDescriptor)
         {
-            this.Initialize(startDate, endDate, activityDescriptor, 1);
+            this.Initialize(startDate, endDate, activityDescriptor);
         }
-        private void Initialize(DateTime startDate, DateTime endDate, ActivityDescriptor activityDescriptor, double averageIntensity)
+        private void Initialize(DateTime startDate, DateTime endDate, ActivityDescriptor activityDescriptor)
         {
             this.StartDate = startDate;
             this.EndDate = endDate;
             this.ActivityDescriptor = activityDescriptor;
-            double totalIntensity = this.Duration.TotalSeconds * averageIntensity;
-            this.totalIntensity = new Distribution(totalIntensity, totalIntensity * averageIntensity, totalIntensity);
             this.RawRating = null;
             this.LogIdleTime = new Distribution(0, 0, 0);
             double numSeconds = this.Duration.TotalSeconds;
@@ -106,17 +100,6 @@ namespace ActivityRecommendation
             }
         }
 
-        public Distribution TotalIntensity // intensity measured in seconds
-        {
-            get
-            {
-                return this.totalIntensity;
-            }
-            set
-            {
-                this.totalIntensity = value;
-            }
-        }
         public TimeSpan Duration
         {
             get
@@ -202,7 +185,6 @@ namespace ActivityRecommendation
             return converted;
         }
 
-        private Distribution totalIntensity;
         private Rating rawRating;
 
         #endregion

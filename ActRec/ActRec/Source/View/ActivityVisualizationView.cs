@@ -509,8 +509,6 @@ namespace ActivityRecommendation
                     x = value.Value.Mean;
                 else
                     x = 0;
-                //Participation xParticipation = this.xAxisActivity.SummarizeParticipationsBetween(startDate, when);
-                //x = xParticipation.TotalIntensity.Mean * xParticipation.TotalIntensity.Weight;
             }
             return x;
         }

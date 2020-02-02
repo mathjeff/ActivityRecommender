@@ -60,7 +60,11 @@ namespace ActivityRecommendation
         private void setupLoadingScreen()
         {
             this.parentView.BackgroundColor = Color.Black;
-            ViewManager viewManager = new ViewManager(this.parentView, new TextblockLayout(this.persona.Name + " is loading your data..."));
+            Label label = new Label();
+            label.Text = this.persona.Name + " is loading your data...";
+            label.VerticalTextAlignment = TextAlignment.Center;
+            label.HorizontalTextAlignment = TextAlignment.Center;
+            ViewManager viewManager = new ViewManager(this.parentView, new TextblockLayout(label));
         }
 
         public void Initialize()

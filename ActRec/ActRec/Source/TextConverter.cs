@@ -520,9 +520,9 @@ namespace ActivityRecommendation
             // the participation being read
             // The participation may have an embedded rating
             Rating rating = null;
-            ActivityDescriptor activityDescriptor = new ActivityDescriptor();
+            ActivityDescriptor activityDescriptor = null;
             DateTime startDate = DateTime.Now;
-            DateTime endDate = DateTime.Now;
+            DateTime endDate = startDate;
             string comment = null;
             bool suggested = false;
             bool successful = false;
@@ -592,6 +592,10 @@ namespace ActivityRecommendation
             if (successful)
             {
                 dismissedActivity = true;
+            }
+            if (activityDescriptor == null)
+            {
+                throw new InvalidDataException("No activity descriptor specified!");
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
             if (rating != null)

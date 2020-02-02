@@ -195,7 +195,7 @@ namespace ActivityRecommendation
         // performs Depth First Search to find all superCategories of the given Activity
         public List<Activity> FindAllSupercategoriesOf(Activity child)
         {
-            return child.GetAllSuperactivities();
+            return this.activityDatabase.GetAllSuperactivitiesOf(child);
         }
         // performs Depth First Search to find all subCategories of the given Activity
         public List<Activity> FindAllSubCategoriesOf(Activity parent)
@@ -1391,7 +1391,7 @@ namespace ActivityRecommendation
             {
                 if (!excludedActivities.Contains(activity))
                 {
-                    if (fromCategory == null || activity.HasAncestor(fromCategory))
+                    if (fromCategory == null || this.activityDatabase.HasAncestor(activity, fromCategory))
                     {
                         // If we get into this ChooseExperimentOption function, then there exists no experiment that has been planned but unstarted.
                         // So, we can check whether this is a post-task by checking whether it is participating in any experiments

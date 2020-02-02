@@ -149,40 +149,10 @@ namespace ActivityRecommendation
             }
         }
 
-        // returns a list containing this Activity and all of its ancestors
-        public List<Activity> GetAllSuperactivities()
-        {
-            List<Activity> superCategories = new List<Activity>();
-            superCategories.Add(this);
-            int i = 0;
-            for (i = 0; i < superCategories.Count; i++)
-            {
-                Activity Doable = superCategories[i];
-                foreach (Activity parent in Doable.Parents)
-                {
-                    if (!superCategories.Contains(parent))
-                    {
-                        superCategories.Add(parent);
-                    }
-                }
-            }
-            return superCategories;
-        }
-        // tells whether <ancestor> is either <this> or one of the ancestors of <this>
-        public bool HasAncestor(Activity ancestor)
-        {
-            return this.GetAllSuperactivities().Contains(ancestor);
-
-        }
         public List<Activity> GetParticipationPredictionActivities()
         {
             List<Activity> activities = new List<Activity>(1);
             activities.Add(this);
-            /*
-            foreach (Doable parent in this.parents)
-            {
-                activities.Add(parent);
-            }*/
             return activities;
         }
         // makes an ActivityDescriptor that describes this Doable

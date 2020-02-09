@@ -50,7 +50,7 @@ namespace ActivityRecommendation.View
             
 
             Button seeGoodRandomParticipation_button = new Button();
-            ButtonLayout seeGoodRandomParticipation_layout = new ButtonLayout(seeGoodRandomParticipation_button, "See one good participation (better participations appear more often)");
+            ButtonLayout seeGoodRandomParticipation_layout = new ButtonLayout(seeGoodRandomParticipation_button, "See a good participation (better ones appear more often)");
             seeGoodRandomParticipation_button.Clicked += SeeGoodRandomParticipation_Clicked;
 
             Button seeRandomParticipations_button = new Button();

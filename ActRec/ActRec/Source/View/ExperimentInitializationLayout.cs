@@ -10,7 +10,7 @@ namespace ActivityRecommendation.View
         public event RequestedExperimentHandler RequestedExperiment;
         public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
 
-        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase, Engine engine)
+        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase, Engine engine, int numActivitiesThatMayBeRequestedDirectly)
         {
             this.SetTitle("Experiment");
             this.activityRecommender = activityRecommender;
@@ -34,8 +34,8 @@ namespace ActivityRecommendation.View
             Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
             for (int i = 0; i < this.numChoices; i++)
             {
-                bool allowRequestingActivitiesDirectly = (i == 0);
-                ExperimentOptionLayout child = new ExperimentOptionLayout(this, activityDatabase, allowRequestingActivitiesDirectly, engine, layoutStack);
+                bool allowRequestingActivityDirectly = (i < numActivitiesThatMayBeRequestedDirectly);
+                ExperimentOptionLayout child = new ExperimentOptionLayout(this, activityDatabase, allowRequestingActivityDirectly, engine, layoutStack);
                 this.children.Add(child);
                 childrenBuilder.AddLayout(child);
                 child.SuggestionDismissed += Child_SuggestionDismissed;
@@ -163,6 +163,12 @@ namespace ActivityRecommendation.View
                 "give up.")
                 .AddMessage("Note that it's very important to focus on this task so ActivityRecommender can have accurate data about how much time you actually spent on it.")
                 .AddMessage("As a result, ActivityRecommender will not allow you to dismiss the resultant suggestion; you will have to attempt to work on it.")
+                .AddMessage("On subsequent experiments, you may also notice that when you are deciding which activities to choose from, some of the boxes may " +
+                "allow you to type in exactly which activity you want to do, and some only say 'Suggest'. You're only allowed to directly enter an average of " +
+                "one activity suggestion per experiment (but you may cancel suggestions as many times as you want (but this may take longer)); the more " +
+                "activity names that you directly choose this time, the fewer that you will be allowed to directly choose next time. This is done to prevent you " +
+                "from accidentally ordering activities in a way such that ActivityRecommender can't analyze efficiency trends over long periods of time.")
+                // Specifically, we want to prevent the user from finishing all of their post-tasks before creating enough new pre-tasks
                 .AddMessage("Ready? Go!")
                 .Build();
             return new HelpButtonLayout("Important Instructions", helpDetails, layoutStack);

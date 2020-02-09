@@ -52,9 +52,15 @@ namespace ActivityRecommendation.Effectiveness
     // Suggests doing a certain activity and measuring it in a certain way (unless it contains an error)
     public class SuggestedMetric
     {
-        public SuggestedMetric(PlannedMetric metric, ActivitySuggestion activitySuggestion) { this.PlannedMetric = metric; this.ActivitySuggestion = activitySuggestion; }
+        public SuggestedMetric(PlannedMetric metric, ActivitySuggestion activitySuggestion, bool chosenByUser)
+{
+            this.PlannedMetric = metric;
+            this.ActivitySuggestion = activitySuggestion;
+            this.ChosenByUser = chosenByUser;
+        }
         public PlannedMetric PlannedMetric { get; set; }
         public ActivitySuggestion ActivitySuggestion { get; set; }
+        public bool ChosenByUser { get; set; }
 
         public ActivityDescriptor ActivityDescriptor
         {

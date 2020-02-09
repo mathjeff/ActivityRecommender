@@ -305,7 +305,7 @@ namespace ActivityRecommendation
 
         private void SuggestionsView_ExperimentRequested()
         {
-            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase, this.engine);
+            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase, this.engine, 3 - this.recentUserData.NumRecent_UserChosen_ExperimentSuggestions);
             experimentationLayout.LatestParticipation = this.LatestParticipation;
             this.layoutStack.AddLayout(experimentationLayout, "Experiment");
             experimentationLayout.RequestedExperiment += ExperimentationInitializationLayout_RequestedExperiment;
@@ -323,10 +323,33 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(layout, "Difficulty");
         }
 
+        // We limit the number of experiment suggestions that the user is allowed to request at once
+        // (This is because we don't want the user to empty the pool of post-tasks too quickly, lowering the accuracy of our longterm efficiency estimates)
+        // This function updates the user's quota of how many experiment suggestions they're allowed to control now
+        private void update_numRecent_userChosenExperimentSuggestions(List<SuggestedMetric> choices)
+        {
+            int numUserChosen_suggestions = 0;
+            foreach (SuggestedMetric metric in choices)
+            {
+                if (metric.ChosenByUser)
+                    numUserChosen_suggestions++;
+            }
+            // The user is only allowed to choose a certain number of suggestions per experiment, on average
+            // This is the deviation from that average
+            int deviationFromMaxAllowedAverage = numUserChosen_suggestions - 1;
+            int newNum = this.recentUserData.NumRecent_UserChosen_ExperimentSuggestions + deviationFromMaxAllowedAverage;
+            if (newNum < 0)
+                newNum = 0;
+            if (newNum > 3)
+                newNum = 3;
+            this.recentUserData.NumRecent_UserChosen_ExperimentSuggestions = newNum;
+            this.writeRecentUserData_if_needed();
+        }
         private void ExperimentDifficultySelectionLayout_Done(List<SuggestedMetric> choices)
         {
             DateTime when = DateTime.Now;
             this.SuspectLatestActionDate(when);
+            this.update_numRecent_userChosenExperimentSuggestions(choices);
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);

@@ -131,6 +131,8 @@ namespace ActivityRecommendation
                 properties[this.DateTag] = this.ConvertToStringBody(data.LatestActionDate);
             if (data.Suggestions != null)
                 properties[this.SuggestionsTag] = this.ConvertToStringBody(data.Suggestions);
+            if (data.NumRecent_UserChosen_ExperimentSuggestions != 0)
+                properties[this.NumRecent_UserChosen_ExperimentSuggestions_Tag] = this.ConvertToStringBody(data.NumRecent_UserChosen_ExperimentSuggestions);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -897,6 +899,11 @@ namespace ActivityRecommendation
                 if (currentChild.Name == this.SuggestionsTag)
                 {
                     data.Suggestions = this.ReadSuggestions(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.NumRecent_UserChosen_ExperimentSuggestions_Tag)
+                {
+                    data.NumRecent_UserChosen_ExperimentSuggestions = this.ReadInt(currentChild);
                     continue;
                 }
             }
@@ -1760,6 +1767,14 @@ namespace ActivityRecommendation
             get
             {
                 return "Weight";
+            }
+        }
+
+        private string NumRecent_UserChosen_ExperimentSuggestions_Tag
+        {
+            get
+            {
+                return "RecentGuidedExperiments";
             }
         }
         #endregion

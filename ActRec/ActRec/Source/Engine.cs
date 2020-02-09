@@ -1519,7 +1519,8 @@ namespace ActivityRecommendation
             plannedMetric.ActivityDescriptor = bestActivity.MakeDescriptor();
             plannedMetric.MetricName = metric.Name;
 
-            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when)), -1);
+            bool userGuidedThisSuggestion = fromCategory != null;
+            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when), userGuidedThisSuggestion), -1);
         }
 
         // returns number of successes per second

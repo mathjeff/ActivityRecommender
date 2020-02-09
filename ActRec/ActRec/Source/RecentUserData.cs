@@ -35,10 +35,23 @@ namespace ActivityRecommendation
                 this.Synchronized = false;
             }
         }
+        public int NumRecent_UserChosen_ExperimentSuggestions
+        {
+            get
+            {
+                return this.numRecent_userchosen_ExperimentSuggestions;
+            }
+            set
+            {
+                this.numRecent_userchosen_ExperimentSuggestions = value;
+                this.Synchronized = false;
+            }
+        }
         public bool Synchronized { get; set; }  // tells whether the information on disk matches the information in memory
 
         private DateTime? latestActionDate;
         private IEnumerable<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
+        private int numRecent_userchosen_ExperimentSuggestions;
 
     }
 }

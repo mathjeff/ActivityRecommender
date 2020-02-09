@@ -86,6 +86,11 @@ namespace ActivityRecommendation.View
             base.SetContent(content);
         }
 
+        public void Placeholder(string text)
+        {
+            this.nameBox.Placeholder = text;
+        }
+
         private void XButton_Clicked(object sender, EventArgs e)
         {
             this.Set_NameText("");

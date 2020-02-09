@@ -21,7 +21,8 @@ namespace ActivityRecommendation.View
             suggestionButton.Clicked += SuggestionButton_Clicked;
             ButtonLayout buttonLayout = new ButtonLayout(suggestionButton, "Suggest");
 
-            this.categoryBox = new ActivityNameEntryBox("From category (optional):", activityDatabase, layoutStack);
+            this.categoryBox = new ActivityNameEntryBox("From category:", activityDatabase, layoutStack);
+            this.categoryBox.Placeholder("(Optional)");
             this.activityDatabase = activityDatabase;
             this.engine = engine;
             this.layoutStack = layoutStack;
@@ -39,7 +40,7 @@ namespace ActivityRecommendation.View
 
                 this.atLeastAsFunAs_button = new Button();
                 atLeastAsFunAs_button.Clicked += RequestAsFunAs_Button_Clicked;
-                configurationLayout.AddLayout(new TitledControl("At least as fun as (optional):", new ButtonLayout(atLeastAsFunAs_button)));
+                configurationLayout.AddLayout(new TitledControl("At least as fun as:", new ButtonLayout(atLeastAsFunAs_button)));
 
                 if (vertical)
                 {
@@ -102,7 +103,7 @@ namespace ActivityRecommendation.View
             this.atLeastAsFunAs_activity = this.specify_AtLeastAsFunAs_Layout.Activity;
             if (this.atLeastAsFunAs_activity == null)
             {
-                this.atLeastAsFunAs_button.Text = "(nothing)";
+                this.atLeastAsFunAs_button.Text = "(Optional)";
             }
             else
             {
@@ -143,10 +144,11 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set helpLayout = new HelpButtonLayout(helpWindow, layoutStack);
 
             this.desiredActivity_box = new ActivityNameEntryBox("I want an activity at least as fun as this one:", activityDatabase, layoutStack);
+            this.desiredActivity_box.Placeholder("(Optional)");
             this.desiredActivity_box.PreferSuggestibleActivities = true;
 
             this.estimatedRating_box = new RelativeRatingEntryView();
-            this.estimatedRating_box.SetTitle("which I think will be this much fun (optional):");
+            this.estimatedRating_box.SetTitle("which I think will be this much fun:");
 
             this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(helpLayout).AddLayout(this.desiredActivity_box).AddLayout(this.EstimatedRating_Box).BuildAnyLayout();
         }

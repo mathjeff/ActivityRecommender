@@ -13,7 +13,7 @@ namespace ActivityRecommendation
 {
     class RelativeRatingEntryView : TitledControl
     {
-        public RelativeRatingEntryView() : base("Relative Score (Optional)")
+        public RelativeRatingEntryView() : base("Relative Score")
         {
             this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
@@ -28,6 +28,7 @@ namespace ActivityRecommendation
             this.mainDisplayGrid.AddLayout(new TextblockLayout(this.nameBlock));
 
             this.SetContent(this.mainDisplayGrid);
+            this.Placeholder("(Optional)");
         }
 
         private void ScaleBlock_TextChanged(object sender, TextChangedEventArgs e)
@@ -52,6 +53,10 @@ namespace ActivityRecommendation
             {
                 return null;
             }
+        }
+        public void Placeholder(string text)
+        {
+            this.scaleBlock.Placeholder = text;
         }
         void UpdateDateColor()
         {

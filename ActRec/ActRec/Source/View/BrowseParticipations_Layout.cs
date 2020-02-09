@@ -18,12 +18,12 @@ namespace ActivityRecommendation.View
 
             TextblockLayout helpLayout = new TextblockLayout("Browse participations");
 
-            ActivityNameEntryBox categoryBox = new ActivityNameEntryBox("From category (Optional)", activityDatabase, layoutStack);
+            ActivityNameEntryBox categoryBox = new ActivityNameEntryBox("From category", activityDatabase, layoutStack);
+            categoryBox.Placeholder("(Optional)");
             this.categoryBox = categoryBox;
 
-            this.sinceDate_box = new DateEntryView("Since (Optional)", layoutStack);
-            DateTime oneWeekAgo = DateTime.Today.Date.Subtract(TimeSpan.FromDays(7));
-            this.sinceDate_box.SetDay(DateTime.Today.Subtract(TimeSpan.FromDays(7)));
+            this.sinceDate_box = new DateEntryView("Since", layoutStack);
+            this.sinceDate_box.Placeholder("(Optional)");
 
             this.displayRatings_box = new CheckBox("No", "Yes");
             this.displayRatings_box.Checked = true;

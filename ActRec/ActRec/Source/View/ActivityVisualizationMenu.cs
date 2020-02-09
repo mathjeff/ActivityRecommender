@@ -21,9 +21,6 @@ namespace ActivityRecommendation
 
             gridBuilder.AddLayout(new ButtonLayout(this.okButton, "Visualize"));
 
-            //this.xAxisNameBox = new ActivityNameEntryBox("X-Axis Activity (optional)");
-            //this.xAxisProgressionSelector = new ProgressionSelectionView("X-Axis");
-
             this.SetContent(gridBuilder.Build());
         }
 

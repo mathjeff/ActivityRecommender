@@ -78,7 +78,7 @@ namespace ActivityRecommendation
 
         private string getDateText()
         {
-            return this.chooseDate_button.Text;
+            return this.dateText;
         }
 
         public void appearInvalid()
@@ -136,21 +136,46 @@ namespace ActivityRecommendation
         {
             this.setDateText(day.ToString("yyyy-MM-dd"));
         }
+        public void Placeholder(string text)
+        {
+            this.placeholder = text;
+            this.updateButtonText();
+        }
+
         public void setDateText(string newText)
         {
-            string oldText = this.chooseDate_button.Text;
+            string oldText = this.dateText;
+            this.dateText = newText;
             if (newText != oldText)
             {
-                this.chooseDate_button.Text = newText;
-                if (this.IsDateValid())
-                    this.appear_defaultValid();
-                else
-                    this.appearInvalid();
+                this.updateButtonText();
                 // call handlers
                 TextChangedEventArgs args = new TextChangedEventArgs(oldText, newText);
                 foreach (EventHandler<TextChangedEventArgs> handler in this.textChanged_handlers)
                 {
                     handler.Invoke(this.chooseDate_button, args);
+                }
+
+            }
+        }
+        private void updateButtonText()
+        {
+            if (this.IsDateValid())
+            {
+                this.chooseDate_button.Text = this.dateText;
+                this.appear_defaultValid();
+            }
+            else
+            {
+                if ((this.dateText == null || this.dateText == "") && this.placeholder != null)
+                {
+                    this.chooseDate_button.Text = this.placeholder;
+                    this.appear_defaultValid();
+                }
+                else
+                {
+                    this.chooseDate_button.Text = this.dateText;
+                    this.appearInvalid();
                 }
             }
         }
@@ -166,6 +191,8 @@ namespace ActivityRecommendation
         List<DateCharacter> dateFormat = new List<DateCharacter>();
         Button chooseDate_button;
         FullscreenDateEntryView implView;
+        private string placeholder = null;
+        private string dateText = "";
     }
 
     class FullscreenDateEntryView : TitledControl

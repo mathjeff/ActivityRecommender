@@ -74,7 +74,16 @@ namespace ActivityRecommendation.View
             this.protoActivity_database.RatingsChanged += ProtoActivity_database_Changed;
             this.protoActivity_database.TextChanged += ProtoActivity_database_Changed;
 
+            this.singleActivityButton = new Button();
+            this.singleActivityButton.Clicked += SingleActivityButton_Clicked;
+            this.singleActivityLayout = new ButtonLayout(this.singleActivityButton);
+
             this.invalidate();
+        }
+
+        private void SingleActivityButton_Clicked(object sender, EventArgs e)
+        {
+            this.edit(this.activity1);
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -105,7 +114,9 @@ namespace ActivityRecommendation.View
             {
                 if (top_protoActivities.Count == 1) 
                 {
-                    this.SubLayout = new TextblockLayout(top_protoActivities[0].Text);
+                    this.SubLayout = this.singleActivityLayout;
+                    this.singleActivityButton.Text = top_protoActivities[0].Text;
+                    this.setActivity1(top_protoActivities[0]);
                 }
                 else
                 {
@@ -161,12 +172,16 @@ namespace ActivityRecommendation.View
 
         private ProtoActivity_Database protoActivity_database;
         private ActivityDatabase activityDatabase;
+
         private ContainerLayout activity1Holder;
         private ContainerLayout activity2Holder;
         private Label numProtoactivitiesTextblock;
         private LayoutChoice_Set multiActivitiesLayout;
         private ProtoActivity activity1;
         private ProtoActivity activity2;
+
         private LayoutStack layoutStack;
+        private Button singleActivityButton;
+        private LayoutChoice_Set singleActivityLayout;
     }
 }

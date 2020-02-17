@@ -1191,12 +1191,12 @@ namespace ActivityRecommendation
             detailsProvider.ParticipationDurationDividedByAverage = durationRatio;
             detailsProvider.ChosenActivity = chosenActivity;
             
-            detailsProvider.ExpectedEfficiencyAfterDoingThisActivityNow = roundedAverageEfficiencyLongtermBonus;
-            detailsProvider.ExpectedEfficiencyAfterDoingThisActivitySometime = roundedEfficiencyBonus;
+            detailsProvider.ExpectedEfficiencyAfterDoingThisActivityNow = roundedEfficiencyBonus;
+            detailsProvider.ExpectedEfficiencyAfterDoingThisActivitySometime = roundedAverageEfficiencyLongtermBonus;
             detailsProvider.ExpectedEfficiencyStddev = roundedEfficiencyStddev;
             
-            detailsProvider.ExpectedFutureFunAfterDoingThisActivityNow = roundedAverageLongtermBonus;
-            detailsProvider.ExpectedFutureFunAfterDoingThisActivitySometime = roundedLongtermBonus;
+            detailsProvider.ExpectedFutureFunAfterDoingThisActivityNow = roundedLongtermBonus;
+            detailsProvider.ExpectedFutureFunAfterDoingThisActivitySometime = roundedAverageLongtermBonus;
             detailsProvider.ExpectedFutureFunStddev = roundedLongtermStddev;
 
             detailsProvider.PredictedCurrentValueForThisActivity = roundedShorttermRatio;

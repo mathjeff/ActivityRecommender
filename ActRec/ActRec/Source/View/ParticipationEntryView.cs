@@ -1200,6 +1200,7 @@ namespace ActivityRecommendation
             detailsProvider.ExpectedFutureFunStddev = roundedLongtermStddev;
 
             detailsProvider.PredictedCurrentValueForThisActivity = roundedShorttermRatio;
+            detailsProvider.PredictedCurrentValueStddev = roundedShortTermStddev;
             detailsProvider.PredictedAverageValueForThisActivity = roundedAverageRatio;
 
             return new ParticipationFeedback(chosenActivity, remark, detailsProvider);

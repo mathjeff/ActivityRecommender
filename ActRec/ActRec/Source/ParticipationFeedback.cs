@@ -59,7 +59,7 @@ namespace ActivityRecommendation
             GridLayout funWhileDoingIt_layout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(2), LayoutScore.Zero);
             funWhileDoingIt_layout.AddLayout(coloredRatio(PredictedCurrentValueForThisActivity, PredictedAverageValueForThisActivity));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("* avg fun while doing it at this time"));
-            funWhileDoingIt_layout.AddLayout(new TextblockLayout("" + PredictedCurrentValueForThisActivity));
+            funWhileDoingIt_layout.AddLayout(new TextblockLayout("" + PredictedCurrentValueStddev));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("stddev"));
             funWhileDoingIt_layout.AddLayout(coloredRatio(PredictedAverageValueForThisActivity, 1));
             funWhileDoingIt_layout.AddLayout(new TextblockLayout("overall average for this activity"));
@@ -161,6 +161,7 @@ namespace ActivityRecommendation
         public double ParticipationDurationDividedByAverage;
 
         public double PredictedCurrentValueForThisActivity;
+        public double PredictedCurrentValueStddev;
         public double PredictedAverageValueForThisActivity;
 
         public double ExpectedFutureFunAfterDoingThisActivityNow;

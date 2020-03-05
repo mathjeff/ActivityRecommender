@@ -1260,9 +1260,9 @@ namespace ActivityRecommendation
                 Distribution combined = baseValue.Plus(chosenValue);
                 double overallAverage = combined.Mean;
 
-                double overallImprovement = (chosenValue.Mean - baseValue.Mean) / overallAverage;
-                double overallVariance = (chosenValue.Variance + baseValue.Variance) / (overallAverage * overallAverage);
-                Distribution difference = Distribution.MakeDistribution(overallImprovement, Math.Sqrt(overallVariance), 1);
+                double relativeImprovement = (chosenValue.Mean - baseValue.Mean) / overallAverage;
+                double relativeVariance = chosenValue.Variance / (overallAverage * overallAverage);
+                Distribution difference = Distribution.MakeDistribution(relativeImprovement, Math.Sqrt(relativeVariance), 1);
 
                 bonusInDays = difference.CopyAndStretchBy(1.0 / weightOfThisMoment);
             }
@@ -1301,9 +1301,9 @@ namespace ActivityRecommendation
                 Distribution combined = baseValue.Plus(chosenValue);
                 double overallAverage = combined.Mean;
 
-                double overallImprovement = (chosenValue.Mean - baseValue.Mean) / overallAverage;
-                double overallVariance = (chosenValue.Variance + baseValue.Variance) / (overallAverage * overallAverage);
-                Distribution difference = Distribution.MakeDistribution(overallImprovement, Math.Sqrt(overallVariance), 1);
+                double relativeImprovement = (chosenValue.Mean - baseValue.Mean) / overallAverage;
+                double relativeVariance = chosenValue.Variance / (overallAverage * overallAverage);
+                Distribution difference = Distribution.MakeDistribution(relativeImprovement, Math.Sqrt(relativeVariance), 1);
 
                 bonusInHours = difference.CopyAndStretchBy(1.0 / weightOfThisMoment);
             }

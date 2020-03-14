@@ -37,11 +37,6 @@ namespace ActivityRecommendation
             }
         }
 
-        public void EnableLogging()
-        {
-            this.contentLayout.LoggingEnabled = true;
-        }
-
         Editor textField;
         TextboxLayout contentLayout;
     }

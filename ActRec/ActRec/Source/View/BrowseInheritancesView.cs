@@ -169,11 +169,12 @@ namespace ActivityRecommendation.View
         {
             this.activityDatabase = activityDatabase;
             this.protoActivity_database = protoActivity_database;
-            //this.resultsContainer = new ContainerLayout();
             this.textBox = new Editor();
             this.textBox.TextChanged += TextBox_TextChanged;
             this.autocompleteGridlayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
             this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(ScrollLayout.New(this.autocompleteGridlayout)).AddLayout(new TextboxLayout(this.textBox)).BuildAnyLayout();
+            this.titleLayout = new TextblockLayout("Activity name (and/or ProtoActivity name):");
+            this.updateAutocomplete();
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -197,8 +198,11 @@ namespace ActivityRecommendation.View
                 if (activities.Count + protoActivities.Count < this.maxNumResults)
                     protoActivities = this.protoActivity_database.TextSearch(query, this.maxNumResults - activities.Count);
             }
-
             this.putAutocomplete(activities, protoActivities);
+            if (activities.Count < 1 && protoActivities.Count < 1)
+            {
+                this.autocompleteGridlayout.PutLayout(this.titleLayout, 0, 0);
+            }
         }
         private void putAutocomplete(List<Activity> activities, List<ProtoActivity> protoActivities)
         {
@@ -291,6 +295,7 @@ namespace ActivityRecommendation.View
         Dictionary<Button, ProtoActivity> protoActivities_byButton = new Dictionary<Button, ProtoActivity>();
         List<Button> buttons = new List<Button>();
         GridLayout autocompleteGridlayout;
+        private TextblockLayout titleLayout;
         private int maxNumResults = 6;
     }
 }

@@ -55,7 +55,7 @@ namespace ActivityRecommendation.View
         public event ActivityChosenHandler ActivityChosen;
         public delegate void ActivityChosenHandler(object sender, Activity activity);
 
-        public ListInheritancesView(ActivityDatabase activityDatabase)
+        public ListInheritancesView(ActivityDatabase activityDatabase) : base("Activities", 30)
         {
             this.activityDatabase = activityDatabase;
 

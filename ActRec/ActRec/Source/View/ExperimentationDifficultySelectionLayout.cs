@@ -37,7 +37,7 @@ namespace ActivityRecommendation.View
             Button okButton = new Button();
             okButton.Clicked += OkButton_Clicked;
             this.okButtonLayout = new ButtonLayout(okButton, "Accept");
-            this.invalidOrder_layout = new TextblockLayout("Illegal ordering! Two times the difficulty of the easiest activity must be more then its difficulty!");
+            this.invalidOrder_layout = new TextblockLayout("Illegal ordering! Two times the difficulty of the easiest activity must be more than its difficulty!");
             this.okButtonHolder = new ContainerLayout();
 
             this.choicesLayout = new ReorderableList<ExperimentDifficulty_ListItem>(difficultyOptions, this);

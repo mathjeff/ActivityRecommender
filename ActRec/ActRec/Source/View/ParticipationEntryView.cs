@@ -836,9 +836,8 @@ namespace ActivityRecommendation
                     }
                 }
             }
-            else
+            else // !funActivity
             {
-                // start
                 if (funTime)
                 {
                     if (soothingActivity)
@@ -876,7 +875,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "A short distraction";
                                     else
-                                        remark = "Preparing for some rest";
+                                        remark = "You're on your way to happiness!";
                                 }
                             }
                         }
@@ -889,7 +888,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "You can do it!";
                                     else
-                                        remark = "Kep it up!";
+                                        remark = "Keep it up!";
                                 }
                                 else // !efficientTime
                                 {
@@ -1035,16 +1034,16 @@ namespace ActivityRecommendation
                                     // Soothing activity and also a soothing time
                                     // Not an efficient activity, but an efficient time
                                     if (fast)
-                                        remark = "You fixed it?";
+                                        remark = "I think you'll mostly appreciate this later, at least";
                                     else
-                                        remark = "Ok, a little bit of laziness might be fine :p";
+                                        remark = "I see some relaxation in your future";
                                 }
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Did you fix it?";
+                                        remark = "Converting some future efficiency into happiness";
                                     else
-                                        remark = "Don't celebrate too much!";
+                                        remark = "I think this will make you happier and less efficient";
                                 }
                             }
                         }
@@ -1180,7 +1179,6 @@ namespace ActivityRecommendation
                         }
                     }
                 }
-                // stop
             }
 
             ParticipationNumericFeedback detailsProvider = new ParticipationNumericFeedback();

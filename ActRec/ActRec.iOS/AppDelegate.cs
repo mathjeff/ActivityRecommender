@@ -27,7 +27,8 @@ namespace ActRec.iOS
             Uniforms.Misc.iOS.ImageUtils.Init();
             Uniforms.Misc.iOS.KeyboardUtils.Init();
             Uniforms.Misc.iOS.TextUtils.Init();
-            LoadApplication(new App(new AppParams("0", null)));
+            string version = NSBundle.MainBundle.InfoDictionary["CFBundleVersion"].ToString();
+            LoadApplication(new App(new AppParams(version, null)));
 
             return base.FinishedLaunching(app, options);
         }

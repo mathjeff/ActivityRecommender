@@ -369,6 +369,10 @@ namespace ActivityRecommendation
         public void ImportData(object sender, FileData fileData)
         {
             string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
+            this.ImportData(fileData.FileName, content);
+        }
+        public void ImportData(string filename, string content)
+        {
             try
             {
                 TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
@@ -381,7 +385,7 @@ namespace ActivityRecommendation
             }
             catch (Exception e)
             {
-                TextblockLayout textLayout = new TextblockLayout("Could not import " + fileData.FileName + " :\n" + e.ToString(), true);
+                TextblockLayout textLayout = new TextblockLayout("Could not import " + filename + " :\n" + e.ToString(), true);
                 this.layoutStack.AddLayout(textLayout, "Import Error");
                 return;
             }

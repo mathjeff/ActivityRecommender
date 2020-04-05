@@ -112,6 +112,7 @@ namespace ActivityRecommendation
         // updates the locations at which to draw the provided points
         private void UpdateDrawing(SKCanvas canvas, SkiaSharp.SKSizeI displaySize)
         {
+            canvas.Clear();
             if (this.plotRequests.Count < 1)
                 return;
 

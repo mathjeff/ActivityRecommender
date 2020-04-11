@@ -11,6 +11,7 @@ namespace ActivityRecommendation
     {
         public ActivityRequest()
         {
+            this.Date = DateTime.Now;
         }
         public ActivityRequest(ActivityDescriptor fromCategory, ActivityDescriptor activityToBeat, DateTime when)
         {
@@ -18,16 +19,19 @@ namespace ActivityRecommendation
             this.ActivityToBeat = activityToBeat;
             this.Date = when;
         }
-        public ActivityRequest(Activity fromCategory, Activity activityToBeat, DateTime when)
+        public ActivityRequest(Activity fromCategory, Activity activityToBeat, DateTime when, ActivityRequestOptimizationProperty optimize = ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS)
         {
             if (fromCategory != null)
                 this.FromCategory = fromCategory.MakeDescriptor();
             if (activityToBeat != null)
                 this.ActivityToBeat = activityToBeat.MakeDescriptor();
             this.Date = when;
+            this.Optimize = optimize;
         }
+        public ActivityRequestOptimizationProperty Optimize = ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS;
 
         public ActivityDescriptor FromCategory { get; set; }
+        public List<Activity> LeafActivitiesToConsider { get; set; }
         public ActivityDescriptor ActivityToBeat { get; set; }
         public DateTime Date { get; set; }
         public Rating RawRawing { get; set; }
@@ -46,5 +50,11 @@ namespace ActivityRecommendation
             return rating;
             */
         }
+    }
+
+    public enum ActivityRequestOptimizationProperty
+    {
+        LONGTERM_HAPPINESS,
+        PARTICIPATION_PROBABILITY
     }
 }

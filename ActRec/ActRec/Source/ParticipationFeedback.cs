@@ -85,7 +85,11 @@ namespace ActivityRecommendation
             futureEfficiency_layout.AddLayout(new TextblockLayout("overall average (hours) after having done this activity"));
             detailsGrid.AddLayout(futureEfficiency_layout);
 
-            ActivitySuggestion suggestion = this.engine.MakeRecommendation((Activity)null, this.ChosenActivity, this.StartDate, TimeSpan.FromSeconds(0.5));
+            ActivityRequest request = new ActivityRequest();
+            request.ActivityToBeat = this.ChosenActivity.MakeDescriptor();
+            request.Date = this.StartDate;
+            request.RequestedProcessingTime = TimeSpan.FromSeconds(0.5);
+            ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
             Activity betterActivity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, this.StartDate);
             Prediction current = this.engine.Get_OverallHappiness_ParticipationEstimate(this.ChosenActivity, this.StartDate);

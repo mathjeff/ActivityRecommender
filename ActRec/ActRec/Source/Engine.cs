@@ -204,41 +204,39 @@ namespace ActivityRecommendation
         }
         public ActivitySuggestion MakeRecommendation()
         {
-            DateTime when = DateTime.Now;
-            return this.MakeRecommendation(when);
+            ActivityRequest request = new ActivityRequest();
+            return this.MakeRecommendation(request);
         }
         public ActivitySuggestion MakeRecommendation(DateTime when)
         {
-            return this.MakeRecommendation(when, null);
-        }
-        public ActivitySuggestion MakeRecommendation(ActivityRequest request)
-        {
-            return this.MakeRecommendation(this.ActivityDatabase.ResolveDescriptor(request.FromCategory), this.ActivityDatabase.ResolveDescriptor(request.ActivityToBeat), request.Date,
-                request.RequestedProcessingTime);
-        }
-        public ActivitySuggestion MakeRecommendation(DateTime when, TimeSpan? requestedProcessingTime)
-        {
-            return this.MakeRecommendation((Activity)null, null, when, requestedProcessingTime);
+            ActivityRequest request = new ActivityRequest(null, null, when);
+            return this.MakeRecommendation(request);
         }
 
-
-        public ActivitySuggestion MakeRecommendation(Activity requestCategory, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        private List<Activity> getActivitiesToConsider(ActivityRequest request)
         {
             List<Activity> candidates;
-            // determine which activities to consider
-            if (requestCategory != null)
+            if (request.LeafActivitiesToConsider != null)
             {
-                candidates = requestCategory.GetChildrenRecursive();
+                candidates = request.LeafActivitiesToConsider;
             }
             else
             {
-                candidates = new List<Activity>(this.activityDatabase.AllActivities);
+                if (request.FromCategory != null)
+                    candidates = this.activityDatabase.ResolveDescriptor(request.FromCategory).GetChildrenRecursive();
+                else
+                    candidates = new List<Activity>(this.activityDatabase.AllActivities);
             }
-            return this.MakeRecommendation(candidates, activityToBeat, when, requestedProcessingTime);
+            return candidates;
         }
-
-        public ActivitySuggestion MakeRecommendation(List<Activity> candidates, Activity activityToBeat, DateTime when, TimeSpan? requestedProcessingTime)
+        public ActivitySuggestion MakeRecommendation(ActivityRequest request)
         {
+            DateTime when = request.Date;
+            Activity activityToBeat = this.activityDatabase.ResolveDescriptor(request.ActivityToBeat);
+
+            List<Activity> candidates = this.getActivitiesToConsider(request);
+            TimeSpan? requestedProcessingTime = request.RequestedProcessingTime;
+
             DateTime processingStartTime = DateTime.Now;
             ActivityRecommendationsAnalysis recommendationsCache = this.cacheForDate(when);
 
@@ -289,8 +287,22 @@ namespace ActivityRecommendation
                     }
                     else
                     {
-                        if (bestActivity == null || recommendationsCache.suggestionValues[candidate].Distribution.Mean >= recommendationsCache.suggestionValues[bestActivity].Distribution.Mean)
+                        if (bestActivity == null)
                             better = true; // found a better activity
+                        else
+                        {
+                            switch (request.Optimize)
+                            {
+                                case ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS:
+                                    better = recommendationsCache.suggestionValues[candidate].Distribution.Mean >= recommendationsCache.suggestionValues[bestActivity].Distribution.Mean;
+                                    break;
+                                case ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY:
+                                    better = recommendationsCache.participationProbabilities[candidate].Distribution.Mean >= recommendationsCache.participationProbabilities[bestActivity].Distribution.Mean;
+                                    break;
+                                default:
+                                    throw new ArgumentException("Unsupported activity request optimization property: " + request.Optimize);
+                            }
+                        }
                     }
                     if (better)
                     {
@@ -733,6 +745,7 @@ namespace ActivityRecommendation
             Distribution distribution = this.CombineRatingDistributions(distributions);
 
             Prediction result = new Prediction(activity, distribution, date, new Composite_SuggestionJustification(distribution, justifications));
+
             return result;
         }
         public Distribution CombineRatingDistributions(IEnumerable<Distribution> distributions)
@@ -1506,7 +1519,13 @@ namespace ActivityRecommendation
 
 
             // Now that we've identified some activities that are reasonable to add to the experiment, choose the one that we think will provide the most longterm value to the user
-            ActivitySuggestion activitySuggestion = this.MakeRecommendation(recommendableActivities, activityToBeat, DateTime.Now, requestedProcessingTime);
+            ActivityRequest request = new ActivityRequest();
+            request.LeafActivitiesToConsider = recommendableActivities;
+            if (activityToBeat != null)
+                request.ActivityToBeat = activityToBeat.MakeDescriptor();
+            request.RequestedProcessingTime = requestedProcessingTime;
+
+            ActivitySuggestion activitySuggestion = this.MakeRecommendation(request);
             Activity bestActivity = this.activityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
 
             // chose a random metric for this activity

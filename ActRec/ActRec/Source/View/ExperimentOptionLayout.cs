@@ -22,7 +22,7 @@ namespace ActivityRecommendation.View
         {
             this.owner = owner;
 
-            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, allowRequestingActivitiesDirectly, true, engine, layoutStack);
+            RequestSuggestion_Layout requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, allowRequestingActivitiesDirectly, false, true, engine, layoutStack);
             requestSuggestion_layout.RequestSuggestion += RequestSuggestion_Impl;
             this.requestSuggestion_layout = requestSuggestion_layout;
             this.Suggestion = null;

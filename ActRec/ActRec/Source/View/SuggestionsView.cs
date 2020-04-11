@@ -30,7 +30,7 @@ namespace ActivityRecommendation.View
 
             this.SetTitle("Get Suggestions");
 
-            this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, false, engine, layoutStack);
+            this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to ask for a activity recommendations.")
@@ -42,7 +42,9 @@ namespace ActivityRecommendation.View
                 .AddMessage("If you're looking for an activity to have a high amount of enjoyability right now, then think of what you would do if you couldn't ask ActivityRecommender for " +
                 "help, and type the name of that activity into the second box. If you do, then ActivityRecommender will make sure to provide a suggestion that it thinks you will like as " +
                 "much as it thinks you will like as much as the one you entered.")
-                .AddMessage("Then, push Suggest to see the activity that is expected to maximize the overall long-term value to you, among the available choices.")
+                .AddMessage("Then, push one of the Suggest buttons")
+                .AddMessage("You can request either the activity that is expected to maximize the long-term value to you, or " +
+                "the activity that ActivityRecommender thinks that you're most likely to do, among the activities satisfying your other criteria.")
                 .AddMessage("Each suggestion will list an activity name, followed by the time to start the activity, an estimate of the probability that you will actually do that activity, " +
                 "and an estimate of the rating that you'd be expected to give to that activity.")
                 .AddMessage("If you don't like a suggestion, press the X button next to it. The duration between when you ask for a suggestion and when you press the X is considered to " +

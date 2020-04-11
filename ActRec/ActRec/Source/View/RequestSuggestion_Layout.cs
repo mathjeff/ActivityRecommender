@@ -15,11 +15,32 @@ namespace ActivityRecommendation.View
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
 
-        public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool vertical, Engine engine, LayoutStack layoutStack)
+        public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowRequestingMostLikely, bool vertical,
+            Engine engine, LayoutStack layoutStack)
         {
             Button suggestionButton = new Button();
-            suggestionButton.Clicked += SuggestionButton_Clicked;
-            ButtonLayout buttonLayout = new ButtonLayout(suggestionButton, "Suggest");
+            suggestionButton.Clicked += SuggestBestActivity_Clicked;
+            ButtonLayout suggest_maxLongtermHappiness_button;
+            if (allowRequestingMostLikely)
+                suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest Best");
+            else
+                suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest");
+            LayoutChoice_Set suggestButton_layout;
+            if (allowRequestingActivitiesDirectly)
+            {
+                Button suggestionButton2 = new Button();
+                suggestionButton2.Clicked += SuggestMostLikelyActivity_Clicked;
+
+                ButtonLayout suggest_mostLikely_button = new ButtonLayout(suggestionButton2, "Suggest Most Likely");
+                Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform().AddLayout(suggest_maxLongtermHappiness_button);
+                if (allowRequestingMostLikely)
+                    builder.AddLayout(suggest_mostLikely_button);
+                suggestButton_layout = builder.BuildAnyLayout();
+            }
+            else
+            {
+                suggestButton_layout = suggest_maxLongtermHappiness_button;
+            }
 
             this.categoryBox = new ActivityNameEntryBox("From category:", activityDatabase, layoutStack);
             this.categoryBox.Placeholder("(Optional)");
@@ -30,7 +51,7 @@ namespace ActivityRecommendation.View
 
             if (!allowRequestingActivitiesDirectly)
             {
-                this.SubLayout = buttonLayout;
+                this.SubLayout = suggest_maxLongtermHappiness_button;
             }
             else
             {
@@ -46,13 +67,13 @@ namespace ActivityRecommendation.View
                 {
                     GridLayout verticalContentLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(2));
                     verticalContentLayout.AddLayout(configurationLayout);
-                    verticalContentLayout.AddLayout(buttonLayout);
+                    verticalContentLayout.AddLayout(suggestButton_layout);
                     this.SubLayout = verticalContentLayout;
                 }
                 else
                 {
                     GridLayout horizontalContentLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
-                    horizontalContentLayout.AddLayout(buttonLayout);
+                    horizontalContentLayout.AddLayout(suggestButton_layout);
                     horizontalContentLayout.AddLayout(configurationLayout);
 
                     this.SubLayout = horizontalContentLayout;
@@ -77,9 +98,19 @@ namespace ActivityRecommendation.View
             this.layoutStack.AddLayout(new StackEntry(this.specify_AtLeastAsFunAs_Layout, ">Fun", this));
         }
 
-        private void SuggestionButton_Clicked(object sender, EventArgs e)
+        private void SuggestBestActivity_Clicked(object sender, EventArgs e)
         {
-            ActivityRequest activityRequest = new ActivityRequest(this.categoryBox.Activity, this.atLeastAsFunAs_activity, DateTime.Now);
+            this.Suggest(ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS);
+        }
+
+        private void SuggestMostLikelyActivity_Clicked(object sender, EventArgs e)
+        {
+            this.Suggest(ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY);
+        }
+
+        private void Suggest(ActivityRequestOptimizationProperty optimizationProperty)
+        {
+            ActivityRequest activityRequest = new ActivityRequest(this.categoryBox.Activity, this.atLeastAsFunAs_activity, DateTime.Now, optimizationProperty);
             if (this.atLeastAsFunAs_activity != null)
             {
                 DateTime startDate = activityRequest.Date;

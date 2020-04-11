@@ -38,5 +38,14 @@
     <true/>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
+
+    <!-- ActivityRecommender makes use of libraries for requesting permissions, and those libraries know how to request lots of permissions. Because ActivityRecommender never asks for those permissions, if a library every requests them on ActivityRecommender's behalf, that's an error -->
+    <key>NSCalendarsUsageDescription</key>
+    <string>Error! This application should not request access to your calendar. Please file a bug at https://github.com/mathjeff/ActivityRecommender</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Error! This application should not request access to your location. Please file a bug at https://github.com/mathjeff/ActivityRecommender</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Error! This application should not request access to your location. Please file a bug at https://github.com/mathjeff/ActivityRecommender</string>
+
 </dict>
 </plist>

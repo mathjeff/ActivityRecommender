@@ -1,8 +1,9 @@
-ActivityRecommender is a Xamarin application.
+ActivityRecommender is a Xamarin application that organizes some code into separate Git submodules.
 
 To build ActivityRecommender:
 
-1. Download the source dependencies. This can be done either via https://github.com/mathjeff/DependencyHandler or by manually putting VisiPlacer, AdaptiveInterpolator, and StatList into the deps/ directory.
+1. Checkout the source dependencies from the git submodules.
+   This can be done via `git submodule init`.
 2. Install Visual Studio.
 3. Install the Xamarin plugin to Visual Studio
 4. Open ActRect.sln in Visual Studio.

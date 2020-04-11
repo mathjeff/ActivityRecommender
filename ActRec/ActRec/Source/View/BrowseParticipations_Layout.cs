@@ -25,14 +25,14 @@ namespace ActivityRecommendation.View
             this.sinceDate_box = new DateEntryView("Since", layoutStack);
             this.sinceDate_box.Placeholder("(Optional)");
 
-            this.displayRatings_box = new CheckBox("No", "Yes");
+            this.displayRatings_box = new VisiPlacement.CheckBox("No", "Yes");
             this.displayRatings_box.Checked = true;
             LayoutChoice_Set displayRatings_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Show ratings?"))
                 .AddLayout(new ButtonLayout(this.displayRatings_box))
                 .BuildAnyLayout();
-            this.requireComments_box = new CheckBox("No", "Yes");
+            this.requireComments_box = new VisiPlacement.CheckBox("No", "Yes");
             this.requireComments_box.Checked = true;
             LayoutChoice_Set requireComments_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
@@ -293,8 +293,8 @@ namespace ActivityRecommendation.View
         private Random randomGenerator;
         private int maxNumTopParticipationsToShow = 10;
         private int maxNumRandomActivitiesToShow = 2;
-        private CheckBox displayRatings_box;
-        private CheckBox requireComments_box;
+        private VisiPlacement.CheckBox displayRatings_box;
+        private VisiPlacement.CheckBox requireComments_box;
         private DateEntryView sinceDate_box;
     }
 }

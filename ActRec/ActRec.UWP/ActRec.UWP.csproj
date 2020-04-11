@@ -146,7 +146,7 @@
     <PackageReference Include="Uniforms.Misc">
       <Version>0.9.1</Version>
     </PackageReference>
-    <PackageReference Include="Xamarin.Forms" Version="4.0.0.497661" />
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.617" />
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.1.5" />
   </ItemGroup>
   <ItemGroup>

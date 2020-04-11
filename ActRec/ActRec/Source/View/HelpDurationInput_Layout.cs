@@ -58,7 +58,7 @@ namespace ActivityRecommendation.View
     {
         public HelpDurationInput_DetailsLayout()
         {
-            this.typeBox = new CheckBox("as a multiple of your effort:", "as a number of minutes:");
+            this.typeBox = new VisiPlacement.CheckBox("as a multiple of your effort:", "as a number of minutes:");
             this.typeBox.Clicked += TypeBox_Clicked;
             this.minutesDurationLayout = new MinutesDurationLayout();
             this.ratioLayout = new RatioLayout();
@@ -97,7 +97,7 @@ namespace ActivityRecommendation.View
         {
             this.gridLayout.PutLayout(this.impl.GetLayout(), 0, 2);
         }
-        CheckBox typeBox;
+        VisiPlacement.CheckBox typeBox;
         List<DurationHelpInterface> options = new List<DurationHelpInterface>();
         RatioLayout ratioLayout;
         MinutesDurationLayout minutesDurationLayout;

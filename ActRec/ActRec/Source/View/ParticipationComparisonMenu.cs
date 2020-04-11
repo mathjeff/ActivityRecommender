@@ -32,7 +32,7 @@ namespace ActivityRecommendation.View
             builder.AddLayout(this.activityToPredictFrom_box);
 
             builder.AddLayout(new TextblockLayout("Comparison Type:"));
-            this.typebox = new CheckBox("Linear Regression", "Bin Comparison");
+            this.typebox = new VisiPlacement.CheckBox("Linear Regression", "Bin Comparison");
             builder.AddLayout(ButtonLayout.WithoutBevel(this.typebox));
 
             this.okButton = new Button();
@@ -78,7 +78,7 @@ namespace ActivityRecommendation.View
         private LayoutStack layoutStack;
         private Engine engine;
         private ActivityDatabase activityDatabase;
-        private CheckBox typebox;
+        private VisiPlacement.CheckBox typebox;
 
 
     }

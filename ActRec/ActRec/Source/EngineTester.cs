@@ -559,6 +559,8 @@ namespace ActivityRecommendation
             // ignore generated ratings
             if (!newRating.FromUser)
                 return newRating;
+            if (this.EarliestRatingDate == null)
+                this.EarliestRatingDate = newRating.Date;
 
             if (this.numRatings % 1000 == 0)
             {
@@ -568,7 +570,7 @@ namespace ActivityRecommendation
             this.numRatings++;
 
 
-            this.UpdateScoreError(newRating.ActivityDescriptor, (DateTime)newRating.Date, newRating.Score);
+            this.UpdateScoreError(newRating, (DateTime)newRating.Date, newRating.Score);
             RatingSource ratingSource = newRating.Source;
             // the code that figures out where a rating came from only checks the most-recently-entered participation
             // Occasionally this participation doesn't match (and we don't yet bother scanning further back), so it's posible that the rating source can be null
@@ -621,15 +623,32 @@ namespace ActivityRecommendation
         }
 
         // runs the engine on the given activity at the given date, and keeps track of the overall error
-        public void UpdateScoreError(ActivityDescriptor descriptor, DateTime when, double correctScore)
+        public void UpdateScoreError(AbsoluteRating rating, DateTime when, double correctScore)
         {
             // compute estimated score
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Activity activity = this.activityDatabase.ResolveDescriptor(rating.ActivityDescriptor);
             this.engine.EstimateSuggestionValue(activity, when);
             Prediction prediction = this.engine.EstimateRating(activity, when);
+            double expectedRating = prediction.Distribution.Mean;
 
             // compute error
-            this.Update_ShortTerm_ScoreError(correctScore - prediction.Distribution.Mean);
+            double error = correctScore - expectedRating;
+            this.Update_ShortTerm_ScoreError(error);
+
+            // update most surprising participation
+            double numSecondsSinceFirstRating = when.Subtract(this.EarliestRatingDate.Value).TotalSeconds;
+            double totalSurprise = Math.Abs(error * numSecondsSinceFirstRating);
+            if (this.mostSurprisingParticipation == null || totalSurprise > this.mostSurprisingParticipation.Surprise)
+            {
+                ParticipationSurprise newSurprise = new ParticipationSurprise();
+                newSurprise.Surprise = totalSurprise;
+                newSurprise.ExpectedRating = expectedRating;
+                newSurprise.ActualRating = correctScore;
+                newSurprise.Date = when;
+                newSurprise.ActivityDescriptor = rating.ActivityDescriptor;
+
+                this.mostSurprisingParticipation = newSurprise;
+            }
         }
         public void Update_ShortTerm_ScoreError(double error)
         {
@@ -773,6 +792,8 @@ namespace ActivityRecommendation
                 // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
                 // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
                 results.TypicalProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
+
+                results.ParticipationHavingMostSurprisingScore = this.mostSurprisingParticipation;
                 return results;
             }
         }
@@ -817,13 +838,14 @@ namespace ActivityRecommendation
                 return this.squaredParticipationProbabilityError;
             }
         }
-
+        public DateTime? EarliestRatingDate { get; set; }
 
         private Distribution squared_shortTermScore_error = new Distribution();
         private Distribution squared_longTermValue_error = new Distribution();
         private Distribution squaredParticipationProbabilityError = new Distribution();
         private Distribution participationPrediction_score = new Distribution();
         private Distribution squared_shortTermEfficiency_error = new Distribution();
+        private ParticipationSurprise mostSurprisingParticipation;
         private ScoreSummarizer ratingSummarizer;
         private ScoreSummarizer efficiencySummarizer;
         // the Engine predicts longterm value based on its suggestions. valueIfSuggested_predictions maps the predictions made to the actual observed longterm value
@@ -852,5 +874,16 @@ namespace ActivityRecommendation
         public double TypicalEfficiencyError;
         // overall error in (the estimated and actual (longterm efficiency prediction if (the given activity is participated in)))
         public double Longterm_EfficiencyIfPredicted_Error;
+
+        public ParticipationSurprise ParticipationHavingMostSurprisingScore;
+    }
+
+    public class ParticipationSurprise
+    {
+        public double ExpectedRating;
+        public double ActualRating;
+        public double Surprise;
+        public ActivityDescriptor ActivityDescriptor;
+        public DateTime Date;
     }
 }

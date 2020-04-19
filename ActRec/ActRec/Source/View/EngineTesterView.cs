@@ -39,15 +39,24 @@ namespace ActivityRecommendation
             DateTime end = DateTime.Now;
             TimeSpan duration = end.Subtract(start);
 
-            LayoutChoice_Set resultsView = new HelpWindowBuilder().AddMessage("Results")
+            HelpWindowBuilder builder = new HelpWindowBuilder().AddMessage("Results");
+            builder
                 .AddMessage("typical longtermHappinessPredictionIfSuggested error = " + results.Longterm_PredictionIfSuggested_Error)
                 .AddMessage("typical longtermHappinessPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error)
                 .AddMessage("typicalScoreError = " + results.TypicalScoreError)
                 .AddMessage("equivalentWeightedProbability = " + results.TypicalProbability)
                 .AddMessage("typicalEfficiencyError = " + results.TypicalEfficiencyError)
-                .AddMessage("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error)
-                .AddMessage("Computed results in " + duration)
-                .Build();
+                .AddMessage("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error);
+
+            ParticipationSurprise surprise = results.ParticipationHavingMostSurprisingScore;
+            if (surprise != null)
+            {
+                builder = builder.AddMessage("Most surprising participation: " + surprise.ActivityDescriptor.ActivityName + " at " +
+                    surprise.Date + ": expected rating " + surprise.ExpectedRating + ", got " + surprise.ActualRating);
+            }
+
+            builder = builder.AddMessage("Computed results in " + duration);
+            LayoutChoice_Set resultsView = builder.Build();
 
             this.layoutStack.AddLayout(resultsView, "Test Results");
         }

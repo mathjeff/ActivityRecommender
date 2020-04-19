@@ -204,6 +204,7 @@ namespace ActivityRecommendation
                 return this.ratingBox.LatestParticipation;
             }
         }
+        public IEnumerable<ActivitySuggestion> CurrentSuggestions = new List<ActivitySuggestion>();
         public void SetStartDate(DateTime newDate)
         {
             this.startDateBox.SetDate(newDate);
@@ -329,9 +330,21 @@ namespace ActivityRecommendation
                 participation.EffectivenessMeasurement.Computation = measurement;
             }
 
+            participation.Suggested = this.get_wasSuggested(participation.ActivityDescriptor);
+
             return participation;
         }
 
+        private bool get_wasSuggested(ActivityDescriptor activity)
+        {
+            foreach (ActivitySuggestion suggestion in this.CurrentSuggestions)
+            {
+                if (activity.CanMatch(suggestion.ActivityDescriptor))
+                    return true;
+            }
+            return false;
+
+        }
 
         public void ActivityName_BecameValid(object sender, TextChangedEventArgs e)
         {
@@ -489,6 +502,7 @@ namespace ActivityRecommendation
             bool soothingTime = (longtermBonusInDays.Mean > averageBonusInDays.Mean);
             bool efficientActivity = (efficiencyBonusInHours.Mean >= 0);
             bool efficientTime = (efficiencyBonusInHours.Mean >= averageEfficiencyBonusInHours.Mean);
+            bool suggested = this.get_wasSuggested(chosenActivity.MakeDescriptor());
 
             string remark;
 
@@ -1200,6 +1214,8 @@ namespace ActivityRecommendation
             detailsProvider.PredictedCurrentValueForThisActivity = roundedShorttermRatio;
             detailsProvider.PredictedCurrentValueStddev = roundedShortTermStddev;
             detailsProvider.PredictedAverageValueForThisActivity = roundedAverageRatio;
+
+            detailsProvider.Suggested = suggested;
 
             return new ParticipationFeedback(chosenActivity, remark, detailsProvider);
         }

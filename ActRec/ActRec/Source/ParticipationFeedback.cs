@@ -102,9 +102,9 @@ namespace ActivityRecommendation
             }
             else
             {
-                if (ExpectedFutureFunAfterDoingThisActivityNow >= 0)
+                if (this.Suggested)
                 {
-                    redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would be even better";
+                    redirectionLabel.Text = "Sorry for not mentioning this earlier, but I thought of a better idea in the meanwhile: " + betterActivity.Name + ".";
                     redirectionLabel.TextColor = Color.Yellow;
                 }
                 else
@@ -191,6 +191,8 @@ namespace ActivityRecommendation
         public double ExpectedEfficiencyAfterDoingThisActivityNow;
         public double ExpectedEfficiencyStddev;
         public double ExpectedEfficiencyAfterDoingThisActivitySometime;
+
+        public bool Suggested;
 
         public Activity ChosenActivity;
 

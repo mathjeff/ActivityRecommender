@@ -667,11 +667,6 @@ namespace ActivityRecommendation
                 return;
 
             participation.Suggested = false;
-            foreach (ActivitySuggestion suggestion in this.CurrentSuggestions)
-            {
-                if (participation.ActivityDescriptor.CanMatch(suggestion.ActivityDescriptor))
-                    participation.Suggested = true;
-            }
             this.AddParticipation(participation);
             // fill in some default data for the ParticipationEntryView
             this.participationEntryView.Clear();
@@ -850,16 +845,6 @@ namespace ActivityRecommendation
                 //this.WriteRecentUserData();
             }
         }
-        public Activity CurrentRecommendedActivity
-        {
-            get
-            {
-                ActivitySuggestion suggestion = this.CurrentSuggestions.FirstOrDefault(null);
-                if (suggestion != null)
-                    return this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
-                return null;
-            }
-        }
         public IEnumerable<ActivitySuggestion> CurrentSuggestions
         {
             get
@@ -869,6 +854,7 @@ namespace ActivityRecommendation
             set
             {
                 this.recentUserData.Suggestions = value;
+                this.participationEntryView.CurrentSuggestions = this.recentUserData.Suggestions;
 
                 this.writeRecentUserData_if_needed();
             }

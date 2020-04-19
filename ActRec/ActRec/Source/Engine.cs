@@ -599,6 +599,37 @@ namespace ActivityRecommendation
             return activity.GetAverageLongtermValueWhenParticipated();
         }
 
+        public Distribution compute_longtermValue_increase_in_days(Distribution averageHappinessValue)
+        {
+            Distribution chosenEstimatedDistribution = averageHappinessValue;
+            if (chosenEstimatedDistribution.Weight <= 0)
+                return new Distribution();
+            Distribution baseValue = this.GetAverageLongtermValueWhenParticipated(this.activityDatabase.RootActivity);
+            Distribution chosenValue = chosenEstimatedDistribution.CopyAndReweightTo(1);
+
+            Distribution bonusInDays = new Distribution();
+            // relWeight(x) = 2^(-x/halflife)
+            // integral(relWeight) = -(log(e)/log(2))*halfLife*2^(-x/halflife)
+            // totalWeight = (log(e)/log(2))*halflife
+            // absWeight(x) = relWeight(x) / totalWeight
+            // absWeight(x) = 2^(-x/halflife) / ((log(e)/log(2))*halflife)
+            // absWeight(0) = log(2)/log(e)/halflife = log(2)/halflife
+            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalDays;
+            if (baseValue.Mean > 0)
+            {
+                Distribution combined = baseValue.Plus(chosenValue);
+                double overallAverage = combined.Mean;
+
+                double relativeImprovement = (chosenValue.Mean - baseValue.Mean) / overallAverage;
+                double relativeVariance = chosenValue.Variance / (overallAverage * overallAverage);
+                Distribution difference = Distribution.MakeDistribution(relativeImprovement, Math.Sqrt(relativeVariance), 1);
+
+                bonusInDays = difference.CopyAndStretchBy(1.0 / weightOfThisMoment);
+            }
+            return bonusInDays;
+        }
+
+
         // returns a Prediction of the value of suggesting the given activity at the given time
         private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, DateTime when)
         {

@@ -1255,32 +1255,7 @@ namespace ActivityRecommendation
         }
         private Distribution compute_longtermValue_increase(Distribution endValue)
         {
-            Distribution chosenEstimatedDistribution = endValue;
-            if (chosenEstimatedDistribution.Weight <= 0)
-                return new Distribution();
-            Distribution baseValue = this.engine.GetAverageLongtermValueWhenParticipated(this.activityDatabase.RootActivity);
-            Distribution chosenValue = chosenEstimatedDistribution.CopyAndReweightTo(1);
-
-            Distribution bonusInDays = new Distribution();
-            // relWeight(x) = 2^(-x/halflife)
-            // integral(relWeight) = -(log(e)/log(2))*halfLife*2^(-x/halflife)
-            // totalWeight = (log(e)/log(2))*halflife
-            // absWeight(x) = relWeight(x) / totalWeight
-            // absWeight(x) = 2^(-x/halflife) / ((log(e)/log(2))*halflife)
-            // absWeight(0) = log(2)/log(e)/halflife = log(2)/halflife
-            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalDays;
-            if (baseValue.Mean > 0)
-            {
-                Distribution combined = baseValue.Plus(chosenValue);
-                double overallAverage = combined.Mean;
-
-                double relativeImprovement = (chosenValue.Mean - baseValue.Mean) / overallAverage;
-                double relativeVariance = chosenValue.Variance / (overallAverage * overallAverage);
-                Distribution difference = Distribution.MakeDistribution(relativeImprovement, Math.Sqrt(relativeVariance), 1);
-
-                bonusInDays = difference.CopyAndStretchBy(1.0 / weightOfThisMoment);
-            }
-            return bonusInDays;
+            return this.engine.compute_longtermValue_increase_in_days(endValue);
         }
 
         // given an activity and a DateTime for its Participation to start, estimates the change in efficiency (measured in hours) in the near future caused by doing it

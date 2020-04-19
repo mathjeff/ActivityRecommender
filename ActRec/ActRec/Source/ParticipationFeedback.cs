@@ -95,28 +95,31 @@ namespace ActivityRecommendation
             Prediction current = this.engine.Get_OverallHappiness_ParticipationEstimate(this.ChosenActivity, this.StartDate);
             Label redirectionLabel = new Label();
             detailsGrid.AddLayout(new TextblockLayout(redirectionLabel));
-            if (betterPrediction.Distribution.Mean <= current.Distribution.Mean)
+            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution);
+            double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFunAfterDoingThisActivityNow, 1);
+            if (improvementInDays <= 0)
             {
                 redirectionLabel.Text = "This activity is a reasonable choice at this time.";
                 redirectionLabel.TextColor = Color.Green;
             }
             else
             {
+                string improvementText = improvementInDays.ToString();
                 if (this.Suggested)
                 {
-                    redirectionLabel.Text = "Sorry for not mentioning this earlier, but I thought of a better idea in the meanwhile: " + betterActivity.Name + ".";
+                    redirectionLabel.Text = "I thought of a better idea: " + betterActivity.Name + ", better by +" + improvementText + " days fun. Sorry for not mentioning this earlier!";
                     redirectionLabel.TextColor = Color.Yellow;
                 }
                 else
                 {
                     if (ExpectedFutureFunAfterDoingThisActivityNow >= 0)
                     {
-                        redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would be even better.";
+                        redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would be even better: +" + improvementText + " days fun.";
                         redirectionLabel.TextColor = Color.Yellow;
                     }
                     else
                     {
-                        redirectionLabel.Text = "I recommend " + betterActivity.Name + " instead.";
+                        redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would improve your future happiness by " + improvementText + " days.";
                         redirectionLabel.TextColor = Color.Red;
                     }
                 }

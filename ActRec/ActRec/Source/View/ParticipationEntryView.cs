@@ -545,7 +545,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "A short, fun distraction";
                                     else
-                                        remark = "So much fun! Don't forget to work though";
+                                        remark = "Great! Don't forget to take a good break, though";
                                 }
                             }
                         }

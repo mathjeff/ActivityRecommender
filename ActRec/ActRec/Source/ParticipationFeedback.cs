@@ -102,8 +102,24 @@ namespace ActivityRecommendation
             }
             else
             {
-                redirectionLabel.Text = "I recommend " + betterActivity.Name + " instead.";
-                redirectionLabel.TextColor = Color.Red;
+                if (ExpectedFutureFunAfterDoingThisActivityNow >= 0)
+                {
+                    redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would be even better";
+                    redirectionLabel.TextColor = Color.Yellow;
+                }
+                else
+                {
+                    if (ExpectedFutureFunAfterDoingThisActivityNow >= 0)
+                    {
+                        redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would be even better.";
+                        redirectionLabel.TextColor = Color.Yellow;
+                    }
+                    else
+                    {
+                        redirectionLabel.Text = "I recommend " + betterActivity.Name + " instead.";
+                        redirectionLabel.TextColor = Color.Red;
+                    }
+                }
             }
 
             return detailsGrid;

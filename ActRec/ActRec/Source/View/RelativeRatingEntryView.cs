@@ -24,8 +24,8 @@ namespace ActivityRecommendation
             this.Clear();
             this.mainDisplayGrid.AddLayout(new TextboxLayout(this.scaleBlock));
 
-            this.nameBlock = new Label();
-            this.mainDisplayGrid.AddLayout(new TextblockLayout(this.nameBlock));
+            this.nameBlock = new TextblockLayout();
+            this.mainDisplayGrid.AddLayout(this.nameBlock);
 
             this.SetContent(this.mainDisplayGrid);
             this.Placeholder("(Optional)");
@@ -93,11 +93,11 @@ namespace ActivityRecommendation
                         dateFormatString = "yyyy-MM-ddTHH:mm:ss";
                     else
                         dateFormatString = "HH:mm:ss";
-                    this.nameBlock.Text = "times the score of your latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
+                    this.nameBlock.setText("times the score of your latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString));
                 }
                 else
                 {
-                    this.nameBlock.Text = "You haven't done anything to compare to!";
+                    this.nameBlock.setText("You haven't done anything to compare to!");
                 }
             }
             get
@@ -126,7 +126,7 @@ namespace ActivityRecommendation
 
         private GridLayout mainDisplayGrid;
         private Participation latestParticipation;
-        private Label nameBlock;
+        private TextblockLayout nameBlock;
         private Editor scaleBlock;
     }
 }

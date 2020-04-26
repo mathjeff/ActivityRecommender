@@ -38,7 +38,7 @@ namespace ActivityRecommendation.View
                 }
             }
             this.SetTitle(title);
-            this.TitleBlock.HorizontalTextAlignment = Xamarin.Forms.TextAlignment.Start;
+            this.TitleLayout.AlignHorizontally(Xamarin.Forms.TextAlignment.Start);
 
 
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();

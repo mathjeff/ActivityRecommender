@@ -19,7 +19,7 @@ namespace ActivityRecommendation.View
             Button okButton = new Button();
             okButton.Clicked += OkButton_Clicked;
             this.metricBox = new TitledTextbox("Metric Name");
-            this.errorMessageHolder = new Label();
+            this.errorMessageHolder = new TextblockLayout();
 
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
                 .AddMessage("This screen lets you add a Metric to an existing activity.")
@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
             
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(new TextblockLayout("Add Metric to Existing Activity"));
-            mainGrid.AddLayout(new TextblockLayout(this.errorMessageHolder));
+            mainGrid.AddLayout(this.errorMessageHolder);
 
             GridLayout bottomGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             bottomGrid.AddLayout(this.metricBox);
@@ -73,7 +73,7 @@ namespace ActivityRecommendation.View
         }
         private void setError(string error)
         {
-            this.errorMessageHolder.Text = error;
+            this.errorMessageHolder.setText(error);
         }
         private void clear()
         {
@@ -85,6 +85,6 @@ namespace ActivityRecommendation.View
         private ActivityNameEntryBox nameBox;
         private TitledTextbox metricBox;
         private ActivityDatabase activityDatabase;
-        private Label errorMessageHolder;
+        private TextblockLayout errorMessageHolder;
     }
 }

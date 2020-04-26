@@ -44,10 +44,10 @@ namespace ActivityRecommendation
 
             bottomGrid.AddLayout(helpLayout);
 
-            this.feedbackView = new Label();
+            this.feedbackLayout = new TextblockLayout();
 
             GridLayout mainGrid = new Vertical_GridLayout_Builder()
-                .AddLayout(new TextblockLayout(this.feedbackView))
+                .AddLayout(this.feedbackLayout)
                 .AddLayout(bottomGrid)
                 .Build();
 
@@ -66,11 +66,11 @@ namespace ActivityRecommendation
             {
                 this.childNameBox.Clear();
                 this.parentNameBox.Clear();
-                this.feedbackView.Text = childDescriptor.ActivityName + " now inherits from " + parentDescriptor.ActivityName;
+                this.feedbackLayout.setText(childDescriptor.ActivityName + " now inherits from " + parentDescriptor.ActivityName);
             }
             else
             {
-                this.feedbackView.Text = error;
+                this.feedbackLayout.setText(error);
             }
         }
 
@@ -79,6 +79,6 @@ namespace ActivityRecommendation
         private Button okButton;
         private LayoutStack layoutStack;
         private ActivityDatabase activityDatabase;
-        private Label feedbackView;
+        private TextblockLayout feedbackLayout;
     }
 }

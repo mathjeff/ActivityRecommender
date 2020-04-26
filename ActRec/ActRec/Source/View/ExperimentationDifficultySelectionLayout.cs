@@ -22,10 +22,8 @@ namespace ActivityRecommendation.View
             if (suggestions.Count != requiredNumChoices)
                 throw new ArgumentException("ExperimentationDifficultySelectionLayout unsupported number of choices: got " + suggestions.Count + ", expected " + requiredNumChoices);
 
-            this.aPlusB_difficulty_textBlock = new Label();
-            this.aPlusB_difficulty_textBlock.Text = "Two times the difficulty of the easiest activity listed above";
             List<ExperimentDifficulty_ListItem> difficultyOptions = new List<ExperimentDifficulty_ListItem>();
-            this.aPlusB_listItem = new ExperimentDifficulty_TextItem(this.aPlusB_difficulty_textBlock);
+            this.aPlusB_listItem = new ExperimentDifficulty_TextItem("Two times the difficulty of the easiest activity listed above");
 
             difficultyOptions.Add(new ExperimentDifficulty_SuggestedMetric(suggestions[0]));
             difficultyOptions.Add(new ExperimentDifficulty_SuggestedMetric(suggestions[1]));
@@ -67,12 +65,12 @@ namespace ActivityRecommendation.View
         {
             if (this.isValidOrder(choices))
             {
-                this.aPlusB_difficulty_textBlock.BackgroundColor = Color.Black;
+                this.aPlusB_listItem.TextblockLayout.setBackgroundColor(Color.Black);
                 this.okButtonHolder.SubLayout = this.okButtonLayout;
             }
             else
             {
-                this.aPlusB_difficulty_textBlock.BackgroundColor = Color.Red;
+                this.aPlusB_listItem.TextblockLayout.setBackgroundColor(Color.Red);
                 this.okButtonHolder.SubLayout = this.invalidOrder_layout;
             }
 
@@ -121,7 +119,6 @@ namespace ActivityRecommendation.View
             return SuggestedMetric_Renderer.Instance.GetLayout((item as ExperimentDifficulty_SuggestedMetric).SuggestedMetric);
         }
         private ReorderableList<ExperimentDifficulty_ListItem> choicesLayout;
-        private Label aPlusB_difficulty_textBlock;
         private ExperimentDifficulty_TextItem aPlusB_listItem;
         private ButtonLayout okButtonLayout;
         private TextblockLayout invalidOrder_layout;
@@ -139,11 +136,14 @@ namespace ActivityRecommendation.View
         public SuggestedMetric SuggestedMetric { get; set; }
     }
 
-    class ExperimentDifficulty_TextItem : TextblockLayout, ExperimentDifficulty_ListItem
+    class ExperimentDifficulty_TextItem : ContainerLayout, ExperimentDifficulty_ListItem
     {
-        public ExperimentDifficulty_TextItem(Label textBlock) : base(textBlock)
+        public ExperimentDifficulty_TextItem(string text)
         {
+            this.TextblockLayout = new TextblockLayout(text);
+            this.SubLayout = this.TextblockLayout;
         }
+        public TextblockLayout TextblockLayout;
     }
 
 }

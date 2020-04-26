@@ -60,11 +60,10 @@ namespace ActivityRecommendation
         private void setupLoadingScreen()
         {
             this.parentView.BackgroundColor = Color.Black;
-            Label label = new Label();
-            label.Text = this.persona.Name + " is loading your data...";
-            label.VerticalTextAlignment = TextAlignment.Center;
-            label.HorizontalTextAlignment = TextAlignment.Center;
-            ViewManager viewManager = new ViewManager(this.parentView, new TextblockLayout(label));
+            TextblockLayout layout = new TextblockLayout(this.persona.Name + " is loading your data...");
+            layout.AlignHorizontally(TextAlignment.Center);
+            layout.AlignVertically(TextAlignment.Center);
+            ViewManager viewManager = new ViewManager(this.parentView, layout);
         }
 
         public void Initialize()
@@ -267,7 +266,7 @@ namespace ActivityRecommendation
 
             if (this.error != "")
             {
-                TextblockLayout textLayout = new TextblockLayout(this.error, true);
+                TextblockLayout textLayout = new TextblockLayout(this.error, true, true);
                 startLayouts.Insert(0, textLayout);
                 startLayouts.Add(OpenIssue_Layout.New());
             }
@@ -385,7 +384,7 @@ namespace ActivityRecommendation
             }
             catch (Exception e)
             {
-                TextblockLayout textLayout = new TextblockLayout("Could not import " + filename + " :\n" + e.ToString(), true);
+                TextblockLayout textLayout = new TextblockLayout("Could not import " + filename + " :\n" + e.ToString(), true, true);
                 this.layoutStack.AddLayout(textLayout, "Import Error");
                 return;
             }

@@ -51,11 +51,11 @@ namespace ActivityRecommendation
 
             contents.AddLayout(middleGrid);
             this.todoCompletionStatusHolder = new ContainerLayout();
-            this.todoCompletionLabel = new Label();
+            this.todoCompletionLabel = new TextblockLayout();
 
             Horizontal_GridLayout_Builder todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
             todoInfo_builder.AddLayout(new Vertical_GridLayout_Builder().Uniform()
-                .AddLayout(new TextblockLayout(this.todoCompletionLabel))
+                .AddLayout(this.todoCompletionLabel)
                 .AddLayout(this.todoCompletionStatusHolder)
                 .Build());
             this.helpStatusHolder = new ContainerLayout();
@@ -381,12 +381,12 @@ namespace ActivityRecommendation
                 this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
                 this.helpStatusHolder.SubLayout = this.helpStatusPicker;
                 // TODO: if there are multiple metrics; figure out how to determine which one to show
-                this.todoCompletionLabel.Text = this.nameBox.Activity.Metrics[0].Name + "?";
+                this.todoCompletionLabel.setText(this.nameBox.Activity.Metrics[0].Name + "?");
             }
             else
             {
                 this.todoCompletionStatusHolder.SubLayout = null;
-                this.todoCompletionLabel.Text = "";
+                this.todoCompletionLabel.setText("");
                 this.helpStatusHolder.SubLayout = null;
             }
         }
@@ -1337,9 +1337,9 @@ namespace ActivityRecommendation
         Button okButton;
         Button feedbackButton;
         Engine engine;
+        TextblockLayout todoCompletionLabel;
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;
-        Label todoCompletionLabel;
         SingleSelect todoCompletionStatusPicker;
         ContainerLayout todoCompletionStatusHolder;
         HelpDurationInput_Layout helpStatusPicker;

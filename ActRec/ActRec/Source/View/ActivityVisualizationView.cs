@@ -59,12 +59,12 @@ namespace ActivityRecommendation
             builder.AddLayout(this.queryEndDateDisplay);
 
             // display the total time spanned by the current window
-            this.totalTimeDisplay = new Label();
-            this.totalTimeDisplay.HorizontalTextAlignment = TextAlignment.Center;
-            builder.AddLayout(new TextblockLayout(this.totalTimeDisplay));
-            this.timeFractionDisplay = new Label();
-            this.timeFractionDisplay.HorizontalTextAlignment = TextAlignment.Center;
-            builder.AddLayout(new TextblockLayout(this.timeFractionDisplay));
+            this.totalTimeDisplay = new TextblockLayout();
+            this.totalTimeDisplay.AlignHorizontally(TextAlignment.Center);
+            builder.AddLayout(this.totalTimeDisplay);
+            this.timeFractionDisplay = new TextblockLayout();
+            this.timeFractionDisplay.AlignHorizontally(TextAlignment.Center);
+            builder.AddLayout(this.timeFractionDisplay);
 
             // display rating statistics
             this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating:");
@@ -460,11 +460,8 @@ namespace ActivityRecommendation
             double participationFraction = numHoursSpent / totalNumHours;
 
             // now update the text blocks
-            //this.availableTimeDisplay.Text = "Have known about this activity for " + Environment.NewLine + availableDuration.TotalDays + " days";
-            this.totalTimeDisplay.Text = "You've spent " + Environment.NewLine + Math.Round(numHoursSpent, 3) + " hours on " + this.YAxisLabel;
-            //this.timeFractionDisplay.Text = "Or " + Environment.NewLine + 100 * participationFraction + "% of your total time" + Environment.NewLine + " Or " + (participationFraction * 24 * 60).ToString() + " minutes per day";
-            this.timeFractionDisplay.Text = "Or " + Environment.NewLine + Math.Round(participationFraction * 24 * 60, 3).ToString() + " minutes per day";
-
+            this.totalTimeDisplay.setText("You've spent " + Environment.NewLine + Math.Round(numHoursSpent, 3) + " hours on " + this.YAxisLabel);
+            this.timeFractionDisplay.setText("Or " + Environment.NewLine + Math.Round(participationFraction * 24 * 60, 3).ToString() + " minutes per day");
         }
 
         public string XAxisLabel
@@ -538,8 +535,8 @@ namespace ActivityRecommendation
         TitledControl participationDataDisplay;
         DateEntryView queryStartDateDisplay;
         DateEntryView queryEndDateDisplay;
-        Label totalTimeDisplay;
-        Label timeFractionDisplay;
+        TextblockLayout totalTimeDisplay;
+        TextblockLayout timeFractionDisplay;
         TitledTextblock ratingWhenSuggested_Display;
         TitledTextblock ratingWhenNotSuggested_Display;
         LayoutStack layoutStack;

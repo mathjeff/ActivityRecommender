@@ -93,59 +93,60 @@ namespace ActivityRecommendation
             Activity betterActivity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, this.StartDate);
             Prediction current = this.engine.Get_OverallHappiness_ParticipationEstimate(this.ChosenActivity, this.StartDate);
-            Label redirectionLabel = new Label();
-            detailsGrid.AddLayout(new TextblockLayout(redirectionLabel));
+            string redirectionText;
+            Color redirectionColor;
             Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution);
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFunAfterDoingThisActivityNow, 1);
             if (improvementInDays <= 0)
             {
-                redirectionLabel.Text = "This activity is a reasonable choice at this time.";
-                redirectionLabel.TextColor = Color.Green;
+                redirectionText = "This activity is a reasonable choice at this time.";
+                redirectionColor = Color.Green;
             }
             else
             {
                 string improvementText = improvementInDays.ToString();
                 if (this.Suggested)
                 {
-                    redirectionLabel.Text = "I thought of a better idea: " + betterActivity.Name + ", better by +" + improvementText + " days fun. Sorry for not mentioning this earlier!";
-                    redirectionLabel.TextColor = Color.Yellow;
+                    redirectionText = "I thought of a better idea: " + betterActivity.Name + ", better by +" + improvementText + " days fun. Sorry for not mentioning this earlier!";
+                    redirectionColor = Color.Yellow;
                 }
                 else
                 {
                     if (ExpectedFutureFunAfterDoingThisActivityNow >= 0)
                     {
-                        redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would be even better: +" + improvementText + " days fun.";
-                        redirectionLabel.TextColor = Color.Yellow;
+                        redirectionText = "I suggest that " + betterActivity.Name + " would be even better: +" + improvementText + " days fun.";
+                        redirectionColor = Color.Yellow;
                     }
                     else
                     {
-                        redirectionLabel.Text = "I suggest that " + betterActivity.Name + " would improve your future happiness by " + improvementText + " days.";
-                        redirectionLabel.TextColor = Color.Red;
+                        redirectionText = "I suggest that " + betterActivity.Name + " would improve your future happiness by " + improvementText + " days.";
+                        redirectionColor = Color.Red;
                     }
                 }
             }
+            detailsGrid.AddLayout(new TextblockLayout(redirectionText, redirectionColor));
+
 
             return detailsGrid;
         }
 
         static TextblockLayout signedColoredValue(double value, double neutralColorThreshold)
         {
-            Label label = new Label();
-            TextblockLayout layout = new TextblockLayout(label);
+            string text;
             if (value > 0)
-                label.Text = "+" + value;
+                text = "+" + value;
             else
-                label.Text = "" + value;
-            label.TextColor = chooseColor(value, 0, neutralColorThreshold);
+                text = "" + value;
+            Color textColor = chooseColor(value, 0, neutralColorThreshold);
+            TextblockLayout layout = new TextblockLayout(text, textColor);
             return layout;
         }
 
         static TextblockLayout coloredRatio(double value, double neutralColorThreshold)
         {
-            Label label = new Label();
-            TextblockLayout layout = new TextblockLayout(label);
-            label.TextColor = chooseColor(value, 1, neutralColorThreshold);
-            label.Text = "" + value;
+            Color color = chooseColor(value, 1, neutralColorThreshold);
+            string text = "" + value;
+            TextblockLayout layout = new TextblockLayout(text, color);
             return layout;
 
         }

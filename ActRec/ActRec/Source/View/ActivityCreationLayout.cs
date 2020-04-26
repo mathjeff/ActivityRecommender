@@ -22,8 +22,8 @@ namespace ActivityRecommendation
             this.typePicker = checkbox;
             mainGrid.AddLayout(ButtonLayout.WithoutBevel(checkbox));
 
-            this.feedbackView = new Label();
-            mainGrid.AddLayout(new TextblockLayout(this.feedbackView));
+            this.feedbackLayout = new TextblockLayout();
+            mainGrid.AddLayout(this.feedbackLayout);
 
             this.childNameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack, true);
             this.childNameBox.AutoAcceptAutocomplete = false;
@@ -103,11 +103,11 @@ namespace ActivityRecommendation
             {
                 this.childNameBox.Clear();
                 this.parentNameBox.Clear();
-                this.feedbackView.Text = "Created " + childDescriptor.ActivityName;
+                this.feedbackLayout.setText("Created " + childDescriptor.ActivityName);
             }
             else
             {
-                this.feedbackView.Text = error;
+                this.feedbackLayout.setText(error);
             }
         }
 
@@ -116,7 +116,7 @@ namespace ActivityRecommendation
         private Button okButton;
         private LayoutStack layoutStack;
         private ActivityDatabase activityDatabase;
-        private Label feedbackView;
+        private TextblockLayout feedbackLayout;
         private VisiPlacement.CheckBox typePicker;
     }
 }

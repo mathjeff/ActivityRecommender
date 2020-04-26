@@ -114,23 +114,15 @@ namespace ActivityRecommendation
             GridLayout centeredGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             GridLayout uncenteredGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
 
-            Label nameBlock = new Label();
-            nameBlock.Text = propertyName;
-            nameBlock.HorizontalTextAlignment = TextAlignment.Start;
-            nameBlock.VerticalTextAlignment = TextAlignment.Center;
-            //nameBlock.TextAlignment = System.Windows.TextAlignment.Left;
-            //nameBlock.VerticalAlignment = VerticalAlignment.Center;
-            TextblockLayout nameLayout = new TextblockLayout(nameBlock);
+            TextblockLayout nameLayout = new TextblockLayout(propertyName);
+            nameLayout.AlignHorizontally(TextAlignment.Start);
+            nameLayout.AlignVertically(TextAlignment.Center);
             centeredGrid.AddLayout(nameLayout);
             uncenteredGrid.AddLayout(nameLayout);
 
-            Label valueBlock = new Label();
-            valueBlock.Text = propertyValue;
-            valueBlock.HorizontalTextAlignment = TextAlignment.Center;
-            valueBlock.VerticalTextAlignment = TextAlignment.Center;
-            //valueBlock.TextAlignment = System.Windows.TextAlignment.Center;
-            //valueBlock.VerticalAlignment = VerticalAlignment.Center;
-            TextblockLayout valueLayout = new TextblockLayout(valueBlock);
+            TextblockLayout valueLayout = new TextblockLayout(propertyValue);
+            valueLayout.AlignHorizontally(TextAlignment.Center);
+            valueLayout.AlignVertically(TextAlignment.Center);
             centeredGrid.AddLayout(valueLayout);
             uncenteredGrid.AddLayout(valueLayout);
 

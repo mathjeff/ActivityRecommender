@@ -31,8 +31,7 @@ namespace ActivityRecommendation.View
             this.nameBoxWithX.AddLayout(this.nameBox_layout);
 
             // the autocomplete above the text box
-            this.autocompleteBlock = new Label();
-            this.autocompleteLayout = new TextblockLayout(this.autocompleteBlock);
+            this.autocompleteLayout = new TextblockLayout();
 
             // button that gives help with autocomplete
             this.autocomplete_helpLayout = new HelpButtonLayout(new HelpWindowBuilder()
@@ -205,7 +204,7 @@ namespace ActivityRecommendation.View
             if (descriptor == null)
             {
                 this.suggestedActivityName = "";
-                this.autocompleteBlock.Text = "";
+                this.autocompleteLayout.setText("");
                 // hide the Help button if it's there
                 this.responseLayout.SubLayout = null;
             }
@@ -226,7 +225,7 @@ namespace ActivityRecommendation.View
                     if (firstActivity_name == descriptor.ActivityName)
                     {
                         // perfect match, so display nothing
-                        this.autocompleteBlock.Text = "";
+                        this.autocompleteLayout.setText("");
                     }
                     else
                     {
@@ -240,7 +239,7 @@ namespace ActivityRecommendation.View
                             }
                         }
                         string suggestionText = String.Join("\n\n", autocompleteNames);
-                        this.autocompleteBlock.Text = suggestionText;
+                        this.autocompleteLayout.setText(suggestionText);
                     }
                     // make the autocomplete suggestion appear
                     this.responseLayout.SubLayout = this.autocompleteLayout;
@@ -341,7 +340,6 @@ namespace ActivityRecommendation.View
         TextboxLayout nameBox_layout;
         string nameText;
         Editor nameBox;
-        Label autocompleteBlock;
         LayoutChoice_Set autocomplete_helpLayout;
         TextblockLayout autocompleteLayout;
         ContainerLayout responseLayout = new ContainerLayout();

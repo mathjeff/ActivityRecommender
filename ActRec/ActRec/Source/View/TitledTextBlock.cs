@@ -14,27 +14,25 @@ namespace ActivityRecommendation
         public TitledTextblock(string startingTitle)
             : base(startingTitle)
         {
-            this.TitleBlock.HorizontalTextAlignment = TextAlignment.Start;
+            this.TitleLayout.AlignHorizontally(TextAlignment.Start);
 
             // create a text field
-            this.textField = new Label();
-            this.textField.HorizontalTextAlignment = TextAlignment.Center;
-            //this.textField.TextWrapping = System.Windows.TextWrapping.Wrap;
-            this.SetContent(new TextblockLayout(this.textField));
-            //this.PutItem(this.textField, 1, 0);
+            this.textField = new TextblockLayout();
+            this.textField.AlignHorizontally(TextAlignment.Center);
+            this.SetContent(this.textField);
         }
         public string Text
         {
             get
             {
-                return this.textField.Text;
+                return this.textField.getText();
             }
             set
             {
-                this.textField.Text = value;
+                this.textField.setText(value);
             }
         }
         
-        Label textField;
+        TextblockLayout textField;
     }
 }

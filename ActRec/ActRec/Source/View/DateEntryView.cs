@@ -203,9 +203,7 @@ namespace ActivityRecommendation
 
             this.dateFormat = dateFormat;
 
-            this.dateBlock = new Label();
-            TextblockLayout dateLayout = new TextblockLayout(this.dateBlock);
-            this.dateBlock.TextColor = Color.Black;
+            this.dateLayout = new TextblockLayout("", Color.Black);
 
             dateLayout.ScoreIfEmpty = true;
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
@@ -257,14 +255,14 @@ namespace ActivityRecommendation
         {
             get
             {
-                string text = this.dateBlock.Text;
+                string text = this.dateLayout.getText();
                 if (text == null)
                     text = "";
                 return text;
             }
             set
             {
-                this.dateBlock.Text = value;
+                this.dateLayout.setText(value);
                 this.updateValidity();
             }
         }
@@ -369,9 +367,9 @@ namespace ActivityRecommendation
         public void updateValidity()
         {
             if (this.isDateValid())
-                this.dateBlock.BackgroundColor = Color.LightGray;
+                this.dateLayout.setBackgroundColor(Color.LightGray);
             else
-                this.dateBlock.BackgroundColor = Color.Red;
+                this.dateLayout.setBackgroundColor(Color.Red);
         }
 
         private bool isDateValid()
@@ -396,7 +394,7 @@ namespace ActivityRecommendation
         }
 
 
-        Label dateBlock;
+        TextblockLayout dateLayout;
         List<Button> buttons = new List<Button>();
         List<DateCharacter> dateFormat = new List<DateCharacter>();
         List<EventHandler<TextChangedEventArgs>> textChanged_handlers = new List<EventHandler<TextChangedEventArgs>>(2);

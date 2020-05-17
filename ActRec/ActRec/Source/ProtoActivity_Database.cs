@@ -91,22 +91,17 @@ namespace ActivityRecommendation
         public bool Synchronized { get; set; }
 
         // sorts the ProtoActivities by score and returns the highest-scoring activities
-        public List<ProtoActivity> GetMostInteresting(int count)
+        public List<ProtoActivity_EstimatedInterest> GetMostInteresting(int count)
         {
             List<ProtoActivity> candidates = new List<ProtoActivity>(this.ProtoActivities);
-            ProtoActivity_InterestComparer comparer = new ProtoActivity_InterestComparer(DateTime.Now);
-            candidates.Sort(comparer);
+            List<ProtoActivity_EstimatedInterest> interests = new ProtoActivity_InterestCalculator(DateTime.Now).Analyze(candidates);
             int minIndex = candidates.Count - count;
             if (minIndex < 0)
                 minIndex = 0;
-            List<ProtoActivity> results = new List<ProtoActivity>(count);
-            for (int i = candidates.Count - 1; i >= minIndex; i--)
+            List<ProtoActivity_EstimatedInterest> results = new List<ProtoActivity_EstimatedInterest>(count);
+            for (int i = interests.Count - 1; i>= minIndex; i--)
             {
-                results.Add(candidates[i]);
-            }
-            for (int i = 0; i < candidates.Count; i++)
-            {
-                System.Diagnostics.Debug.WriteLine("Score [" + i + "] = " + comparer.computeInterest(candidates[i]));
+                results.Add(interests[i]);
             }
             return results;
         }
@@ -144,28 +139,53 @@ namespace ActivityRecommendation
         private StringQueryMatcher stringQueryMatcher = new StringQueryMatcher();
     }
 
-    class ProtoActivity_InterestComparer : IComparer<ProtoActivity>
+    class ProtoActivity_InterestCalculator : IComparer<ProtoActivity_EstimatedInterest>
     {
-        public ProtoActivity_InterestComparer(DateTime when)
+        public ProtoActivity_InterestCalculator(DateTime when)
         {
             this.when = when;
         }
-        public int Compare(ProtoActivity a, ProtoActivity b)
+
+        public List<ProtoActivity_EstimatedInterest> Analyze(List<ProtoActivity> protoActivities)
         {
-            return this.computeInterest(a).CompareTo(this.computeInterest(b));
+            List<ProtoActivity_EstimatedInterest> interests = new List<ProtoActivity_EstimatedInterest>();
+            foreach (ProtoActivity protoActivity in protoActivities)
+            {
+                ProtoActivity_EstimatedInterest estimate = this.computeInterest(protoActivity);
+                interests.Add(estimate);
+            }
+            interests.Sort(this);
+            return interests;
         }
 
         // Gives a score telling how soon we want to show the given ProtoActivity next
         // Higher scores indicate to show the given ProtoActivity sooner
-        public double computeInterest(ProtoActivity activity)
+        public ProtoActivity_EstimatedInterest computeInterest(ProtoActivity activity)
         {
+            ProtoActivity_EstimatedInterest interest = new ProtoActivity_EstimatedInterest();
+            interest.ProtoActivity = activity;
+
             Distribution distribution = activity.Ratings;
-            double ratingMean = distribution.Plus(Distribution.MakeDistribution(0.5, 0.5, 2)).Mean;
-            double numIdleSeconds = this.when.Subtract(activity.LastInteractedWith).TotalSeconds;
-            return ratingMean * numIdleSeconds;
+            interest.RatingMean = distribution.Plus(Distribution.MakeDistribution(0.5, 0.5, 2)).Mean;
+            interest.NumIdleSeconds = this.when.Subtract(activity.LastInteractedWith).TotalSeconds;
+            interest.Interest = interest.RatingMean * interest.NumIdleSeconds;
+
+            return interest;
+        }
+        public int Compare(ProtoActivity_EstimatedInterest a, ProtoActivity_EstimatedInterest b)
+        {
+            return a.Interest.CompareTo(b.Interest);
         }
 
         private DateTime when;
+    }
+
+    public class ProtoActivity_EstimatedInterest
+    {
+        public double Interest;
+        public double NumIdleSeconds;
+        public double RatingMean;
+        public ProtoActivity ProtoActivity;
 
     }
 }

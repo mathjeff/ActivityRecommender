@@ -28,9 +28,19 @@ namespace ActivityRecommendation.View
             mark1Worse_button.Text = "Worse";
             mark1Worse_button.Clicked += Mark1Worse_button_Clicked;
 
+            Button explainScore1Button = new Button();
+            explainScore1Button.Text = "?";
+            explainScore1Button.Clicked += ExplainScore1Button_Clicked;
+            this.explainScore1Button = new ButtonLayout(explainScore1Button);
+
             Button mark2Worse_button = new Button();
             mark2Worse_button.Text = "Worse";
             mark2Worse_button.Clicked += Mark2Worse_button_Clicked;
+
+            Button explainScore2Button = new Button();
+            explainScore2Button.Text = "?";
+            explainScore2Button.Clicked += ExplainScore2Button_Clicked;
+            this.explainScore2Button = new ButtonLayout(explainScore2Button);
 
             BoundProperty_List rowHeights = BoundProperty_List.Uniform(3);
             BoundProperty_List columnWidths = new BoundProperty_List(3);
@@ -54,8 +64,12 @@ namespace ActivityRecommendation.View
                 .AddMessage("If you want to modify a ProtoActivity, press its Edit button (note that if you make any changes, then this will temporarily dismiss it (by resetting its interest score)).")
                 .AddMessage("If you want to see different ProtoActivities, then first you should choose which one (of the two visible ProtoActivities) you like less. Press the button marked " +
                 "'Worse' next to the ProtoActivity that you like less. This will cause two new ProtoActivities to appear (by resetting the interest scores of the two currently visible " +
-                "ProtoActivities to 0). This will also cause the one you marked 'Worse' to return less often (by decreasing the rate at which its interest score grows over time) and " +
-                "the other one to return more often (by increasing the rate at which its interest score grows over time).")
+                "ProtoActivities to 0). This will also cause the one you marked 'Worse' to return less often and " +
+                "the other one to return more often.")
+                .AddMessage("The way that ProtoActivities are chosen in this screen is that each ProtoActivity has a score of how much you like it, and " +
+                "a duration since the last time you interacted with that ProtoActivity. The product of the two is its interest score, and the " +
+                "ProtoActivities with the highest interest scores are the ones that will be displayed.")
+                .AddMessage("If you want to see the calculation of the interest scores of the two current ProtoActivities, press the \"?\" button.")
                 .AddMessage("Enjoy!")
                 .Build(), 
                 layoutStack);
@@ -66,8 +80,24 @@ namespace ActivityRecommendation.View
             grid.PutLayout(this.activity1Holder, 1, 1);
             this.activity2Holder = new ContainerLayout();
             grid.PutLayout(this.activity2Holder, 1, 2);
-            grid.PutLayout(new ButtonLayout(mark1Worse_button), 2, 1);
-            grid.PutLayout(new ButtonLayout(mark2Worse_button), 2, 2);
+            this.activity1ScoreBlock = new TextblockLayout();
+            this.score1Holder = new ContainerLayout();
+            this.score2Holder = new ContainerLayout();
+            grid.PutLayout(
+                new Vertical_GridLayout_Builder()
+                .Uniform()
+                .AddLayout(new ButtonLayout(mark1Worse_button))
+                .AddLayout(this.score1Holder)
+                .BuildAnyLayout()
+                , 2, 1);
+            this.activity2ScoreBlock = new TextblockLayout();
+            grid.PutLayout(
+                new Vertical_GridLayout_Builder()
+                .Uniform()
+                .AddLayout(new ButtonLayout(mark2Worse_button))
+                .AddLayout(this.score2Holder)
+                .BuildAnyLayout()
+                , 2, 2);
 
             this.multiActivitiesLayout = grid;
 
@@ -79,6 +109,22 @@ namespace ActivityRecommendation.View
             this.singleActivityLayout = new ButtonLayout(this.singleActivityButton);
 
             this.invalidate();
+        }
+
+        private void ExplainScore2Button_Clicked(object sender, EventArgs e)
+        {
+            this.showScores();
+        }
+
+        private void ExplainScore1Button_Clicked(object sender, EventArgs e)
+        {
+            this.showScores();
+        }
+
+        private void showScores()
+        {
+            this.score1Holder.SubLayout = this.activity1ScoreBlock;
+            this.score2Holder.SubLayout = this.activity2ScoreBlock;
         }
 
         private void SingleActivityButton_Clicked(object sender, EventArgs e)
@@ -105,7 +151,7 @@ namespace ActivityRecommendation.View
 
         private void update()
         {
-            List <ProtoActivity> top_protoActivities = this.protoActivity_database.GetMostInteresting(2);
+            List <ProtoActivity_EstimatedInterest> top_protoActivities = this.protoActivity_database.GetMostInteresting(2);
             if (top_protoActivities.Count == 0)
             {
                 this.SubLayout = new TextblockLayout("No ProtoActivities found!");
@@ -115,7 +161,7 @@ namespace ActivityRecommendation.View
                 if (top_protoActivities.Count == 1) 
                 {
                     this.SubLayout = this.singleActivityLayout;
-                    this.singleActivityButton.Text = top_protoActivities[0].Text;
+                    this.singleActivityButton.Text = top_protoActivities[0].ProtoActivity.Text;
                     this.setActivity1(top_protoActivities[0]);
                 }
                 else
@@ -127,15 +173,19 @@ namespace ActivityRecommendation.View
                 }
             }
         }
-        private void setActivity1(ProtoActivity protoActivity)
+        private void setActivity1(ProtoActivity_EstimatedInterest interest)
         {
-            this.activity1 = protoActivity;
+            this.activity1 = interest.ProtoActivity;
             this.activity1Holder.SubLayout = this.summarize(this.activity1);
+            this.activity1ScoreBlock.setText(this.describeScore(interest));
+            this.score1Holder.SubLayout = this.explainScore1Button;
         }
-        private void setActivity2(ProtoActivity protoActivity)
+        private void setActivity2(ProtoActivity_EstimatedInterest interest)
         {
-            this.activity2 = protoActivity;
+            this.activity2 = interest.ProtoActivity;
             this.activity2Holder.SubLayout = this.summarize(this.activity2);
+            this.activity2ScoreBlock.setText(this.describeScore(interest));
+            this.score2Holder.SubLayout = this.explainScore2Button;
         }
 
         private LayoutChoice_Set summarize(ProtoActivity protoActivity)
@@ -143,6 +193,13 @@ namespace ActivityRecommendation.View
             TextblockLayout option1 = new TextblockLayout(protoActivity.Text, true, 16);
             TextblockLayout option2 = new TextblockLayout(protoActivity.Text, 30);
             return new LayoutUnion(option1, option2);
+        }
+
+        private string describeScore(ProtoActivity_EstimatedInterest interest)
+        {
+            double numIdleDays = interest.NumIdleSeconds / 60 / 60 / 24;
+            double scoreInDays = interest.Interest / 60 / 60 / 24;
+            return "Estimate score = " + Math.Round(scoreInDays, 0) + " (" + Math.Round(interest.RatingMean, 2) + " * " + Math.Round(numIdleDays) + " days)";
         }
 
         private void Mark1Worse_button_Clicked(object sender, EventArgs e)
@@ -175,6 +232,14 @@ namespace ActivityRecommendation.View
 
         private ContainerLayout activity1Holder;
         private ContainerLayout activity2Holder;
+
+        private ContainerLayout score1Holder;
+        private ContainerLayout score2Holder;
+        private TextblockLayout activity1ScoreBlock;
+        private TextblockLayout activity2ScoreBlock;
+        private ButtonLayout explainScore1Button;
+        private ButtonLayout explainScore2Button;
+
         private TextblockLayout numProtoactivitiesLayout;
         private LayoutChoice_Set multiActivitiesLayout;
         private ProtoActivity activity1;

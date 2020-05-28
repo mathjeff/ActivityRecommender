@@ -81,8 +81,10 @@ namespace ActivityRecommendation
                 .AddMessage("1. Type the name of the activity that you participated in, and press Enter if you want to take the autocomplete suggestion.")
                 .AddMessage("You must have entered some activities in the activity name entry screen in order to enter them here.")
                 .AddMessage("Notice that once you enter an activity name, ActivityRecommender will tell you how it estimates this will affect your longterm happiness.")
-                .AddMessage("2. You may enter a rating (this is strongly encouraged). The rating is a measurement of how much happiness you received per unit time for doing " 
-                + "this activity divided by the amount of happiness you received per unit time for doing the previous activity.")
+                .AddMessage("2. You may enter a rating (this is strongly recommended). The rating is a measurement of how much happiness you received per unit time from"
+                + "this participation divided by the amount of happiness you received per unit time for the previous. "
+                + "(The ratio that you enter will be combined with ActivityRecommender's previous expectations of how much you would enjoy these two "
+                + "participations, and will be used to create an appropriate absolute rating from 0 to 1 for this participation.)")
                 .AddMessage("If this Activity is a ToDo, you will see a box asking you to specify whether you completed the ToDo. Press the box if you completed it.")
                 .AddMessage("3. Enter a start date and an end date. If you use the \"End = Now\" button right when the activity completes, you don't even need to type the date in. If you " +
                 "do have to type the date in, press the white box.")

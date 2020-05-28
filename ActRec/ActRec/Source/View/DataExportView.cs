@@ -58,4 +58,25 @@ namespace ActivityRecommendation
         Persona persona;
         LayoutStack layoutStack;
     }
+
+    class ExportSuccessLayout : TitledControl
+    {
+        public ExportSuccessLayout(string filename, PublicFileIo fileIo)
+        {
+            this.fileIo = fileIo;
+
+            this.SetTitle("Saved " + filename);
+            Button viewButton = new Button();
+            ButtonLayout viewButtonLayout = new ButtonLayout(viewButton, "View files");
+            this.SetContent(viewButtonLayout);
+            viewButton.Clicked += ViewButton_Clicked;
+        }
+
+        private async void ViewButton_Clicked(object sender, EventArgs e)
+        {
+            await this.fileIo.PromptUserForFile();
+        }
+
+        private PublicFileIo fileIo;
+    }
 }

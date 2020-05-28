@@ -427,12 +427,14 @@ namespace ActivityRecommendation
             // TODO make it possible for the user to control the file path
             bool successful = await this.publicFileIo.ExportFile(fileName, content);
 
-            string message;
             if (successful)
-                message = "Saved " + fileName;
+            {
+                this.layoutStack.AddLayout(new ExportSuccessLayout(fileName, this.publicFileIo), "Success");
+            }
             else
-                message = "Failed to save " + fileName;
-            this.layoutStack.AddLayout(new TextblockLayout(message), "Error");
+            {
+                this.layoutStack.AddLayout(new TextblockLayout("Failed to save " + fileName), "Error");
+            }
         }
 
         public bool GoBack()

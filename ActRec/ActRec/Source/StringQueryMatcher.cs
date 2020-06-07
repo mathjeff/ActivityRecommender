@@ -1,55 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Xamarin.Forms;
 
 namespace ActivityRecommendation
 {
     class StringQueryMatcher
     {
+        // returns a number indicating how well these two strings match
         public int StringScore(string item, string query)
         {
-            int totalScore = 0;
-            if (item == query)
-                totalScore++;
+            int numSimilarities = 0;
+
             if (item.ToLower() == query.ToLower())
-                totalScore++;
+                numSimilarities++;
             char separator = ' ';
             List<string> itemWords = new List<string>(item.Split(separator));
             string[] queryWords = query.Split(separator);
 
+            int numCaseMatches = 0;
+            int numUnmatchedWords = 0;
             foreach (string queryWord in queryWords)
             {
                 if (queryWord.Length < 1)
                     continue;
                 string queryWordLower = queryWord.ToLower();
+                bool thisQueryWordMatches = false;
                 for (int i = 0; i < itemWords.Count; i++)
                 {
                     string itemWord = itemWords[i];
                     string itemWordLower = itemWord.ToLower();
 
                     int matchScore = 0;
+                    // 1 point for a case-insensitive prefix match
                     if (itemWordLower.StartsWith(queryWordLower))
                         matchScore++;
+                    // 1 point for a case-sensitive prefix match
                     if (itemWord.StartsWith(queryWord))
-                        matchScore++;
+                        numCaseMatches++;
+                    // 1 point for a case-insensitive word match
                     if (itemWordLower == queryWordLower)
                         matchScore++;
+                    // 1 point for a full word match
                     if (itemWord == queryWord)
-                        matchScore++;
+                        numCaseMatches++;
                     if (matchScore > 0)
                     {
+                        // more points for matching the first unmatched word
                         if (i == 0)
                             matchScore += 3;
-                        totalScore += matchScore * queryWord.Length;
+                        // more points for longer queries
+                        numSimilarities += matchScore + queryWord.Length;
                         itemWords.RemoveRange(0, i + 1);
+                        thisQueryWordMatches = true;
                         break;
                     }
+                    numUnmatchedWords++;
                 }
+                // a query was unmatched
+                if (!thisQueryWordMatches)
+                    return 0;
             }
 
-            return totalScore;
+            numUnmatchedWords += itemWords.Count;
+
+            // Usually, case doesn't matter, but it is theoretically possible for a user to have two activities with the same name except casing
+            // However, it may be likely for a user to have two different activities containing the same word with different casings,
+            // and in that case we don't want to consider the casing difference to be significant unless the user has typed a long query
+            // So, if all words were matched, then we also give points for correct casing
+            if (numUnmatchedWords == 0)
+                numSimilarities += numCaseMatches;
+
+            return numSimilarities;
         }
-
-
     }
+    
 }

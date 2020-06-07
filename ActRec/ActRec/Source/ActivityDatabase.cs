@@ -241,7 +241,7 @@ namespace ActivityRecommendation
         // Otherwise, returns a number that gets larger if it's more likely that the user meant to match <activity>
         public double MatchQuality(ActivityDescriptor descriptor, Activity activity)
         {
-            double matchScore = 0;
+            int stringScore = 0;
             if (descriptor.RequiresPerfectMatch)
             {
                 // make sure the name matches
@@ -255,18 +255,18 @@ namespace ActivityRecommendation
             }
             else
             {
-                // a bunch of points based on string similarity
+                // points based on string similarity
                 string desiredName = descriptor.ActivityName;
                 if (desiredName.Length < 2 * activity.Name.Length)
                 {
-                    matchScore = this.stringScore(activity.Name, desiredName);
+                    stringScore = this.stringScore(activity.Name, desiredName);
                 }
                 else
                 {
-                    // if the user enters a string that it rediculously long, then we don't bother comparing it
-                    matchScore = 0;
+                    // if the user enters a string that it ridiculously long, then we don't bother comparing it
+                    stringScore = 0;
                 }
-                if (desiredName.Length > 0 && matchScore <= 0)
+                if (desiredName.Length > 0 && stringScore <= 0)
                 {
                     // name has nothing in common
                     return 0;
@@ -274,22 +274,52 @@ namespace ActivityRecommendation
             }
             // now that we've verified that this activity is allowed to be a match, we calculate its score
 
-            // +1 point if the 'Suggestible' property matches
+            // extra points for a fully matching name, because it must be possible to select an activity by name directly
+            double exactNameScore = 0;
+            if (descriptor.ActivityName.ToLower().Equals(activity.Name.ToLower()))
+                exactNameScore += 1;
+            if (descriptor.ActivityName.Equals(activity.Name))
+                exactNameScore += 1;
+
+            // more points if the 'Suggestible' property matches
+            double suggestibleScore = 0;
             if (descriptor.Suggestible != null && descriptor.Suggestible.Value == activity.Suggestible)
-                matchScore += 1;
+                suggestibleScore += 1;
 
 
-            // up to 1 extra point based on the likelihood that the user did this activity
+            double participationScore = 0;
+            // more points based on the likelihood that the user did this activity
             if (descriptor.PreferMorePopular)
             {
                 // Give better scores to activities that the user has logged more often
-                matchScore += (1.0 - 1.0 / ((double)activity.NumParticipations + 1.0));
+                participationScore += (1.0 - 1.0 / ((double)activity.NumParticipations + 1.0));
             }
-            else
+
+            // fewer points for completed Todos
+            double completedTodoScore = 1;
+            ToDo t = activity as ToDo;
+            if (t != null)
             {
-                matchScore += 1;
+                if (t.IsCompleted())
+                {
+                    completedTodoScore = 0;
+                }
             }
-            return matchScore;
+
+            double finalScore = 0;
+
+            // Now we add up the score
+            // We give lower priority to the factors at the top of this calculation and higher priority to the lower factors
+
+            // points for non-name properties
+            finalScore += participationScore;
+            finalScore += suggestibleScore;
+            finalScore += completedTodoScore;
+            finalScore /= 3;
+            // more points for a more closely matching name
+            finalScore += stringScore;
+
+            return finalScore;
         }
         public int NumActivities
         {

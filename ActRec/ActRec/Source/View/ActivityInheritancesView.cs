@@ -1,4 +1,5 @@
 ﻿using ActivityRecommendation.Effectiveness;
+using System;
 using System.Collections.Generic;
 using VisiPlacement;
 
@@ -17,14 +18,7 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                if (children.Count < 1)
-                {
-                    title = activity.Name;
-                }
-                else
-                {
-                    title = activity.Name;
-                }
+                title = activity.Name;
                 if (activity is Category)
                 {
                     title += " (Category)";
@@ -66,8 +60,33 @@ namespace ActivityRecommendation.View
             }
             if (parents.Count > 0)
                 gridBuilder.AddLayout(new ActivityListView(parents.Count.ToString() + " Parents:", parents));
+
+            List<Activity> childTodos = new List<Activity>();
+            List<Activity> childCategories = new List<Activity>();
+            foreach (Activity child in children)
+            {
+                if (child is ToDo)
+                {
+                    childTodos.Add(child);
+                }
+                else
+                {
+                    if (child is Category)
+                    {
+                        childCategories.Add(child);
+                    }
+                    else
+                    {
+                        throw new InvalidCastException("Unrecognized object type " + child);
+                    }
+                }
+            }
+
             if (children.Count > 0)
-                gridBuilder.AddLayout(new ActivityListView(children.Count.ToString() + " Children:", children));
+            {
+                gridBuilder.AddLayout(new ActivityListView(" " + childCategories.Count.ToString() + " Children of type Category:", childCategories));
+                gridBuilder.AddLayout(new ActivityListView(" " + childTodos.Count.ToString() + " Children of type ToDo:", childTodos));
+            }
 
             this.SetContent(gridBuilder.Build());
         }
@@ -89,7 +108,8 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                this.SetContent(new TextblockLayout(activities[0].Name, 16));
+                if (activities.Count > 0)
+                    this.SetContent(new TextblockLayout(activities[0].Name, 16));
             }
 
             this.SetTitle(name);

@@ -1,6 +1,7 @@
 ﻿using StatLists;
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using VisiPlacement;
 using Xamarin.Forms;
 
@@ -84,7 +85,7 @@ namespace ActivityRecommendation
         private LayoutChoice_Set make_helpLayout()
         {
             LayoutChoice_Set ratingsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("The Ratings graph shows three values over time.")
+                .AddMessage("The Ratings graph shows four values over time.")
                 .AddMessage("The green plot indicates how you have rated this activity during this time.")
                 .AddMessage("The red plot is a straight line showing the trend of the green plot.")
                 .AddMessage("The blue plot essentially estimates how happy you have been overall"
@@ -92,10 +93,11 @@ namespace ActivityRecommendation
                 .AddMessage("Similarly, the yellow plot estimates approximately how efficient you have been overall (there will only be efficiency data if you have been using the experimentation feature)")
                 .Build();
             LayoutChoice_Set participationsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("The Participations graph shows three values over time.")
+                .AddMessage("The Participations graph shows four values over time.")
                 .AddMessage("The green plot shows the cumulative amount of time you've spent on this particular activity during this time.")
                 .AddMessage("The red plot is a straight line showing the trend of the green plot.")
                 .AddMessage("The blue plot shows the cumulative number of times that ActivityRecommender has recommended this activity to you.")
+                .AddMessage("The yellow plot estimates your cumulative effectiveness in doing this activity over time. This plot will only be different from the green plot requires if you have been using the experimentation feature. ")
                 .AddMessage("You'll also notice some short vertical lines near the bottom, denoting days or months based on how much time the graph encompasses.")
                 .Build();
             LayoutChoice_Set dateHelpLayout = new HelpWindowBuilder()
@@ -231,6 +233,18 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " to update ratings plot");
 
         }
+        private DateTime MaxDate(DateTime a, DateTime b)
+        {
+            if (a.CompareTo(b) >= 0)
+                return a;
+            return b;
+        }
+        private DateTime MinDate(DateTime a, DateTime b)
+        {
+            if (a.CompareTo(b) <= 0)
+                return a;
+            return b;
+        }
         public void UpdateParticipationsPlot()
         {
             DateTime start = DateTime.Now;
@@ -242,9 +256,10 @@ namespace ActivityRecommendation
             List<Participation> participations = participationProgression.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
             DateTime lastDate = this.queryEndDateDisplay.GetDate();
-            double firstCoordinate = this.GetXCoordinate(firstDate);
-            double lastCoordinate = this.GetXCoordinate(lastDate);
+            //double firstCoordinate = this.GetXCoordinate(firstDate);
+            //double lastCoordinate = this.GetXCoordinate(lastDate);
             List<Datapoint> cumulativeParticipationDurations = new List<Datapoint>();
+            List<Datapoint> cumulativeEffectivenesses = new List<Datapoint>();
             List<Datapoint> cumulativeSuggestionCounts = new List<Datapoint>();
             List<double> suggestionDates = new List<double>();
 
@@ -254,7 +269,7 @@ namespace ActivityRecommendation
             newPlot.MinX = 0;
             newPlot.MaxX = 1;
 
-            double x1, x2, cumulativeParticipationSeconds, cumulativeSuggestionCount;
+            double x1, x2, cumulativeParticipationSeconds, cumulativeEffectiveness, cumulativeSuggestionCount;
             x1 = 0;
 
             if (this.xAxisProgression != null)
@@ -263,89 +278,102 @@ namespace ActivityRecommendation
                 x1 = newPlot.MinX.Value;
 
 
-            double maxXPlotted = 0;
-            List<double> startXs = new List<double>(participations.Count);
-            List<double> endXs = new List<double>(participations.Count);
+            List<DateTime> startXs = new List<DateTime>(participations.Count);
+            List<DateTime> endXs = new List<DateTime>(participations.Count);
 
             // figure out which dates we care about
-            double participationStartCoordinate, participationEndCoordinate;
             int numActiveIntervals = 0;
-            DateTime startDate, endDate;
 
             foreach (Participation participation in participations)
             {
                 // update some data about cumulative participation duration
-                startDate = participation.StartDate;
-                endDate = participation.EndDate;
                 // make sure this participation is relevant
-                if (endDate.CompareTo(firstDate) >= 0 && startDate.CompareTo(lastDate) <= 0)
+                if (participation.EndDate.CompareTo(firstDate) >= 0 && participation.StartDate.CompareTo(lastDate) <= 0)
                 {
-                    participationStartCoordinate = Math.Max(this.GetXCoordinate(startDate), firstCoordinate);
-                    participationEndCoordinate = Math.Min(this.GetXCoordinate(endDate), lastCoordinate);
-                    startXs.Add(participationStartCoordinate);
-                    endXs.Add(participationEndCoordinate);
-                    if (participationStartCoordinate < firstCoordinate)
-                        numActiveIntervals++;
+                    startXs.Add(this.MaxDate(firstDate, participation.StartDate));
+                    endXs.Add(this.MinDate(participation.EndDate, lastDate));
 
                     // update some data about cumulative num suggestions
                     // this is slightly hacky - really there should be a method that just returns a list of every Suggestion for an Activity
                     if (participation.Suggested)
                     {
                         // double-check that the participation was suggested more recently than the start DateTime
-                        double suggestionDate = this.GetXCoordinate(startDate);
-                        if (suggestionDate >= firstCoordinate)
-                            suggestionDates.Add(suggestionDate);
+                        if (participation.StartDate.CompareTo(participation.StartDate) >= 0)
+                            suggestionDates.Add(this.GetXCoordinate(participation.StartDate));
                     }
                 }
             }
             startXs.Sort();
             endXs.Sort();
             cumulativeParticipationSeconds = 0;
+            cumulativeEffectiveness = 0;
+            DateTime prevDate = firstDate;
             while (endXs.Count > 0 || startXs.Count > 0)
             {
+                DateTime participationStart;
+                DateTime participationEnd;
                 if (startXs.Count > 0)
                 {
                     if (endXs.Count > 0)
                     {
-                        participationStartCoordinate = startXs[0];
-                        participationEndCoordinate = endXs[0];
+                        participationStart = startXs[0];
+                        participationEnd = endXs[0];
                     }
                     else
                     {
-                        participationStartCoordinate = startXs[0];
-                        participationEndCoordinate = participationStartCoordinate + 1;  // something larger that will be ignored
+                        participationStart = startXs[0];
+                        participationEnd = lastDate;  // something larger that will be ignored
                     }
                 }
                 else
                 {
-                    participationEndCoordinate = endXs[0];
-                    participationStartCoordinate = participationEndCoordinate + 1;      // something larger that will be ignored
+                    participationEnd = endXs[0];
+                    participationStart = lastDate;      // something larger that will be ignored
                 }
-                if (participationStartCoordinate < participationEndCoordinate)
+                if (participationStart.CompareTo(participationEnd) < 0)
                 {
-                    x2 = participationStartCoordinate;
+                    x2 = this.GetXCoordinate(participationStart);
                     double weight = x2 - x1;
-                    // add a datapoint denoting the start of the interval
+                    // add datapoints denoting the start of the idle interval
                     cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationSeconds, weight));
+                    cumulativeEffectivenesses.Add(new Datapoint(x1, cumulativeEffectiveness, weight));
+                    // update cumulatives
                     cumulativeParticipationSeconds += weight * numActiveIntervals;
+                    if (numActiveIntervals > 0)
+                    {
+                        Distribution efficiency = this.overallEfficiency_summarizer.GetValueDistributionForDates(prevDate, lastDate, true, false);
+                        if (efficiency.Weight > 0)
+                        {
+                            cumulativeEffectiveness += efficiency.Mean * weight * numActiveIntervals;
+                        }
+                    }
                     numActiveIntervals++;
-                    // add a datapoint denoting the end of the interval
+                    // add datapoints denoting the end of the idle interval
                     cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationSeconds, weight));
+                    cumulativeEffectivenesses.Add(new Datapoint(x2, cumulativeEffectiveness, weight));
                     startXs.RemoveAt(0);
+                    prevDate = participationStart;
                 }
                 else
                 {
-                    x2 = participationEndCoordinate;
+                    x2 = this.GetXCoordinate(participationEnd);
                     double weight = x2 - x1;
-                    // add a datapoint denoting the start of the interval
+                    // add datapoints denoting the start of the active interval
                     cumulativeParticipationDurations.Add(new Datapoint(x1, cumulativeParticipationSeconds, weight));
+                    cumulativeEffectivenesses.Add(new Datapoint(x1, cumulativeEffectiveness, weight));
                     cumulativeParticipationSeconds += weight * numActiveIntervals;
+                    Distribution efficiency = this.overallEfficiency_summarizer.GetValueDistributionForDates(prevDate, lastDate, true, false);
+                    if (efficiency.Weight > 0)
+                    {
+                        cumulativeEffectiveness += efficiency.Mean * weight * numActiveIntervals;
+                    }
                     numActiveIntervals--;
-                    // add a datapoint denoting the end of the interval
+                    // add datapoints denoting the end of the active interval
                     cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationSeconds, weight));
+                    cumulativeEffectivenesses.Add(new Datapoint(x2, cumulativeEffectiveness, weight));
                     endXs.RemoveAt(0);
+                    prevDate = participationEnd;
                 }
-                maxXPlotted = x2;
                 x1 = x2;
             }
 
@@ -363,6 +391,14 @@ namespace ActivityRecommendation
                 spacePerTick = spacePerTick / cumulativeParticipationSeconds;
             }
 
+            // rescale cumulativeEffectivenesses to total 1
+            if (cumulativeEffectiveness != 0)
+            {
+                foreach (Datapoint item in cumulativeEffectivenesses)
+                {
+                    item.Output = item.Output / cumulativeEffectiveness;
+                }
+            }
 
             // We also want to plot the number of times that the activity was suggested
             cumulativeSuggestionCount = 0;
@@ -398,6 +434,7 @@ namespace ActivityRecommendation
 
             newPlot.AddSeries(cumulativeParticipationDurations, true);
             newPlot.AddSeries(cumulativeSuggestionCounts, false);
+            newPlot.AddSeries(cumulativeEffectivenesses, false);
 
             // assign y-axis tick marks
             if (spacePerTick > 0)

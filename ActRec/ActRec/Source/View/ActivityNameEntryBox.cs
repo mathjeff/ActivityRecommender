@@ -11,6 +11,7 @@ namespace ActivityRecommendation.View
         public ActivityNameEntryBox(string startingTitle, ReadableActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false) : base(startingTitle)
         {
             // some settings
+            this.layoutStack = layoutStack;
             this.AutoAcceptAutocomplete = true;
             this.createNewActivity = createNewActivity;
             this.database = activityDatabase;
@@ -21,20 +22,21 @@ namespace ActivityRecommendation.View
             this.nameBox.TextChanged += NameBox_TextChanged;
             this.nameBox_layout = new TextboxLayout(this.nameBox);
 
-            // button for clearing the box's text
-            Button xButton = new Button();
-            xButton.Text = "X";
-            xButton.Clicked += XButton_Clicked;
-            this.xButtonLayout = new ButtonLayout(xButton);
+            // "X"/"?" button for clearing text or getting help
+            // We use one button for both purposes so that the layout doesn't relayout (and shift focus) when this button switches from one to the other
+            this.sideButton = new Button();
+            this.sideButton.Clicked += SideButton_Clicked;
+            this.sideButtonLayout = new ButtonLayout(this.sideButton);
 
-            this.nameBoxWithX = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
-            this.nameBoxWithX.AddLayout(this.nameBox_layout);
+            this.nameBoxWithSideButton = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
+            this.nameBoxWithSideButton.AddLayout(this.nameBox_layout);
+            this.nameBoxWithSideButton.AddLayout(this.sideButtonLayout);
 
             // the autocomplete above the text box
             this.autocompleteLayout = new TextblockLayout();
 
             // button that gives help with autocomplete
-            this.autocomplete_helpLayout = new HelpButtonLayout(new HelpWindowBuilder()
+            this.helpWindow = new HelpWindowBuilder()
                 .AddMessage("This screen explains how you can enter " + startingTitle + ". " +
                 "Your input must match an activity that you have previously entered.")
                 .AddMessage("The most basic way to input an activity name is to type it in using the letters on the keyboard.")
@@ -60,27 +62,27 @@ namespace ActivityRecommendation.View
                 .AddMessage("t")
                 .AddMessage("")
                 .AddMessage("Note, of course, that the longer and more unique your text, the more likely that it will be matched with the activity that you intend.")
-                .Build()
-                , layoutStack);
+                .Build();
+            this.autocomplete_longHelpLayout = new HelpButtonLayout(this.helpWindow, layoutStack);
 
             // the main layout that contains everything
             LayoutChoice_Set content;
             if (createNewActivity)
             {
-                content = nameBoxWithX;
+                content = nameBoxWithSideButton;
             }
             else
             {
                 GridLayout contentWithFeedback = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
                 contentWithFeedback.AddLayout(this.responseLayout);
-                contentWithFeedback.AddLayout(this.nameBoxWithX);
+                contentWithFeedback.AddLayout(this.nameBoxWithSideButton);
 
                 content = contentWithFeedback;
 
                 this.UpdateFeedback();
             }
 
-            this.updateXButton();
+            this.updateSideButton();
 
             base.SetContent(content);
         }
@@ -90,9 +92,12 @@ namespace ActivityRecommendation.View
             this.nameBox.Placeholder = text;
         }
 
-        private void XButton_Clicked(object sender, EventArgs e)
+        private void SideButton_Clicked(object sender, EventArgs e)
         {
-            this.Set_NameText("");
+            if (this.sideButton.Text == "X")
+                this.Set_NameText("");
+            else
+                this.layoutStack.AddLayout(this.helpWindow, "Help");
         }
 
         public void AddTextChangedHandler(EventHandler<TextChangedEventArgs> h)
@@ -111,7 +116,7 @@ namespace ActivityRecommendation.View
                 this.userEnteredText(oldText, newText);
 
             this.UpdateFeedback();
-            this.updateXButton();
+            this.updateSideButton();
 
             if (this.NameMatchesSuggestion)
             {
@@ -120,15 +125,21 @@ namespace ActivityRecommendation.View
             }
         }
 
-        private void updateXButton()
+        private void updateSideButton()
         {
             if (this.NameText != "" && this.NameText != null)
             {
-                this.nameBoxWithX.PutLayout(this.xButtonLayout, 1, 0);
+                // Box has text; show X button
+                this.nameBoxWithSideButton.PutLayout(this.sideButtonLayout, 1, 0);
+                this.sideButton.Text = "X";
             }
             else
             {
-                this.nameBoxWithX.PutLayout(null, 1, 0);
+                // Box has no text, show "?" if it's helpful, otherwise show no button
+                if (this.createNewActivity)
+                    this.nameBoxWithSideButton.PutLayout(null, 1, 0);
+                else
+                    this.sideButton.Text = "?";
             }
         }
 
@@ -249,7 +260,7 @@ namespace ActivityRecommendation.View
                     // no matches
                     this.suggestedActivityName = "";
                     // show a help button
-                    this.responseLayout.SubLayout = this.autocomplete_helpLayout;
+                    this.responseLayout.SubLayout = this.autocomplete_longHelpLayout;
                 }
 
             }
@@ -335,17 +346,20 @@ namespace ActivityRecommendation.View
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
 
-        ButtonLayout xButtonLayout;
-        GridLayout nameBoxWithX;
+        Button sideButton;
+        ButtonLayout sideButtonLayout;
+        LayoutChoice_Set helpWindow;
+        GridLayout nameBoxWithSideButton;
         TextboxLayout nameBox_layout;
         string nameText;
         Editor nameBox;
-        LayoutChoice_Set autocomplete_helpLayout;
+        LayoutChoice_Set autocomplete_longHelpLayout;
         TextblockLayout autocompleteLayout;
         ContainerLayout responseLayout = new ContainerLayout();
         ReadableActivityDatabase database;
         string suggestedActivityName = "";
         bool createNewActivity;
+        LayoutStack layoutStack;
     }
 
     public delegate void NameMatchedSuggestionHandler(object sender, TextChangedEventArgs e);

@@ -29,7 +29,11 @@ namespace ActivityRecommendation.View
             }
 
             this.statusHolder = new ContainerLayout();
-            GridLayout topGrid = new Horizontal_GridLayout_Builder().AddLayout(helpButton).AddLayout(this.statusHolder).Uniform().Build();
+            GridLayout topGrid = new Horizontal_GridLayout_Builder()
+                .AddLayout(helpButton)
+                .AddLayout(new HelpButtonLayout("List Open ToDos", new ListOpenTodosView(activityDatabase), layoutStack))
+                .Uniform()
+                .Build();
 
             Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
             for (int i = 0; i < this.numChoices; i++)
@@ -46,13 +50,13 @@ namespace ActivityRecommendation.View
             BoundProperty_List rowHeights = new BoundProperty_List(3);
             rowHeights.BindIndices(0, 1);
             rowHeights.BindIndices(0, 2);
-            rowHeights.SetPropertyScale(0, 1);
+            rowHeights.SetPropertyScale(0, 2);
             rowHeights.SetPropertyScale(1, 1);
-            rowHeights.SetPropertyScale(2, 3);
+            rowHeights.SetPropertyScale(2, 6);
 
             GridLayout mainGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(topGrid);
-            mainGrid.AddLayout(new HelpButtonLayout("List Open ToDos", new ListOpenTodosView(activityDatabase), layoutStack));
+            mainGrid.AddLayout(this.statusHolder);
             mainGrid.AddLayout(bottomGrid);
 
             string statusMessage = "(" + experimentsStatus.NumExperimentParticipationsRemaining + " experiment";
@@ -150,7 +154,9 @@ namespace ActivityRecommendation.View
                 "to measure how sleep affects your ability to quickly you get your work done.")
                 .AddMessage("This is possible even if you don't have any two tasks of the same difficulty, because by randomizing the ordering of the tasks, after taking " +
                 "enough measurements, the random variations in difficulty should eventually approximately cancel each other out.")
-                .AddMessage("What you have to do, first, is to look at the list of possible suggestions, and determine whether there are any that you are unwilling to attempt " +
+                .AddMessage("What you should do first is to push each of the Suggest buttons, to create some experiment options.")
+                .AddMessage("(You can customize the suggestions via the other fields, if you like.)")
+                .AddMessage("Next, determine whether any of the provided suggestions are any that you are unwilling to attempt " +
                 "doing right now.")
                 .AddMessage("(Note that it's ok if they're too difficult to finish in one sitting; you just need to be willing to make an attempt.)")
                 .AddMessage("If there are any you are unwilling to attempt right now, then press the coresponding X button.")

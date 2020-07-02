@@ -42,7 +42,7 @@ namespace ActivityRecommendation.View
                 suggestButton_layout = suggest_maxLongtermHappiness_button;
             }
 
-            this.categoryBox = new ActivityNameEntryBox("From category:", activityDatabase, layoutStack);
+            this.categoryBox = new ActivityNameEntryBox("Category:", activityDatabase, layoutStack);
             this.categoryBox.Placeholder("(Optional)");
             this.activityDatabase = activityDatabase;
             this.engine = engine;
@@ -61,7 +61,7 @@ namespace ActivityRecommendation.View
 
                 this.atLeastAsFunAs_button = new Button();
                 atLeastAsFunAs_button.Clicked += RequestAsFunAs_Button_Clicked;
-                configurationLayout.AddLayout(new TitledControl("At least as fun as:", new ButtonLayout(atLeastAsFunAs_button)));
+                configurationLayout.AddLayout(new TitledControl("As fun as:", new ButtonLayout(atLeastAsFunAs_button)));
 
                 if (vertical)
                 {

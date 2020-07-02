@@ -37,7 +37,7 @@ namespace ActivityRecommendation.View
 
             // button that gives help with autocomplete
             this.helpWindow = new HelpWindowBuilder()
-                .AddMessage("This screen explains how you can enter " + startingTitle + ". " +
+                .AddMessage("This screen explains how to enter " + startingTitle + " in the previous screen. " +
                 "Your input must match an activity that you have previously entered.")
                 .AddMessage("The most basic way to input an activity name is to type it in using the letters on the keyboard.")
                 .AddMessage("However, while you type the activity name, ActivityRecommender will try to guess which activity you mean, and " +

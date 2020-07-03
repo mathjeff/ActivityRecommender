@@ -81,7 +81,7 @@ namespace ActivityRecommendation
                 .AddMessage("1. Type the name of the activity that you participated in, and press Enter if you want to take the autocomplete suggestion.")
                 .AddMessage("You must have entered some activities in the activity name entry screen in order to enter them here.")
                 .AddMessage("Notice that once you enter an activity name, ActivityRecommender will tell you how it estimates this will affect your longterm happiness.")
-                .AddMessage("2. You may enter a rating (this is strongly recommended). The rating is a measurement of how much happiness you received per unit time from"
+                .AddMessage("2. You may enter a rating (this is strongly recommended). The rating is a measurement of how much happiness you received per unit time from "
                 + "this participation divided by the amount of happiness you received per unit time for the previous. "
                 + "(The ratio that you enter will be combined with ActivityRecommender's previous expectations of how much you would enjoy these two "
                 + "participations, and will be used to create an appropriate absolute rating from 0 to 1 for this participation.)")
@@ -93,7 +93,7 @@ namespace ActivityRecommendation
                 .AddMessage("It's up to you how many participations you log, how often you rate them, and how accurate the start and end dates are. ActivityRecommender will be able to " +
                 "provide more useful help to you if you provide more accurate data, but even just a few participations per day should still be enough for meaningful feedback.")
                 .Build();
-
+                
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
             grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now", 16));
             grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));

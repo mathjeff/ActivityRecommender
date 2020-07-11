@@ -559,6 +559,15 @@ NaN    equivalentWeightedProbability
 3.6981 typicalEfficiencyError
 1.7414 typical longtermEfficiencyIfParticipated error
 EngineTester completed in 00:02:07.8680408 // when running in the debugger on a desktop
+
+updated results after fixing some incorrect participation intensities
+0.0901 typical longtermPredictionIfSuggested error
+0.0263 typical longtermPredictionIfParticipated error
+0.1351 typicalScoreError
+0.9592 equivalentWeightedProbability
+3.6981 typicalEfficiencyError
+1.7414 typical longtermEfficiencyIfParticipated error
+EngineTester completed in 00:02:07.7771503
 */
 
 namespace ActivityRecommendation
@@ -610,7 +619,7 @@ namespace ActivityRecommendation
             {
                 // if the activity was certaintly not suggested, then we don't want to include it in our estimate 
                 // of "the probability that the user would do the activity, given that it was suggested"
-                this.UpdateParticipationProbabilityError(newParticipation.ActivityDescriptor, newParticipation.StartDate, newParticipation.Duration.TotalSeconds);
+                this.UpdateParticipationProbabilityError(newParticipation.ActivityDescriptor, newParticipation.StartDate, 1);
             }
 
 
@@ -677,6 +686,8 @@ namespace ActivityRecommendation
         }
         public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
         {
+            if (actualIntensity > 1 || actualIntensity < 0)
+                System.Diagnostics.Debug.WriteLine("Invalid participation intensity: " + actualIntensity);
             // compute the estimate participation probability
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             Prediction predictionForSuggestion =  this.engine.EstimateSuggestionValue(activity, when);
@@ -805,11 +816,11 @@ namespace ActivityRecommendation
                 // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
                 // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -Math.Log(1 - predictedProbability) - 2)
                 // 2 * scoreComponent + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
+                // 2 * this.participationPrediction_score.Mean + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
                 // predictedProbability * (1 - predictedProbability) = e ^ (-2 * this.participationPrediction_score.Mean - 2);
                 // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
                 // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
                 results.TypicalProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
-
                 results.ParticipationHavingMostSurprisingScore = this.mostSurprisingParticipation;
                 return results;
             }

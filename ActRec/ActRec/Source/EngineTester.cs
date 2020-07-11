@@ -542,6 +542,23 @@ updated results on 2020-02-01 with more data:
 1.7822 typical longtermEfficiencyIfParticipated error
 EngineTester completed in 00:08:32.9351070 // when running in the debugger
 
+updated results on 2020-07-11 with more data:
+0.0889 typical longtermPredictionIfSuggested error
+0.0269 typical longtermPredictionIfParticipated error
+0.1351 typicalScoreError
+NaN    equivalentWeightedProbability
+3.6981 typicalEfficiencyError
+1.7382 typical longtermEfficiencyIfParticipated error
+EngineTester completed in 00:02:07.1717935 // when running in the debugger on a desktop
+
+updated results after predicting longterm happiness from longterm efficiency
+0.0886 typical longtermPredictionIfSuggested error
+0.0263 typical longtermPredictionIfParticipated error
+0.1351 typicalScoreError
+NaN    equivalentWeightedProbability
+3.6981 typicalEfficiencyError
+1.7414 typical longtermEfficiencyIfParticipated error
+EngineTester completed in 00:02:07.8680408 // when running in the debugger on a desktop
 */
 
 namespace ActivityRecommendation

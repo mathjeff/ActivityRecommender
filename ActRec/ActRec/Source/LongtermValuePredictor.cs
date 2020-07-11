@@ -41,6 +41,9 @@ namespace ActivityRecommendation
         }
         public void UpdateMany(int count)
         {
+            // Even if we have time to update many rating summaries, we don't need to update more than we have
+            if (count > this.ratingSummariesToUpdate.Count)
+                count = this.ratingSummariesToUpdate.Count;
             for (int i = 0; i < count; i++)
             {
                 this.UpdateOne();

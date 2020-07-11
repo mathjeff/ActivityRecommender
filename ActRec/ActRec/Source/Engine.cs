@@ -28,6 +28,14 @@ namespace ActivityRecommendation
             this.thinkingTime = Distribution.MakeDistribution(60, 0, 1);      // default amount of time thinking about a suggestion is 1 minute
             this.ratingsOfUnpromptedActivities = new Distribution();
 
+            this.happinessFromEfficiency_predictor = new LongtermValuePredictor(
+                new AdaptiveLinearInterpolation.HyperBox<Distribution>(
+                    new AdaptiveLinearInterpolation.FloatRange[] {
+                        new AdaptiveLinearInterpolation.FloatRange(0, true, 1, true)
+                    }
+                ),
+                this.weightedRatingSummarizer
+            );
         }
 
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
@@ -164,6 +172,7 @@ namespace ActivityRecommendation
             {
                 parent.AddEfficiencyMeasurement(measurement);
             }
+            this.happinessFromEfficiency_predictor.AddDatapoint(measurement.StartDate, new double[] { measurement.RecomputedEfficiency.Mean });
         }
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
@@ -563,28 +572,34 @@ namespace ActivityRecommendation
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
 
+            List<Distribution> distributions = new List<Distribution>();
+
             // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
             double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.4);
             shortTerm_prediction.Distribution = shortTerm_prediction.Distribution.CopyAndReweightTo(shortWeight);
+            distributions.Add(shortTerm_prediction.Distribution);
 
             double mediumWeight = activity.NumParticipations;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
-
-            List<Distribution> distributions = new List<Distribution>();
-            distributions.Add(shortTerm_prediction.Distribution);
             distributions.Add(mediumTerm_distribution);
 
             if (activity.NumParticipations < 40)
             {
+                // before we have much data, we predict that the happiness after doing this activity resembles that after doing its parent activities
                 foreach (Activity parent in activity.ParentsUsedForPrediction)
                 {
                     Distribution parentDistribution = this.Get_OverallHappiness_ParticipationEstimate(parent, when).Distribution.CopyAndReweightTo(4);
                     distributions.Add(parentDistribution);
                 }
+                // if this activity is correlated with efficiency, and if efficiency is correlated with happiness,
+                // then this activity is correlated with happiness too
+                Distribution efficiency = this.Get_OverallEfficiency_ParticipationEstimate(activity, when).Distribution;
+                Distribution happinessFromEfficiency_prediction = this.Predict_LongtermHappiness_From_LongtermEfficiency(efficiency).CopyAndReweightTo(4);
+                distributions.Add(happinessFromEfficiency_prediction);
             }
 
             Distribution distribution = this.CombineRatingDistributions(distributions);
@@ -633,6 +648,8 @@ namespace ActivityRecommendation
         // returns a Prediction of the value of suggesting the given activity at the given time
         private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, DateTime when)
         {
+            List<Prediction> distributions = new List<Prediction>();
+
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, when);
             Prediction probabilityPrediction = this.EstimateParticipationProbability(activity, when);
@@ -650,6 +667,7 @@ namespace ActivityRecommendation
             SuggestionJustification shortTermJustification = new Composite_SuggestionJustification(shortTerm_prediction.Distribution, shortTerm_prediction.Justification, probabilityPrediction.Justification);
             shortTermJustification.Label = "Short-term happiness estimate";
             shortTerm_prediction.Justification = shortTermJustification;
+            distributions.Add(shortTerm_prediction);
 
             // When predicting longterm happiness based on the DateTimes of suggestions of (or participations in) this Activity, there are two likely sources of error.
             // One likely source of error is that suggesting this Activity isn't actually what's changing the user's net present happiness. To check the plausibility that
@@ -672,8 +690,6 @@ namespace ActivityRecommendation
             double longWeight = activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 6;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 
-            List<Prediction> distributions = new List<Prediction>();
-            distributions.Add(shortTerm_prediction);
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
                 activity, mediumTerm_distribution, activity.GetAverageLongtermValueWhenParticipated(), null);
             mediumJustification.Label = "Happiness after participated";
@@ -725,6 +741,11 @@ namespace ActivityRecommendation
             return activity.GetAverageEfficiencyWhenParticipated();
         }
 
+        public Distribution Predict_LongtermHappiness_From_LongtermEfficiency(Distribution efficiency)
+        {
+            AdaptiveLinearInterpolation.Distribution prediction = this.happinessFromEfficiency_predictor.Interpolate(new double[] { efficiency.Mean });
+            return new Distribution(prediction);
+        }
         // returns a bunch of thoughts telling why <activity> was last rated as it was
         public ActivitySuggestion_Justification JustifySuggestion(ActivitySuggestion activitySuggestion)
         {
@@ -902,6 +923,7 @@ namespace ActivityRecommendation
                 {
                     activity.UpdateNext_RatingSummaries(numRatingsToUpdate);
                 }
+                this.happinessFromEfficiency_predictor.UpdateMany(numRatingsToUpdate);
             }
         }
         // gets called whenever any outside source provides a rating
@@ -1844,6 +1866,8 @@ namespace ActivityRecommendation
         int numCompletedExperiments;
         int numStartedExperiments;
         ActivityRecommendationsAnalysis currentRecommendationsCache;
+
+        LongtermValuePredictor happinessFromEfficiency_predictor;
 
     }
 }

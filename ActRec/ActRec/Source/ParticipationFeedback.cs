@@ -99,7 +99,14 @@ namespace ActivityRecommendation
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFunAfterDoingThisActivityNow, 1);
             if (improvementInDays <= 0)
             {
-                redirectionText = "This activity is a reasonable choice at this time.";
+                if (ExpectedFutureFunAfterDoingThisActivityNow >= 0)
+                {
+                    redirectionText = "Nice! I don't have any ideas of something better to do at this time.";
+                }
+                else
+                {
+                    redirectionText = "Not bad. I don't have any ideas of something better to do at this time.";
+                }
                 redirectionColor = Color.Green;
             }
             else

@@ -207,15 +207,22 @@ namespace ActivityRecommendation
             }
         }
         public IEnumerable<ActivitySuggestion> CurrentSuggestions = new List<ActivitySuggestion>();
-        public void SetStartDate(DateTime newDate)
-        {
-            this.startDateBox.SetDate(newDate);
-        }
         public DateTime StartDate
         {
             get
             {
                 return this.startDateBox.GetDate();
+            }
+            set
+            {
+                this.startDateBox.SetDate(value);
+            }
+        }
+        public bool Is_EndDate_Valid
+        {
+            get
+            {
+                return this.endDateBox.IsDateValid();
             }
         }
         public DateTime EndDate
@@ -276,8 +283,7 @@ namespace ActivityRecommendation
         }
         public void SetEnddateNow(DateTime when)
         {
-            DateTime now = DateTime.Now;
-            this.endDateBox.SetDate(now);
+            this.endDateBox.SetDate(when);
             //this.setEnddateButton.SetDefaultBackground();
         }
         public void AddSetstartdateHandler(EventHandler h)

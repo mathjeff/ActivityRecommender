@@ -690,9 +690,8 @@ namespace ActivityRecommendation
         }
         private void MakeEndNow()
         {
-            DateTime now = DateTime.Now;
-            this.LatestActionDate = now;
-            this.participationEntryView.SetEnddateNow(now);
+            this.participationEntryView.SetEnddateNow(DateTime.Now);
+            this.LatestActionDate = this.participationEntryView.EndDate;
         }
         private void AddParticipation(Participation newParticipation)
         {
@@ -943,12 +942,18 @@ namespace ActivityRecommendation
             DateTime endDate = when;
             if (startDate.Day != endDate.Day)
             {
-                // it's more helpful for the default end-date to be on the same day
-                endDate = new DateTime(startDate.Year, startDate.Month, startDate.Day, startDate.Hour, startDate.Minute, startDate.Second);
+                // We don't want the default start and end dates to be on different days; it's more likely that each participation lasted < 1 day
+                endDate = startDate;
+            }
+            if (this.participationEntryView.Is_EndDate_Valid && this.LatestActionDate.Equals(this.participationEntryView.EndDate))
+            {
+                // If the user hasn't done anything since recording the previous participation,
+                // then most likely their next participation hasn't started yet, so we leave the end date invalid (equal to the start date)
+                // so the user cannot forget to explicitly set it
+                endDate = startDate;
             }
             this.participationEntryView.EndDate = endDate;
-            // updating the StartDate while a suggestion is onscreen takes a while (because of updating the feedback block text), so in those cases, skip it
-            this.participationEntryView.SetStartDate(startDate);
+            this.participationEntryView.StartDate = startDate;
         }
 
 

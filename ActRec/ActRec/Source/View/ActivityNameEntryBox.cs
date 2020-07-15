@@ -28,9 +28,16 @@ namespace ActivityRecommendation.View
             this.sideButton.Clicked += SideButton_Clicked;
             this.sideButtonLayout = new ButtonLayout(this.sideButton);
 
-            this.nameBoxWithSideButton = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Zero);
-            this.nameBoxWithSideButton.AddLayout(this.nameBox_layout);
-            this.nameBoxWithSideButton.AddLayout(this.sideButtonLayout);
+            // layouts controlling the alignment of the main text box and the side button
+            this.sideLayout = new ContainerLayout();
+            this.sideLayout.SubLayout = this.sideButtonLayout;
+            GridLayout evenBox = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.WithRatios(new List<double>() { 7, 1 }), LayoutScore.Zero);
+            GridLayout unevenBox = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+            evenBox.AddLayout(this.nameBox_layout);
+            evenBox.AddLayout(this.sideLayout);
+            unevenBox.AddLayout(this.nameBox_layout);
+            unevenBox.AddLayout(this.sideLayout);
+            this.nameBoxWithSideLayout = new LayoutUnion(evenBox, unevenBox);
 
             // the autocomplete above the text box
             this.autocompleteLayout = new TextblockLayout();
@@ -69,13 +76,13 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set content;
             if (createNewActivity)
             {
-                content = nameBoxWithSideButton;
+                content = unevenBox;
             }
             else
             {
                 GridLayout contentWithFeedback = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
                 contentWithFeedback.AddLayout(this.responseLayout);
-                contentWithFeedback.AddLayout(this.nameBoxWithSideButton);
+                contentWithFeedback.AddLayout(this.nameBoxWithSideLayout);
 
                 content = contentWithFeedback;
 
@@ -130,14 +137,14 @@ namespace ActivityRecommendation.View
             if (this.NameText != "" && this.NameText != null)
             {
                 // Box has text; show X button
-                this.nameBoxWithSideButton.PutLayout(this.sideButtonLayout, 1, 0);
+                this.sideLayout.SubLayout = this.sideButtonLayout;
                 this.sideButton.Text = "X";
             }
             else
             {
                 // Box has no text, show "?" if it's helpful, otherwise show no button
                 if (this.createNewActivity)
-                    this.nameBoxWithSideButton.PutLayout(null, 1, 0);
+                    this.sideLayout.SubLayout = null;
                 else
                     this.sideButton.Text = "?";
             }
@@ -349,7 +356,8 @@ namespace ActivityRecommendation.View
         Button sideButton;
         ButtonLayout sideButtonLayout;
         LayoutChoice_Set helpWindow;
-        GridLayout nameBoxWithSideButton;
+        LayoutChoice_Set nameBoxWithSideLayout;
+        ContainerLayout sideLayout;
         TextboxLayout nameBox_layout;
         string nameText;
         Editor nameBox;

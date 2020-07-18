@@ -167,5 +167,7 @@
       <Name>ActRec</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BundleResource Include="Resources\button_background.png" />
+  </ItemGroup>
 </Project>

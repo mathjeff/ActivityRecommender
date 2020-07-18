@@ -315,20 +315,24 @@ namespace ActivityRecommendation
                     }
                     if (better)
                     {
+                        /*
                         if (bestActivity != null)
                         {
                             System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + recommendationsCache.suggestionValues[candidate].Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + recommendationsCache.suggestionValues[bestActivity].Distribution.Mean + " as highest-value suggestion");
                         }
+                        */
                         bestActivity = candidate;
                     }
                     if (activityToBeat != null)
                     {
                         if (mostFunActivity == null || recommendationsCache.utilities[candidate] >= recommendationsCache.utilities[mostFunActivity])
                         {
+                            /*
                             if (mostFunActivity != null)
                             {
                                 System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with utility value " + recommendationsCache.utilities[candidate] + " replaced " + mostFunActivity + " with suggestion value " + recommendationsCache.utilities[mostFunActivity] + " as most-fun suggestion");
                             }
+                            */
                             mostFunActivity = candidate;
                         }
                     }
@@ -1230,7 +1234,7 @@ namespace ActivityRecommendation
             PlannedExperiment experiment = this.findExperimentToUpdate(a);
             if (experiment == null)
             {
-                // can't estimate effectivness without an experiment
+                // can't estimate effectiveness without an experiment
                 return null;
             }
             if (!experiment.InProgress)
@@ -1595,6 +1599,21 @@ namespace ActivityRecommendation
             return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, when), userGuidedThisSuggestion), -1);
         }
 
+        // Generates a set of experiment options that together form a possible experiment
+        // This is convenient for unit tests
+        // The user interface will generally call ChooseExperimentOption instead to choose them one at a time
+        public List<SuggestedMetric> ChooseExperimentOptions(DateTime when)
+        {
+            List<SuggestedMetric> choices = new List<SuggestedMetric>();
+            ActivityRequest request = new ActivityRequest(this.activityDatabase.RootActivity.MakeDescriptor(), null, when);
+            for (int i = 0; i < 3; i++)
+            {
+                SuggestedMetric_Metadata metadata = this.ChooseExperimentOption(request, choices, null, when);
+                choices.Add(metadata.Content);
+            }
+            return choices;
+        }
+
         // returns number of successes per second
         public double EstimateDifficulty_WithoutUser(Activity activity)
         {
@@ -1834,6 +1853,14 @@ namespace ActivityRecommendation
         private UserPreferences Get_UserPreferences()
         {
             return UserPreferences.DefaultPreferences;
+        }
+
+        public Random Randomness
+        {
+            set
+            {
+                this.randomGenerator = value;
+            }
         }
         private ActivityRecommendationsAnalysis cacheForDate(DateTime when)
         {

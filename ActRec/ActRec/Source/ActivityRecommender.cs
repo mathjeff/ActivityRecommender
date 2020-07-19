@@ -259,6 +259,10 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout("Start", new StackEntry(usageMenu, "Home", null));
             introMenu_builder.AddLayout(new StackEntry(personaCustomizationView, "Customization", personaCustomizationView));
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
+            introMenu_builder.AddLayout("Credits", (new CreditsWindowBuilder(layoutStack)
+                .AddContribution(new AppContribution(ActRecContributor.JEFFRY_GASTON, new DateTime(2011, 10, 16), "Designed and created ActivityRecommender"))
+                .Build()));
+
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
             List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>(1);

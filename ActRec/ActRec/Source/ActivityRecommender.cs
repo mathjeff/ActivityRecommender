@@ -267,6 +267,7 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout("Credits", (new CreditsWindowBuilder(layoutStack)
                 .AddContribution(ActRecContributor.JEFFRY_GASTON, new DateTime(2011, 10, 16), "Designed and created ActivityRecommender")
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 7, 20), "Suggested giving ActivityRecommender a personalizable name")
+                .AddContribution(ActRecContributor.AARON_SMITH, new DateTime(2019, 8, 17), "Pointed out that users might not know where they are and might not think to go back")
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 9, 21), "Tested ActivityRecommender on iOS")
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 2, 16), "Created the application icon that Android and iOS users see now")
                 .Build()));

@@ -93,6 +93,7 @@ namespace ActivityRecommendation
                 .AddMessage("It's up to you how many participations you log, how often you rate them, and how accurate the start and end dates are. ActivityRecommender will be able to " +
                 "provide more useful help to you if you provide more accurate data, but even just a few participations per day should still be enough for meaningful feedback.")
                 .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(ActRecContributor.AARON_SMITH, new DateTime(2019, 8, 17), "Pointed out out that it was hard to tell when the participation and suggestion screens are not yet relevant due to not having any activities")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 11, 10), "Suggested disallowing entering participations having empty durations")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 11, 28), "Mentioned that the keyboard was often in the way of text boxes on iOS")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 1, 26), "Pointed out that feedback should be relative to average rather happiness than relative to the previous participation")

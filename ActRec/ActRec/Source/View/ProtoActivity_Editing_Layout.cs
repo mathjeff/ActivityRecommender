@@ -45,6 +45,10 @@ namespace ActivityRecommendation.View
                 .AddMessage("  After you go back, if you later want to return to this same ProtoActivity, you will have to go to one of the screens for browsing existing ProtoActivities and then search for it.")
                 .AddMessage("To turn this ProtoActivity into an Activity, press Promote to Activity.")
                 .AddMessage("To delete this ProtoActivity, delete all of the text in the box and then either press Save or go back to a previous screen.")
+                .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(ActRecContributor.AARON_SMITH, new DateTime(2019, 9, 16), "Pointed out that the promote-a-protoactivity button crashed if the text box was empty")
+                    .Build()
+                )
                 .Build()
                 , layoutStack);
 

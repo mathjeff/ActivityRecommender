@@ -52,6 +52,10 @@ namespace ActivityRecommendation
                 "Category. For example, Sleeping would be a Category.")
                 .AddMessage("If the thing you're creating is something you plan to complete once and don't plan to do again, then select the type ToDo. For example, \"Reading " +
                 "ActivityRecommender's Built-In Features Overview\" would be a ToDo.")
+                .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(ActRecContributor.AARON_SMITH, new DateTime(2019, 8, 17), "Suggested that if Activity is the only valid choice then it should autopopulate")
+                    .Build()
+                )
                 .Build();
 
             HelpButtonLayout helpLayout = new HelpButtonLayout(helpWindow, layoutStack);

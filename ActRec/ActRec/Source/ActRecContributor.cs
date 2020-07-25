@@ -11,5 +11,6 @@ namespace ActivityRecommendation
         public static AppContributor ANNI_ZHANG = new AppContributor("Anni Zhang", "anniz44@mit.edu", "https://web.mit.edu/almlab/anni_zhang.html");
         public static AppContributor CORY_JALBERT = new AppContributor("Cory Jalbert");
         public static AppContributor JEFFRY_GASTON = new AppContributor("Jeff Gaston", null, "github.com/mathjeff");
+        public static AppContributor TONY_FISCHETTI = new AppContributor("Tony Fischetti", null, "tonyfischettiart.com");
     }
 }

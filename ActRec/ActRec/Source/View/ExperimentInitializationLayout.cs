@@ -176,6 +176,10 @@ namespace ActivityRecommendation.View
                 "from accidentally ordering activities in a way such that ActivityRecommender can't analyze efficiency trends over long periods of time.")
                 // Specifically, we want to prevent the user from finishing all of their post-tasks before creating enough new pre-tasks
                 .AddMessage("Ready? Go!")
+                .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(new AppContribution(ActRecContributor.CORY_JALBERT, new System.DateTime(2017, 12, 14), "Suggested adding the ability to quantify more things about yourself than just happiness"))
+                    .Build()
+                 )
                 .Build();
             return new HelpButtonLayout("Important Instructions", helpDetails, layoutStack);
         }

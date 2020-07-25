@@ -7,6 +7,7 @@ namespace ActivityRecommendation
     public class ActRecContributor
     {
         // sorted in alphabetical order
+        public static AppContributor CORY_JALBERT = new AppContributor("Cory Jalbert");
         public static AppContributor JEFFRY_GASTON = new AppContributor("Jeff Gaston", null, "github.com/mathjeff");
     }
 }

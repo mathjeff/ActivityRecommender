@@ -201,6 +201,10 @@ namespace ActivityRecommendation
             this.participationEntryView.AddSetenddateHandler(new EventHandler(this.MakeEndNow));
             this.participationEntryView.AddSetstartdateHandler(new EventHandler(this.MakeStartNow));
             this.participationEntryView.LatestParticipation = this.latestParticipation;
+            if (this.recentUserData.Suggestions.Count() > 0)
+            {
+                this.participationEntryView.SetActivityName(this.recentUserData.Suggestions.First().ActivityDescriptor.ActivityName);
+            }
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);

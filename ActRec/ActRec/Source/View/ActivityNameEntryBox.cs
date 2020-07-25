@@ -69,6 +69,10 @@ namespace ActivityRecommendation.View
                 .AddMessage("t")
                 .AddMessage("")
                 .AddMessage("Note, of course, that the longer and more unique your text, the more likely that it will be matched with the activity that you intend.")
+                .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 6, 7), "Pointed out that completed ToDos should have a very low autocomplete priority")
+                    .Build()
+                 )
                 .Build();
             this.autocomplete_longHelpLayout = new HelpButtonLayout(this.helpWindow, layoutStack);
 

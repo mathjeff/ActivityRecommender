@@ -71,6 +71,10 @@ namespace ActivityRecommendation.View
                 "ProtoActivities with the highest interest scores are the ones that will be displayed.")
                 .AddMessage("If you want to see the calculation of the interest scores of the two current ProtoActivities, press the \"?\" button.")
                 .AddMessage("Enjoy!")
+                .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 5, 28), "Suggested explaining the calculation of protoactivity sort score")
+                    .Build()
+                 )
                 .Build(), 
                 layoutStack);
             grid.PutLayout(helpButton, 2, 0);

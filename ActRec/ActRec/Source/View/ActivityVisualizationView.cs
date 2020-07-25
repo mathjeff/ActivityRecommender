@@ -111,14 +111,23 @@ namespace ActivityRecommendation
                 .AddMessage("The statistics will only refer to data that falls within the duration specified by the date boxes above.")
                 .Build();
 
+            LayoutChoice_Set creditsLayout = new CreditsButtonBuilder(this.layoutStack)
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 28), "Pointed out that the top of the app was occluded on iOS")
+                .Build();
+
             GridLayout helpGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             helpGrid.AddLayout(new HelpButtonLayout("Ratings graph", ratingsHelpLayout, this.layoutStack));
             helpGrid.AddLayout(new HelpButtonLayout("Date selection", dateHelpLayout, this.layoutStack));
             helpGrid.AddLayout(new HelpButtonLayout("Participations graph", participationsHelpLayout, this.layoutStack));
             helpGrid.AddLayout(new HelpButtonLayout("Text stats", statsHelpLayout, this.layoutStack));
 
+            LayoutChoice_Set detailLayout = new Vertical_GridLayout_Builder()
+                .AddLayout(helpGrid)
+                .AddLayout(creditsLayout)
+                .Build();
+
             LayoutChoice_Set helpButton = new HelpButtonLayout("Explain",
-                new TitledControl("Choose a View to Explain", helpGrid), this.layoutStack);
+                new TitledControl("Choose a View to Explain", detailLayout), this.layoutStack);
             return helpButton;
         }
 

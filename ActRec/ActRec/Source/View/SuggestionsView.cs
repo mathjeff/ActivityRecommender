@@ -55,6 +55,11 @@ namespace ActivityRecommendation.View
                 .AddMessage("You can also plan out several participations in a row by pressing the Suggest button multiple times in a row.")
                 .AddMessage("Whenever you record a participation matching the first suggestion in the list, then that suggestion will be removed.")
                 .AddMessage("Enjoy!")
+                .AddLayout(new CreditsButtonBuilder(layoutStack)
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 8, 1), "Suggested that when the user asks for a suggestion at least as fun as a certain activity, ActivityRecommender should always suggest a different activity than the one they mentioned")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 7, 18), "Pointed out that buttons on iOS weren't visually responding to touch")
+                    .Build()
+                 )
                 .Build();
 
             this.helpButton_layout = new HelpButtonLayout(helpWindow, this.layoutStack);

@@ -39,13 +39,17 @@ namespace ActivityRecommendation
 
         private void SetupView()
         {
-
-            HelpWindowBuilder helper = new HelpWindowBuilder();
-            helper.AddMessage("This this txt file contains most of what you've provided to " + this.persona.Name + ", and so it may become large.");
-            LayoutChoice_Set help = helper.Build();
+            LayoutChoice_Set instructions = new TextblockLayout("This this txt file contains most of what you've provided to " + this.persona.Name + ", and so it may become large.");
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
+            LayoutChoice_Set credits = new CreditsButtonBuilder(this.layoutStack)
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 04, 05), "Pointed that exported data files could not be seen by users on iOS")
+                .Build();
 
-            this.SetContent(new Vertical_GridLayout_Builder().AddLayout(help).AddLayout(buttonLayout).Build());
+            this.SetContent(new Vertical_GridLayout_Builder()
+                .AddLayout(instructions)
+                .AddLayout(buttonLayout)
+                .AddLayout(credits)
+                .Build());
         }
 
         private async void ExportButton_Clicked(object sender, EventArgs e)

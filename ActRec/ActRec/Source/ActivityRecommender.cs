@@ -188,7 +188,8 @@ namespace ActivityRecommendation
                     .AddMessage("To undo, remove, or modify an entry, you have to edit the data file directly. Go back to the Export screen and export all of your data as a .txt file. " +
                     "Then make some changes, and go to the Import screen to load your changed file.")
                     .AddLayout(new CreditsButtonBuilder(layoutStack)
-                        .AddContribution(new AppContribution(ActRecContributor.CORY_JALBERT, new DateTime(2017, 12, 14), "Suggested having pre-chosen activities available for easy import"))
+                        .AddContribution(ActRecContributor.CORY_JALBERT, new DateTime(2017, 12, 14), "Suggested having pre-chosen activities available for easy import")
+                        .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 8), "Pointed out that linebreaks in buttons didn't work correctly on iOS")
                         .Build()
                     )
                     .Build()))
@@ -264,7 +265,10 @@ namespace ActivityRecommendation
             introMenu_builder.AddLayout(new StackEntry(personaCustomizationView, "Customization", personaCustomizationView));
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             introMenu_builder.AddLayout("Credits", (new CreditsWindowBuilder(layoutStack)
-                .AddContribution(new AppContribution(ActRecContributor.JEFFRY_GASTON, new DateTime(2011, 10, 16), "Designed and created ActivityRecommender"))
+                .AddContribution(ActRecContributor.JEFFRY_GASTON, new DateTime(2011, 10, 16), "Designed and created ActivityRecommender")
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 7, 20), "Suggested giving ActivityRecommender a personalizable name")
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 9, 21), "Tested ActivityRecommender on iOS")
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 2, 16), "Created the application icon that Android and iOS users see now")
                 .Build()));
 
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();

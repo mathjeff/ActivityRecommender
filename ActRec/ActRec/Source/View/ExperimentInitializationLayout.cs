@@ -177,7 +177,10 @@ namespace ActivityRecommendation.View
                 // Specifically, we want to prevent the user from finishing all of their post-tasks before creating enough new pre-tasks
                 .AddMessage("Ready? Go!")
                 .AddLayout(new CreditsButtonBuilder(layoutStack)
-                    .AddContribution(new AppContribution(ActRecContributor.CORY_JALBERT, new System.DateTime(2017, 12, 14), "Suggested adding the ability to quantify more things about yourself than just happiness"))
+                    .AddContribution(ActRecContributor.CORY_JALBERT, new System.DateTime(2017, 12, 14), "Suggested adding the ability to quantify more things about yourself than just happiness")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new System.DateTime(2019, 11, 2), "Pointed out that the experiment screen crashed for new users")
+                    // TODO: move this contribution inside the experiment difficulty selection screen?
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new System.DateTime(2019, 11, 28), "Discussed the experiment difficulty selection screen and the addition of the 2*A difficulty entry")
                     .Build()
                  )
                 .Build();

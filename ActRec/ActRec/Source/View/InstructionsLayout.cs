@@ -1,4 +1,5 @@
-﻿using VisiPlacement;
+﻿using System.Dynamic;
+using VisiPlacement;
 
 // This file serves two pruposes:
 // #1. It generates the instructions screen in the application
@@ -39,6 +40,10 @@ namespace ActivityRecommendation.View
                 "ActivityRecommender will be able to give you better and better suggestions.")
                 .AddMessage("Step 4b: Export a backup of your data if it's important to you.")
                 .AddMessage("Step 4c: Explore! ActivityRecommender has more features than are mentioned here :)")
+                .Build());
+
+            menuBuilder.AddLayout("Credits", new CreditsWindowBuilder(layoutStack)
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new System.DateTime(2019, 8, 18), "Discussed the organization of the introduction and get-excited screens")
                 .Build());
 
             mainLayout.SetContent(menuBuilder.Build());

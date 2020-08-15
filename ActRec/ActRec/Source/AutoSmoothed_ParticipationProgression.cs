@@ -256,7 +256,6 @@ namespace ActivityRecommendation
 
                 Correlator correlator = summary.Trend;
 
-                double slope = correlator.Slope;
                 double x = this.GetWeight(when.Subtract(summary.Start));
                 double predictedY = correlator.GetYForX(x);
                 double actualY = this.GetWeight(summary.CumulativeIntensity);

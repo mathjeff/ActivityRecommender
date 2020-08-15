@@ -99,6 +99,7 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 1, 26), "Pointed out that feedback should be relative to average rather happiness than relative to the previous participation")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 4, 19), "Discussed participation feedback messages")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 7, 12), "Pointed out that the time required to log a participation can cause the end time of the next participation to be a couple minutes after the previous one")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 15), "Suggested that if the participation feedback recommends a different time, then it should specify which time")
                     .Build()
                 )
                 .Build();
@@ -474,33 +475,42 @@ namespace ActivityRecommendation
         }
         private ParticipationFeedback computeStandardFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
+            DateTime comparisonDate = this.engine.chooseRandomBelievableParticipationStart(chosenActivity, startDate);
+            if (comparisonDate.CompareTo(startDate) == 0)
+            {
+                // not enough data
+                return null;
+            }
+
+            Distribution comparisonBonusInDays = this.compute_longtermValue_increase(chosenActivity, comparisonDate);
+            if (comparisonBonusInDays.Mean <= 0)
+            {
+                // not enough data
+                return null;
+            }
+            Distribution comparisonEfficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, comparisonDate);
+            Distribution comparisonValueRatio = this.compute_estimatedRating_ratio(chosenActivity, comparisonDate);
+
             Distribution longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
             if (longtermBonusInDays.Mean == 0)
             {
                 // no data
                 return null;
             }
-            Distribution averageBonusInDays = this.compute_longtermValue_increase(chosenActivity);
-
             Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
-            Distribution averageEfficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity);
-
             Distribution shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
-            Distribution averageValueRatio = this.compute_estimatedRating_ratio(chosenActivity);
-
-            double roundedLongtermBonus = Math.Round(longtermBonusInDays.Mean, 3);
-            double roundedLongtermStddev = Math.Round(longtermBonusInDays.StdDev, 3);
-
-            double roundedAverageLongtermBonus = Math.Round(averageBonusInDays.Mean, 3);
 
             double roundedShorttermRatio = Math.Round(shorttermValueRatio.Mean, 3);
             double roundedShortTermStddev = Math.Round(shorttermValueRatio.StdDev, 3);
+            double roundedComparisonBonus = Math.Round(comparisonValueRatio.Mean, 3);
+
+            double roundedLongtermBonus = Math.Round(longtermBonusInDays.Mean, 3);
+            double roundedLongtermStddev = Math.Round(longtermBonusInDays.StdDev, 3);
+            double roundedComparisonLongtermBonus = Math.Round(comparisonBonusInDays.Mean, 3);
 
             double roundedEfficiencyBonus = Math.Round(efficiencyBonusInHours.Mean, 3);
             double roundedEfficiencyStddev = Math.Round(efficiencyBonusInHours.StdDev, 3);
-
-            double roundedAverageRatio = Math.Round(averageValueRatio.Mean, 3);
-            double roundedAverageEfficiencyLongtermBonus = Math.Round(averageEfficiencyBonusInHours.Mean, 3);
+            double roudnedComparisonEfficiencyLongtermBonus = Math.Round(comparisonEfficiencyBonusInHours.Mean, 3);
 
             // compute how long the user spent doing this and how long they usually spend doing it
             // TODO: do we want to change this calculation to use Math.Exp(LogActiveTime) like Engine.GuessParticipationEndDate does?
@@ -514,11 +524,11 @@ namespace ActivityRecommendation
 
             bool fast = (actualNumSeconds <= typicalNumSeconds);
             bool funActivity = (shorttermValueRatio.Mean >= 1);
-            bool funTime = (shorttermValueRatio.Mean >= averageValueRatio.Mean);
+            bool funTime = (shorttermValueRatio.Mean >= comparisonValueRatio.Mean);
             bool soothingActivity = (longtermBonusInDays.Mean >= 0);
-            bool soothingTime = (longtermBonusInDays.Mean > averageBonusInDays.Mean);
+            bool soothingTime = (longtermBonusInDays.Mean > comparisonBonusInDays.Mean);
             bool efficientActivity = (efficiencyBonusInHours.Mean >= 0);
-            bool efficientTime = (efficiencyBonusInHours.Mean >= averageEfficiencyBonusInHours.Mean);
+            bool efficientTime = (efficiencyBonusInHours.Mean >= comparisonEfficiencyBonusInHours.Mean);
             bool suggested = this.get_wasSuggested(chosenActivity.MakeDescriptor());
 
             string remark;
@@ -1217,20 +1227,21 @@ namespace ActivityRecommendation
             detailsProvider.ActivityDatabase = this.activityDatabase;
             detailsProvider.StartDate = startDate;
             detailsProvider.EndDate = endDate;
+            detailsProvider.ComparisonDate = comparisonDate;
             detailsProvider.ParticipationDurationDividedByAverage = durationRatio;
             detailsProvider.ChosenActivity = chosenActivity;
             
-            detailsProvider.ExpectedEfficiencyAfterDoingThisActivityNow = roundedEfficiencyBonus;
-            detailsProvider.ExpectedEfficiencyAfterDoingThisActivitySometime = roundedAverageEfficiencyLongtermBonus;
+            detailsProvider.ExpectedEfficiency = roundedEfficiencyBonus;
+            detailsProvider.ComparisonExpectedEfficiency = roudnedComparisonEfficiencyLongtermBonus;
             detailsProvider.ExpectedEfficiencyStddev = roundedEfficiencyStddev;
             
-            detailsProvider.ExpectedFutureFunAfterDoingThisActivityNow = roundedLongtermBonus;
-            detailsProvider.ExpectedFutureFunAfterDoingThisActivitySometime = roundedAverageLongtermBonus;
+            detailsProvider.ExpectedFutureFun = roundedLongtermBonus;
+            detailsProvider.ComparisonExpectedFutureFun = roundedComparisonLongtermBonus;
             detailsProvider.ExpectedFutureFunStddev = roundedLongtermStddev;
 
-            detailsProvider.PredictedCurrentValueForThisActivity = roundedShorttermRatio;
+            detailsProvider.PredictedValue = roundedShorttermRatio;
             detailsProvider.PredictedCurrentValueStddev = roundedShortTermStddev;
-            detailsProvider.PredictedAverageValueForThisActivity = roundedAverageRatio;
+            detailsProvider.ComparisonPredictedValue = roundedComparisonBonus;
 
             detailsProvider.Suggested = suggested;
 

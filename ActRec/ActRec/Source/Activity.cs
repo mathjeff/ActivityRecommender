@@ -190,7 +190,26 @@ namespace ActivityRecommendation
             ParticipationsSummary result = this.participationProgression.SummarizeParticipationsBetween(startDate, endDate);
             return result;
         }
+        // Computes the average amount of time between consecutive participations in this activity
+        public TimeSpan ComputeAverageIdlenessDuration(DateTime when)
+        {
+            if (this.NumParticipations < 1)
+                return TimeSpan.FromSeconds(0);
+            DateTime firstDate = this.DiscoveryDate;
+            TimeSpan knownDuration = when.Subtract(firstDate);
 
+            double participatedSeconds = this.participationDurations.SumValue;
+            if (participatedSeconds <= 0)
+                return TimeSpan.FromSeconds(0);
+
+            if (knownDuration.TotalSeconds <= participatedSeconds)
+                return TimeSpan.FromSeconds(0);
+
+            double totalIdleSeconds = when.Subtract(firstDate).TotalSeconds;
+            double averageIdleSeconds = totalIdleSeconds / this.NumParticipations;
+
+            return TimeSpan.FromSeconds(averageIdleSeconds);
+        }
 
         public TimeSpan AverageTimeBetweenConsiderations
         {

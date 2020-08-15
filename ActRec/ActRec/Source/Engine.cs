@@ -398,6 +398,26 @@ namespace ActivityRecommendation
             double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
             return start.Add(TimeSpan.FromSeconds(typicalNumSeconds));
         }
+        public DateTime chooseRandomBelievableParticipationStart(Activity activity, DateTime actualStart)
+        {
+            if (activity.NumParticipations < 1)
+            {
+                // not enough data
+                return actualStart;
+            }
+            TimeSpan averageIdlenessDuration = activity.ComputeAverageIdlenessDuration(actualStart);
+            double averageIdleSeconds = averageIdlenessDuration.TotalSeconds;
+            if (averageIdleSeconds <= 0)
+            {
+                // not enough data
+                return actualStart;
+            }
+            DateTime latestParticipationEnd = activity.LatestParticipationDate;
+            double currentIdleSeconds = actualStart.Subtract(latestParticipationEnd).TotalSeconds;
+            double randomSeconds = (currentIdleSeconds + averageIdleSeconds) * this.randomGenerator.NextDouble();
+            TimeSpan randomIdleTime = TimeSpan.FromSeconds(randomSeconds);
+            return latestParticipationEnd.Add(randomIdleTime);
+        }
         // This function essentially addresses the well-known multi-armed bandit problem
         // Given two distributions, we estimate the expected total value from choosing values from them
         private double GetCombinedValue(Activity activityA, Activity activityB, ActivityRecommendationsAnalysis recommendationsCache)

@@ -42,7 +42,7 @@ namespace ActivityRecommendation
             LayoutChoice_Set instructions = new TextblockLayout("This this txt file contains most of what you've provided to " + this.persona.Name + ", and so it may become large.");
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
             LayoutChoice_Set credits = new CreditsButtonBuilder(this.layoutStack)
-                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 04, 05), "Pointed that exported data files could not be seen by users on iOS")
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 04, 05), "Pointed out that exported data files could not be seen by users on iOS")
                 .Build();
 
             this.SetContent(new Vertical_GridLayout_Builder().Uniform()

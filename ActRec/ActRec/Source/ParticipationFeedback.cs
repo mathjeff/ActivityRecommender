@@ -42,50 +42,46 @@ namespace ActivityRecommendation
 
         public LayoutChoice_Set MakeLayout()
         {
-            BoundProperty_List rowHeights = BoundProperty_List.Uniform(10);
-            GridLayout detailsGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
-            detailsGrid.AddLayout(new TextblockLayout(ChosenActivity.Name + " " +
-                TimeFormatter.summarizeTimespan(this.StartDate, this.EndDate) + ": " +
-                "You spent " + ParticipationDurationDividedByAverage + " as long as average. I predict:"
-                ));
+            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
+            builder.AddLayout(new TextblockLayout(ChosenActivity.Name));
+            builder.AddLayout(new TextblockLayout("From " + this.StartDate + " to " + this.EndDate + ", " + ParticipationDurationDividedByAverage + " as long as average. I predict:"));
 
-            detailsGrid.AddLayout(new TextblockLayout("I predict:"));
-            string funLabel = " * avg fun while doing it";
-            detailsGrid.AddLayout(
+            string funLabel = "* avg fun while doing it";
+            builder.AddLayout(
                 new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(coloredRatio(PredictedValue, ComparisonPredictedValue, PredictedCurrentValueStddev))
                 .AddLayout(new TextblockLayout(funLabel))
                 .BuildAnyLayout()
             );
             string longtermFunLabel = "days future fun (over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days)";
-            detailsGrid.AddLayout(
+            builder.AddLayout(
                 new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(signedColoredValue(ExpectedFutureFun, ComparisonExpectedFutureFun, ExpectedFutureFunStddev))
                 .AddLayout(new TextblockLayout(longtermFunLabel))
                 .BuildAnyLayout()
             );
             string efficiencyLabel = "hours future efficiency (over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days)";
-            detailsGrid.AddLayout(
+            builder.AddLayout(
                 new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(signedColoredValue(ExpectedEfficiency, ComparisonExpectedEfficiency, ExpectedEfficiencyStddev))
                 .AddLayout(new TextblockLayout(efficiencyLabel))
                 .BuildAnyLayout()
             );
 
-            detailsGrid.AddLayout(new TextblockLayout("If " + this.ComparisonDate + " had been when you had done this:"));
-            detailsGrid.AddLayout(
+            builder.AddLayout(new TextblockLayout("If you had done this at " + this.ComparisonDate + ":"));
+            builder.AddLayout(
                 new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(coloredRatio(ComparisonPredictedValue, 1, 0))
                 .AddLayout(new TextblockLayout(funLabel))
                 .BuildAnyLayout()
             );
-            detailsGrid.AddLayout(
+            builder.AddLayout(
                 new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(signedColoredValue(ComparisonExpectedFutureFun, 1, 0))
                 .AddLayout(new TextblockLayout(longtermFunLabel))
                 .BuildAnyLayout()
             );
-            detailsGrid.AddLayout(
+            builder.AddLayout(
                 new Horizontal_GridLayout_Builder().Uniform()
                 .AddLayout(signedColoredValue(ComparisonExpectedEfficiency, 0, 0))
                 .AddLayout(new TextblockLayout(efficiencyLabel))
@@ -107,11 +103,11 @@ namespace ActivityRecommendation
             {
                 if (ExpectedFutureFun >= 0)
                 {
-                    redirectionText = "Nice! I don't have an idea of anything better to do at this time.";
+                    redirectionText = "Nice! I don't have any better ideas for things to do at this time.";
                 }
                 else
                 {
-                    redirectionText = "Not bad. I don't have an idea of anything better to do at this time.";
+                    redirectionText = "Not bad. I don't have any better ideas for things to do at this time.";
                 }
                 redirectionColor = Color.Green;
             }
@@ -137,10 +133,10 @@ namespace ActivityRecommendation
                     }
                 }
             }
-            detailsGrid.AddLayout(new TextblockLayout(redirectionText, redirectionColor));
+            builder.AddLayout(new TextblockLayout(redirectionText, redirectionColor));
 
 
-            return detailsGrid;
+            return builder.BuildAnyLayout();
         }
 
         static TextblockLayout signedColoredValue(double value, double neutralColorThreshold, double stddev)
@@ -151,7 +147,7 @@ namespace ActivityRecommendation
             else
                 text = "" + value;
             if (stddev != 0)
-                text += " +/- (" + stddev + ")";
+                text += " +/- " + stddev;
             Color textColor = chooseColor(value, 0, neutralColorThreshold);
             TextblockLayout layout = new TextblockLayout(text, textColor);
             return layout;
@@ -162,7 +158,7 @@ namespace ActivityRecommendation
             Color color = chooseColor(value, 1, neutralColorThreshold);
             string text = "" + value;
             if (stddev != 0)
-                text += " +/- (" + stddev + ")";
+                text += " +/- " + stddev;
             TextblockLayout layout = new TextblockLayout(text, color);
             return layout;
 

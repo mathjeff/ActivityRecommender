@@ -57,7 +57,7 @@ namespace ActivityRecommendation.View
             ButtonLayout seeRandomParticipations_layout = new ButtonLayout(seeRandomParticipations_button, "See " + this.maxNumRandomActivitiesToShow + " participations chosen (uniformly) at random");
             seeRandomParticipations_button.Clicked += SeeRandomParticipations_button_Clicked;
 
-            this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
+            this.SubLayout = new Vertical_GridLayout_Builder()
                 .AddLayout(helpLayout)
                 .AddLayout(categoryBox)
                 .AddLayout(sinceDate_box)

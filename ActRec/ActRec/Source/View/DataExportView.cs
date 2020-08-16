@@ -45,7 +45,7 @@ namespace ActivityRecommendation
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 04, 05), "Pointed that exported data files could not be seen by users on iOS")
                 .Build();
 
-            this.SetContent(new Vertical_GridLayout_Builder()
+            this.SetContent(new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(instructions)
                 .AddLayout(buttonLayout)
                 .AddLayout(credits)

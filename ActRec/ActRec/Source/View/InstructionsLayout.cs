@@ -31,8 +31,9 @@ namespace ActivityRecommendation.View
                 "else mentioned here is under the \"Start\" menu option.")
                 .AddMessage("Step 2: Add some activities. Everything that ActivityRecommender does is based on the activities that you tell it about. Think of some activities that you like to do, " +
                 "and enter their names. The only activity that exists initially is the built-in activity named Activity. Each other must have a parent activity. For example, if you " +
-                "create a new activity named Exercise whose parent is Activity, you can then create a new activity named Frisbee whose parent is Exercise. The advantage to categorizing " +
-                "activities like this is it allows ActivityRecommender to know that they are related and enables ActivityRecommender to give better suggestions.")
+                "create a new activity named Exercise whose parent is Activity, you can then create a new activity named Frisbee whose parent is Exercise. The main advantage to categorizing " +
+                "activities like this is it allows ActivityRecommender to know that they are related and enables ActivityRecommender to give better suggestions. Additionally, this also allows you " +
+                "to later view a graph of your total time spent in Exercise, which would then include Frisbee.")
                 .AddMessage("Step 3: Record some participations. Whereas an activity is something like \"Frisbee\", a participation is something like \"I played Frisbee today from 14:00 to 15:00 " +
                 "and it was 1.1 times as much fun as having watched television earlier today.\" For ActivityRecommender to know what you like to do, it needs some information about what " +
                 "you have done in the past, along with how much you liked it. Before you can report having played Frisbee, you must have recorded that Frisbee is an activity.")

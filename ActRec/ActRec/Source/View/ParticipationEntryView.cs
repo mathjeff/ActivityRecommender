@@ -100,6 +100,7 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 4, 19), "Discussed participation feedback messages")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 7, 12), "Pointed out that the time required to log a participation can cause the end time of the next participation to be a couple minutes after the previous one")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 15), "Suggested that if the participation feedback recommends a different time, then it should specify which time")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 30), "Pointed out that participation feedback was missing more often than it should have been.")
                     .Build()
                 )
                 .Build();
@@ -483,7 +484,7 @@ namespace ActivityRecommendation
             }
 
             Distribution comparisonBonusInDays = this.compute_longtermValue_increase(chosenActivity, comparisonDate);
-            if (comparisonBonusInDays.Mean <= 0)
+            if (comparisonBonusInDays.Mean == 0)
             {
                 // not enough data
                 return null;

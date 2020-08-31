@@ -259,6 +259,7 @@ namespace ActivityRecommendation
             MenuLayoutBuilder debuggingBuilder = new MenuLayoutBuilder(this.layoutStack);
             debuggingBuilder.AddLayout("View Logs", new MenuLayoutBuilder(this.layoutStack).AddLayout("View Logs", new LogViewer(this.LogReader)).Build());
             debuggingBuilder.AddLayout("Enable/Disable Layout Debugging", new EnableDebugging_Layout(this.viewManager));
+            debuggingBuilder.AddLayout("Change Screen Size", new Change_ViewSize_Layout(this.viewManager));
             debuggingBuilder.AddLayout("Compute ActivityRecommender's Accuracy (Very Slow)", new EngineTesterView(this, this.layoutStack));
 
             PersonaCustomizationView personaCustomizationView = new PersonaCustomizationView(this.persona);

@@ -8,7 +8,7 @@ using Xamarin.Forms;
 namespace ActivityRecommendation
 {
     // a DateEntryView is a small button that displays a DateTime. If a DateEntryView is clicked, it brings up a fullscreen editing view
-    class DateEntryView : TitledControl, OnBack_Listener
+    class DateEntryView : ContainerLayout, OnBack_Listener
     {
         public static bool Parse(string text, out DateTime result)
         {
@@ -31,11 +31,14 @@ namespace ActivityRecommendation
 
         public DateEntryView(string title, LayoutStack layoutStack)
         {
-            this.SetTitle(title);
             this.layoutStack = layoutStack;
             this.chooseDate_button = new Button();
             this.chooseDate_button.Clicked += ChooseDate_button_Clicked;
-            this.SetContent(ButtonLayout.WithoutBevel(this.chooseDate_button));
+            this.title = title;
+            this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
+                .AddLayout(new TextblockLayout(title).AlignHorizontally(TextAlignment.Center))
+                .AddLayout(ButtonLayout.WithoutBevel(this.chooseDate_button))
+                .Build();
 
             // Use a dateFormat of "yyyy-MM-ddTHH:mm:ss";
             this.dateFormat.Add(new DateCharacter('y', true));
@@ -64,7 +67,7 @@ namespace ActivityRecommendation
         private void ChooseDate_button_Clicked(object sender, EventArgs e)
         {
             this.implView.DateText = this.getDateText();
-            this.layoutStack.AddLayout(this.implView, this.GetTitle(), this);
+            this.layoutStack.AddLayout(this.implView, this.title, this);
         }
 
         public void Add_TextChanged_Handler(EventHandler<TextChangedEventArgs> h)
@@ -193,6 +196,7 @@ namespace ActivityRecommendation
         FullscreenDateEntryView implView;
         private string placeholder = null;
         private string dateText = "";
+        private string title;
     }
 
     class FullscreenDateEntryView : TitledControl

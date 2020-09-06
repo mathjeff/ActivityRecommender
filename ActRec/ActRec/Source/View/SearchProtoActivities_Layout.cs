@@ -37,8 +37,8 @@ namespace ActivityRecommendation.View
             ProtoActivity protoActivity = this.ProtoActivity;
             if (protoActivity != null)
             {
-                LayoutChoice_Set layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoactivityDatabase, this.activityDatabase, this.layoutStack);
-                this.layoutStack.AddLayout(layout, "Proto");
+                ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoactivityDatabase, this.activityDatabase, this.layoutStack);
+                this.layoutStack.AddLayout(layout, "Proto", layout);
             }
         }
 

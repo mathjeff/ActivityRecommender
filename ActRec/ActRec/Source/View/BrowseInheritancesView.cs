@@ -36,7 +36,8 @@ namespace ActivityRecommendation.View
 
         private void protoActivity_chosen(object sender, ProtoActivity protoActivity)
         {
-            this.layoutStack.AddLayout(new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack), "Proto");
+            ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack);
+            this.layoutStack.AddLayout(layout, "Proto", layout);
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)

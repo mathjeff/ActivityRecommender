@@ -12,3 +12,7 @@ For an overview of key features, see the in-app documentation at [FeatureOvervie
 For usage instructions, see the in-app documentation at [InstructionsLayout.cs](./ActRec/ActRec/Source/View/InstructionsLayout.cs)
 
 To build/edit ActivityRecommender, see [Building.md](Building.md)
+
+Other questions?
+   *   Open a bug
+   *   Ask in [our subreddit](https://www.reddit.com/r/ActivityRecommender/)

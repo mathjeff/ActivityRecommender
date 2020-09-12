@@ -10,6 +10,16 @@ namespace ActivityRecommendation
     {
         public Correlator()
         {
+            this.xs = new Distribution();
+            this.ys = new Distribution();
+        }
+
+        public Correlator(double count, double sumXY, Distribution xs, Distribution ys)
+        {
+            this.count = count;
+            this.sumXY = sumXY;
+            this.xs = xs;
+            this.ys = ys;
         }
 
         public void Add(double x, double y)
@@ -91,12 +101,7 @@ namespace ActivityRecommendation
 
         public Correlator Plus(Correlator other)
         {
-            Correlator result = new Correlator();
-            result.count = this.count + other.count;
-            result.sumXY = this.sumXY + other.sumXY;
-            result.xs = this.xs.Plus(other.xs);
-            result.ys = this.ys.Plus(other.ys);
-            return result;
+            return new Correlator(this.count + other.count, this.sumXY + other.sumXY, this.xs.Plus(other.xs), this.ys.Plus(other.ys));
         }
 
         public Correlator CopyAndShiftUp(double y)
@@ -114,25 +119,14 @@ namespace ActivityRecommendation
             // newSumXY = sumXY + xs.Mean * shiftY * count
             double shiftedSumXY = this.sumXY + this.xs.Mean * y * this.count;
 
-            Correlator shifted = new Correlator();
-            shifted.count = this.count;
-            shifted.sumXY = shiftedSumXY;
-            shifted.xs = this.xs.Clone();
-            shifted.ys = newYs;
-            return shifted;
+            return new Correlator(this.count, shiftedSumXY, this.xs.Clone(), newYs);
         }
         public Correlator CopyAndShiftRight(double x)
         {
             Distribution newXs = this.xs.CopyAndShiftBy(x);
             double shiftedSumXY = this.sumXY + x * this.ys.Mean * this.count;
 
-            Correlator shifted = new Correlator();
-            shifted.count = this.count;
-            shifted.sumXY = shiftedSumXY;
-            shifted.xs = newXs;
-            shifted.ys = this.ys.Clone();
-            return shifted;
-
+            return new Correlator(this.count, shiftedSumXY, newXs, this.ys.Clone());
         }
 
         public Correlator Clone()
@@ -142,7 +136,7 @@ namespace ActivityRecommendation
 
         double count;
         double sumXY;
-        Distribution xs = new Distribution();
-        Distribution ys = new Distribution();
+        Distribution xs;
+        Distribution ys;
     }
 }

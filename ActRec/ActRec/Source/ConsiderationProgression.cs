@@ -34,15 +34,11 @@ namespace ActivityRecommendation
         {
             if (this.ShouldIncludeParticipation(newParticipation))
             {
-                WillingnessSummary willingness = new WillingnessSummary();
+                WillingnessSummary willingness;
                 if (newParticipation.Suggested)
-                {
-                    willingness.NumPromptedParticipations = 1;
-                }
+                    willingness = WillingnessSummary.Prompted;
                 else
-                {
-                    willingness.NumUnpromptedParticipations = 1;
-                }
+                    willingness = WillingnessSummary.Unprompted;
                 this.AddValue(newParticipation.StartDate, willingness);
             }
         }
@@ -57,7 +53,7 @@ namespace ActivityRecommendation
         }
         public void AddSkip(ActivitySkip newSkip)
         {
-            WillingnessSummary willingness = new WillingnessSummary(0, 0, 1);
+            WillingnessSummary willingness = WillingnessSummary.Skipped;
             this.AddValue(newSkip.SuggestionStartDate, willingness);
         }
         public void AddValue(DateTime when, WillingnessSummary value)
@@ -183,7 +179,7 @@ namespace ActivityRecommendation
         }
         public WillingnessSummary Default()
         {
-            return new WillingnessSummary();
+            return WillingnessSummary.Empty;
         }
 
         #endregion

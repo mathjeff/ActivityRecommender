@@ -11,6 +11,47 @@ namespace ActivityRecommendation
 {
     public class WillingnessSummary
     {
+        private static WillingnessSummary skipped;
+        public static WillingnessSummary Skipped
+        {
+            get
+            {
+                if (skipped == null)
+                    skipped = new WillingnessSummary(0, 0, 1);
+                return skipped;
+            }
+        }
+        private static WillingnessSummary prompted;
+        public static WillingnessSummary Prompted
+        {
+            get
+            {
+                if (prompted == null)
+                    prompted = new WillingnessSummary(0, 1, 0);
+                return prompted;
+            }
+        }
+        private static WillingnessSummary unprompted;
+        public static WillingnessSummary Unprompted
+        {
+            get
+            {
+                if (unprompted == null)
+                    unprompted = new WillingnessSummary(1, 0, 0);
+                return unprompted;
+            }
+        }
+        private static WillingnessSummary empty;
+        public static WillingnessSummary Empty
+        {
+            get
+            {
+                if (empty == null)
+                    empty = new WillingnessSummary(0, 0, 0);
+                return empty;
+            }
+        }
+
         public WillingnessSummary()
         {
         }
@@ -39,7 +80,7 @@ namespace ActivityRecommendation
             return difference;
         }
 
-        public Double NumUnpromptedParticipations
+        public double NumUnpromptedParticipations
         {
             get
             {

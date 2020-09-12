@@ -499,11 +499,11 @@ namespace ActivityRecommendation
             foreach (Participation newParticipation in this.PendingParticipationsForShorttermAnalysis)
             {
                 // get the coordinates at that time and save them
-                WillingnessSummary willingness = new WillingnessSummary();
+                WillingnessSummary willingness;
                 if (newParticipation.Suggested)
-                    willingness.NumPromptedParticipations = 1;
+                    willingness = WillingnessSummary.Prompted;
                 else
-                    willingness.NumUnpromptedParticipations = 1;
+                    willingness = WillingnessSummary.Unprompted;
 
                 this.AddParticipationDatapoint(newParticipation.StartDate, willingness);
 
@@ -578,7 +578,7 @@ namespace ActivityRecommendation
             foreach (ActivitySkip newSkip in this.PendingSkips)
             {
                 // get the coordinates at that time and save them
-                WillingnessSummary willingness = new WillingnessSummary(0, 0, 1);
+                WillingnessSummary willingness = WillingnessSummary.Skipped;
                 this.AddParticipationDatapoint(newSkip.SuggestionStartDate, willingness);
 
 
@@ -907,7 +907,7 @@ namespace ActivityRecommendation
 
         public WillingnessSummary Default()
         {
-            return new WillingnessSummary();
+            return WillingnessSummary.Empty;
         }
 
         // We pretend that this WillingnessSummary was a bunch of skips and suggested participations

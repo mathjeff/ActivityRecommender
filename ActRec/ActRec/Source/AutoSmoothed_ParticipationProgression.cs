@@ -196,8 +196,7 @@ namespace ActivityRecommendation
             double idleX2 = this.GetWeight(later.Start.Subtract(earlier.Start));
 
             double earlierSum = this.GetWeight(earlier.CumulativeIntensity);
-            Correlator laterShifted = later.Trend.CopyAndShiftUp(earlierSum);
-            laterShifted = laterShifted.CopyAndShiftRight(idleX2);
+            Correlator laterShifted = later.Trend.CopyAndShiftRightAndUp(idleX2, earlierSum);
             Correlator correlator = earlier.Trend.Plus(laterShifted);
 
             if (idleDuration.TotalSeconds > 0)

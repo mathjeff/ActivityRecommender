@@ -129,6 +129,19 @@ namespace ActivityRecommendation
             return new Correlator(this.count, shiftedSumXY, newXs, this.ys.Clone());
         }
 
+        public Correlator CopyAndShiftRightAndUp(double x, double y)
+        {
+            // shift x
+            Distribution newXs = this.xs.CopyAndShiftBy(x);
+            double shiftedSumXY = this.sumXY + x * this.ys.Mean * this.count;
+
+            // shift y
+            Distribution newYs = this.ys.CopyAndShiftBy(y);
+            shiftedSumXY = shiftedSumXY + newXs.Mean * y * this.count;
+
+            return new Correlator(this.count, shiftedSumXY, newXs, newYs);
+        }
+
         public Correlator Clone()
         {
             return this.CopyAndShiftUp(0);

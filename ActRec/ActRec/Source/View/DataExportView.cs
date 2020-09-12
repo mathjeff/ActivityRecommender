@@ -17,7 +17,7 @@ namespace ActivityRecommendation
     {
         public DataExportView(ActivityRecommender activityRecommender, Persona persona, LayoutStack layoutStack)
         {
-            this.SetTitle("Export Data");
+            this.SetTitle("Export Your Data");
 
             this.persona = persona;
             

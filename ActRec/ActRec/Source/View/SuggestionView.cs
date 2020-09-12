@@ -16,7 +16,10 @@ namespace ActivityRecommendation
         public event JustifySuggestionHandler JustifySuggestion;
         public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
 
-        public SuggestionView(ActivitySuggestion suggestion, LayoutStack layoutStack)
+        public event VisitParticipationScreenHandler VisitParticipationScreen;
+        public delegate void VisitParticipationScreenHandler();
+
+        public SuggestionView(ActivitySuggestion suggestion, bool addDoNowButton, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
@@ -39,12 +42,26 @@ namespace ActivityRecommendation
             titleComponentWidths.SetPropertyScale(1, titleWidthWeight);
             GridLayout centeredTitle = GridLayout.New(BoundProperty_List.Uniform(1), titleComponentWidths, LayoutScore.Zero);
             centeredTitle.PutLayout(titleLayout, 1, 0);
-            GridLayout offsetTitle = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(1), LayoutScore.Get_UnCentered_LayoutScore(1));
-            offsetTitle.PutLayout(titleLayout, 0, 0);
-            contentBuilder.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
+            if (addDoNowButton)
+            {
+                // include the doNow button in the centered layout
+                Button doNowButton = new Button();
+                doNowButton.Clicked += DoNowButton_Clicked;
+                ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "Doing it?");
+                centeredTitle.PutLayout(doButtonLayout, 0, 0);
+                // require that the centered layout must be used
+                contentBuilder.AddLayout(centeredTitle);
+            }
+            else
+            {
+                // Allow the title to be off-center if necessary
+                GridLayout offsetTitle = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(1), LayoutScore.Get_UnCentered_LayoutScore(1));
+                offsetTitle.PutLayout(titleLayout, 0, 0);
+                contentBuilder.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
+            }
 
             // Add the remaining fields
-            
+
             // Include the seconds field only for participations shorter than 1 minute
             string timeFormat = "HH:mm:ss";
             if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMilliseconds(1)) >= 0)
@@ -82,6 +99,12 @@ namespace ActivityRecommendation
             mainGrid.AddLayout(sideBuilder.Build());
             this.SubLayout = mainGrid;
 
+        }
+
+        private void DoNowButton_Clicked(object sender, EventArgs e)
+        {
+            if (this.VisitParticipationScreen != null)
+                this.VisitParticipationScreen.Invoke();
         }
 
         private void ExplainWhyYouCantSkipButton_Clicked(object sender, EventArgs e)

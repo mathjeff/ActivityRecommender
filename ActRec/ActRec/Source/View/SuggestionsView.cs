@@ -21,6 +21,9 @@ namespace ActivityRecommendation.View
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest request);
 
+        public event VisitParticipationScreenHandler VisitParticipationScreen;
+        public delegate void VisitParticipationScreenHandler();
+
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine)
         {
             this.activityDatabase = activityDatabase;
@@ -173,9 +176,11 @@ namespace ActivityRecommendation.View
                 layouts.Add(this.topLayout);
             if (this.messageLayout != null)
                 layouts.Insert(0, messageLayout);
+            bool addDoNowButton = true;
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
-                layouts.Add(this.makeLayout(suggestion));
+                layouts.Add(this.makeLayout(suggestion, addDoNowButton));
+                addDoNowButton = false;
             }
             if (this.suggestions.Count < this.maxNumSuggestions)
                 layouts.Add(this.requestSuggestion_layout);
@@ -189,12 +194,18 @@ namespace ActivityRecommendation.View
             this.SetContent(grid);
         }
 
-        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion)
+        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool doNowButton)
         {
-            SuggestionView suggestionView = new SuggestionView(suggestion, this.layoutStack);
+            SuggestionView suggestionView = new SuggestionView(suggestion, doNowButton, this.layoutStack);
             suggestionView.Dismissed += SuggestionView_Dismissed;
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
+            suggestionView.VisitParticipationScreen += SuggestionView_VisitParticipationScreen;
             return new LayoutCache(suggestionView);
+        }
+
+        private void SuggestionView_VisitParticipationScreen()
+        {
+            this.VisitParticipationScreen.Invoke();
         }
 
         private void SuggestionView_JustifySuggestion(ActivitySuggestion suggestion)

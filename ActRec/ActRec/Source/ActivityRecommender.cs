@@ -211,6 +211,7 @@ namespace ActivityRecommendation
             this.suggestionsView.RequestSuggestion += SuggestionsView_RequestSuggestion;
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
+            this.suggestionsView.VisitParticipationScreen += SuggestionsView_VisitParticipationScreen;
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
@@ -303,6 +304,11 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
 
+        private void SuggestionsView_VisitParticipationScreen()
+        {
+            this.layoutStack.GoBack();
+            this.layoutStack.AddLayout(this.participationEntryView, "Record Participations");
+        }
 
         private void SuggestionsView_RequestSuggestion(ActivityRequest request)
         {

@@ -73,7 +73,7 @@ namespace ActivityRecommendation
             ProgressionValue currentValue = this.testingInputProgression.GetValueAt(when, false);
             Distribution currentInput;
             if (currentValue == null)
-                currentInput = new Distribution();
+                currentInput = Distribution.Zero;
             else
                 currentInput = currentValue.Value;
             Prediction result = this.Guess(currentInput);

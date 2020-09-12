@@ -1303,11 +1303,11 @@ namespace ActivityRecommendation
         private Distribution computeEfficiencyIncrease(Distribution endValue)
         {
             if (endValue.Weight <= 0)
-                return new Distribution();
+                return Distribution.Zero;
             Distribution baseValue = this.engine.Get_AverageEfficiency_WhenParticipated(this.activityDatabase.RootActivity);
             Distribution chosenValue = endValue.CopyAndReweightTo(1);
 
-            Distribution bonusInHours = new Distribution();
+            Distribution bonusInHours = Distribution.Zero;
             // relWeight(x) = 2^(-x/halflife)
             // integral(relWeight) = -(log(e)/log(2))*halfLife*2^(-x/halflife)
             // totalWeight = (log(e)/log(2))*halflife

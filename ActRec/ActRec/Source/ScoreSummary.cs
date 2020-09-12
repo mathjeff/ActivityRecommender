@@ -93,6 +93,6 @@ namespace ActivityRecommendation
         DateTime earliestKnownDate;  // the date that this RatingSummary describes
         DateTime latestKnownDate;   // the date of the latest rating known to this RatingSummary
         bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;
-        Distribution values = new Distribution();
+        Distribution values = Distribution.Zero;
     }
 }

@@ -26,7 +26,7 @@ namespace ActivityRecommendation
             this.firstInteractionDate = DateTime.Now;
             this.latestInteractionDate = new DateTime(0);
             this.thinkingTime = Distribution.MakeDistribution(60, 0, 1);      // default amount of time thinking about a suggestion is 1 minute
-            this.ratingsOfUnpromptedActivities = new Distribution();
+            this.ratingsOfUnpromptedActivities = Distribution.Zero;
 
             this.happinessFromEfficiency_predictor = new LongtermValuePredictor(
                 new AdaptiveLinearInterpolation.HyperBox<Distribution>(
@@ -827,7 +827,7 @@ namespace ActivityRecommendation
         public Distribution CombineRatingDistributions(IEnumerable<Distribution> distributions)
         {
             // first add up all distributions that have standard deviation equal to zero
-            Distribution sumOfZeroStdDevs = new Distribution(0, 0, 0);
+            Distribution sumOfZeroStdDevs = Distribution.Zero;
             bool stdDevIsZero = false;
             foreach (Distribution distribution in distributions)
             {
@@ -845,7 +845,7 @@ namespace ActivityRecommendation
             }
             // If we get here, then there are no distributions with zero standard deviation
             // So we can divide by any standard deviation without getting division by zero
-            Distribution sum = new Distribution(0, 0, 0);
+            Distribution sum = Distribution.Zero;
             double totalWeight = 0;
             foreach (Distribution currentDistribution in distributions)
             {

@@ -20,7 +20,7 @@ namespace ActivityRecommendation
         }
         public Distribution Default()
         {
-            return new Distribution(0, 0, 0);
+            return Distribution.Zero;
         }
         public AdaptiveLinearInterpolation.Distribution ConvertToDistribution(Distribution distribution)
         {

@@ -49,7 +49,7 @@ namespace ActivityRecommendation
             // check whether there is any data to predict from
             if (this.searchHelper.NumItems <= 0)
             {
-                return new Distribution(0, 0, 0);
+                return Distribution.Zero;
             }
             return this.AdaptivePrediction(input);
             //return this.PredictRootNNearestNeighbors(input);

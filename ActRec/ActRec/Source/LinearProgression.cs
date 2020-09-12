@@ -121,7 +121,7 @@ namespace ActivityRecommendation
         }
         private ProgressionValue DefaultValue(DateTime when)
         {
-            return new ProgressionValue(when, new Distribution());
+            return new ProgressionValue(when, Distribution.Zero);
         }
 
         public Activity Owner

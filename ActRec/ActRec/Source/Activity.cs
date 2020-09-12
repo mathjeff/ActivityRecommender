@@ -47,9 +47,9 @@ namespace ActivityRecommendation
             this.uniqueIdentifier = nextID;
             this.defaultDiscoveryDate = DateTime.Now;
             this.participationDurations = Distribution.MakeDistribution(3600, 0, 1);    // default duration of an Doable is 1 hour
-            this.ratingsWhenSuggested = new Distribution(0, 0, 0);
-            this.ratingsWhenNotSuggested = new Distribution(0, 0, 0);
-            this.thinkingTimes = new Distribution(0, 0, 0);
+            this.ratingsWhenSuggested = Distribution.Zero;
+            this.ratingsWhenNotSuggested = Distribution.Zero;
+            this.thinkingTimes = Distribution.Zero;
             nextID++;
         }
 

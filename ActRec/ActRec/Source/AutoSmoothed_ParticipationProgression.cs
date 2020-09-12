@@ -99,7 +99,7 @@ namespace ActivityRecommendation
                 summary.Start = startDate;
                 summary.End = endDate;
                 summary.CumulativeIntensity = new TimeSpan();
-                summary.LogActiveTime = Distribution.MakeDistribution(0, 0, 0);
+                summary.LogActiveTime = Distribution.Zero;
                 summary.Trend = new Correlator();
                 return summary;
             }

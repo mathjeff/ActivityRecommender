@@ -7,6 +7,16 @@ namespace ActivityRecommendation
 {
     public class Distribution
     {
+        private static Distribution zero;
+        public static Distribution Zero
+        {
+            get
+            {
+                if (zero == null)
+                    zero = new Distribution(0, 0, 0);
+                return zero;
+            }
+        }
         // constructors
         public static Distribution MakeDistribution(double mean, double stdDev, double weight)
         {

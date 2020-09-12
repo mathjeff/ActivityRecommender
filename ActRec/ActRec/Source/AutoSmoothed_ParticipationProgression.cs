@@ -190,11 +190,16 @@ namespace ActivityRecommendation
             summary.End = later.End;
             summary.LogActiveTime = earlier.LogActiveTime.Plus(later.LogActiveTime);
 
-            double earlierSum = this.GetWeight(earlier.CumulativeIntensity);
-            Correlator correlator = earlier.Trend.Clone();
+            // time between prev end and next start
             TimeSpan idleDuration = later.Start.Subtract(earlier.End);
             double idleX1 = this.GetWeight(earlier.End.Subtract(earlier.Start));
             double idleX2 = this.GetWeight(later.Start.Subtract(earlier.Start));
+
+            double earlierSum = this.GetWeight(earlier.CumulativeIntensity);
+            Correlator laterShifted = later.Trend.CopyAndShiftUp(earlierSum);
+            laterShifted = laterShifted.CopyAndShiftRight(idleX2);
+            Correlator correlator = earlier.Trend.Plus(laterShifted);
+
             if (idleDuration.TotalSeconds > 0)
             {
                 double idleY = earlierSum;
@@ -203,17 +208,15 @@ namespace ActivityRecommendation
                 correlator.Add(idleX2, idleY, weight);
             }
 
-            Correlator laterShifted = later.Trend.CopyAndShiftUp(earlierSum);
-            laterShifted = laterShifted.CopyAndShiftRight(idleX2);
-            correlator = correlator.Plus(laterShifted);
             summary.Trend = correlator;
+
 
             ParticipationAndSummary result = new ParticipationAndSummary();
             result.Summary = summary;
 
             if (summary.Trend.Correlation < 0)
             {
-                System.Diagnostics.Debug.WriteLine("illegal correlation found: " + summary.Trend.Correlation + " for Doable " + this.Owner.Name);
+                System.Diagnostics.Debug.WriteLine("illegal correlation found: " + summary.Trend.Correlation + " for Activity " + this.Owner.Name);
             }
             // not bothering to assign a Participation because nothing will need it
 

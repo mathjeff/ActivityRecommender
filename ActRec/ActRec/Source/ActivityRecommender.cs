@@ -260,6 +260,7 @@ namespace ActivityRecommendation
             debuggingBuilder.AddLayout("Enable/Disable Layout Debugging", new EnableDebugging_Layout(this.viewManager));
             debuggingBuilder.AddLayout("Change Screen Size", new Change_ViewSize_Layout(this.viewManager));
             debuggingBuilder.AddLayout("Compute ActivityRecommender's Accuracy (Very Slow)", new EngineTesterView(this, this.layoutStack));
+            debuggingBuilder.AddLayout("View Memory Usage", new ViewMemoryUsageLayout());
 
             PersonaCustomizationView personaCustomizationView = new PersonaCustomizationView(this.persona);
 

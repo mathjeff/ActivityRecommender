@@ -7,7 +7,7 @@
     <DependencyList>  
       <item>  
         <name>AdaptiveInterpolator</name>
-        <version>8aa78db904c78d8f682fde2fd704dcc9ad80577d</version>
+        <version>6573625d03a6216904de5b9f310b4a85d39dfece</version>
         <syncher>  
           <Git>  
             <origin>  
@@ -22,7 +22,7 @@
       
       <item>  
         <name>VisiPlacer</name>
-        <version>a7e49c93e73fbf4e8634bf899c3c773d015d2c22</version>
+        <version>8a797b669d668a17b8c31c25886c713e738f338c</version>
         <syncher>  
           <Git>  
             <origin>  

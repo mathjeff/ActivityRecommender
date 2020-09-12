@@ -168,8 +168,7 @@ namespace ActivityRecommendation
 
 
             LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout("Browse Activities", new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack))
-                .AddLayout("Brainstorm ProtoActivities", protoActivitiesLayout)
+                .AddLayout("Browse My Activities", new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack))
                 .AddLayout("Import Some Premade Activities", activityImportLayout)
                 .AddLayout("Add/Edit Activities", (new MenuLayoutBuilder(this.layoutStack)
                     .AddLayout("Enter New Activity", activityCreationView)
@@ -177,6 +176,7 @@ namespace ActivityRecommendation
                     .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
                     .Build()
                 ))
+                .AddLayout("Brainstorm ProtoActivities", protoActivitiesLayout)
                 .AddLayout("Help", (new HelpWindowBuilder()
                     .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
                     .AddMessage("This screen also allows you to add new types of activities.")
@@ -245,9 +245,9 @@ namespace ActivityRecommendation
 
 
             MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("Activities", inheritanceEditingView);
+            usageMenu_builder.AddLayout("Activities I Like", inheritanceEditingView);
             usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
-            usageMenu_builder.AddLayout("Get Suggestions", this.suggestionsView);
+            usageMenu_builder.AddLayout("What Do I Do Now?", this.suggestionsView);
             usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
             usageMenu_builder.AddLayout("Import/Export", importExportView);
             LayoutChoice_Set usageMenu = usageMenu_builder.Build();

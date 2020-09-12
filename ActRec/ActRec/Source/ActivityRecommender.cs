@@ -244,14 +244,14 @@ namespace ActivityRecommendation
                 .Build();
 
 
-            MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("Activities I Like", inheritanceEditingView);
-            usageMenu_builder.AddLayout("Record Participations", this.participationEntryView);
-            usageMenu_builder.AddLayout("What Do I Do Now?", this.suggestionsView);
-            usageMenu_builder.AddLayout("View Statistics", visualizationMenu);
-            usageMenu_builder.AddLayout("Import/Export", importExportView);
-            LayoutChoice_Set usageMenu = usageMenu_builder.Build();
-
+            LayoutChoice_Set usageMenu = new HomeScreen(
+                inheritanceEditingView,
+                this.participationEntryView,
+                this.suggestionsView,
+                visualizationMenu,
+                importExportView,
+                this.ActivityDatabase,
+                this.layoutStack);
 
             LayoutChoice_Set helpMenu = InstructionsLayout.New(this.layoutStack);
 

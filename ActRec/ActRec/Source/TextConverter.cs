@@ -13,6 +13,8 @@ namespace ActivityRecommendation
     {
         #region Constructor
 
+        private Dictionary<string, ActivityDescriptor> activityDescriptors = new Dictionary<string, ActivityDescriptor>();
+
         public TextConverter(HistoryReplayer listener, ActivityDatabase activityDatabase)
         {
             this.listener = listener;
@@ -855,21 +857,29 @@ namespace ActivityRecommendation
         }
         private ActivityDescriptor ReadActivityDescriptor(XmlNode nodeRepresentation)
         {
-            ActivityDescriptor descriptor = new ActivityDescriptor();
+            string name = null;
+            bool? suggestible = null;
+            //ActivityDescriptor descriptor = new ActivityDescriptor();
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityNameTag)
                 {
-                    descriptor.ActivityName = this.ReadText(currentChild);
+                    name = this.ReadText(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.ChoosableTag)
                 {
-                    descriptor.Suggestible = this.ReadBool(currentChild);
+                    suggestible = this.ReadBool(currentChild);
                     continue;
                 }
             }
-            return descriptor;
+            if (!this.activityDescriptors.ContainsKey(name))
+            {
+                ActivityDescriptor result = new ActivityDescriptor(name);
+                result.Suggestible = suggestible;
+                this.activityDescriptors[name] = result;
+            }
+            return this.activityDescriptors[name];
         }
         /*private RatingSource ReadRatingSource(XmlNode nodeRepresentation)
         {

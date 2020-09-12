@@ -72,7 +72,6 @@ namespace ActivityRecommendation
             this.CheckIfIsNewVersion();
 
             this.layoutStack = new LayoutStack();
-            this.suggestionDatabase = new SuggestionDatabase();
             this.protoActivities_database = new ProtoActivity_Database();
 
             this.InitializeSettings();
@@ -503,7 +502,6 @@ namespace ActivityRecommendation
             this.engine = engine;
             this.persona.NameChanged += Persona_NameChanged;
             this.protoActivities_database = loader.ProtoActivity_Database;
-            this.suggestionDatabase = loader.SuggestionDatabase;
             this.latestParticipation = loader.LatestParticipation;
             this.recentUserData = loader.RecentUserData;
             this.SuspectLatestActionDate(loader.LatestDate);
@@ -1001,7 +999,6 @@ namespace ActivityRecommendation
         Participation latestParticipation;
         RecentUserData recentUserData;
         LayoutStack layoutStack;
-        SuggestionDatabase suggestionDatabase;
         // how long to spend making a suggestion
         TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
         string error = "";

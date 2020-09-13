@@ -45,19 +45,18 @@ namespace ActivityRecommendation.View
             // button that gives help with autocomplete
             this.helpWindow = new HelpWindowBuilder()
                 .AddMessage("This screen explains how to enter " + startingTitle + " in the previous screen. " +
-                "Your input must match an activity that you have previously entered.")
-                .AddMessage("The most basic way to input an activity name is to type it in using the letters on the keyboard.")
-                .AddMessage("However, while you type the activity name, ActivityRecommender will try to guess which activity you mean, and " +
-                "that guess will appear above. If the autocomplete suggestion is what you want, then you can press " +
+                "If you haven't already created the activity that you want to enter here, you will have to go back and create it first in the Activities screen.")
+                .AddMessage("")
+                .AddMessage("To input an activity name, you may type it in using the letters on the keyboard.")
+                .AddMessage("While you do this, ActivityRecommender will try to guess which activity you mean, and " +
+                "that autocomplete guess will appear above. If this autocomplete suggestion is what you want, then you can press " +
                 "[enter] to use the autocomplete suggestion.")
                 .AddMessage("Autocomplete does not require you to type full words but it does require spaces between words.")
                 .AddMessage("Autocomplete does not require that you type letters using the correct case but it is more effective if you do.")
-                .AddMessage("If autocomplete encounters a misspelled word, autocomplete will ignore the misspelled word.")
-                .AddMessage("Consider the following example.")
+                .AddMessage("Consider the following example:")
                 .AddMessage("If you have already entered an activity named \"Taking out the Garbage\", " +
                 "here are some things you can type that might cause it to become the autocomplete suggestion:")
                 .AddMessage("Taking out the")
-                .AddMessage("Taking out the MisspelledWord")
                 .AddMessage("Taking")
                 .AddMessage("out")
                 .AddMessage("Garbage")
@@ -68,7 +67,8 @@ namespace ActivityRecommendation.View
                 .AddMessage("G")
                 .AddMessage("t")
                 .AddMessage("")
-                .AddMessage("Note, of course, that the longer and more unique your text, the more likely that it will be matched with the activity that you intend.")
+                .AddMessage("Note, of course, that the longer and more unique your text, the more likely that it will be matched with the activity that you intend, rather than " +
+                "with another activity, like for example, 'Talking on the Phone'")
                 .AddLayout(new CreditsButtonBuilder(layoutStack)
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 6, 7), "Pointed out that completed ToDos should have a very low autocomplete priority")
                     .Build()

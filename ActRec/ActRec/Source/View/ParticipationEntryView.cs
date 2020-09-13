@@ -470,10 +470,25 @@ namespace ActivityRecommendation
                     "your efficiency is lower in the morning than in the evening.";
                 return new ParticipationFeedback(chosenActivity, summary, new ConstantValueProvider<LayoutChoice_Set>(new TextblockLayout(details)));
             }
-            else
+            ParticipationFeedback standardFeedback = this.computeStandardFeedback(chosenActivity, startDate, endDate);
+            if (standardFeedback != null)
+                return standardFeedback;
+            if (this.activityDatabase.RootActivity.NumParticipations < 20)
             {
-                return this.computeStandardFeedback(chosenActivity, startDate, endDate);
+                string summary = "You're off to a good start!";
+
+                LayoutChoice_Set detailedLayout = new HelpWindowBuilder()
+                    .AddMessage("Participation Feedback!")
+                    .AddMessage("After you've entered enough data, the button on the previous screen will give you feedback about how you will feel about what you are doing.")
+                    .AddMessage("(This may take a couple of days and requires that you give some ratings too, in the box on the left)")
+                    .AddMessage("I have 128 different feedback messages that I know how to give!")
+                    .AddMessage("When you press the feedback button, you will see a more detailed analysis on this screen.")
+                    .AddMessage("Isn't that cool?")
+                    .Build();
+
+                return new ParticipationFeedback(chosenActivity, summary, new ConstantValueProvider<LayoutChoice_Set>(detailedLayout));
             }
+            return null;
         }
         private ParticipationFeedback computeStandardFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {

@@ -167,17 +167,17 @@ namespace ActivityRecommendation
             ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
 
 
-            LayoutChoice_Set inheritanceEditingView = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout("Browse My Activities", new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack))
-                .AddLayout("Import Some Premade Activities", activityImportLayout)
-                .AddLayout("Add/Edit Activities", (new MenuLayoutBuilder(this.layoutStack)
+            LayoutChoice_Set inheritanceEditingView = new ActivitiesMenuLayout(
+                new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
+                activityImportLayout,
+                (new MenuLayoutBuilder(this.layoutStack)
                     .AddLayout("Enter New Activity", activityCreationView)
                     .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
                     .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
                     .Build()
-                ))
-                .AddLayout("Brainstorm ProtoActivities", protoActivitiesLayout)
-                .AddLayout("Help", (new HelpWindowBuilder()
+                ),
+                protoActivitiesLayout,
+                (new HelpWindowBuilder()
                     .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
                     .AddMessage("This screen also allows you to add new types of activities.")
                     .AddMessage("When you ask ActivityRecommender for a recommendation later, it will only suggest activities that you have entered here.")
@@ -191,8 +191,10 @@ namespace ActivityRecommendation
                         .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 8), "Pointed out that linebreaks in buttons didn't work correctly on iOS")
                         .Build()
                     )
-                    .Build()))
-                .Build();
+                    .Build()
+                ),
+                this.layoutStack,
+                this.ActivityDatabase);
 
             this.participationEntryView = new ParticipationEntryView(this.engine.ActivityDatabase, this.layoutStack);
             this.participationEntryView.Engine = this.engine;

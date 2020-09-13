@@ -15,7 +15,7 @@ namespace ActivityRecommendation.View
 
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
 
-            menuBuilder.AddLayout("What's awesome about ActivityRecommender?", FeatureOverviewLayout.New(layoutStack));
+            menuBuilder.AddLayout("What's awesome?", FeatureOverviewLayout.New(layoutStack));
 
             menuBuilder.AddLayout("How do I navigate?", makeNavigationHelp_layout(layoutStack));
 
@@ -47,83 +47,49 @@ namespace ActivityRecommendation.View
 
         private static LayoutChoice_Set makeNavigationHelp_layout(LayoutStack layoutStack)
         {
-            LayoutChoice_Set backButtonExplanationLayout = new HelpWindowBuilder()
-                .AddMessage("If nothing onscreen looks interesting to you, then go back! Have you seen the handy buttons at the bottom of the screen?")
-                .AddLayout(
-                    new HelpButtonLayout("I see the back buttons!",
-                        (new HelpWindowBuilder()
-                            .AddMessage("Great! Press one of the buttons at the bottom of the screen to go back to an earlier screen.")
-                            .AddMessage("The button will tell you which screen it returns you to.")
-                            .AddMessage("We try to fit a lot of these back buttons on your screen at once. However, sometimes not all of the buttons fit, " +
-                            "so we might not be able to show you a button for every screen that you can go back to. " +
-                            "If you'd like to go back further, just press one of the back buttons, and then on the new screen look for new back buttons.")
-                            .Build()
-                        ),
-                        layoutStack
-                    )
-                )
-                .AddLayout(
-                    new HelpButtonLayout("What buttons?",
-                        (
-                            new HelpWindowBuilder()
-                            .AddMessage("There! At the bottom! The buttons changed! Do you see those buttons?")
-                            .AddLayout(
-                                new HelpButtonLayout("Oh, those buttons",
-                                    new TextblockLayout("Yes! Now press a button to go back to a previous screen. The words on the button will " +
-                                    "tell you which screen they go to."),
-                                    layoutStack
-                                )
-                            )
-                            .AddLayout(
-                                new HelpButtonLayout("Nope, I'm still confused.",
-                                    (new HelpWindowBuilder()
-                                        .AddMessage("Ok, you're very funny.")
-                                        .AddMessage("We've now removed all the other buttons. You have to push one of the back buttons at the bottom of the screen.")
-                                        .Build()
-                                    ),
-                                    layoutStack
-                                )
-                            )
-                            .Build()
-                        ),
-                        layoutStack
-                    )
-                )
-                .Build();
-
-            LayoutChoice_Set forwardButtonExplanationLayout = new HelpWindowBuilder()
-                .AddMessage("If the information on your screen seems related to what you want but is too general, then " +
-                "look at the buttons onscreen. Do any of them look promising? ")
-                .AddMessage("Press a button and see what happens!")
-                .AddMessage("For example, trying pressing this button:")
-                .AddLayout(
-                    new HelpButtonLayout("Compliment Me!",
-                        new TextblockLayout("Wow! You're doing a great job reading all of the instructions. I think you will do good things!"),
-                        layoutStack
-                    )
-                )
-                .Build();
-
-            LayoutChoice_Set helpButtonExplanationLayout =
+            LayoutChoice_Set result = new TitledControl("Navigating ActivityRecommender",
                 new HelpWindowBuilder()
-                .AddMessage("If you are looking at a screen in ActivityRecommender and you don't know what it means, you can:")
-                .AddMessage("A) Search for the button labelled 'Help' and push it. Most screens in ActivityRecommender offer help!.")
-                .AddMessage("B) Ask for help! Tell us about that something is confusing, by pushing this button:")
-                .AddLayout(OpenIssue_Layout.New())
-                .Build();
-
-            LayoutChoice_Set howActivityRecommenderWorksLayout = new TextblockLayout("If you're not sure what you want ActivityRecommender to do, then " +
-                "you should first look at the overview of what ActivityRecommender can do. Go back and select 'How do I use ActivityRecommender?'");
-
-            LayoutChoice_Set result = new TitledControl("How to navigate ActivityRecommender!\nNavigating ActivityRecommender depends on what you want and which screen you are on.",
-                (new MenuLayoutBuilder(layoutStack)
-                    .AddLayout("When the screen doesn't contain what you want, go back!", backButtonExplanationLayout)
-                    .AddLayout("When the screen is too general, go forward!", forwardButtonExplanationLayout)
-                    .AddLayout("When you're not sure whether the screen contains what you want, check for help!", helpButtonExplanationLayout)
-                    .AddLayout("When you're unsure what you want, read the feature overview!", howActivityRecommenderWorksLayout)
-                    .Build()
-                )
+                    .AddMessage("To find your way around in ActivityRecommender, do this:")
+                    .AddMessage("1. Decide what you want to do with ActivityRecommender. If you don't know what ActivityRecommender can do, then " +
+                    "go back and visit the Get Excited or How to Use screens.")
+                    .AddMessage("2. Look at the current screen and try to determine whether it seems capable of doing what you want.")
+                    .AddMessage("2a. If you're not sure, look for a button labelled Help and press it.")
+                    .AddLayout(
+                        new HelpButtonLayout("Help",
+                            new TextblockLayout("The screen you were reading explains how to find things in ActivityRecommender, and you successfully found the Help button. Congratulations!"),
+                            layoutStack
+                        )
+                    )
+                    .AddMessage("2b. If you're still not sure, you can ask for help here:")
+                    .AddLayout(OpenIssue_Layout.New())
+                    .AddMessage("3. Whenever the current screen looks promising, press a button and see what happens!")
+                    .AddMessage("4. Whenever the current screen doesn't seem like what you want, push one of the back buttons at the bottom of the screen")
+                    .AddLayout(
+                        new HelpButtonLayout("Tell me more about the back buttons",
+                            (new HelpWindowBuilder()
+                                .AddLayout(
+                                    new HelpWindowBuilder()
+                                    .AddMessage("As you visit more screens, you will see more buttons at the bottom of the screen. Each button will jump you back to the screen " +
+                                        "that it represents. Press one!")
+                                    .AddMessage("You may notice that the very first screen in ActivityRecommender doesn't usually get a back button. That's because you will almost " +
+                                        "never want to return to it, so we only show you its back button when it's the only screen left to go back to.")
+                                    .Build()
+                                )
+                                .AddLayout(
+                                    new HelpButtonLayout("How many back buttons can there be?",
+                                        new TextblockLayout("The maximum number of back buttons you can see onscreen at once depends on the size of your screen and the length of " +
+                                        "the words in them. How many do you see now?"),
+                                        layoutStack
+                                    )
+                                )
+                                .Build()
+                            ),
+                            layoutStack
+                        )
+                    )
+                .Build()
             );
+
 
             return result;
         }

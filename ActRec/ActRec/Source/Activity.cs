@@ -46,7 +46,7 @@ namespace ActivityRecommendation
             this.latestInteractionDate = null;
             this.uniqueIdentifier = nextID;
             this.defaultDiscoveryDate = DateTime.Now;
-            this.participationDurations = Distribution.MakeDistribution(3600, 0, 1);    // default duration of an Doable is 1 hour
+            this.participationDurations = Distribution.Zero;
             this.ratingsWhenSuggested = Distribution.Zero;
             this.ratingsWhenNotSuggested = Distribution.Zero;
             this.thinkingTimes = Distribution.Zero;
@@ -120,7 +120,13 @@ namespace ActivityRecommendation
         public List<ActivitySuggestion> PendingSuggestions = new List<ActivitySuggestion>();
         public List<EfficiencyMeasurement> PendingEfficiencyMeasurements = new List<EfficiencyMeasurement>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
-        public int NumParticipations { get { return (int)this.participationDurations.Weight; } }
+        public int NumParticipations
+        {
+            get
+            {
+                return (int)this.participationDurations.Weight;
+            }
+        }
 
         public void AddParentDescriptor(ActivityDescriptor newParent)
         {
@@ -247,6 +253,8 @@ namespace ActivityRecommendation
             get
             {
                 this.ApplyPendingParticipations();
+                if (this.participationDurations.Weight <= 0)
+                    return 3600; // we try to return a reasonable default
                 return this.participationDurations.Mean;
             }
         }

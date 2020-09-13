@@ -23,46 +23,64 @@ namespace ActivityRecommendation.View
             this.importExportLayout = importExportLayout;
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
+
+            this.setupOptions();
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
-            if (this.activityDatabase.ContainsCustomActivity() != this.containedCustomActivity)
+            if (this.activityDatabase.ContainsCustomActivity())
             {
-                this.update();
+                if (this.activityDatabase.RootActivity.NumParticipations > 0)
+                    this.SubLayout = this.fullLayout;
+                else
+                    this.SubLayout = this.noParticipations_layout;
             }
             else
             {
-                if (this.SubLayout == null)
-                    this.update();
+                this.SubLayout = this.noActivities_layout;
             }
             return base.GetBestLayout(query);
         }
-        private void update()
+        private void setupOptions()
         {
-            bool containsCustomActivity = this.activityDatabase.ContainsCustomActivity();
-            MenuLayoutBuilder usageMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            usageMenu_builder.AddLayout("Activities I Like", this.activitiesLayout);
-            if (containsCustomActivity)
-            {
-                usageMenu_builder.AddLayout("Record Participations", this.participationsLayout);
-                usageMenu_builder.AddLayout("What Do I Do Now?", this.suggestionsLayout);
-                usageMenu_builder.AddLayout("View Statistics", this.statisticsLayout);
-            }
-            usageMenu_builder.AddLayout("Import/Export", this.importExportLayout);
+            StackEntry activitiesEntry = new StackEntry(this.activitiesLayout, "Activities", null);
+            StackEntry participationsEntry = new StackEntry(this.participationsLayout, "Record Participations", null);
+            StackEntry suggestionsEntry = new StackEntry(this.suggestionsLayout, "What Do I Do Now?", null);
+            StackEntry statisticsEntry = new StackEntry(this.statisticsLayout, "View Statistics", null);
+            StackEntry importExportEntry = new StackEntry(this.importExportLayout, "Import/Export", null);
 
-            LayoutChoice_Set usageMenu = usageMenu_builder.Build();
-            this.SubLayout = usageMenu;
+            MenuLayoutBuilder noActivities_builder = new MenuLayoutBuilder(this.layoutStack);
+            noActivities_builder.AddLayout(activitiesEntry);
+            noActivities_builder.AddLayout(importExportEntry);
+            this.noActivities_layout = noActivities_builder.Build();
 
-            this.containedCustomActivity = containsCustomActivity;
+            MenuLayoutBuilder noParticipations_builder = new MenuLayoutBuilder(this.layoutStack);
+            noParticipations_builder.AddLayout(activitiesEntry);
+            noParticipations_builder.AddLayout(participationsEntry);
+            noParticipations_builder.AddLayout(suggestionsEntry);
+            noParticipations_builder.AddLayout(importExportEntry);
+            this.noParticipations_layout = noParticipations_builder.Build();
+
+            MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack);
+            fullBuilder.AddLayout(activitiesEntry);
+            fullBuilder.AddLayout(participationsEntry);
+            fullBuilder.AddLayout(suggestionsEntry);
+            fullBuilder.AddLayout(statisticsEntry);
+            fullBuilder.AddLayout(importExportEntry);
+            this.fullLayout = fullBuilder.Build();
         }
         private LayoutChoice_Set activitiesLayout;
         private LayoutChoice_Set participationsLayout;
         private LayoutChoice_Set suggestionsLayout;
         private LayoutChoice_Set statisticsLayout;
         private LayoutChoice_Set importExportLayout;
+
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
-        private bool containedCustomActivity = false;
+
+        private LayoutChoice_Set noActivities_layout;
+        private LayoutChoice_Set noParticipations_layout;
+        private LayoutChoice_Set fullLayout;
     }
 }

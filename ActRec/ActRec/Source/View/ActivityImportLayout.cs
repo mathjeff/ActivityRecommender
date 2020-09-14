@@ -21,17 +21,44 @@ namespace ActivityRecommendation.View
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Reading</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Useful</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Cleaning</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Buying Food</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Buying Sneakers</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Getting my Hair Cut</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Cleaning</Name></Parent><Child><Name>Cleaning my Room</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Cleaning</Name></Parent><Child><Name>Cleaning the Bathroom Sink</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Cleaning</Name></Parent><Child><Name>Emptying the Dishwasher</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Cleaning</Name></Parent><Child><Name>Mopping the Floor</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Biking</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Playing in the Snow</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Frisbee</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Miniature Golf</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Ice Skating</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Jogging</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Ping Pong</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Pushups</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Rock Climbing</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Soccer</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Situps</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Swimming</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Volleyball</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Yardwork</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Exercise</Name></Parent><Child><Name>Walking</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Appreciating my Accomplishments</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Game</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Making a Costume</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Music</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Playing in the Snow</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Pleasure Reading</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Watching Television</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Game</Name></Parent><Child><Name>Board/Card Game</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Game</Name></Parent><Child><Name>Cryptograms</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Game</Name></Parent><Child><Name>Computer Game</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Game</Name></Parent><Child><Name>Video Game</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Analyzing/Optimizing my Life</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Fixing Something</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Learning a Language</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Listening to a Podcast</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Investing</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Social</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Technology</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Trying Something New</Name></Child></Inheritance>
@@ -40,22 +67,37 @@ namespace ActivityRecommendation.View
 <Inheritance><Parent><Name>Interesting</Name></Parent><Child><Name>Writing a Story</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Music</Name></Parent><Child><Name>Listening to Music</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Physical Activity</Name></Parent><Child><Name>Exercise</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Physical Activity</Name></Parent><Child><Name>Stretching</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Playing in the Snow</Name></Parent><Child><Name>Sledding</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Reading</Name></Parent><Child><Name>Pleasure Reading</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Reading</Name></Parent><Child><Name>Reading a Nonfiction Book</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Pleasure Reading</Name></Parent><Child><Name>Reading a Webcomic</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Pleasure Reading</Name></Parent><Child><Name>Reading a Fiction Book</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Reading</Name></Parent><Child><Name>Reading the News</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Music</Name></Parent><Child><Name>Watching a Music Video</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Music</Name></Parent><Child><Name>Singing</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Social</Name></Parent><Child><Name>Hanging Out with Friends</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Social</Name></Parent><Child><Name>Browsing Social Media</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Technology</Name></Parent><Child><Name>Computer Programming</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Technology</Name></Parent><Child><Name>Working on a Math Problem</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Technology</Name></Parent><Child><Name>Working on ActivityRecommender</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Cooking</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Fixing Something</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Investing</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Physical Activity</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Reading the News</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Seeing a Doctor</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Seeing the Dentist</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Technology</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Helping Someone</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Useful</Name></Parent><Child><Name>Work</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Watching Television</Name></Parent><Child><Name>Watching a Movie</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Checking Email</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Chores</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Employment</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Homework</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Job Searching</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Laundry</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Paperwork</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Working on a Gift</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Work</Name></Parent><Child><Name>Yardwork</Name></Child></Inheritance>

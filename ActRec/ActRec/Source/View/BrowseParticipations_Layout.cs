@@ -39,6 +39,12 @@ namespace ActivityRecommendation.View
                 .AddLayout(new TextblockLayout("Require comments?"))
                 .AddLayout(new ButtonLayout(this.requireComments_box))
                 .BuildAnyLayout();
+            this.requireSuccessful_box = new VisiPlacement.SingleSelect(new List<string>() { "Any", "No Metric", "Successful", "Failed" });
+            LayoutChoice_Set requireSuccessful_layout = new Horizontal_GridLayout_Builder()
+                .Uniform()
+                .AddLayout(new TextblockLayout("Require success status ="))
+                .AddLayout(new ButtonLayout(this.requireSuccessful_box))
+                .BuildAnyLayout();
 
             Button browseTopParticipations_button = new Button();
             ButtonLayout browseTopParticipations_layout = new ButtonLayout(browseTopParticipations_button, "Browse top " + this.maxNumTopParticipationsToShow + " highest rated");
@@ -63,6 +69,7 @@ namespace ActivityRecommendation.View
                 .AddLayout(sinceDate_box)
                 .AddLayout(displayRatings_layout)
                 .AddLayout(requireComments_layout)
+                .AddLayout(requireSuccessful_layout)
                 .AddLayout(
                     new Horizontal_GridLayout_Builder()
                     .Uniform()
@@ -148,7 +155,40 @@ namespace ActivityRecommendation.View
                 {
                     commentedParticipations = participationsSinceDate;
                 }
-                return commentedParticipations;
+                // filter participations based on whether they succeeded or failed
+                List<Participation> correctSuccess_participations;
+                if (this.requireSuccessful_box.SelectedIndex == 0)
+                {
+                    // no filter, include all
+                    correctSuccess_participations = commentedParticipations;
+                }
+                else if (this.requireSuccessful_box.SelectedIndex == 1)
+                {
+                    // filter to participations that had no metric
+                    correctSuccess_participations = new List<Participation>();
+                    foreach (Participation participation in commentedParticipations)
+                    {
+                        if (participation.EffectivenessMeasurement == null)
+                            correctSuccess_participations.Add(participation);
+                    }
+                }
+                else
+                {
+                    // filter to participations with metrics and the appropriate success or failure status
+                    correctSuccess_participations = new List<Participation>();
+                    bool requirement = this.requireSuccessful_box.SelectedIndex == 2;
+                    foreach (Participation participation in commentedParticipations)
+                    {
+                        if (participation.EffectivenessMeasurement != null)
+                        {
+                            if (participation.CompletedMetric == requirement)
+                            {
+                                correctSuccess_participations.Add(participation);
+                            }
+                        }
+                    }
+                }
+                return correctSuccess_participations;
             }
         }
 
@@ -295,6 +335,7 @@ namespace ActivityRecommendation.View
         private int maxNumRandomActivitiesToShow = 2;
         private VisiPlacement.CheckBox displayRatings_box;
         private VisiPlacement.CheckBox requireComments_box;
+        private VisiPlacement.SingleSelect requireSuccessful_box;
         private DateEntryView sinceDate_box;
     }
 }

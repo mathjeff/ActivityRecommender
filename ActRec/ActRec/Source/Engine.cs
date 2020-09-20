@@ -263,16 +263,13 @@ namespace ActivityRecommendation
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
                 this.UpdateSuggestionValue(activityToBeat, when);
+                recommendationsCache.futureEfficiencies[activityToBeat] = this.Get_OverallEfficiency_ParticipationEstimate(activityToBeat, when);
                 recommendationsCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "You asked for an activity at least as fun as this one");
-                //recommendationsCache.utilities[activityToBeat] = 0; // if they're asking for us to beat this activity then it means they would rather do something else
-                //Prediction participationPrediction = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "You asked for an activity at least as fun as this one");
-                //recommendationsCache.participationProbabilities[activityToBeat] = participationPrediction;
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);
                 }
                 // Here we add the activityToBeat as a candidate so that if activityToBeat is the best activity, then we still have give a suggestion
-                //bestActivity = activityToBeat;
                 consideredCandidates.Add(activityToBeat);
             }
             while (candidates.Count > 0)
@@ -290,6 +287,10 @@ namespace ActivityRecommendation
                     this.UpdateSuggestionValue(candidate, when);
                     Distribution currentRating = recommendationsCache.suggestionValues[candidate].Distribution;
                     bool better = false;
+                    if (request.Optimize == ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY)
+                    {
+                        recommendationsCache.futureEfficiencies[candidate] = this.Get_OverallEfficiency_ParticipationEstimate(candidate, when);
+                    }
                     if (activityToBeat != null && recommendationsCache.utilities[candidate] < recommendationsCache.utilities[activityToBeat])
                     {
                         better = false; // user doesn't have enough will power to do this activity
@@ -308,7 +309,9 @@ namespace ActivityRecommendation
                                 case ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY:
                                     better = recommendationsCache.participationProbabilities[candidate].Distribution.Mean >= recommendationsCache.participationProbabilities[bestActivity].Distribution.Mean;
                                     break;
-                                default:
+                                case ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY:
+                                    better = recommendationsCache.futureEfficiencies[candidate].Distribution.Mean >= recommendationsCache.futureEfficiencies[candidate].Distribution.Mean;
+                                    break;                                default:
                                     throw new ArgumentException("Unsupported activity request optimization property: " + request.Optimize);
                             }
                         }
@@ -619,12 +622,12 @@ namespace ActivityRecommendation
                     Distribution parentDistribution = this.Get_OverallHappiness_ParticipationEstimate(parent, when).Distribution.CopyAndReweightTo(4);
                     distributions.Add(parentDistribution);
                 }
-                // if this activity is correlated with efficiency, and if efficiency is correlated with happiness,
-                // then this activity is correlated with happiness too
-                Distribution efficiency = this.Get_OverallEfficiency_ParticipationEstimate(activity, when).Distribution;
-                Distribution happinessFromEfficiency_prediction = this.Predict_LongtermHappiness_From_LongtermEfficiency(efficiency).CopyAndReweightTo(4);
-                distributions.Add(happinessFromEfficiency_prediction);
             }
+            // if this activity is correlated with efficiency, and if efficiency is correlated with happiness,
+            // then this activity is correlated with happiness too
+            Distribution efficiency = this.Get_OverallEfficiency_ParticipationEstimate(activity, when).Distribution;
+            Distribution happinessFromEfficiency_prediction = this.Predict_LongtermHappiness_From_LongtermEfficiency(efficiency).CopyAndReweightTo(4);
+            distributions.Add(happinessFromEfficiency_prediction);
 
             Distribution distribution = this.CombineRatingDistributions(distributions);
             Prediction prediction = shortTerm_prediction;
@@ -1304,7 +1307,7 @@ namespace ActivityRecommendation
             this.EstimateRating(activity1, p.StartDate);
             this.EstimateRating(activity2, p.StartDate);
             double predictedEfficiency1 = this.PredictEfficiency(activity1, participation1.StartDate).Mean;
-            System.Diagnostics.Debug.WriteLine("Predictioned efficiency = " + predictedEfficiency1 + " for " + activity1.Name + " at " + participation1.StartDate);
+            System.Diagnostics.Debug.WriteLine("Predicted efficiency = " + predictedEfficiency1 + " for " + activity1.Name + " at " + participation1.StartDate);
             // TODO: when predicting the efficiency of participation2, don't use lots of extra prediction factors, just use the timestamp
             // because although the first participation was chosen randomly, the second wasn't chosen from the same pool
             // (For example, the user might tend to prefer to work on easier tasks in the evening, and so if participation2.StartDate is in the evening,
@@ -1312,7 +1315,7 @@ namespace ActivityRecommendation
             // If we use time of day (or any other predictor, really) as a prediction factor, then it might cause us to draw the (incorrect) conclusion
             // that that time of day results in more eficiency)
             double predictedEfficiency2 = this.PredictEfficiency(activity2, participation2.StartDate).Mean;
-            System.Diagnostics.Debug.WriteLine("Predictioned efficiency = " + predictedEfficiency2 + " for " + activity2.Name + " at " + participation2.StartDate);
+            System.Diagnostics.Debug.WriteLine("Predicted efficiency = " + predictedEfficiency2 + " for " + activity2.Name + " at " + participation2.StartDate);
             System.Diagnostics.Debug.WriteLine("Making completion efficiency measurement for " + activity1.Name + " and " + activity2.Name);
 
             // now calculate efficiency

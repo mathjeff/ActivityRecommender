@@ -55,6 +55,7 @@ namespace ActivityRecommendation
     public enum ActivityRequestOptimizationProperty
     {
         LONGTERM_HAPPINESS,
-        PARTICIPATION_PROBABILITY
+        PARTICIPATION_PROBABILITY,
+        LONGTERM_EFFICIENCY
     }
 }

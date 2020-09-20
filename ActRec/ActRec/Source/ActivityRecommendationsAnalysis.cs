@@ -25,6 +25,8 @@ namespace ActivityRecommendation
         public Dictionary<Activity, Prediction> participationProbabilities = new Dictionary<Activity, Prediction>();
         // the importance of suggesting the activity
         public Dictionary<Activity, Prediction> suggestionValues = new Dictionary<Activity, Prediction>();
+        // the estimated future efficiency if the user does this
+        public Dictionary<Activity, Prediction> futureEfficiencies = new Dictionary<Activity, Prediction>();
 
     }
 

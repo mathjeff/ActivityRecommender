@@ -15,26 +15,33 @@ namespace ActivityRecommendation.View
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
 
-        public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowRequestingMostLikely, bool vertical,
+        public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowMultipleSuggestionTypes, bool vertical,
             Engine engine, LayoutStack layoutStack)
         {
             Button suggestionButton = new Button();
             suggestionButton.Clicked += SuggestBestActivity_Clicked;
             ButtonLayout suggest_maxLongtermHappiness_button;
-            if (allowRequestingMostLikely)
+            if (allowMultipleSuggestionTypes)
                 suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest Best");
             else
                 suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest");
             LayoutChoice_Set suggestButton_layout;
             if (allowRequestingActivitiesDirectly)
             {
-                Button suggestionButton2 = new Button();
-                suggestionButton2.Clicked += SuggestMostLikelyActivity_Clicked;
 
-                ButtonLayout suggest_mostLikely_button = new ButtonLayout(suggestionButton2, "Suggest Most Likely");
                 Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform().AddLayout(suggest_maxLongtermHappiness_button);
-                if (allowRequestingMostLikely)
+                if (allowMultipleSuggestionTypes)
+                {
+                    Button suggestionButton2 = new Button();
+                    suggestionButton2.Clicked += SuggestMostLikelyActivity_Clicked;
+                    ButtonLayout suggest_mostLikely_button = new ButtonLayout(suggestionButton2, "Suggest Most Likely");
                     builder.AddLayout(suggest_mostLikely_button);
+
+                    Button suggestionButton3 = new Button();
+                    suggestionButton3.Clicked += SuggestMostEfficientActivity_Clicked;
+                    ButtonLayout suggest_mostEfficient_button = new ButtonLayout(suggestionButton3, "Suggest For Most Future Efficiency");
+                    builder.AddLayout(suggest_mostEfficient_button);
+                }
                 suggestButton_layout = builder.BuildAnyLayout();
             }
             else
@@ -106,6 +113,11 @@ namespace ActivityRecommendation.View
         private void SuggestMostLikelyActivity_Clicked(object sender, EventArgs e)
         {
             this.Suggest(ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY);
+        }
+
+        private void SuggestMostEfficientActivity_Clicked(object sender, EventArgs e)
+        {
+            this.Suggest(ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY);
         }
 
         private void Suggest(ActivityRequestOptimizationProperty optimizationProperty)

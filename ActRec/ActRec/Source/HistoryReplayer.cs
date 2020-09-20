@@ -29,6 +29,7 @@ namespace ActivityRecommendation
         public virtual void PostInheritance(Inheritance newInheritance) { }
         public virtual void PostCategory(Category category) { }
         public virtual void PostToDo(ToDo todo) { }
+        public virtual void PostProblem(Problem problem) { }
 
 
 

@@ -23,12 +23,13 @@ namespace ActivityRecommendation.View
                 {
                     title += " (Category)";
                 }
-                else
+                else if (activity is ToDo)
                 {
-                    if (activity is ToDo)
-                    {
-                        title += " (ToDo)";
-                    }
+                    title += " (ToDo)";
+                }
+                else if (activity is Problem)
+                {
+                    title += " (Problem)";
                 }
             }
             this.SetTitle(title);
@@ -63,22 +64,24 @@ namespace ActivityRecommendation.View
 
             List<Activity> childTodos = new List<Activity>();
             List<Activity> childCategories = new List<Activity>();
+            List<Activity> childProblems = new List<Activity>();
             foreach (Activity child in children)
             {
                 if (child is ToDo)
                 {
                     childTodos.Add(child);
                 }
+                else if (child is Category)
+                {
+                    childCategories.Add(child);
+                }
+                else if (child is Problem)
+                {
+                    childProblems.Add(child);
+                }
                 else
                 {
-                    if (child is Category)
-                    {
-                        childCategories.Add(child);
-                    }
-                    else
-                    {
-                        throw new InvalidCastException("Unrecognized object type " + child);
-                    }
+                    throw new InvalidCastException("Unrecognized object type " + child);
                 }
             }
 
@@ -86,6 +89,7 @@ namespace ActivityRecommendation.View
             {
                 gridBuilder.AddLayout(new ActivityListView(" " + childCategories.Count.ToString() + " Children of type Category:", childCategories));
                 gridBuilder.AddLayout(new ActivityListView(" " + childTodos.Count.ToString() + " Children of type ToDo:", childTodos));
+                gridBuilder.AddLayout(new ActivityListView(" " + childProblems.Count.ToString() + " Children of type Problem:", childProblems));
             }
 
             this.SetContent(gridBuilder.Build());

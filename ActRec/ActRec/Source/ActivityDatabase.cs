@@ -32,7 +32,6 @@ namespace ActivityRecommendation
 
         public ActivityDatabase(ScoreSummarizer happinessSummarizer, ScoreSummarizer efficiencySummarizer)
         {
-            //this.activitiesByName = new Dictionary<string, List<Activity> >();
             this.activitiesByName = new StatList<string, IEnumerable<Activity>>(this, this);
             this.allActivities = new List<Activity>();
             this.happinessSummarizer = happinessSummarizer;
@@ -42,7 +41,12 @@ namespace ActivityRecommendation
             this.AddActivity(this.rootActivity);
             this.todoCategory = new Category("ToDo", happinessSummarizer, efficiencySummarizer);
             this.todoCategory.setSuggestible(false);
+            this.todoCategory.AddParent(this.rootActivity);
             this.AddActivity(this.todoCategory);
+            this.problemCategory = new Category("Problem", happinessSummarizer, efficiencySummarizer);
+            this.problemCategory.setSuggestible(false);
+            this.problemCategory.AddParent(this.rootActivity);
+            this.AddActivity(this.problemCategory);
         }
 
         #endregion
@@ -56,8 +60,8 @@ namespace ActivityRecommendation
             if (err != "")
                 return err;
             Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
-            if (parent == this.todoCategory)
-                return "You can't assign an Activity of type Category as a child of the Category named ToDo";
+            if (parent == this.todoCategory || parent == this.problemCategory)
+                return "You can't assign an Activity of type Category as a child of the Category named " + parent.Name;
             ActivityDescriptor childDescriptor = inheritance.ChildDescriptor;
             Activity child = this.CreateCategory(inheritance.ChildDescriptor);
             return this.AddParent(inheritance);
@@ -70,7 +74,19 @@ namespace ActivityRecommendation
                 return err;
             ToDo toDo = this.CreateToDo(inheritance.ChildDescriptor);
             Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
-            if (parent == this.todoCategory)
+            if (parent == this.todoCategory || parent == this.rootActivity)
+                return ""; // don't have to add the same parent twice
+            return this.AddParent(inheritance);
+        }
+
+        public string CreateProblem(Inheritance inheritance)
+        {
+            string err = this.ValidateCandidateNewInheritance(inheritance);
+            if (err != "")
+                return err;
+            Problem problem = this.CreateProblem(inheritance.ChildDescriptor);
+            Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
+            if (parent == this.problemCategory || parent == this.rootActivity)
                 return ""; // don't have to add the same parent twice
             return this.AddParent(inheritance);
         }
@@ -426,6 +442,19 @@ namespace ActivityRecommendation
             return result;
         }
 
+        public Problem CreateProblem(ActivityDescriptor sourceDescriptor)
+        {
+            Activity existing = this.ResolveDescriptor(sourceDescriptor);
+            if (existing != null)
+            {
+                throw new ArgumentException("Activity " + sourceDescriptor.ActivityName + " already exists");
+            }
+            Problem result = new Problem(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
+            result.AddParent(this.problemCategory);
+            this.AddActivity(result);
+            return result;
+        }
+
         // returns a string telling the error, or "" if no error
         public string AddMetric(Activity activity, Metric metric)
         {
@@ -520,8 +549,8 @@ namespace ActivityRecommendation
             Activity parent = this.ResolveDescriptor(parentDescriptor);
             if (parent == null)
                 return "Parent " + parentDescriptor.ActivityName + " does not exist";
-            if (!(parent is Activity))
-                return "Parent " + parentDescriptor.ActivityName + " is not of type Category";
+            if (parent is ToDo)
+                return "Parent " + parentDescriptor.ActivityName + " is a ToDo which cannot have child activities";
             return "";
         }
 
@@ -539,6 +568,7 @@ namespace ActivityRecommendation
         private ScoreSummarizer efficiencySummarizer;
         private Category rootActivity;
         private Category todoCategory; // a Category that is the parent of each ToDo
+        private Category problemCategory; // a Category that is the parent of each problem
         private StringQueryMatcher stringQueryMatcher = new StringQueryMatcher();
 
         #endregion

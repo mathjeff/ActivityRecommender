@@ -25,6 +25,11 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(todo);
             this.addText(text);
         }
+        public override void PostProblem(Problem problem)
+        {
+            string text = this.textConverter.ConvertToString(problem);
+            this.addText(text);
+        }
         public override void PostInheritance(Inheritance newInheritance)
         {
             string text = this.textConverter.ConvertToString(newInheritance);

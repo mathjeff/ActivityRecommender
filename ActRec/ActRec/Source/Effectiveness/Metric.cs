@@ -47,4 +47,12 @@ namespace ActivityRecommendation.Effectiveness
         }
     }
 
+    public class ProblemMetric : CompletionMetric
+    {
+        public ProblemMetric(Problem problem) : base("Fix: " + problem.Name, problem)
+        {
+        }
+    }
+
 }
+ 

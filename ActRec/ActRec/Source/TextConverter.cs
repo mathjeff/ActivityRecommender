@@ -94,6 +94,9 @@ namespace ActivityRecommendation
             Category category = activity as Category;
             if (category != null)
                 return this.ConvertToString(category);
+            Problem problem = activity as Problem;
+            if (problem != null)
+                return this.ConvertToString(problem);
             throw new Exception("Unsupported Activity type: " + activity);
         }
         public string ConvertToString(ToDo toDo)
@@ -105,6 +108,11 @@ namespace ActivityRecommendation
         {
             string body = this.ConvertToStringBody(category.MakeDescriptor());
             return this.ConvertToString(body, this.CategoryTag);
+        }
+        public string ConvertToString(Problem problem)
+        {
+            string body = this.ConvertToStringBody(problem.MakeDescriptor());
+            return this.ConvertToString(body, this.ProblemTag);
         }
 
         // converts the ActivityRequest into a string that is ready to write to disk
@@ -327,6 +335,11 @@ namespace ActivityRecommendation
                     this.ProcessTodo(node);
                     continue;
                 }
+                if (node.Name == this.ProblemTag)
+                {
+                    this.ProcessProblem(node);
+                    continue;
+                }
                 if (node.Name == this.ParticipationTag)
                 {
                     this.ProcessParticipation(node);
@@ -414,6 +427,13 @@ namespace ActivityRecommendation
             ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
             ToDo todo = this.activityDatabase.CreateToDo(activityDescriptor);
             this.listener.PostToDo(todo);
+        }
+        private void ProcessProblem(XmlNode nodeRepresentation)
+        {
+            // the Todo just puts all of the fields of the ActivityDescriptor at the top level
+            ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(nodeRepresentation);
+            Problem todo = this.activityDatabase.CreateProblem(activityDescriptor);
+            this.listener.PostProblem(todo);
         }
         private void ProcessParticipation(XmlNode nodeRepresentation)
         {
@@ -1371,6 +1391,13 @@ namespace ActivityRecommendation
             get
             {
                 return "ToDo";
+            }
+        }
+        public string ProblemTag
+        {
+            get
+            {
+                return "Problem";
             }
         }
         public string ChoosableTag

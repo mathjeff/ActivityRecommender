@@ -1,5 +1,6 @@
 ﻿using ActivityRecommendation.View;
 using System;
+using System.Collections.Generic;
 using VisiPlacement;
 using Xamarin.Forms;
 
@@ -16,11 +17,13 @@ namespace ActivityRecommendation
 
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            VisiPlacement.CheckBox checkbox = new VisiPlacement.CheckBox("Type = ToDo", Color.FromRgb(179, 172, 166), "Type = Category", Color.FromRgb(181, 255, 254));
-            checkbox.Checked = true;
+            SingleSelect_Choice todoType = new SingleSelect_Choice("Type = ToDo", Color.FromRgb(179, 172, 166));
+            SingleSelect_Choice categoryType = new SingleSelect_Choice("Type = Category", Color.FromRgb(181, 255, 254));
+            SingleSelect_Choice problemType = new SingleSelect_Choice("Type = Problem", Color.FromRgb(235, 228, 134));
+            SingleSelect typeSelector = new SingleSelect(new List<SingleSelect_Choice>() { categoryType, todoType, problemType });
 
-            this.typePicker = checkbox;
-            mainGrid.AddLayout(ButtonLayout.WithoutBevel(checkbox));
+            this.typePicker = typeSelector;
+            mainGrid.AddLayout(ButtonLayout.WithoutBevel(typeSelector));
 
             this.feedbackLayout = new TextblockLayout();
             mainGrid.AddLayout(this.feedbackLayout);
@@ -67,15 +70,22 @@ namespace ActivityRecommendation
         }
 
         // returns true if the type of Activity to create is Category (otherwise the type is ToDo)
-        public bool SelectedActivityTypeIsCategory
+        bool SelectedActivityTypeIsCategory
         {
             get
             {
-                return this.typePicker.Checked;
+                return this.typePicker.SelectedIndex == 0;
+            }
+        }
+        public bool SelectedActivityTypeIsToDo
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 1;
             }
             set
             {
-                this.typePicker.Checked = value;
+                this.typePicker.SelectedIndex = 1;
             }
         }
 
@@ -100,9 +110,20 @@ namespace ActivityRecommendation
 
             string error;
             if (this.SelectedActivityTypeIsCategory)
+            {
                 error = this.activityDatabase.CreateCategory(inheritance);
+            }
             else
-                error = this.activityDatabase.CreateToDo(inheritance);
+            {
+                if (this.SelectedActivityTypeIsToDo)
+                {
+                    error = this.activityDatabase.CreateToDo(inheritance);
+                }
+                else
+                {
+                    error = this.activityDatabase.CreateProblem(inheritance);
+                }
+            }
             if (error == "")
             {
                 this.childNameBox.Clear();
@@ -121,6 +142,6 @@ namespace ActivityRecommendation
         private LayoutStack layoutStack;
         private ActivityDatabase activityDatabase;
         private TextblockLayout feedbackLayout;
-        private VisiPlacement.CheckBox typePicker;
+        private VisiPlacement.SingleSelect typePicker;
     }
 }

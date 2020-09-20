@@ -28,14 +28,6 @@ namespace ActivityRecommendation
             return "ToDo " + base.Name;
         }
         
-        // makes an ActivityDescriptor that describes this ToDo
-        public override ActivityDescriptor MakeDescriptor()
-        {
-            ActivityDescriptor descriptor = new ActivityDescriptor();
-            descriptor.ActivityName = this.Name;
-            return descriptor;
-        }
-
         public bool IsCompleted()
         {
             return this.complete;

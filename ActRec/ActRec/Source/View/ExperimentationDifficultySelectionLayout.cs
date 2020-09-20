@@ -9,14 +9,15 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    // An ExperimentationDifficultySelectionLayout asks the user for some information about the relative difficulties of several activities
-    // This is supposed to happen after the user has identified several plausible activities to include in an experiment but before one specific activity has been chosen to do now
+    // An ExperimentationDifficultySelectionLayout asks the user for some information about the relative difficulties of several activities.
+    // This is supposed to happen after the user has identified several plausible activities to include in an experiment but before one specific activity has been chosen to do now.
+    // The user may also specify which specific metrics they want to use to measure their participations.
     class ExperimentationDifficultySelectionLayout : ContainerLayout, LayoutProvider<ExperimentDifficulty_ListItem>
     {
         public event RequestedExperimentHandler Done;
         public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
 
-        public ExperimentationDifficultySelectionLayout(List<SuggestedMetric> suggestions)
+        public ExperimentationDifficultySelectionLayout(List<SuggestedMetric> suggestions, ActivityDatabase activityDatabase)
         {
             int requiredNumChoices = 3;
             if (suggestions.Count != requiredNumChoices)
@@ -25,12 +26,12 @@ namespace ActivityRecommendation.View
             List<ExperimentDifficulty_ListItem> difficultyOptions = new List<ExperimentDifficulty_ListItem>();
             this.aPlusB_listItem = new ExperimentDifficulty_TextItem("Two times the difficulty of the easiest activity listed above");
 
-            difficultyOptions.Add(new ExperimentDifficulty_SuggestedMetric(suggestions[0]));
-            difficultyOptions.Add(new ExperimentDifficulty_SuggestedMetric(suggestions[1]));
+            difficultyOptions.Add(this.newItem(suggestions[0], activityDatabase));
+            difficultyOptions.Add(this.newItem(suggestions[1], activityDatabase));
             difficultyOptions.Add(this.aPlusB_listItem);
-            difficultyOptions.Add(new ExperimentDifficulty_SuggestedMetric(suggestions[2]));
+            difficultyOptions.Add(this.newItem(suggestions[2], activityDatabase));
 
-            string instructions = "Rearrange these tasks so they appear in order by increasing difficulty.";
+            string instructions = "Rearrange these tasks so they appear in order by increasing difficulty. Also, you may change which metric you would like to use to measure your efficiency.";
 
             Button okButton = new Button();
             okButton.Clicked += OkButton_Clicked;
@@ -55,6 +56,12 @@ namespace ActivityRecommendation.View
             this.updateValidity(this.choicesLayout.Items);
 
             this.SubLayout = gridLayout;
+        }
+
+        private ExperimentDifficulty_SuggestedMetric newItem(SuggestedMetric metric, ActivityDatabase activityDatabase)
+        {
+            Activity activity = activityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
+            return new ExperimentDifficulty_SuggestedMetric(metric, activity);
         }
 
         private void ChoicesLayout_Reordered(List<ExperimentDifficulty_ListItem> choices)
@@ -95,12 +102,14 @@ namespace ActivityRecommendation.View
             for (int i = 0; i < reorderedItems.Count; i++)
             {
                 ExperimentDifficulty_ListItem item = reorderedItems[i];
-                ExperimentDifficulty_SuggestedMetric suggestion = item as ExperimentDifficulty_SuggestedMetric;
-                if (suggestion != null)
+                ExperimentDifficulty_SuggestedMetric suggestionItem = item as ExperimentDifficulty_SuggestedMetric;
+                if (suggestionItem != null)
                 {
-                    SuggestedMetric suggestedMetric = suggestion.SuggestedMetric;
+                    SuggestedMetric suggestedMetric = suggestionItem.SuggestedMetric;
                     suggestedMetric.PlannedMetric.DifficultyEstimate.NumEasiers = i;
                     suggestedMetric.PlannedMetric.DifficultyEstimate.NumHarders = reorderedItems.Count - 1 - i;
+                    suggestedMetric.PlannedMetric.MetricName = suggestionItem.MetricChooser.Metric.Name;
+
                     results.Add(suggestedMetric);
                 }
             }
@@ -113,11 +122,25 @@ namespace ActivityRecommendation.View
 
         public LayoutChoice_Set GetLayout(ExperimentDifficulty_ListItem item)
         {
-            LayoutChoice_Set itemAsLayout = item as LayoutChoice_Set;
-            if (itemAsLayout != null)
-                return itemAsLayout;
-            return SuggestedMetric_Renderer.Instance.GetLayout((item as ExperimentDifficulty_SuggestedMetric).SuggestedMetric);
+            ExperimentDifficulty_TextItem textItem = item as ExperimentDifficulty_TextItem;
+            if (textItem != null)
+                return textItem;
+
+            ExperimentDifficulty_SuggestedMetric metricItem = item as ExperimentDifficulty_SuggestedMetric;
+
+            BoundProperty_List columnWidths = new BoundProperty_List(2);
+            columnWidths.BindIndices(0, 1);
+            columnWidths.SetPropertyScale(0, 5);
+            columnWidths.SetPropertyScale(1, 2);
+            GridLayout gridLayout = GridLayout.New(new BoundProperty_List(1), columnWidths, LayoutScore.Zero);
+            gridLayout.AddLayout(new TextblockLayout(metricItem.SuggestedMetric.ActivityDescriptor.ActivityName));
+            ChooseMetric_View chooser = metricItem.MetricChooser;
+
+            gridLayout.AddLayout(chooser);
+            return gridLayout;
+
         }
+
         private ReorderableList<ExperimentDifficulty_ListItem> choicesLayout;
         private ExperimentDifficulty_TextItem aPlusB_listItem;
         private ButtonLayout okButtonLayout;
@@ -132,8 +155,15 @@ namespace ActivityRecommendation.View
 
     class ExperimentDifficulty_SuggestedMetric : ExperimentDifficulty_ListItem
     {
-        public ExperimentDifficulty_SuggestedMetric(SuggestedMetric suggestedMetric) { this.SuggestedMetric = suggestedMetric; }
+        public ExperimentDifficulty_SuggestedMetric(SuggestedMetric suggestedMetric, Activity activity)
+        {
+            this.SuggestedMetric = suggestedMetric;
+            this.MetricChooser = new ChooseMetric_View();
+            this.MetricChooser.SetActivity(activity);
+            this.MetricChooser.Choose(suggestedMetric.PlannedMetric.MetricName);
+        }
         public SuggestedMetric SuggestedMetric { get; set; }
+        public ChooseMetric_View MetricChooser { get; set; }
     }
 
     class ExperimentDifficulty_TextItem : ContainerLayout, ExperimentDifficulty_ListItem

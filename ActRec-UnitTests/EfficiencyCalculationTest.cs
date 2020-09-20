@@ -40,7 +40,7 @@ namespace ActRec_UnitTests
                 ActivityDescriptor activityDescriptor = suggestion.ActivitySuggestion.ActivityDescriptor;
                 Participation participation = new Participation(when, when.AddDays(duration), activityDescriptor);
 
-                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(true, 0);
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(null, true, 0);
                 participation.EffectivenessMeasurement.DismissedActivity = true;
                 RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
                 participation.EffectivenessMeasurement.Computation = measurement;

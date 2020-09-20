@@ -55,9 +55,13 @@ namespace ActivityRecommendation.View
                 }
             }
 
-            foreach (Metric metric in activity.Metrics)
+            foreach (Metric metric in activity.IntrinsicMetrics)
             {
                 gridBuilder.AddLayout(new TextblockLayout("Has metric: " + metric.Name));
+            }
+            foreach (Metric metric in activity.InheritedMetrics)
+            {
+                gridBuilder.AddLayout(new TextblockLayout("Inherited metric: " + metric.Name));
             }
             if (parents.Count > 0)
                 gridBuilder.AddLayout(new ActivityListView(parents.Count.ToString() + " Parents:", parents));

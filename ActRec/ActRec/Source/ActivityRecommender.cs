@@ -359,7 +359,7 @@ namespace ActivityRecommendation
 
         public void Request_ExperimentOption_Difficulties(List<SuggestedMetric> choices)
         {
-            ExperimentationDifficultySelectionLayout layout = new ExperimentationDifficultySelectionLayout(choices);
+            ExperimentationDifficultySelectionLayout layout = new ExperimentationDifficultySelectionLayout(choices, this.ActivityDatabase);
             layout.Done += this.ExperimentDifficultySelectionLayout_Done;
             this.layoutStack.AddLayout(layout, "Difficulty");
         }
@@ -393,6 +393,7 @@ namespace ActivityRecommendation
             this.update_numRecent_userChosenExperimentSuggestions(choices);
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
+            this.recentUserData.DemandedMetricName = experimentSuggestion.MetricName;
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);
 
             PlannedExperiment experiment = experimentSuggestion.Experiment;
@@ -600,16 +601,23 @@ namespace ActivityRecommendation
 
         private void updateExperimentParticipationDemands()
         {
-            ActivityDescriptor demand = null;
+            ActivityDescriptor demandedActivity = null;
+            Metric demandedMetric = null;
             if (this.suggestionsView.GetSuggestions().Count() > 0)
             {
                 ActivitySuggestion suggestion = this.suggestionsView.GetSuggestions().First();
                 if (!suggestion.Skippable)
                 {
-                    demand = suggestion.ActivityDescriptor;
+                    demandedActivity = suggestion.ActivityDescriptor;
+                    Activity activity = this.ActivityDatabase.ResolveDescriptor(demandedActivity);
+                    string metricName = this.recentUserData.DemandedMetricName;
+                    if (metricName != "")
+                        demandedMetric = activity.MetricForName(metricName);
+                    else
+                        demandedMetric = activity.DefaultMetric;
                 }
             }
-            this.participationEntryView.DemandNextParticipationBe(demand);
+            this.participationEntryView.DemandNextParticipationBe(demandedActivity, demandedMetric);
         }
 
         private void PersistSuggestions()

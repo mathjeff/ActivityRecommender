@@ -42,19 +42,19 @@ namespace ActivityRecommendation
                     return null;
                 return this.EffectivenessMeasurement.Computation;
             }
-            set
+        }
+        public void setRelativeEfficiencyMeasurement(RelativeEfficiencyMeasurement measurement, Metric metric)
+        {
+            if (this.EffectivenessMeasurement == null)
             {
-                if (this.EffectivenessMeasurement == null)
-                {
-                    bool successful = value.RecomputedEfficiency.Mean > 0;
-                    double helpFraction = 0;
-                    if (successful)
-                        helpFraction = 1 - value.RecomputedEfficiency.Mean;
-
-                    this.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful, helpFraction);
-                }
-                this.EffectivenessMeasurement.Computation = value;
+                bool successful = measurement.RecomputedEfficiency.Mean > 0;
+                double helpFraction = 0;
+                if (successful)
+                    helpFraction = 1 - measurement.RecomputedEfficiency.Mean;
+                
+                this.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, successful, helpFraction);
             }
+            this.EffectivenessMeasurement.Computation = measurement;
         }
         // Returns true if this Participation was assigned a completion metric that considers this Participation to have succeeded
         public bool CompletedMetric

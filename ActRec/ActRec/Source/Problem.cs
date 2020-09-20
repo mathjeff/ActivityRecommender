@@ -12,7 +12,7 @@ namespace ActivityRecommendation
         // public
         public Problem(string activityName, ScoreSummarizer overallRatings_summarizer, ScoreSummarizer overallEfficiency_summarizer) : base(activityName, overallRatings_summarizer, overallEfficiency_summarizer)
         {
-            this.AddMetric(new ProblemMetric(this));
+            this.AddIntrinsicMetric(new ProblemMetric(this));
         }
         #endregion
 

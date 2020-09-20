@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ActivityRecommendation.View;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,11 +24,27 @@ namespace ActivityRecommendation.Effectiveness
                 return this.FirstParticipation != null;
             }
         }
+
+        public string CurrentMetricName
+        {
+            get
+            {
+                if (this.InProgress)
+                    return this.Later.MetricName;
+                else
+                    return this.Earlier.MetricName;
+            }
+
+        }
     }
 
     // A plan to do a certain Activity, along with how to measure its success
     public class PlannedMetric
     {
+        public PlannedMetric()
+        {
+            this.MetricName = "";
+        }
         public ActivityDescriptor ActivityDescriptor { get; set; }
 
         public string MetricName { get; set; }
@@ -53,7 +70,7 @@ namespace ActivityRecommendation.Effectiveness
     public class SuggestedMetric
     {
         public SuggestedMetric(PlannedMetric metric, ActivitySuggestion activitySuggestion, bool chosenByUser)
-{
+        {
             this.PlannedMetric = metric;
             this.ActivitySuggestion = activitySuggestion;
             this.ChosenByUser = chosenByUser;
@@ -70,26 +87,6 @@ namespace ActivityRecommendation.Effectiveness
             }
         }
     }
-
-    public class SuggestedMetric_Renderer : LayoutProvider<SuggestedMetric>
-    {
-        public static SuggestedMetric_Renderer Instance = new SuggestedMetric_Renderer();
-        public LayoutChoice_Set GetLayout(SuggestedMetric metric)
-        {
-            BoundProperty_List columnWidths = new BoundProperty_List(2);
-            columnWidths.BindIndices(0, 1);
-            columnWidths.SetPropertyScale(0, 5);
-            columnWidths.SetPropertyScale(1, 2);
-            GridLayout gridLayout = GridLayout.New(new BoundProperty_List(1), columnWidths, LayoutScore.Zero);
-            gridLayout.AddLayout(new TextblockLayout(metric.ActivityDescriptor.ActivityName));
-            gridLayout.AddLayout(new TextblockLayout(metric.PlannedMetric.MetricName));
-            return gridLayout;
-
-        }
-
-
-    }
-
 
     // holds a SuggestedMetric and some information about the process of creating it
     public class SuggestedMetric_Metadata
@@ -132,6 +129,13 @@ namespace ActivityRecommendation.Effectiveness
 
         public ActivitySuggestion ActivitySuggestion { get; set; }
         public PlannedExperiment Experiment { get; set; }
+        public string MetricName
+        {
+            get
+            {
+                return this.Experiment.CurrentMetricName;
+            }
+        }
     }
 
 }

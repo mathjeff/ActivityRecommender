@@ -106,7 +106,6 @@ namespace ActivityRecommendation
             Category parentCategory = parent as Category;
             if (parentCategory == null)
                 return "Parent " + parent.Name + " is not of type Category";
-            this.superactivitiesCache = new Dictionary<Activity, List<Activity>>();
             child.AddParent(parentCategory);
             if (this.InheritanceAdded != null)
                 this.InheritanceAdded.Invoke(inheritance);
@@ -135,25 +134,7 @@ namespace ActivityRecommendation
         // returns a list containing this Activity and all of its ancestors
         public List<Activity> GetAllSuperactivitiesOf(Activity activity)
         {
-            if (!this.superactivitiesCache.ContainsKey(activity))
-            {
-                List<Activity> superCategories = new List<Activity>();
-                superCategories.Add(activity);
-                int i = 0;
-                for (i = 0; i < superCategories.Count; i++)
-                {
-                    Activity Doable = superCategories[i];
-                    foreach (Activity parent in Doable.Parents)
-                    {
-                        if (!superCategories.Contains(parent))
-                        {
-                            superCategories.Add(parent);
-                        }
-                    }
-                }
-                this.superactivitiesCache[activity] = superCategories;
-            }
-            return this.superactivitiesCache[activity];
+            return activity.SelfAndAncestors;
         }
         // tells whether <ancestor> is either <descendant> or one of the ancestors of <descendant>
         public bool HasAncestor(Activity descendant, Activity ancestor)
@@ -458,12 +439,7 @@ namespace ActivityRecommendation
         // returns a string telling the error, or "" if no error
         public string AddMetric(Activity activity, Metric metric)
         {
-            if (activity.Metrics.Count > 0)
-            {
-                // TODO: remove this requirement when the ParticipationEntryView can support more than one metric per Activity
-                return activity.Name + " already has a metric (" + activity.Metrics[0].Name + ")";
-            }
-            activity.AddMetric(metric);
+            activity.AddIntrinsicMetric(metric);
             this.MetricAdded.Invoke(metric, activity);
             return "";
         }
@@ -560,7 +536,6 @@ namespace ActivityRecommendation
         #region Private Variables
 
         private List<Activity> allActivities;
-        private Dictionary<Activity, List<Activity>> superactivitiesCache = new Dictionary<Activity, List<Activity>>();
         // We only allow one Activity for each name, but we want to be able to find activities having certain name prefixes, and StatList currently
         // requires that its value type is the same as its aggregation type
         private StatList<string, IEnumerable<Activity>> activitiesByName;

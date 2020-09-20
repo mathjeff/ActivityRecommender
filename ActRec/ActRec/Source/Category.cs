@@ -38,6 +38,7 @@ namespace ActivityRecommendation
         public void AddChild(Activity child)
         {
             this.children.Add(child);
+            child.InvalidateAncestorList();
         }
 
         // makes an ActivityDescriptor that describes this Activity

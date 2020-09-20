@@ -11,16 +11,18 @@ namespace ActivityRecommendation.Effectiveness
     // a CompletionEffectivenessMeasurement records whether the Participation completed its ToDo
     public class CompletionEfficiencyMeasurement
     {
-        public CompletionEfficiencyMeasurement(bool successful, double helpFraction)
+        public CompletionEfficiencyMeasurement(Metric metric, bool successful, double helpFraction)
         {
             this.Successful = successful;
             this.HelpFraction = helpFraction;
+            this.Metric = metric;
         }
-        public CompletionEfficiencyMeasurement(RelativeEfficiencyMeasurement computation, bool successful, double helpFraction)
+        public CompletionEfficiencyMeasurement(RelativeEfficiencyMeasurement computation, Metric metric, bool successful, double helpFraction)
         {
             this.Computation = computation;
             this.Successful = successful;
             this.HelpFraction = helpFraction;
+            this.Metric = metric;
         }
 
         // Whether this task was completed
@@ -29,6 +31,7 @@ namespace ActivityRecommendation.Effectiveness
         public double HelpFraction { get; set; }
         // Whether the task should be dismissed
         public bool DismissedActivity { get; set; }
+        public Metric Metric { get; set; }
         public RelativeEfficiencyMeasurement Computation { get; set; }
     }
 
@@ -63,6 +66,7 @@ namespace ActivityRecommendation.Effectiveness
         public RelativeEfficiencyMeasurement Later { get; set; }
     }
 
+    // An EfficiencyMeasurement records the computed efficiency of a Participation
     public interface EfficiencyMeasurement
     {
         ActivityDescriptor ActivityDescriptor { get; }

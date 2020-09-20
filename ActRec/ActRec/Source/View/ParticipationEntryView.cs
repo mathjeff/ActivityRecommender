@@ -51,7 +51,7 @@ namespace ActivityRecommendation
 
             contents.AddLayout(middleGrid);
             this.todoCompletionStatusHolder = new ContainerLayout();
-            this.todoCompletionLabel = new TextblockLayout();
+            this.todoCompletionLabel = new ChooseMetric_View();
 
             Horizontal_GridLayout_Builder todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
             todoInfo_builder.AddLayout(new Vertical_GridLayout_Builder().Uniform()
@@ -342,10 +342,12 @@ namespace ActivityRecommendation
                 // Record the success/failure status of the participation
                 string status = this.todoCompletionStatusPicker.SelectedItem.ToString();
                 bool successful = (status == this.TaskCompleted_Text);
-                bool closed = (status != TaskIncomplete_Text);
+                bool closed = (status != this.TaskIncomplete_Text);
                 double helpFraction = this.helpStatusPicker.GetHelpFraction(participation.Duration);
-                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(successful, helpFraction);
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(this.todoCompletionLabel.Metric, successful, helpFraction);
                 participation.EffectivenessMeasurement.DismissedActivity = closed;
+                // Notice that the Engine doesn't need us to pass in a Metric for computing the efficiency of this participation, because computing efficiency requires an experiment, and the
+                // experiment already knows which metric we're using
                 RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
                 participation.EffectivenessMeasurement.Computation = measurement;
             }
@@ -372,9 +374,10 @@ namespace ActivityRecommendation
             this.updateTodoCheckboxVisibility();
         }
 
-        public void DemandNextParticipationBe(ActivityDescriptor activityDescriptor)
+        public void DemandNextParticipationBe(ActivityDescriptor activityDescriptor, Metric metric)
         {
             this.demanded_nextParticipationActivity = activityDescriptor;
+            this.todoCompletionLabel.DemandMetric(metric);
         }
 
         private void Invalidate_FeedbackBlock_Text()
@@ -385,6 +388,8 @@ namespace ActivityRecommendation
 
         private void updateTodoCheckboxVisibility()
         {
+            this.todoCompletionLabel.SetActivity(this.nameBox.Activity);
+
             if (this.EnteringActivityWithMetric)
             {
                 SingleSelect singleSelect;
@@ -400,13 +405,10 @@ namespace ActivityRecommendation
                 this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
                 this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
                 this.helpStatusHolder.SubLayout = this.helpStatusPicker;
-                // TODO: if there are multiple metrics; figure out how to determine which one to show
-                this.todoCompletionLabel.setText(this.nameBox.Activity.Metrics[0].Name + "?");
             }
             else
             {
                 this.todoCompletionStatusHolder.SubLayout = null;
-                this.todoCompletionLabel.setText("");
                 this.helpStatusHolder.SubLayout = null;
             }
         }
@@ -417,7 +419,7 @@ namespace ActivityRecommendation
             {
                 Activity activity = this.nameBox.Activity;
                 if (activity != null)
-                    return (activity.Metrics.Count > 0);
+                    return activity.HasAMetric;
                 return false;
             }
         }
@@ -1382,7 +1384,7 @@ namespace ActivityRecommendation
         Button okButton;
         Button feedbackButton;
         Engine engine;
-        TextblockLayout todoCompletionLabel;
+        ChooseMetric_View todoCompletionLabel;
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;
         SingleSelect todoCompletionStatusPicker;

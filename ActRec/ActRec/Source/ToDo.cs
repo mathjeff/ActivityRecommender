@@ -17,7 +17,7 @@ namespace ActivityRecommendation
         // public
         public ToDo(string activityName, ScoreSummarizer overallRatings_summarizer, ScoreSummarizer overallEfficiency_summarizer) : base(activityName, overallRatings_summarizer, overallEfficiency_summarizer)
         {
-            this.AddMetric(new TodoMetric(this));
+            this.AddIntrinsicMetric(new TodoMetric(this));
         }
         #endregion
 

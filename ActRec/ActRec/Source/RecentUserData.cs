@@ -47,11 +47,23 @@ namespace ActivityRecommendation
                 this.Synchronized = false;
             }
         }
+        // if the user started an experiment, then we require that they measure their participation via this metric
+        public string DemandedMetricName {
+            get
+            {
+                return this.demandedMetricName;
+            }
+            set
+            {
+                this.demandedMetricName = value;
+                this.Synchronized = false;
+            }
+        }
         public bool Synchronized { get; set; }  // tells whether the information on disk matches the information in memory
 
         private DateTime? latestActionDate;
         private IEnumerable<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
         private int numRecent_userchosen_ExperimentSuggestions;
-
+        private string demandedMetricName;
     }
 }

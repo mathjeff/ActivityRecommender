@@ -47,10 +47,10 @@ namespace ActivityRecommendation
     class ActivitySuggestionOrError
     {
         public ActivitySuggestionOrError(ActivitySuggestion suggestion) { this.Suggestion = suggestion; }
-        public ActivitySuggestionOrError(String error) { this.Error = error; }
+        public ActivitySuggestionOrError(string error) { this.Error = error; }
 
         public ActivitySuggestion Suggestion { get; set; }
-        public String Error { get; set; }
+        public string Error { get; set; }
     }
 
 }

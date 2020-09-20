@@ -28,7 +28,9 @@ namespace ActivityRecommendation
             if (this.recomputeEfficiencies)
             {
                 if (newParticipation.RelativeEfficiencyMeasurement != null)
-                    newParticipation.RelativeEfficiencyMeasurement = this.engine.Make_CompletionEfficiencyMeasurement(newParticipation);
+                {
+                    newParticipation.setRelativeEfficiencyMeasurement(this.engine.Make_CompletionEfficiencyMeasurement(newParticipation), newParticipation.EffectivenessMeasurement.Metric);
+                }
             }
         }
         public override RelativeRating ProcessRating(RelativeRating newRating)

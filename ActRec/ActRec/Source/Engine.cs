@@ -1023,20 +1023,26 @@ namespace ActivityRecommendation
             Activity activity = this.ActivityDatabase.ResolveDescriptor(newParticipation.ActivityDescriptor);
             if (this.experimentToUpdate.ContainsKey(activity))
             {
-                PlannedExperiment experiment = this.experimentToUpdate[activity];
-                if (experiment.InProgress)
+                string metricName = newParticipation.EffectivenessMeasurement.Metric.Name;
+                Dictionary<string, PlannedExperiment> experimentsForThisActivity = this.experimentToUpdate[activity];
+                if (experimentsForThisActivity.ContainsKey(metricName))
                 {
-                    // found the second participation in the experiment, so mark the experiment as complete
-                    this.experimentToUpdate.Remove(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
-                    this.numCompletedExperiments++;
+                    PlannedExperiment experiment = experimentsForThisActivity[metricName];
+                    if (experiment.InProgress)
+                    {
+                        // found the second participation in the experiment, so mark the experiment as complete
+                        this.numCompletedExperiments++;
+                    }
+                    else
+                    {
+                        // found the first participation in the experiment; no longer have to update this experiment if this Activity gets completed
+                        // (and we can add this Activity+Metric into a new Experiment)
+                        experiment.FirstParticipation = newParticipation;
+                        this.numStartedExperiments++;
+                    }
+                    this.experimentToUpdate[activity].Remove(metricName);
                 }
-                else
-                {
-                    // found the first participation in the experiment; no longer have to update this experiment if this Activity gets completed (and can add this Activity into a new Experiment)
-                    experiment.FirstParticipation = newParticipation;
-                    this.experimentToUpdate.Remove(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor));
-                    this.numStartedExperiments++;
-                }
+
             }
         }
 
@@ -1116,8 +1122,15 @@ namespace ActivityRecommendation
         public void PutExperimentInMemory(PlannedExperiment experiment)
         {
             // save the experiment in a way where we can associate a participation in either activity back to it
-            this.experimentToUpdate.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor), experiment);
-            this.experimentToUpdate.Add(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor), experiment);
+            this.PutExperimentInMemory(experiment.Earlier, experiment);
+            this.PutExperimentInMemory(experiment.Later, experiment);
+        }
+        private void PutExperimentInMemory(PlannedMetric metric, PlannedExperiment experiment)
+        {
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
+            if (!this.experimentToUpdate.ContainsKey(activity))
+                this.experimentToUpdate.Add(activity, new Dictionary<string, PlannedExperiment>());
+            this.experimentToUpdate[activity].Add(metric.MetricName, experiment);
         }
         // tells the Engine about an Activity that it may choose from
         public void PutActivityDescriptorInMemory(ActivityDescriptor newDescriptor)
@@ -1251,7 +1264,7 @@ namespace ActivityRecommendation
         public RelativeEfficiencyMeasurement Make_CompletionEfficiencyMeasurement(Participation p)
         {
             Activity a = this.ActivityDatabase.ResolveDescriptor(p.ActivityDescriptor);
-            PlannedExperiment experiment = this.findExperimentToUpdate(a);
+            PlannedExperiment experiment = this.findExperimentToUpdate(a, p.EffectivenessMeasurement.Metric.Name);
             if (experiment == null)
             {
                 // can't estimate effectiveness without an experiment
@@ -1462,7 +1475,7 @@ namespace ActivityRecommendation
         public SuggestedMetric_Metadata ChooseExperimentOption(ActivityRequest activityRequest, List<SuggestedMetric> existingOptions, TimeSpan? requestedProcessingTime, DateTime when, bool dryRun = false)
         {
             // activities that can ever be put in an experiment
-            List<Activity> activitiesHavingMetrics = this.SuggestibleActivitiesHavingMetrics;
+            List<Activity> activitiesHavingMetrics = this.SuggestibleActivitiesHavingIntrinsicMetrics;
 
             // activities that are already listed as options can't be re-added as new options
             HashSet<Activity> excludedActivities = new HashSet<Activity>();
@@ -1483,9 +1496,27 @@ namespace ActivityRecommendation
                 {
                     if (fromCategory == null || this.activityDatabase.HasAncestor(activity, fromCategory))
                     {
-                        // If we get into this ChooseExperimentOption function, then there exists no experiment that has been planned but unstarted.
-                        // So, we can check whether this is a post-task by checking whether it is participating in any experiments
-                        if (this.wouldCompletionAffectExperiment(activity))
+                        // Now we determine whether to plan for this activity to be a pre activity or a post activity.
+                        // We don't want to require the user to measure their participation in any specific way because if we did require them to measure it in a certain way then
+                        // they would know that this activity was being treated as a post activity.
+                        // So, (assuming that the user created multiple metrics), because it is always possible for the user to change the metric, if any of the metrics are paired, then
+                        // we prepare for the possibility that the user will change the metric to one that has already been paired.
+                        // Consequently, we treat these activities as post-tasks.
+                        // However, if the user already has lots of pending post-tasks and chooses another unchosen metric, then this could result in the user having to wait longer than expected before
+                        // being able to measure their efficiency. However, it should be unlikely and mostly harmless for a user to repeatedly change metrics and get too many pre-tasks, so we ignore
+                        // it for now.
+                        bool canBePostMetric = false;
+                        foreach (Metric m in activity.AllMetrics)
+                        {
+                            // If we get into this ChooseExperimentOption function, then there exists no experiment that has been planned but unstarted.
+                            // So, we can check whether this is a post-task by checking whether it is participating in any experiments
+                            if (this.wouldCompletionAffectExperiment(activity, m.Name))
+                            {
+                                canBePostMetric = true;
+                                break;
+                            }
+                        }
+                        if (canBePostMetric)
                             availablePostActivities.Add(activity);
                         else
                             availablePreActivities.Add(activity);
@@ -1606,9 +1637,23 @@ namespace ActivityRecommendation
             Activity bestActivity = this.activityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
 
             // chose a random metric for this activity
-            List<Metric> metrics = bestActivity.Metrics;
+            List<Metric> metrics = new List<Metric>();
+            foreach (Metric metricOption in bestActivity.AllMetrics)
+            {
+                bool isPostMetric = this.wouldCompletionAffectExperiment(bestActivity, metricOption.Name);
+                if (isPostMetric)
+                {
+                    if (considerPostActivities)
+                        metrics.Add(metricOption);
+                }
+                else
+                {
+                    if (considerPreActivities)
+                        metrics.Add(metricOption);
+                }
+            }
             if (metrics.Count < 1)
-                throw new Exception("Internal error while planning experiment: activity " + bestActivity + " has no metrics");
+                throw new Exception("Internal error while planning experiment: no valid metric found for " + bestActivity);
             Metric metric = metrics[this.randomGenerator.Next(metrics.Count)];
 
             PlannedMetric plannedMetric = new PlannedMetric();
@@ -1697,48 +1742,47 @@ namespace ActivityRecommendation
         public ExperimentSuggestion Experiment(List<SuggestedMetric> choices, DateTime when)
         {
             // separate into pre-activities and post-activities
-            List<SuggestedMetric> unpairedActivities = new List<SuggestedMetric>();
-            List<SuggestedMetric> pairedActivities = new List<SuggestedMetric>();
+            List<SuggestedMetric> unpairedActivityMetrics = new List<SuggestedMetric>();
+            List<SuggestedMetric> pairedActivityMetrics = new List<SuggestedMetric>();
 
             foreach (SuggestedMetric suggestion in choices)
             {
                 // If we get into this Experiment function, then there exists no experiment that has been planned but unstarted.
                 // So, we can check whether this is a post-task by checking whether it is participating in any experiments
-                if (this.wouldCompletionAffectExperiment(this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor)))
-                    pairedActivities.Add(suggestion);
+                if (this.wouldCompletionAffectExperiment(this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor), suggestion.PlannedMetric.MetricName))
+                    pairedActivityMetrics.Add(suggestion);
                 else
-                    unpairedActivities.Add(suggestion);
+                    unpairedActivityMetrics.Add(suggestion);
             }
             // to start a new experiment we need at least 2 available activities
-            if (unpairedActivities.Count < 2)
-                unpairedActivities.Clear();
+            if (unpairedActivityMetrics.Count < 2)
+                unpairedActivityMetrics.Clear();
 
             // Choose whether to start a new experiment or finish an existing experiment.
             // We've gone to great lengths to hide from the user the information about whether we're finishing an existing experiment or starting a new experiment because
             // if the user discovers which one this is, it might subconsciously motivate them to work harder on the post tasks and less hard on the pre tasks, artificially skewing the results
-            int suggestionIndex = this.randomGenerator.Next(unpairedActivities.Count + pairedActivities.Count);
+            int suggestionIndex = this.randomGenerator.Next(unpairedActivityMetrics.Count + pairedActivityMetrics.Count);
 
-            bool choosePreActivity = (suggestionIndex < unpairedActivities.Count);
+            bool choosePreActivity = (suggestionIndex < unpairedActivityMetrics.Count);
             if (choosePreActivity)
             {
                 // We're choosing a pre-activity. Pair it with another unpaired activity
-                int suggestion2Index = this.randomGenerator.Next(unpairedActivities.Count - 1);
+                int suggestion2Index = this.randomGenerator.Next(unpairedActivityMetrics.Count - 1);
                 if (suggestion2Index == suggestionIndex)
-                    suggestion2Index = unpairedActivities.Count - 1;
+                    suggestion2Index = unpairedActivityMetrics.Count - 1;
 
-                PlannedExperiment experiment = this.PlanExperiment(unpairedActivities[suggestionIndex], unpairedActivities[suggestion2Index]);
+                PlannedExperiment experiment = this.PlanExperiment(unpairedActivityMetrics[suggestionIndex], unpairedActivityMetrics[suggestion2Index]);
 
-                Activity earlierActivity = this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
-                ActivitySuggestion activitySuggestion = unpairedActivities[suggestionIndex].ActivitySuggestion;
+                ActivitySuggestion activitySuggestion = unpairedActivityMetrics[suggestionIndex].ActivitySuggestion;
                 activitySuggestion.Skippable = false;
                 return new ExperimentSuggestion(experiment, activitySuggestion);
             }
             else
             {
                 // We're choosing a post-activity. Find the experiment we previously created for it
-                SuggestedMetric experimentSuggestion = pairedActivities[suggestionIndex - unpairedActivities.Count];
+                SuggestedMetric experimentSuggestion = pairedActivityMetrics[suggestionIndex - unpairedActivityMetrics.Count];
                 Activity laterActivity = this.ActivityDatabase.ResolveDescriptor(experimentSuggestion.ActivityDescriptor);
-                PlannedExperiment experiment = this.findExperimentToUpdate(laterActivity);
+                PlannedExperiment experiment = this.findExperimentToUpdate(laterActivity, experimentSuggestion.PlannedMetric.MetricName);
                 ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
                 activitySuggestion.Skippable = false;
                 return new ExperimentSuggestion(experiment, activitySuggestion);
@@ -1778,18 +1822,20 @@ namespace ActivityRecommendation
         }
 
         // for a given Activity, returns the Experiment that will need updating if the user participates in Activity
-        private PlannedExperiment findExperimentToUpdate(Activity activity)
+        private PlannedExperiment findExperimentToUpdate(Activity activity, string metricName)
         {
             if (this.experimentToUpdate.ContainsKey(activity))
             {
-                return this.experimentToUpdate[activity];
+                Dictionary<string, PlannedExperiment> experimentsByMetricName = this.experimentToUpdate[activity];
+                if (experimentsByMetricName.ContainsKey(metricName))
+                    return experimentsByMetricName[metricName];
             }
             return null;
         }
         // tells whether completing this Activity would affect an experiment
-        private bool wouldCompletionAffectExperiment(Activity activity)
+        private bool wouldCompletionAffectExperiment(Activity activity, string metricName)
         {
-            return (this.findExperimentToUpdate(activity) != null);
+            return (this.findExperimentToUpdate(activity, metricName) != null);
         }
 
         private int NumCompletedExperiments
@@ -1808,7 +1854,7 @@ namespace ActivityRecommendation
             }
         }
         // returns a list of Activities that are available to be added into a new Experiment
-        private List<Activity> SuggestibleActivitiesHavingMetrics
+        private List<Activity> SuggestibleActivitiesHavingIntrinsicMetrics
         {
             get
             {
@@ -1816,14 +1862,8 @@ namespace ActivityRecommendation
                 List<Activity> results = new List<Activity>();
                 foreach (Activity activity in this.activityDatabase.AllActivities)
                 {
-                    if (activity.Suggestible)
-                    {
-                        List<Metric> metrics = activity.Metrics;
-                        if (metrics.Count > 0)
-                        {
-                            results.Add(activity);
-                        }
-                    }
+                    if (activity.Suggestible && activity.IntrinsicMetrics.Count > 0)
+                        results.Add(activity);
                 }
                 return results;
             }
@@ -1908,8 +1948,8 @@ namespace ActivityRecommendation
         int numUnpromptedParticipations;
         private Random randomGenerator = new Random();
 
-        // for each of several activities, tells the PlannedExperiment that needs updating if the user participates in that activity
-        Dictionary<Activity, PlannedExperiment> experimentToUpdate = new Dictionary<Activity, PlannedExperiment>();
+        // for each of several activities and metrics, tells which PlannedExperiment that needs updating if the user participates in that activity
+        Dictionary<Activity, Dictionary<string, PlannedExperiment>> experimentToUpdate = new Dictionary<Activity, Dictionary<string, PlannedExperiment>>();
         int numCompletedExperiments;
         int numStartedExperiments;
         ActivityRecommendationsAnalysis currentRecommendationsCache;

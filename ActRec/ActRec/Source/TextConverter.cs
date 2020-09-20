@@ -67,6 +67,8 @@ namespace ActivityRecommendation
                 if (participation.DismissedActivity)
                     properties[this.DismissedActivity_Tag] = this.ConvertToStringBody(true);
             }
+            if (participation.EffectivenessMeasurement != null)
+                properties[this.Participation_MetricName_Tag] = participation.EffectivenessMeasurement.Metric.Name;
             if (participation.RelativeEfficiencyMeasurement != null)
                 properties[this.EfficiencyMeasurement_Tag] = this.ConvertToStringBody(participation.RelativeEfficiencyMeasurement);
 
@@ -143,6 +145,8 @@ namespace ActivityRecommendation
                 properties[this.SuggestionsTag] = this.ConvertToStringBody(data.Suggestions);
             if (data.NumRecent_UserChosen_ExperimentSuggestions != 0)
                 properties[this.NumRecent_UserChosen_ExperimentSuggestions_Tag] = this.ConvertToStringBody(data.NumRecent_UserChosen_ExperimentSuggestions);
+            if (data.DemandedMetricName != "")
+                properties[this.MetricName_Tag] = data.DemandedMetricName;
 
             return this.ConvertToString(properties, objectName);
         }
@@ -231,9 +235,7 @@ namespace ActivityRecommendation
 
             // record the metric if it's not the first metric (in most (initially all at the time of writing) cases it will be the first metric)
             Activity activity = this.activityDatabase.ResolveDescriptor(experiment.ActivityDescriptor);
-            if (activity.Metrics.Count < 1)
-                throw new ArgumentException("Internal error: an ExperimentSuggestion's Activity cannot have 0 metrics");            
-            if (experiment.MetricName != activity.Metrics[0].Name && experiment.MetricName != null)
+            if (activity.DefaultMetric == null || experiment.MetricName != activity.DefaultMetric.Name)
                 properties[this.MetricTag] = this.XmlEscape(experiment.MetricName);
 
             properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.EstimatedSuccessesPerSecond);
@@ -318,7 +320,7 @@ namespace ActivityRecommendation
         }
 
         // converts the given text into a sequence of objects and sends them to the Engine
-        public void ReadText(string text)
+        public void ProcessText(string text)
         {
             IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(text);
             if (nodes == null)
@@ -495,7 +497,7 @@ namespace ActivityRecommendation
         {
             Metric metric = this.ReadMetric(nodeRepresentation);
             Activity activity = this.activityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
-            activity.AddMetric(metric);
+            activity.AddIntrinsicMetric(metric);
             if (this.listener != null)
                 this.listener.AddMetric(metric);
 
@@ -551,6 +553,7 @@ namespace ActivityRecommendation
             bool suggested = false;
             bool successful = false;
             bool dismissedActivity = false;
+            string metricName = "";
             RelativeEfficiencyMeasurement efficiencyMeasurement = null;
             double helpFraction = 0;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
@@ -612,6 +615,11 @@ namespace ActivityRecommendation
                     efficiencyMeasurement = this.ReadEfficiencyMeasurement(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.Participation_MetricName_Tag)
+                {
+                    metricName = this.ReadText(currentChild);
+                    continue;
+                }
             }
             if (successful)
             {
@@ -636,9 +644,21 @@ namespace ActivityRecommendation
             currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
-            if (dismissedActivity || efficiencyMeasurement != null)
+
+            // Fill the success/failure status for this participation
+            Activity activity = this.activityDatabase.ResolveDescriptor(activityDescriptor);
+            if (activity.HasAMetric)
             {
-                CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(successful, helpFraction);
+                Metric metric;
+                if (metricName == "")
+                    metric = activity.DefaultMetric;
+                else
+                    metric = activity.MetricForName(metricName);
+                if (metric == null)
+                {
+                    throw new InvalidDataException("Invalid metric '" + metricName + "' specified for participation '" + activityDescriptor.ActivityName + "' at " + startDate);
+                }
+                CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, successful, helpFraction);
                 effectivenessMeasurement.DismissedActivity = dismissedActivity;
                 currentParticipation.EffectivenessMeasurement = effectivenessMeasurement;
                 if (efficiencyMeasurement != null)
@@ -936,6 +956,11 @@ namespace ActivityRecommendation
                     data.NumRecent_UserChosen_ExperimentSuggestions = this.ReadInt(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.MetricName_Tag)
+                {
+                    data.DemandedMetricName = this.ReadText(currentChild);
+                    continue;
+                }
             }
             return data;
         }
@@ -1044,6 +1069,12 @@ namespace ActivityRecommendation
                     continue;
                 }
             }
+            if (metric.MetricName == "")
+            {
+                Activity activity = this.activityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
+                metric.MetricName = activity.DefaultMetric.Name;
+            }
+
             return metric;
         }
 
@@ -1699,6 +1730,13 @@ namespace ActivityRecommendation
                 return "Name";
             }
         }
+        private string Participation_MetricName_Tag
+        {
+            get
+            {
+                return "Metric";
+            }
+        }
         private string SuccessRateTag
         {
             get
@@ -1845,7 +1883,7 @@ namespace ActivityRecommendation
             ActivityDatabase activityDatabase = new ActivityDatabase(null, null);
             activityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
             TextConverter impl = new TextConverter(null, activityDatabase);
-            impl.ReadText(text);
+            impl.ProcessText(text);
 
             return this.inheritances;
         }

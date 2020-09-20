@@ -147,6 +147,42 @@ namespace ActivityRecommendation
                 return this.parents;
             }
         }
+        public List<Activity> SelfAndAncestors
+        {
+            get
+            {
+                if (this.allAncestors == null)
+                {
+                    List<Activity> superActivities = new List<Activity>();
+                    superActivities.Add(this);
+                    int i = 0;
+                    for (i = 0; i < superActivities.Count; i++)
+                    {
+                        Activity ancestor = superActivities[i];
+                        foreach (Activity parent in ancestor.Parents)
+                        {
+                            if (!superActivities.Contains(parent))
+                            {
+                                superActivities.Add(parent);
+                            }
+                        }
+                    }
+                    this.allAncestors = superActivities;
+                }
+                return this.allAncestors;
+            }
+        }
+        public void InvalidateAncestorList()
+        {
+            if (this.allAncestors != null)
+            {
+                this.allAncestors = null;
+                foreach (Activity child in this.GetChildren())
+                {
+                    child.InvalidateAncestorList();
+                }
+            }
+        }
         public List<Activity> ParentsUsedForPrediction
         {
             get
@@ -858,14 +894,90 @@ namespace ActivityRecommendation
             return subCategories;
         }
 
-        public List<Metric> Metrics
+        // Returns a list of Metrics that are attached to this Activity directly rather than to another Activity
+        // Any Metric in this list should have a stable index across runs even if the user adds another inheritance
+        public List<Metric> IntrinsicMetrics
         {
             get
             {
-                return this.metrics;
+                if (this.intrinsicMetrics == null)
+                {
+                    this.intrinsicMetrics = new List<Metric>(1);
+                }
+                return this.intrinsicMetrics;
+            }
+            set
+            {
+                this.intrinsicMetrics = value;
+            }
+        }
+        public void AddIntrinsicMetric(Metric metric)
+        {
+            this.IntrinsicMetrics.Add(metric);
+        }
+        // Returns a list of Metrics that are attached to another Activity. The ordering of this list could change when the user adds a new inheritance
+        public List<Metric> InheritedMetrics
+        {
+            get
+            {
+                List<Metric> result = new List<Metric>();
+                foreach (Activity activity in this.SelfAndAncestors)
+                {
+                    if (activity != this)
+                        result.AddRange(activity.IntrinsicMetrics);
+                }
+                return result;
+            }
+        }
+        public List<Metric> AllMetrics
+        {
+            get
+            {
+                if (this.inheritedMetrics == null)
+                    return this.IntrinsicMetrics;
+                return new List<Metric>(this.IntrinsicMetrics.Concat(this.InheritedMetrics));
+            }
+        }
+        public bool HasAMetric
+        {
+            get
+            {
+                if (this.intrinsicMetrics != null && this.intrinsicMetrics.Count > 0)
+                    return true;
+                if (this.InheritedMetrics.Count > 0)
+                    return true;
+                return false;
+            }
+        }
+        // Returns the default metric that we refer to if no other metric name is specified
+        // This allows the data file to be shorter in the common case when an activity only has one metric
+        public Metric DefaultMetric
+        {
+            get
+            {
+                if (this.intrinsicMetrics != null && this.intrinsicMetrics.Count > 0)
+                    return this.intrinsicMetrics[0];
+                return null;
             }
         }
 
+        public Metric MetricForName(string name)
+        {
+            if (this.intrinsicMetrics != null)
+            {
+                foreach (Metric metric in this.intrinsicMetrics)
+                {
+                    if (metric.Name == name)
+                        return metric;
+                }
+            }
+            foreach (Metric metric in this.InheritedMetrics)
+            {
+                if (metric.Name == name)
+                    return metric;
+            }
+            return null;
+        }
 
 
         #endregion
@@ -977,11 +1089,6 @@ namespace ActivityRecommendation
                 return this.ratingProgression.Distribution;
 
             }
-        }
-
-        public void AddMetric(Metric metric)
-        {
-            this.metrics.Add(metric);
         }
 
         // Smoothes by <smoothingWindowDuration> the participation intensities in <this> and matches them up against those of <activityToPredict>
@@ -1205,6 +1312,7 @@ namespace ActivityRecommendation
         private string name;
         private List<Activity> parents;
         private List<Activity> parentsUsedForPrediction;
+        private List<Activity> allAncestors;
         private List<ActivityDescriptor> parentDescriptors;
 
         //private List<IPredictionLink> ratingPredictors;
@@ -1251,7 +1359,8 @@ namespace ActivityRecommendation
 
         private DateTime defaultDiscoveryDate;
         private Distribution participationDurations;
-        private List<Metric> metrics = new List<Metric>(1);
+        private List<Metric> inheritedMetrics;
+        private List<Metric> intrinsicMetrics;
         
         int numSuggestions;
 

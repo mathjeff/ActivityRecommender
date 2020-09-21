@@ -23,8 +23,26 @@ namespace ActivityRecommendation
             return "Problem: " + base.Name;
         }
 
+        public List<Activity> Children
+        {
+            get
+            {
+                return this.children;
+            }
+        }
+        public override List<Activity> GetChildren()
+        {
+            return this.children;
+        }
+        public void AddChild(Activity child)
+        {
+            this.children.Add(child);
+            child.InvalidateAncestorList();
+        }
+
         #endregion
 
+        private List<Activity> children = new List<Activity>();
 
     }
 

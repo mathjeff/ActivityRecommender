@@ -85,9 +85,6 @@ namespace ActivityRecommendation
             if (err != "")
                 return err;
             Problem problem = this.CreateProblem(inheritance.ChildDescriptor);
-            Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
-            if (parent == this.problemCategory || parent == this.rootActivity)
-                return ""; // don't have to add the same parent twice
             return this.AddParent(inheritance);
         }
 
@@ -104,9 +101,23 @@ namespace ActivityRecommendation
             if (parent == null)
                 return "Parent " + inheritance.ParentDescriptor.ActivityName + " does not exist";
             Category parentCategory = parent as Category;
-            if (parentCategory == null)
-                return "Parent " + parent.Name + " is not of type Category";
-            child.AddParent(parentCategory);
+            if (parentCategory != null)
+            {
+                if (child is Problem && child.Parents.Count == 0 && parentCategory != this.problemCategory)
+                {
+                    // If the first parent added to a Problem is neither a Problem nor this.problemCategory, then add this.problemCategory as a parent
+                    child.AddParent(this.problemCategory);
+                }
+                child.AddParent(parentCategory);
+            }
+            else
+            {
+                Problem parentProblem = parent as Problem;
+                if (parentProblem != null)
+                    child.AddParent(parentProblem);
+                else
+                    return "Parent " + parent.Name + " is not of type Category or Problem";
+            }
             if (this.InheritanceAdded != null)
                 this.InheritanceAdded.Invoke(inheritance);
             return "";
@@ -431,7 +442,6 @@ namespace ActivityRecommendation
                 throw new ArgumentException("Activity " + sourceDescriptor.ActivityName + " already exists");
             }
             Problem result = new Problem(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
-            result.AddParent(this.problemCategory);
             this.AddActivity(result);
             return result;
         }
@@ -456,11 +466,19 @@ namespace ActivityRecommendation
         public void AddInheritance(Inheritance inheritance)
         {
             this.GetActivityOrCreateCategory(inheritance.ParentDescriptor);
-            Category parent = this.ResolveToCategory(inheritance.ParentDescriptor);
+            Category parentCategory = this.ResolveDescriptor(inheritance.ParentDescriptor) as Category;
             Activity child = this.GetActivityOrCreateCategory(inheritance.ChildDescriptor);
+            if (parentCategory != null)
+            {
+                child.AddParent(parentCategory);
+            }
+            else
+            {
+                Problem parentProblem = (Problem)this.ResolveDescriptor(inheritance.ParentDescriptor);
+                child.AddParent(parentProblem);
+            }
             if (inheritance.DiscoveryDate != null)
                 child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
-            child.AddParent(parent);
             if (this.InheritanceAdded != null)
                 this.InheritanceAdded.Invoke(inheritance);
         }

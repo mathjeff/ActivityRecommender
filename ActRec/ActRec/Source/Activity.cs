@@ -140,6 +140,14 @@ namespace ActivityRecommendation
                 newParent.AddChild(this);
             }
         }
+        public virtual void AddParent(Problem newParent)
+        {
+            if (!this.parents.Contains(newParent))
+            {
+                this.parents.Add(newParent);
+                newParent.AddChild(this);
+            }
+        }
         public List<Activity> Parents
         {
             get

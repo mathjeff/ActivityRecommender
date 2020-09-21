@@ -924,25 +924,30 @@ namespace ActivityRecommendation
             this.IntrinsicMetrics.Add(metric);
         }
         // Returns a list of Metrics that are attached to another Activity. The ordering of this list could change when the user adds a new inheritance
-        public List<Metric> InheritedMetrics
+        public virtual List<Metric> InheritedMetrics
         {
             get
             {
-                List<Metric> result = new List<Metric>();
-                foreach (Activity activity in this.SelfAndAncestors)
+                List<Metric> metricList = new List<Metric>();
+                HashSet<Metric> metricSet = new HashSet<Metric>(metricList);
+                foreach (Activity parent in this.parents)
                 {
-                    if (activity != this)
-                        result.AddRange(activity.IntrinsicMetrics);
+                    foreach (Metric metric in parent.AllMetrics)
+                    {
+                        if (!metricSet.Contains(metric))
+                        {
+                            metricList.Add(metric);
+                            metricSet.Add(metric);
+                        }
+                    }
                 }
-                return result;
+                return metricList;
             }
         }
         public List<Metric> AllMetrics
         {
             get
             {
-                if (this.inheritedMetrics == null)
-                    return this.IntrinsicMetrics;
                 return new List<Metric>(this.IntrinsicMetrics.Concat(this.InheritedMetrics));
             }
         }

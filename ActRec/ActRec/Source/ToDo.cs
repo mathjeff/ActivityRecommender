@@ -46,6 +46,14 @@ namespace ActivityRecommendation
             base.AddParticipation(newParticipation);
         }
 
+        public override List<Metric> InheritedMetrics
+        {
+            get
+            {
+                // An Activity that started with built-in metrics doesn't need to inherit more from elsewhere
+                return new List<Metric>(0);
+            }
+        }
 
         #endregion
 

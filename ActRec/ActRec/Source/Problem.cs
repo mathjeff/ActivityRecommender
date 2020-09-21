@@ -49,6 +49,12 @@ namespace ActivityRecommendation
             }
         }
 
+        protected override bool isSuggestible()
+        {
+            return false;
+        }
+
+
         #endregion
 
         private List<Activity> children = new List<Activity>();

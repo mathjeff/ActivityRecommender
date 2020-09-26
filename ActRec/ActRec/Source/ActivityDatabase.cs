@@ -236,6 +236,19 @@ namespace ActivityRecommendation
             return existing;
         }
 
+        public Problem ResolveProblem(ActivityDescriptor descriptor)
+        {
+            return (Problem)this.ResolveDescriptor(descriptor);
+        }
+
+        public Problem GetOrCreateProblem(ActivityDescriptor descriptor)
+        {
+            Problem existing = this.ResolveProblem(descriptor);
+            if (existing == null)
+                return this.CreateProblem(descriptor);
+            return existing;
+        }
+
         // tells whether the given descriptor can match the given activity
         public bool Matches(ActivityDescriptor descriptor, Activity activity)
         {

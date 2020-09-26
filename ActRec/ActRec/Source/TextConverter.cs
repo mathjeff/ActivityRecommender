@@ -647,7 +647,7 @@ namespace ActivityRecommendation
 
             // Fill the success/failure status for this participation
             Activity activity = this.activityDatabase.ResolveDescriptor(activityDescriptor);
-            if (activity.HasAMetric)
+            if (activity.DefaultMetric != null || metricName != "")
             {
                 Metric metric;
                 if (metricName == "")
@@ -1206,6 +1206,14 @@ namespace ActivityRecommendation
                     inheritanceTexts.Add(this.ConvertToString(activity));
                     continue;
                 }
+                if (node.Name == this.ProblemTag)
+                {
+                    ActivityDescriptor activityDescriptor = this.ReadActivityDescriptor(node);
+                    Problem problem = this.activityDatabase.GetOrCreateProblem(activityDescriptor);
+                    inheritanceTexts.Add(this.ConvertToString(problem));
+                    continue;
+                }
+
                 if (node.Name == this.MetricTag)
                 {
                     Metric metric = this.ProcessMetric(node);

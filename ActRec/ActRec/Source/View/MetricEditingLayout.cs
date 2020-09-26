@@ -65,6 +65,7 @@ namespace ActivityRecommendation.View
                 return;
             }
             Metric metric = new CompletionMetric(metricName, activity);
+            metric.DiscoveryDate = DateTime.Now;
             string error = this.activityDatabase.AddMetric(activity, metric);
             if (error != "")
                 this.setError(error);

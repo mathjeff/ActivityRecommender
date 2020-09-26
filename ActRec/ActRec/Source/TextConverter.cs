@@ -56,21 +56,70 @@ namespace ActivityRecommendation
                 properties[this.CommentTag] = this.XmlEscape(comment);
             if (participation.Consideration != null)
                 properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
-            if (participation.CompletedMetric)
+            
+            // success/failure
+            Activity activity = this.activityDatabase.ResolveDescriptor(participation.ActivityDescriptor);
+            if (participation.EffectivenessMeasurement != null)
             {
-                properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(true);
-                if (participation.HelpFraction > 0)
-                    properties[this.HelpFraction_Tag] = this.ConvertToStringBody(participation.HelpFraction);
+                bool successful = participation.CompletedMetric; // whether this participation succeeded
+                bool recordedMetric = false; // whether we recorded a metric for this participation
+                bool dismissed = participation.DismissedActivity; // whether this participation dismissed its activity
+                if (activity.DefaultMetric == null)
+                {
+                    recordedMetric = true;
+                    // If this activity doesn't have a clear default metric, then we have to record which metric was used
+                    properties[this.Participation_MetricName_Tag] = participation.EffectivenessMeasurement.Metric.Name;
+                }
+                if (successful)
+                {
+                    // if this participation was successful, record that
+                    properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(true);
+                    if (participation.HelpFraction > 0)
+                        properties[this.HelpFraction_Tag] = this.ConvertToStringBody(participation.HelpFraction);
+                }
+                else
+                {
+                    if (dismissed)
+                    {
+                        // if this participation dismissed its activity, record that
+                        properties[this.DismissedActivity_Tag] = this.ConvertToStringBody(true);
+                    }
+                    else
+                    {
+                        // if this participation failed without dismissing the activity, then decide how to record that
+                        if (recordedMetric)
+                        {
+                            // If we recorded a metric, then it's already clear that the user tried to succeed
+                            // So, we don't need to explicitly record failure
+                        }
+                        else
+                        {
+                            if (this.shouldNullMetricAndNullSuccessBeInterpretedAsFailure(activity))
+                            {
+                                // We didn't record a metric, but we don't need to record a success either because it will still be counted as failure
+                            }
+                            else
+                            {
+                                // We didn't record a metric, so we have to record a failure or else it would be treated as having made no attempt
+                                properties[this.ParticipationSuccessful_Tag] = this.ConvertToStringBody(false);
+                            }
+                        }
+                    }
+                }
+                if (participation.RelativeEfficiencyMeasurement != null)
+                    properties[this.EfficiencyMeasurement_Tag] = this.ConvertToStringBody(participation.RelativeEfficiencyMeasurement);
             }
             else
             {
-                if (participation.DismissedActivity)
-                    properties[this.DismissedActivity_Tag] = this.ConvertToStringBody(true);
+                // This Participation didn't attempt to complete a Metric
+                if (this.shouldNullMetricAndNullSuccessBeInterpretedAsFailure(activity))
+                {
+                    // If we don't record a success or failure status for this Participation, then that would be interpreted as a failure
+                    // So, we explicitly record that it was unattempted
+                    properties[this.Participation_MetricName_Tag] = "";
+                }
+
             }
-            if (participation.EffectivenessMeasurement != null)
-                properties[this.Participation_MetricName_Tag] = participation.EffectivenessMeasurement.Metric.Name;
-            if (participation.RelativeEfficiencyMeasurement != null)
-                properties[this.EfficiencyMeasurement_Tag] = this.ConvertToStringBody(participation.RelativeEfficiencyMeasurement);
 
             return this.ConvertToString(properties, objectName);
         }
@@ -249,6 +298,8 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
             properties[this.MetricName_Tag] = this.XmlEscape(metric.Name);
             properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(metric.ActivityDescriptor);
+            if (metric.DiscoveryDate != null)
+                properties[this.DiscoveryDateTag] = this.ConvertToStringBody(metric.DiscoveryDate);
 
             return this.ConvertToString(properties, this.MetricTag);
         }
@@ -551,9 +602,9 @@ namespace ActivityRecommendation
             DateTime endDate = startDate;
             string comment = null;
             bool suggested = false;
-            bool successful = false;
+            bool? successful = null;
             bool dismissedActivity = false;
-            string metricName = "";
+            string metricName = null;
             RelativeEfficiencyMeasurement efficiencyMeasurement = null;
             double helpFraction = 0;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
@@ -621,10 +672,6 @@ namespace ActivityRecommendation
                     continue;
                 }
             }
-            if (successful)
-            {
-                dismissedActivity = true;
-            }
             if (activityDescriptor == null)
             {
                 throw new InvalidDataException("No activity descriptor specified!");
@@ -647,29 +694,91 @@ namespace ActivityRecommendation
 
             // Fill the success/failure status for this participation
             Activity activity = this.activityDatabase.ResolveDescriptor(activityDescriptor);
-            if (activity.DefaultMetric != null || metricName != "")
+
+            if (metricName == null && successful == null)
+            {
+                // in some cases we treat null metric and null success status as failure
+                if (this.shouldNullMetricAndNullSuccessBeInterpretedAsFailure(activity))
+                {
+                    successful = false;
+                }
+            }
+            if (dismissedActivity && successful == null)
+            {
+                // if this participation dismissed the activity and didn't specify a success/failure status, then it failed
+                successful = false;
+            }
+            if (metricName != null && metricName != "" && successful == null)
+            {
+                // if a metric was specified and no success status was specified, that's failure
+                successful = false;
+            }
+
+            if (successful == true)
+            {
+                // a successful participation dismisses its ToDo
+                dismissedActivity = true;
+            }
+
+            // if we determined a success/failure status, then make a note of it
+            if (successful != null)
             {
                 Metric metric;
-                if (metricName == "")
+                if (metricName == null)
                     metric = activity.DefaultMetric;
                 else
                     metric = activity.MetricForName(metricName);
                 if (metric == null)
                 {
-                    throw new InvalidDataException("Invalid metric '" + metricName + "' specified for participation '" + activityDescriptor.ActivityName + "' at " + startDate);
+                    System.Diagnostics.Debug.WriteLine("Invalid metric '" + metricName + "' specified for participation '" + activityDescriptor.ActivityName + "' at " + startDate);
                 }
-                CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, successful, helpFraction);
-                effectivenessMeasurement.DismissedActivity = dismissedActivity;
-                currentParticipation.EffectivenessMeasurement = effectivenessMeasurement;
-                if (efficiencyMeasurement != null)
+                else
                 {
-                    efficiencyMeasurement.FillInFromParticipation(currentParticipation);
+                    CompletionEfficiencyMeasurement effectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, successful.Value, helpFraction);
+                    effectivenessMeasurement.DismissedActivity = dismissedActivity;
+                    currentParticipation.EffectivenessMeasurement = effectivenessMeasurement;
+                    if (efficiencyMeasurement != null)
+                    {
+                        efficiencyMeasurement.FillInFromParticipation(currentParticipation);
+                    }
+                    currentParticipation.EffectivenessMeasurement.Computation = efficiencyMeasurement;
                 }
-                currentParticipation.EffectivenessMeasurement.Computation = efficiencyMeasurement;
             }
 
             this.latestParticipationRead = currentParticipation;
             return currentParticipation;
+        }
+
+        // Before ActivityRecommender supported multiple metrics per activity, we did not record which metric was being completed.
+        // Additionally, when a Participation failed, we recorded no success/failure status either, and left it implied that the participation failed.
+        // This function tells whether a participation in <Activity> that specifies metricName == "" and success = null to be a failed participation
+        private bool shouldNullMetricAndNullSuccessBeInterpretedAsFailure(Activity activity)
+        {
+            if (activity.DefaultMetric == null)
+            {
+                // If this activity doesn't have a metric that can be recognized as the default metric, then
+                // if a participation specifies no metric, we cannot treat that participation as failed because
+                // we won't know which metric it failed.
+                return false;
+            }
+
+            if (activity.DefaultMetric.DiscoveryDate != null)
+            {
+                // If this activity's default metric knows its discovery date, then it's possible that:
+                // 1. this participation was created before support for multiple metrics per activity was added, and
+                // 2. this metric was assigned after support for multiple metrics per activity was added.
+                // In this case, the participation wouldn't have known about this metric, and would not have considered null data to be failure
+                return false;
+            }
+            // If we get here, then the activity has a default metric which was created before activities could have multiple metrics
+            // There are 3 cases:
+            // A. `activity` is a ToDo (a ToDo's metric doesn't record a separate DiscoveryDate)
+            //    In this case, we must treat (null,null) as failure because it could be an old ToDo
+            // B. `activity` is a Problem (a Problem's metric doesn't record a separate DiscoveryDate)
+            //    In this case, it doesn't matter whether we treat (null,null) as failure or not as long as we're consistent
+            // C. `activity`'s default metric was created before support was added for multiple metrics per activity
+            //    In this case, we must treat (null,null) as failure because it could be an old Participation
+            return true;
         }
 
         private RelativeEfficiencyMeasurement ReadEfficiencyMeasurement(XmlNode nodeRepresentation)
@@ -1082,6 +1191,7 @@ namespace ActivityRecommendation
         {
             string metricName = null;
             ActivityDescriptor activityDescriptor = null;
+            DateTime? discoveryDate = null;
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.MetricName_Tag)
@@ -1094,9 +1204,15 @@ namespace ActivityRecommendation
                     activityDescriptor = this.ReadActivityDescriptor(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.DiscoveryDateTag)
+                {
+                    discoveryDate = this.ReadDate(currentChild);
+                    continue;
+                }
             }
             Activity activity = this.activityDatabase.ResolveDescriptor(activityDescriptor);
             Metric metric = new CompletionMetric(metricName, activity);
+            metric.DiscoveryDate = discoveryDate;
             return metric;
         }
 

@@ -13,6 +13,7 @@ namespace ActivityRecommendation.Effectiveness
     {
         string Name { get; }
         ActivityDescriptor ActivityDescriptor { get; }
+        DateTime? DiscoveryDate { get; set; }
     }
 
     public class CompletionMetric : Metric
@@ -36,6 +37,8 @@ namespace ActivityRecommendation.Effectiveness
                 return this.activity.MakeDescriptor();
             }
         }
+        public DateTime? DiscoveryDate { get;set; }
+
         private string name;
         private Activity activity;
     }

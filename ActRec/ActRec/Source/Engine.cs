@@ -1024,7 +1024,7 @@ namespace ActivityRecommendation
         private void updateExperimentsWithNewParticipation(Participation newParticipation)
         {
             Activity activity = this.ActivityDatabase.ResolveDescriptor(newParticipation.ActivityDescriptor);
-            if (this.experimentToUpdate.ContainsKey(activity))
+            if (this.experimentToUpdate.ContainsKey(activity) && newParticipation.EffectivenessMeasurement != null)
             {
                 string metricName = newParticipation.EffectivenessMeasurement.Metric.Name;
                 Dictionary<string, PlannedExperiment> experimentsForThisActivity = this.experimentToUpdate[activity];

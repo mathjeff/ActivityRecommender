@@ -51,11 +51,12 @@ namespace ActivityRecommendation
 
             contents.AddLayout(middleGrid);
             this.todoCompletionStatusHolder = new ContainerLayout();
-            this.todoCompletionLabel = new ChooseMetric_View();
+            this.metricChooser = new ChooseMetric_View(true);
+            this.metricChooser.ChoseNewMetric += TodoCompletionLabel_ChoseNewMetric;
 
             Horizontal_GridLayout_Builder todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
             todoInfo_builder.AddLayout(new Vertical_GridLayout_Builder().Uniform()
-                .AddLayout(this.todoCompletionLabel)
+                .AddLayout(this.metricChooser)
                 .AddLayout(this.todoCompletionStatusHolder)
                 .Build());
             this.helpStatusHolder = new ContainerLayout();
@@ -196,7 +197,7 @@ namespace ActivityRecommendation
             this.nameBox.Clear();
             this.CommentText = "";
             this.feedbackButton.Text = "";
-            this.updateTodoCheckboxVisibility();
+            this.updateMetricSelectorVisibility();
         }
         public Engine Engine
         {
@@ -302,6 +303,13 @@ namespace ActivityRecommendation
         {
             this.setStartdateButton.Clicked += h;
         }
+        private Metric Metric
+        {
+            get
+            {
+                return this.metricChooser.Metric;
+            }
+        }
         public Participation GetParticipation(ActivityDatabase activities, Engine engine)
         {
             Activity activity = this.nameBox.Activity;
@@ -337,14 +345,15 @@ namespace ActivityRecommendation
                 // If the rating is invalid, then we can ignore that
             }
 
-            if (this.EnteringActivityWithMetric)
+            Metric metric = this.Metric;
+            if (metric != null)
             {
                 // Record the success/failure status of the participation
                 string status = this.todoCompletionStatusPicker.SelectedItem.ToString();
                 bool successful = (status == this.TaskCompleted_Text);
                 bool closed = (status != this.TaskIncomplete_Text);
                 double helpFraction = this.helpStatusPicker.GetHelpFraction(participation.Duration);
-                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(this.todoCompletionLabel.Metric, successful, helpFraction);
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, successful, helpFraction);
                 participation.EffectivenessMeasurement.DismissedActivity = closed;
                 // Notice that the Engine doesn't need us to pass in a Metric for computing the efficiency of this participation, because computing efficiency requires an experiment, and the
                 // experiment already knows which metric we're using
@@ -371,13 +380,17 @@ namespace ActivityRecommendation
         public void ActivityName_BecameValid(object sender, TextChangedEventArgs e)
         {
             this.Invalidate_FeedbackBlock_Text();
-            this.updateTodoCheckboxVisibility();
+            this.updateMetricSelectorVisibility();
         }
 
         public void DemandNextParticipationBe(ActivityDescriptor activityDescriptor, Metric metric)
         {
             this.demanded_nextParticipationActivity = activityDescriptor;
-            this.todoCompletionLabel.DemandMetric(metric);
+            this.metricChooser.DemandMetric(metric);
+            // If there was not previously a demanded participation and metric, then the metric chooser may have allowed the user to enter no metric
+            // Now that we're demanding a specific metric, it's possible that a metric has appeared in the metric chooser, and we might need to
+            // suddenly ask the user if they completed this metric
+            this.updateMetricSelectorVisibility();
         }
 
         private void Invalidate_FeedbackBlock_Text()
@@ -386,14 +399,13 @@ namespace ActivityRecommendation
             this.AnnounceChange(true);
         }
 
-        private void updateTodoCheckboxVisibility()
+        private void updateMetricSelectorVisibility()
         {
-            this.todoCompletionLabel.SetActivity(this.nameBox.Activity);
+            this.metricChooser.SetActivity(this.nameBox.Activity);
 
             if (this.EnteringActivityWithMetric)
             {
                 SingleSelect singleSelect;
-                Picker picker = new Picker();
                 SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
                 SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Color.Green);
                 SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
@@ -402,16 +414,31 @@ namespace ActivityRecommendation
                 else
                     singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { incomplete, complete });
                 this.todoCompletionStatusPicker = singleSelect;
-                this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
                 this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
+            }
+            this.updateCompletionStatusVisibility();
+        }
+
+        private void TodoCompletionLabel_ChoseNewMetric(ChooseMetric_View view)
+        {
+            this.updateCompletionStatusVisibility();
+        }
+        private void updateCompletionStatusVisibility()
+        {
+            Metric metric = this.Metric;
+            if (metric != null)
+            {
                 this.helpStatusHolder.SubLayout = this.helpStatusPicker;
+                if (this.todoCompletionStatusHolder.SubLayout == null)
+                    this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
             }
             else
             {
-                this.todoCompletionStatusHolder.SubLayout = null;
                 this.helpStatusHolder.SubLayout = null;
+                this.todoCompletionStatusHolder.SubLayout = null;
             }
         }
+
 
         private bool EnteringActivityWithMetric
         {
@@ -1384,7 +1411,7 @@ namespace ActivityRecommendation
         Button okButton;
         Button feedbackButton;
         Engine engine;
-        ChooseMetric_View todoCompletionLabel;
+        ChooseMetric_View metricChooser;
         LayoutStack layoutStack;
         bool feedbackIsUpToDate;
         SingleSelect todoCompletionStatusPicker;

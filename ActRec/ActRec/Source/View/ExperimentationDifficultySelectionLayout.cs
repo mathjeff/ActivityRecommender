@@ -158,7 +158,7 @@ namespace ActivityRecommendation.View
         public ExperimentDifficulty_SuggestedMetric(SuggestedMetric suggestedMetric, Activity activity)
         {
             this.SuggestedMetric = suggestedMetric;
-            this.MetricChooser = new ChooseMetric_View();
+            this.MetricChooser = new ChooseMetric_View(false);
             this.MetricChooser.SetActivity(activity);
             this.MetricChooser.Choose(suggestedMetric.PlannedMetric.MetricName);
         }

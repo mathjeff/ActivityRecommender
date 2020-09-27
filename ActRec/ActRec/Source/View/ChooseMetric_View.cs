@@ -13,8 +13,10 @@ namespace ActivityRecommendation.View
     {
         public event ChoseNewMetricHandler ChoseNewMetric;
         public delegate void ChoseNewMetricHandler(ChooseMetric_View view);
-        public ChooseMetric_View()
+        private static int NO_METRIC_INDEX = -1;
+        public ChooseMetric_View(bool allowChoosingNoMetric)
         {
+            this.allowChoosingNoMetric = allowChoosingNoMetric;
             Button button = new Button();
             button.Clicked += Button_Clicked;
             this.buttonLayout = new ButtonLayout(button);
@@ -58,7 +60,12 @@ namespace ActivityRecommendation.View
             {
                 this.selectedIndex++;
                 if (this.selectedIndex >= this.activity.AllMetrics.Count)
-                    this.selectedIndex = 0;
+                {
+                    if (this.allowChoosingNoMetric)
+                        this.selectedIndex = NO_METRIC_INDEX;
+                    else
+                        this.selectedIndex = 0;
+                }
             }
             if (this.ChoseNewMetric != null)
             {
@@ -82,26 +89,38 @@ namespace ActivityRecommendation.View
                         return this.demandedMetric;
                 }
                 // Return currently selected metric
+                if (this.selectedIndex == NO_METRIC_INDEX)
+                    return null;
                 return this.activity.AllMetrics[this.selectedIndex];
             }
         }
 
         private void updateLayout()
         {
-            Metric metric = this.Metric;
-            if (metric == null)
+            if (this.activity == null || !this.activity.HasAMetric)
             {
+                // We have no metrics to choose from, so there's nothing to show
                 this.SubLayout = null;
                 return;
             }
-            string text = metric.Name + "?";
-            if (this.demandedMetric != null || this.activity.AllMetrics.Count == 1)
+            Metric metric = this.Metric;
+            if (metric == null)
             {
+                // We have a metric but the user has currently selected null
+                this.buttonLayout.setText("No metric");
+                this.SubLayout = this.buttonLayout;
+                return;
+            }
+            string text = metric.Name + "?";
+            if (this.demandedMetric != null || ((!this.allowChoosingNoMetric) && this.activity.AllMetrics.Count == 1))
+            {
+                // The user has to choose this metric
                 this.singleMetric_layout.setText(text);
                 this.SubLayout = this.singleMetric_layout;
             }
             else
             {
+                // Show the current metric but allow the user to choose another one
                 this.buttonLayout.setText(text);
                 this.SubLayout = this.buttonLayout;
             }
@@ -112,5 +131,6 @@ namespace ActivityRecommendation.View
         int selectedIndex;
         ButtonLayout buttonLayout;
         TextblockLayout singleMetric_layout;
+        bool allowChoosingNoMetric;
     }
 }

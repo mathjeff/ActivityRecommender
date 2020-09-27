@@ -15,6 +15,8 @@ namespace ActRec.UWP
         {
             InitializeComponent();
             AppParams appParams = new AppParams("", new ConstantValueProvider<StreamReader>(null));
+            // Uniforms.misc isn't supported on windows, so we disable trying to check for it
+            TextFormatter.Impl.ChooseType(TextFormatterType.INNATE);
             LoadApplication(new ActRec.App(appParams));
         }
     }

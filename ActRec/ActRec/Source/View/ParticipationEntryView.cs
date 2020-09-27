@@ -11,6 +11,9 @@ namespace ActivityRecommendation
 {
     class ParticipationEntryView : TitledControl
     {
+        public event VisitActivitiesScreenHandler VisitActivitiesScreen;
+        public delegate void VisitActivitiesScreenHandler();
+
         public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack) : base("Type What You've Been Doing")
         {
             this.activityDatabase = activityDatabase;
@@ -116,11 +119,47 @@ namespace ActivityRecommendation
 
             this.mainLayout = contents;
 
-            this.noActivities_explanationLayout = new TextblockLayout(
-                "This screen is where you will be able to record having participated in an activity.\n" +
-                "Before you can record a participation in an activity, ActivityRecommender needs to know what activities are relevant to you.\n" +
-                "You should go back and create at least one activity first (press the button that says \"Activities\" and proceed from there)."
-                );
+            Vertical_GridLayout_Builder noActivities_help_builder = new Vertical_GridLayout_Builder();
+            noActivities_help_builder.AddLayout(new TextblockLayout("This screen is where you will be able to record having participated in an activity.\n"));
+            noActivities_help_builder.AddLayout(
+                new HelpButtonLayout("Recording a participation is deceptively easy",
+                    new HelpWindowBuilder()
+                        .AddMessage("Autocomplete is everywhere in ActivityRecommender and is very fast. You will be impressed.")
+                        .AddMessage("Autocomplete is one of the reasons that you must enter an Activity before you can record a participation, so " +
+                        "ActivityRecommender can know which activity you're referring to, usually after you type only one or two letters.")
+                        .Build()
+                ,
+                    layoutStack
+                )
+            );
+            noActivities_help_builder.AddLayout(
+                new HelpButtonLayout("You get feedback!",
+                    new HelpWindowBuilder()
+                        .AddMessage("Nearly every time you record a participation, ActivityRecommender will give you feedback on what you're doing. " +
+                        "This feedback will eventually contain suggestions of other things you could be doing now, and alternate times for what you " +
+                        "did do. This feedback gets increasingly specific and increasingly accurate as you record more data, eventually including " +
+                        "current happiness, future happiness, and future efficiency. Wow!")
+                        .Build()
+                ,
+                    layoutStack
+                )
+            );
+            
+            noActivities_help_builder.AddLayout(new TextblockLayout("Before you can record a participation, ActivityRecommender needs you to go back " +
+                "and add some activities first. Here is a convenient button for jumping directly to the Activities screen:"));
+
+            Button activitiesButton = new Button();
+            activitiesButton.Text = "Activities";
+            activitiesButton.Clicked += ActivitiesButton_Clicked;
+            noActivities_help_builder.AddLayout(new ButtonLayout(activitiesButton));
+
+            this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
+        }
+
+        private void ActivitiesButton_Clicked(object sender, EventArgs e)
+        {
+            if (this.VisitActivitiesScreen != null)
+                this.VisitActivitiesScreen.Invoke();
         }
 
         private void FeedbackButton_Clicked(object sender, EventArgs e)

@@ -13,7 +13,6 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set suggestionsLayout,
             LayoutChoice_Set statisticsLayout,
             LayoutChoice_Set importExportLayout,
-            ActivityDatabase activityDatabase,
             LayoutStack layoutStack)
         {
             this.activitiesLayout = activitiesLayout;
@@ -21,28 +20,12 @@ namespace ActivityRecommendation.View
             this.suggestionsLayout = suggestionsLayout;
             this.statisticsLayout = statisticsLayout;
             this.importExportLayout = importExportLayout;
-            this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
 
-            this.setupOptions();
+            this.setup();
         }
 
-        public override SpecificLayout GetBestLayout(LayoutQuery query)
-        {
-            if (this.activityDatabase.ContainsCustomActivity())
-            {
-                if (this.activityDatabase.RootActivity.NumParticipations > 0)
-                    this.SubLayout = this.fullLayout;
-                else
-                    this.SubLayout = this.noParticipations_layout;
-            }
-            else
-            {
-                this.SubLayout = this.noActivities_layout;
-            }
-            return base.GetBestLayout(query);
-        }
-        private void setupOptions()
+        private void setup()
         {
             StackEntry activitiesEntry = new StackEntry(this.activitiesLayout, "Activities", null);
             StackEntry participationsEntry = new StackEntry(this.participationsLayout, "Record Participations", null);
@@ -50,25 +33,13 @@ namespace ActivityRecommendation.View
             StackEntry statisticsEntry = new StackEntry(this.statisticsLayout, "View Statistics", null);
             StackEntry importExportEntry = new StackEntry(this.importExportLayout, "Import/Export", null);
 
-            MenuLayoutBuilder noActivities_builder = new MenuLayoutBuilder(this.layoutStack);
-            noActivities_builder.AddLayout(activitiesEntry);
-            noActivities_builder.AddLayout(importExportEntry);
-            this.noActivities_layout = noActivities_builder.Build();
-
-            MenuLayoutBuilder noParticipations_builder = new MenuLayoutBuilder(this.layoutStack);
-            noParticipations_builder.AddLayout(activitiesEntry);
-            noParticipations_builder.AddLayout(participationsEntry);
-            noParticipations_builder.AddLayout(suggestionsEntry);
-            noParticipations_builder.AddLayout(importExportEntry);
-            this.noParticipations_layout = noParticipations_builder.Build();
-
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack);
             fullBuilder.AddLayout(activitiesEntry);
             fullBuilder.AddLayout(participationsEntry);
             fullBuilder.AddLayout(suggestionsEntry);
             fullBuilder.AddLayout(statisticsEntry);
             fullBuilder.AddLayout(importExportEntry);
-            this.fullLayout = fullBuilder.Build();
+            this.SubLayout = fullBuilder.Build();
         }
         private LayoutChoice_Set activitiesLayout;
         private LayoutChoice_Set participationsLayout;
@@ -76,11 +47,7 @@ namespace ActivityRecommendation.View
         private LayoutChoice_Set statisticsLayout;
         private LayoutChoice_Set importExportLayout;
 
-        private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
 
-        private LayoutChoice_Set noActivities_layout;
-        private LayoutChoice_Set noParticipations_layout;
-        private LayoutChoice_Set fullLayout;
     }
 }

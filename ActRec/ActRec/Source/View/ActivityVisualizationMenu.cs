@@ -9,44 +9,49 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationMenu : TitledControl
     {
-        public ActivityVisualizationMenu(ActivityDatabase activityDatabase, LayoutStack layoutStack)
+        public ActivityVisualizationMenu(Engine engine, LayoutStack layoutStack)
         {
             this.SetTitle("View Statistics");
+            this.engine = engine;
+            this.layoutStack = layoutStack;
+
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
 
-            this.yAxisNameBox = new ActivityNameEntryBox("Activity", activityDatabase, layoutStack);
+            this.yAxisNameBox = new ActivityNameEntryBox("Activity", engine.ActivityDatabase, layoutStack);
             gridBuilder.AddLayout(this.yAxisNameBox);
 
             this.okButton = new Button();
+            this.okButton.Clicked += OkButton_Clicked;
 
             gridBuilder.AddLayout(new ButtonLayout(this.okButton, "Visualize"));
 
             this.SetContent(gridBuilder.Build());
         }
 
-        public void AddOkClickHandler(EventHandler e)
+        private void OkButton_Clicked(object sender, EventArgs e)
         {
-            this.okButton.Clicked += e;
-        }
-        /*
-        public string XAxisActivityName
-        {
-            get
+            this.engine.EnsureRatingsAreAssociated();
+
+            IProgression xAxisProgression = this.XAxisProgression;
+            ActivityDescriptor yAxisDescriptor = this.YAxisActivityDescriptor;
+            Activity yAxisActivity = null;
+            if (yAxisDescriptor != null)
             {
-                return this.xAxisNameBox.NameText;
+                yAxisActivity = this.engine.ActivityDatabase.ResolveDescriptor(yAxisDescriptor);
             }
-            set
+            if (yAxisActivity != null)
             {
-                this.xAxisNameBox.NameText = value;
+                yAxisActivity.ApplyPendingData();
+                ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
+                this.layoutStack.AddLayout(visualizationView, "Graph");
             }
         }
-        */
+
         public IProgression XAxisProgression
         {
             get
             {
-                return TimeProgression.AbsoluteTime; //TODO: fix this
-                //return this.xAxisProgressionSelector.Progression;
+                return TimeProgression.AbsoluteTime;
             }
         }
         public ActivityDescriptor YAxisActivityDescriptor
@@ -58,7 +63,7 @@ namespace ActivityRecommendation
         }
         Button okButton;
         ActivityNameEntryBox yAxisNameBox;
-        //ActivityNameEntryBox xAxisNameBox;
-        //ProgressionSelectionView xAxisProgressionSelector; // TODO: make this work
+        Engine engine;
+        LayoutStack layoutStack;
     }
 }

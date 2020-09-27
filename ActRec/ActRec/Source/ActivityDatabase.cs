@@ -498,7 +498,7 @@ namespace ActivityRecommendation
 
         public bool ContainsCustomActivity()
         {
-            return this.NumActivities > 2;
+            return this.NumActivities > 3;
         }
 
         #region Functions for ICombiner<List<Activity>>

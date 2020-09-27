@@ -167,7 +167,7 @@ namespace ActivityRecommendation
             ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
 
 
-            LayoutChoice_Set inheritanceEditingView = new ActivitiesMenuLayout(
+            this.activitiesMenuLayout = new ActivitiesMenuLayout(
                 new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
                 activityImportLayout,
                 (new MenuLayoutBuilder(this.layoutStack)
@@ -206,6 +206,7 @@ namespace ActivityRecommendation
             {
                 this.participationEntryView.SetActivityName(this.recentUserData.Suggestions.First().ActivityDescriptor.ActivityName);
             }
+            this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);
@@ -214,21 +215,13 @@ namespace ActivityRecommendation
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
             this.suggestionsView.VisitParticipationScreen += SuggestionsView_VisitParticipationScreen;
+            this.suggestionsView.VisitActivitiesScreen += SuggestionsView_VisitActivitiesScreen;
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
-            MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
-            visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
-
-            this.statisticsMenu = new ActivityVisualizationMenu(this.engine.ActivityDatabase, layoutStack);
-            this.statisticsMenu.AddOkClickHandler(new EventHandler(this.VisualizeActivity));
-
-            visualizationBuilder.AddLayout("Visualize one Activity", this.statisticsMenu);
-            visualizationBuilder.AddLayout("Browse Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.layoutStack));
-
-            LayoutChoice_Set visualizationMenu = visualizationBuilder.Build();
-            
-
+            StatisticsMenu visualizationMenu = new StatisticsMenu(this.engine, this.layoutStack);
+            visualizationMenu.VisitActivitiesScreen += VisualizationMenu_VisitActivitiesScreen;
+            visualizationMenu.VisitParticipationsScreen += VisualizationMenu_VisitParticipationsScreen;
 
             this.dataImportView = new DataImportView(this.layoutStack);
             this.dataImportView.RequestImport += this.ImportData;
@@ -248,12 +241,11 @@ namespace ActivityRecommendation
 
 
             LayoutChoice_Set usageMenu = new HomeScreen(
-                inheritanceEditingView,
+                this.activitiesMenuLayout,
                 this.participationEntryView,
                 this.suggestionsView,
                 visualizationMenu,
                 importExportView,
-                this.ActivityDatabase,
                 this.layoutStack);
 
             LayoutChoice_Set helpMenu = InstructionsLayout.New(this.layoutStack);
@@ -319,11 +311,34 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
 
+
+        private void ParticipationEntryView_VisitActivitiesScreen()
+        {
+            this.layoutStack.GoBack();
+            this.layoutStack.AddLayout(this.activitiesMenuLayout, "Activities");
+        }
+
+        private void SuggestionsView_VisitActivitiesScreen()
+        {
+            this.ParticipationEntryView_VisitActivitiesScreen();
+        }
+
         private void SuggestionsView_VisitParticipationScreen()
         {
             this.layoutStack.GoBack();
             this.layoutStack.AddLayout(this.participationEntryView, "Record Participations");
         }
+
+        private void VisualizationMenu_VisitActivitiesScreen()
+        {
+            this.SuggestionsView_VisitActivitiesScreen();
+        }
+
+        private void VisualizationMenu_VisitParticipationsScreen()
+        {
+            this.SuggestionsView_VisitParticipationScreen();
+        }
+
 
         private void SuggestionsView_RequestSuggestion(ActivityRequest request)
         {
@@ -938,37 +953,6 @@ namespace ActivityRecommendation
         }
 
 
-        public void VisualizeActivity(object sender, EventArgs e)
-        {
-            this.VisualizeActivity();
-        }
-        public void VisualizeActivity()
-        {
-            this.engine.EnsureRatingsAreAssociated();
-
-            //ActivityDescriptor xAxisDescriptor = this.statisticsMenu.XAxisActivityDescriptor;
-            IProgression xAxisProgression = this.statisticsMenu.XAxisProgression;
-            ActivityDescriptor yAxisDescriptor = this.statisticsMenu.YAxisActivityDescriptor;
-            //Activity xAxisActivity = null;
-            Activity yAxisActivity = null;
-            /*
-            if (xAxisDescriptor != null)
-            {
-                xAxisActivity = this.engine.ActivityDatabase.ResolveDescriptor(xAxisDescriptor);
-            }
-            */
-            if (yAxisDescriptor != null)
-            {
-                yAxisActivity = this.engine.ActivityDatabase.ResolveDescriptor(yAxisDescriptor);
-            }
-            if (yAxisActivity != null)
-            {
-                yAxisActivity.ApplyPendingData();
-                ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
-                this.layoutStack.AddLayout(visualizationView, "Graph");
-            }
-        }
-
         public ActivityDatabase ActivityDatabase
         {
             get
@@ -1011,6 +995,7 @@ namespace ActivityRecommendation
         ViewManager viewManager;
         LayoutChoice_Set mainLayout;
 
+        ActivitiesMenuLayout activitiesMenuLayout;
         ParticipationEntryView participationEntryView;
         SuggestionsView suggestionsView;
         DataExportView dataExportView;

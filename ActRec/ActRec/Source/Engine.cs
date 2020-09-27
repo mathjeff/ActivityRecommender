@@ -774,7 +774,7 @@ namespace ActivityRecommendation
             return new Distribution(prediction);
         }
         // returns a bunch of thoughts telling why <activity> was last rated as it was
-        public ActivitySuggestion_Justification JustifySuggestion(ActivitySuggestion activitySuggestion)
+        public ActivitySuggestion_Explanation ExplainSuggestion(ActivitySuggestion activitySuggestion)
         {
             // first identify the most important reason for convenience
             Activity activity = this.ActivityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
@@ -795,9 +795,10 @@ namespace ActivityRecommendation
                     bestReason = candidate.Justification;
                 }
             }
-            ActivitySuggestion_Justification justification = new ActivitySuggestion_Justification();
+            ActivitySuggestion_Explanation justification = new ActivitySuggestion_Explanation();
             justification.Suggestion = activitySuggestion;
             justification.PrimaryReason = bestReason;
+            justification.Score = this.currentRecommendationsCache.ratings[activity].Distribution.Mean;
             // also list all of the reasons for clarity
             List<SuggestionJustification> clauses = new List<SuggestionJustification>(predictions.Count);
             foreach (Prediction contributor in predictions)

@@ -580,8 +580,8 @@ namespace ActivityRecommendation
         }
         public void JustifySuggestion(ActivitySuggestion suggestion)
         {
-            ActivitySuggestion_Justification justification = this.engine.JustifySuggestion(suggestion);
-            this.layoutStack.AddLayout(new ActivitySuggestion_Justification_Layout(justification), "Why");
+            ActivitySuggestion_Explanation justification = this.engine.ExplainSuggestion(suggestion);
+            this.layoutStack.AddLayout(new ActivitySuggestion_Explanation_Layout(justification), "Why");
         }
 
         private void AddSuggestion_To_SuggestionsView(ActivitySuggestion suggestion)

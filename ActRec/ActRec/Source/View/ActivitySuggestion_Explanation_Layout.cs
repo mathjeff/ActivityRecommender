@@ -7,15 +7,21 @@ using VisiPlacement;
 
 namespace ActivityRecommendation.View
 {
-    public class ActivitySuggestion_Justification_Layout : ContainerLayout
+    public class ActivitySuggestion_Explanation_Layout : ContainerLayout
     {
         private int maxFontSize = 30;
-        public ActivitySuggestion_Justification_Layout(ActivitySuggestion_Justification justification)
+        public ActivitySuggestion_Explanation_Layout(ActivitySuggestion_Explanation justification)
         {
-            
+            ActivitySuggestion suggestion = justification.Suggestion;
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
-            builder.AddLayout(this.newTextBlock("Why " + justification.Suggestion.ActivityDescriptor.ActivityName + " was suggested to start at " +
+            builder.AddLayout(this.newTextBlock("Suggesting " + suggestion.ActivityDescriptor.ActivityName + " " +
                 justification.Suggestion.StartDate));
+            if (suggestion.ParticipationProbability != null)
+                builder.AddLayout(this.newTextBlock("Participation probability: " + Math.Round(suggestion.ParticipationProbability.Value, 3)));
+            if (suggestion.PredictedScoreDividedByAverage != null)
+                builder.AddLayout(this.newTextBlock("Rating: " + Math.Round(justification.Score, 3) + " (" +
+                    Math.Round(suggestion.PredictedScoreDividedByAverage.Value, 3) + " x avg)"));
+            builder.AddLayout(this.newTextBlock("\nExplanations:"));
             foreach (SuggestionJustification child in justification.Reasons)
             {
                 builder.AddLayouts(this.renderJustification(child, 0));

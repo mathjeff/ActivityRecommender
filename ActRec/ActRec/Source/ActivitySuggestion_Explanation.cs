@@ -7,9 +7,10 @@ using VisiPlacement;
 
 namespace ActivityRecommendation
 {
-    public class ActivitySuggestion_Justification
+    public class ActivitySuggestion_Explanation
     {
         public ActivitySuggestion Suggestion { get; set; }
+        public double Score { get; set; } // normally an ActivitySuggestion only records its score divided by average
         public SuggestionJustification PrimaryReason { get; set; }
         public List<SuggestionJustification> Reasons { get; set; }
     }

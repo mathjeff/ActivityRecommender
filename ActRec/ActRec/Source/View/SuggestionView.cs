@@ -24,60 +24,31 @@ namespace ActivityRecommendation
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
 
-            // have the X button use a certain amount of space on the right
-            BoundProperty_List widths = new BoundProperty_List(2);
 
+            // set up grid for holding buttons and content
+            // have the X button use a certain amount of space on the right
+            BoundProperty_List widths = new BoundProperty_List(3);
             int titleWidthWeight = 6;
-            widths.SetPropertyScale(0, titleWidthWeight + 1);
-            widths.SetPropertyScale(1, 1);
+            widths.SetPropertyScale(0, 1);
+            widths.SetPropertyScale(1, titleWidthWeight);
+            widths.SetPropertyScale(2, 1);
             widths.BindIndices(0, 1);
+            widths.BindIndices(0, 2);
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
-            Vertical_GridLayout_Builder contentBuilder = new Vertical_GridLayout_Builder().Uniform();
-            
-            // Attempt to center the activity name, but allow it to be off-center if necessary
-            TextblockLayout titleLayout = new TextblockLayout(suggestion.ActivityDescriptor.ActivityName, TextAlignment.Center);
-            BoundProperty_List titleComponentWidths = new BoundProperty_List(2);
-            titleComponentWidths.BindIndices(0, 1);
-            titleComponentWidths.SetPropertyScale(0, 1);
-            titleComponentWidths.SetPropertyScale(1, titleWidthWeight);
-            GridLayout centeredTitle = GridLayout.New(BoundProperty_List.Uniform(1), titleComponentWidths, LayoutScore.Zero);
-            centeredTitle.PutLayout(titleLayout, 1, 0);
+
+            // make a doNow button if needed
             if (isFirstSuggestion)
             {
-                // include the doNow button in the centered layout
                 Button doNowButton = new Button();
                 doNowButton.Clicked += DoNowButton_Clicked;
                 ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "Doing it?");
-                centeredTitle.PutLayout(doButtonLayout, 0, 0);
-                // require that the centered layout must be used
-                contentBuilder.AddLayout(centeredTitle);
-            }
-            else
-            {
-                // Allow the title to be off-center if necessary
-                GridLayout offsetTitle = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(1), LayoutScore.Get_UnCentered_LayoutScore(1));
-                offsetTitle.PutLayout(titleLayout, 0, 0);
-                contentBuilder.AddLayout(new LayoutUnion(centeredTitle, offsetTitle));
+                mainGrid.PutLayout(doButtonLayout, 0, 0);
             }
 
-            // Add the remaining fields
+            // add content
+            mainGrid.PutLayout(new TextblockLayout(this.summarize(suggestion)), 1, 0);
 
-            // Include the seconds field only for participations shorter than 1 minute
-            string timeFormat = "HH:mm:ss";
-            if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMilliseconds(1)) >= 0)
-                timeFormat = "HH:mm";
-            string whenText = suggestion.StartDate.ToString(timeFormat);
-            if (suggestion.EndDate.HasValue)
-                whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
-            contentBuilder.AddLayout(this.make_displayField("When:", whenText));
-            if (suggestion.ParticipationProbability != null && suggestion.Skippable)
-                contentBuilder.AddLayout(this.make_displayField("Probability:", Math.Round(suggestion.ParticipationProbability.Value, 3).ToString()));
-            if (suggestion.PredictedScoreDividedByAverage != null)
-                contentBuilder.AddLayout(this.make_displayField("Rating:", Math.Round(suggestion.PredictedScoreDividedByAverage.Value, 3).ToString() + " x avg"));
-            this.contentGrid = contentBuilder.Build();
-
-            // Add buttons
-            mainGrid.AddLayout(this.contentGrid);
+            // Add buttons on the right
             this.cancelButton = new Button();
             this.cancelButton.Clicked += cancelButton_Click;
             this.justifyButton = new Button();
@@ -96,9 +67,111 @@ namespace ActivityRecommendation
                 .AddLayout(cancelLayout);
             if (this.suggestion.PredictedScoreDividedByAverage != null)
                 sideBuilder.AddLayout(new ButtonLayout(this.justifyButton, "?"));
-            mainGrid.AddLayout(sideBuilder.Build());
+            mainGrid.PutLayout(sideBuilder.Build(), 2, 0);
             this.SubLayout = mainGrid;
+        }
 
+        // given a probability, returns an adjective to describe it
+        private string getProbabilityAdjective(double probability)
+        {
+            //if (probability <= 0)
+            //    return "won't";
+            if (probability <= 0.1)
+                return "could";
+            if (probability <= 0.2)
+                return "will occasionally";
+            if (probability <= 0.3)
+                return "can sometimes";
+            if (probability <= 0.4)
+                return "might";
+            if (probability <= 0.5)
+                return "may";
+            if (probability <= 0.6)
+                return "often";
+            if (probability < 0.7)
+                return "are likely to";
+            if (probability <= 0.8)
+                return "usually";
+            if (probability <= 0.9)
+                return "probably will";
+            if (probability < 1)
+                return "will almost definitely";
+            return "will certainly";
+        }
+
+        // given a rating (relative to the average rating), returns a verb to describe it
+        private string getRatingVerb(double ratingTimesAverage)
+        {
+            if (ratingTimesAverage <= 0.3)
+                return "despise";
+            if (ratingTimesAverage <= 0.5)
+                return "tolerate";
+            if (ratingTimesAverage <= 0.6)
+                return "dislike";
+            if (ratingTimesAverage <= 0.7)
+                return "not like";
+            if (ratingTimesAverage <= 0.8)
+                return "accept";
+            if (ratingTimesAverage <= 0.9)
+                return "do";
+            if (ratingTimesAverage <= 1)
+                return "appreciate";
+            if (ratingTimesAverage <= 1.1)
+                return "like";
+            if (ratingTimesAverage <= 1.2)
+                return "enjoy";
+            if (ratingTimesAverage <= 1.5)
+                return "love";
+            return "be overjoyed with";
+        }
+
+        private string summarize(ActivitySuggestion suggestion)
+        {
+            // Summarize participation probability and predicted score
+            string text = "You";
+            string longTimeFormat = "HH:mm:ss";
+            string shortTimeFormat = "HH:mm";
+            if (!suggestion.Skippable)
+            {
+                // If this is an unskippable experiment, then remind the user that they promised to do it
+                text += " promised to do " + suggestion.ActivityDescriptor.ActivityName + " at " + suggestion.StartDate.ToString(shortTimeFormat) + ".";
+                if (suggestion.PredictedScoreDividedByAverage != null)
+                {
+                    // Also tell the user how we think they'll feel about it
+                    text += " I think you will " + this.getRatingVerb(suggestion.PredictedScoreDividedByAverage.Value) + " it.";
+                }
+                text += " Get started!";
+            }
+            else
+            {
+                // For a normal suggestion, we tell them how likely we think it is that they will do it, and
+                // how we think they will feel about it
+                if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
+                {
+                    text += " " + this.getProbabilityAdjective(suggestion.ParticipationProbability.Value);
+                    text += " " + this.getRatingVerb(suggestion.PredictedScoreDividedByAverage.Value);
+                }
+                else
+                {
+                    // No data at the moment
+                    text += " may do";
+                }
+                text += " " + suggestion.ActivityDescriptor.ActivityName;
+
+                // Also tell the user when we think they'll start and how long we think they'll do it
+                // Include the seconds field only for participations shorter than 1 minute
+                string timeFormat;
+                if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMinutes(1)) >= 0)
+                    timeFormat = shortTimeFormat;
+                else
+                    timeFormat = longTimeFormat;
+                string whenText = suggestion.StartDate.ToString(timeFormat);
+                if (suggestion.EndDate.HasValue)
+                    whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
+
+                text += " " + whenText + ".";
+            }
+            return text;
         }
 
         private void DoNowButton_Clicked(object sender, EventArgs e)
@@ -155,7 +228,6 @@ namespace ActivityRecommendation
             
         }
         
-        GridLayout contentGrid;
         Button cancelButton;
         Button explainWhyYouCantSkipButton;
         Button justifyButton;

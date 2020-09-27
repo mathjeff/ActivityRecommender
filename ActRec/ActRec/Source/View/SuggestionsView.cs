@@ -33,8 +33,11 @@ namespace ActivityRecommendation.View
 
             this.SetTitle("Get Suggestions");
 
+            this.messageLayout = new TextblockLayout("What kind of suggestion would you like?");
+
             this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
+            this.askWhatIsNext_layout = new TextblockLayout().AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to ask for activity recommendations from among activities you have said that you like.")
                 .AddMessage("By default, the recommendation will attempt to maximize your long-term happiness.")
@@ -113,25 +116,25 @@ namespace ActivityRecommendation.View
         public void RemoveSuggestion(ActivitySuggestion suggestion)
         {
             this.suggestions.Remove(suggestion);
-            this.UpdateSuggestions();
+            this.UpdateSuggestionsAndMessage();
         }
 
         public void ClearSuggestions()
         {
             this.suggestions.Clear();
-            this.UpdateSuggestions();
+            this.UpdateSuggestionsAndMessage();
         }
         public void AddSuggestion(ActivitySuggestion suggestion)
         {
             this.suggestions.Add(suggestion);
-            this.UpdateSuggestions();
+            this.UpdateSuggestionsAndMessage();
         }
         public void AddSuggestions(IEnumerable<ActivitySuggestion> suggestions)
         {
             foreach (ActivitySuggestion suggestion in suggestions)
             {
                 this.suggestions.Add(suggestion);
-                this.UpdateSuggestions();
+                this.UpdateSuggestionsAndMessage();
             }
         }
         public IEnumerable<ActivitySuggestion> GetSuggestions()
@@ -152,12 +155,17 @@ namespace ActivityRecommendation.View
             }
         }
         
+        private void UpdateSuggestionsAndMessage()
+        {
+            this.messageLayout = null;
+            this.UpdateSuggestions();
+        }
         private void UpdateSuggestions()
         {
             this.Update_Suggestion_StartTimes();
-            this.messageLayout = null;
             this.UpdateLayout_From_Suggestions();
         }
+
         private void Update_Suggestion_StartTimes()
         {
             // Update the start time of each activity to be when the previous one ends
@@ -172,18 +180,32 @@ namespace ActivityRecommendation.View
         private void UpdateLayout_From_Suggestions()
         {
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
+            // show help and experiments if there are no suggestions visible
             if (this.suggestions.Count == 0)
                 layouts.Add(this.topLayout);
+            // show feedback if there is any
             if (this.messageLayout != null)
                 layouts.Insert(0, messageLayout);
+            // show suggestions if there are any
             bool addDoNowButton = true;
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
                 layouts.Add(this.makeLayout(suggestion, addDoNowButton));
                 addDoNowButton = false;
             }
+            // show the button for getting more suggestions if there's room
             if (this.suggestions.Count < this.maxNumSuggestions)
                 layouts.Add(this.requestSuggestion_layout);
+            // show an explanation about how multiple suggestions work (they're in chronological order) if there's room
+            if (layouts.Count < this.maxNumSuggestions)
+            {
+                if (this.suggestions.Count > 0)
+                {
+                    // make sure that the user realizes that asking for another suggestiib
+                    this.askWhatIsNext_layout.setText("What's after that?");
+                    layouts.Insert(layouts.Count - 1, this.askWhatIsNext_layout);
+                }
+            }
 
             GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(layouts.Count), new BoundProperty_List(1), LayoutScore.Zero);
             foreach (LayoutChoice_Set layout in layouts)
@@ -230,6 +252,7 @@ namespace ActivityRecommendation.View
 
 
         RequestSuggestion_Layout requestSuggestion_layout;
+        TextblockLayout askWhatIsNext_layout;
         LayoutChoice_Set helpButton_layout;
         Button experimentButton;
         LayoutChoice_Set startExperiment_layout;

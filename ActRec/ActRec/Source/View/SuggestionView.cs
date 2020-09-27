@@ -19,7 +19,7 @@ namespace ActivityRecommendation
         public event VisitParticipationScreenHandler VisitParticipationScreen;
         public delegate void VisitParticipationScreenHandler();
 
-        public SuggestionView(ActivitySuggestion suggestion, bool addDoNowButton, LayoutStack layoutStack)
+        public SuggestionView(ActivitySuggestion suggestion, bool isFirstSuggestion, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
@@ -42,7 +42,7 @@ namespace ActivityRecommendation
             titleComponentWidths.SetPropertyScale(1, titleWidthWeight);
             GridLayout centeredTitle = GridLayout.New(BoundProperty_List.Uniform(1), titleComponentWidths, LayoutScore.Zero);
             centeredTitle.PutLayout(titleLayout, 1, 0);
-            if (addDoNowButton)
+            if (isFirstSuggestion)
             {
                 // include the doNow button in the centered layout
                 Button doNowButton = new Button();

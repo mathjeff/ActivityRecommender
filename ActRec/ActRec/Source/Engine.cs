@@ -795,18 +795,19 @@ namespace ActivityRecommendation
                     bestReason = candidate.Justification;
                 }
             }
-            ActivitySuggestion_Explanation justification = new ActivitySuggestion_Explanation();
-            justification.Suggestion = activitySuggestion;
-            justification.PrimaryReason = bestReason;
-            justification.Score = this.currentRecommendationsCache.ratings[activity].Distribution.Mean;
+            ActivitySuggestion_Explanation explanation = new ActivitySuggestion_Explanation();
+            explanation.Suggestion = activitySuggestion;
+            explanation.PrimaryReason = bestReason;
+            explanation.Score = this.currentRecommendationsCache.ratings[activity].Distribution.Mean;
+            explanation.SuggestionValue = this.currentRecommendationsCache.suggestionValues[activity].Distribution.Mean;
             // also list all of the reasons for clarity
             List<SuggestionJustification> clauses = new List<SuggestionJustification>(predictions.Count);
             foreach (Prediction contributor in predictions)
             {
                 clauses.Add(contributor.Justification);
             }
-            justification.Reasons = clauses;
-            return justification;
+            explanation.Reasons = clauses;
+            return explanation;
         }
         public Prediction CombineRatingPredictions(IEnumerable<Prediction> predictions)
         {

@@ -4,29 +4,50 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VisiPlacement;
+using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
     public class ActivitySuggestion_Explanation_Layout : ContainerLayout
     {
         private int maxFontSize = 30;
-        public ActivitySuggestion_Explanation_Layout(ActivitySuggestion_Explanation justification)
+        public ActivitySuggestion_Explanation_Layout(ActivitySuggestion_Explanation explanation)
         {
-            ActivitySuggestion suggestion = justification.Suggestion;
+            this.explanation = explanation;
+            ActivitySuggestion suggestion = explanation.Suggestion;
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
-            builder.AddLayout(this.newTextBlock("Suggesting " + suggestion.ActivityDescriptor.ActivityName + " " +
-                justification.Suggestion.StartDate));
+            builder.AddLayout(this.newTextBlock("Suggesting " + suggestion.ActivityDescriptor.ActivityName + " at " +
+                explanation.Suggestion.StartDate.ToString("HH:mm") + "\n"));
             if (suggestion.ParticipationProbability != null)
-                builder.AddLayout(this.newTextBlock("Participation probability: " + Math.Round(suggestion.ParticipationProbability.Value, 3)));
+                builder.AddLayout(this.newTextBlock("Participation probability: " + Math.Round(suggestion.ParticipationProbability.Value, 3) + "\n"));
             if (suggestion.PredictedScoreDividedByAverage != null)
-                builder.AddLayout(this.newTextBlock("Rating: " + Math.Round(justification.Score, 3) + " (" +
-                    Math.Round(suggestion.PredictedScoreDividedByAverage.Value, 3) + " x avg)"));
-            builder.AddLayout(this.newTextBlock("\nExplanations:"));
-            foreach (SuggestionJustification child in justification.Reasons)
-            {
-                builder.AddLayouts(this.renderJustification(child, 0));
-            }
+                builder.AddLayout(this.newTextBlock("Rating: " + Math.Round(explanation.Score, 3) + " (" +
+                    Math.Round(suggestion.PredictedScoreDividedByAverage.Value, 3) + " x avg)\n"));
+
+            Button explainQuality_button = new Button();
+            explainQuality_button.Clicked += ExplainQuality_button_Clicked;
+            explainQuality_button.Text = "Suggestion quality: " + Math.Round(explanation.SuggestionValue, 3);
+            this.suggestionQuality_container = new ContainerLayout();
+            builder.AddLayout(this.suggestionQuality_container);
+            this.suggestionQuality_container.SubLayout = new ButtonLayout(explainQuality_button);
+
             this.SubLayout = ScrollLayout.New(builder.Build());
+        }
+
+        private void ExplainQuality_button_Clicked(object sender, EventArgs e)
+        {
+            this.explainSuggestionQuality();
+        }
+
+        private void explainSuggestionQuality()
+        {
+            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
+            builder.AddLayout(new TextblockLayout("Suggestion quality: " + Math.Round(explanation.SuggestionValue, 3)));
+            foreach (SuggestionJustification child in this.explanation.Reasons)
+            {
+                builder.AddLayouts(this.renderJustification(child, 1));
+            }
+            this.suggestionQuality_container.SubLayout = builder.BuildAnyLayout();
         }
 
         private TextblockLayout newTextBlock(string text)
@@ -55,12 +76,11 @@ namespace ActivityRecommendation.View
 
             // add any custom description
             List<LayoutChoice_Set> results = new List<LayoutChoice_Set>();
-            results.Add(this.newTextBlock(prefix + ">", justification.Label, indent));
             // add the specific values
             double currentMean = Math.Round(justification.Value.Mean, 3);
             double stddev = Math.Round(justification.Value.StdDev, 3);
             double weight = Math.Round(justification.Value.Weight, 1);
-            results.Add(this.newTextBlock(prefix + "::", "val = " + currentMean + " +/- " + stddev + "(" + weight + ")", indent));
+            string whatText = justification.Label + " = " + currentMean + " +/- " + stddev + " (weight = " + weight + ")";
 
             // add additional information for some specific types of justifications
             InterpolatorSuggestion_Justification interpolatorJustification = justification as InterpolatorSuggestion_Justification;
@@ -74,26 +94,28 @@ namespace ActivityRecommendation.View
                         c = " (up from average of " + overallMean + ")";
                     else
                         c = " (down from average of " + overallMean + ")";
-                    results.Add(this.newTextBlock(prefix + "??", c, indent));
+                    whatText += c;
                 }
             }
+            results.Add(this.newTextBlock(prefix, whatText, indent));
 
             Composite_SuggestionJustification compositeJustification = justification as Composite_SuggestionJustification;
             if (compositeJustification != null)
             {
-                if (compositeJustification.Children.Count == 1)
-                {
-                    // if there's exactly one child then don't bother displaying the combined value because it should match its child
-                    results.RemoveAt(results.Count - 1);
-                }
+                // if there are multiple children, explain that this value was computed based on the children
+                int childIndent;
+                results.Add(this.newTextBlock(prefix + "\\- Why:", "" + compositeJustification.Children.Count + " reasons:", indent));
+                childIndent = indent + 1;
                 foreach (SuggestionJustification child in compositeJustification.Children)
                 {
-                    List<LayoutChoice_Set> childLayouts = this.renderJustification(child, indent + 1);
+                    List<LayoutChoice_Set> childLayouts = this.renderJustification(child, childIndent);
                     results.AddRange(childLayouts);
                 }
             }
             return results;
         }
 
+        private ContainerLayout suggestionQuality_container;
+        private ActivitySuggestion_Explanation explanation;
     }
 }

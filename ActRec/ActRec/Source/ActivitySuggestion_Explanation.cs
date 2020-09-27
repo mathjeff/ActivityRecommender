@@ -11,6 +11,7 @@ namespace ActivityRecommendation
     {
         public ActivitySuggestion Suggestion { get; set; }
         public double Score { get; set; } // normally an ActivitySuggestion only records its score divided by average
+        public double SuggestionValue { get; set; } // not normally needed after MakeRecommendation completes
         public SuggestionJustification PrimaryReason { get; set; }
         public List<SuggestionJustification> Reasons { get; set; }
     }

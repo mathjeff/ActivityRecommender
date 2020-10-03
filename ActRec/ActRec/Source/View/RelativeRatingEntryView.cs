@@ -94,10 +94,11 @@ namespace ActivityRecommendation
                     else
                         dateFormatString = "HH:mm:ss";
                     this.nameBlock.setText("times the score of your latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString));
+                    this.SetContent(this.mainDisplayGrid);
                 }
                 else
                 {
-                    this.nameBlock.setText("You haven't done anything to compare to!");
+                    this.SetContent(null);
                 }
             }
             get

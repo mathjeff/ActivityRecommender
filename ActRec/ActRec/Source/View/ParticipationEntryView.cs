@@ -106,6 +106,7 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 15), "Suggested that if the participation feedback recommends a different time, then it should specify which time")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 30), "Pointed out that participation feedback was missing more often than it should have been.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 30), "Pointed out that the text in the starttime box had stopped fitting properly.")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 10, 3), "Pointed out that it was possible record participations in the future.")
                     .Build()
                 )
                 .Build();
@@ -362,12 +363,18 @@ namespace ActivityRecommendation
                 return null;
             if (!this.endDateBox.IsDateValid())
                 return null;
+            // If the user is trying to submit a participation with misordered dates, then point the out to them
+            // Although we could've highlighted this to the user sooner, in most cases this would just distract them and they wouldn't want to think about it
             if (this.EndDate.CompareTo(this.StartDate) <= 0)
             {
-                // If the user is trying to submit a participation with misordered dates, then point the out to them
-                // Although we could've highlighted this to the user sooner, in most cases this would just distract them and they wouldn't want to think about it
                 this.startDateBox.appearInvalid();
                 this.endDateBox.appearInvalid();
+                return null;
+            }
+            // If the user tries to record having done someting in the future, that's a mistake because it hasn't happened yet
+            DateTime now = DateTime.Now;
+            if (this.StartDate.CompareTo(now) > 0 || this.EndDate.CompareTo(now) > 0)
+            {
                 return null;
             }
             Participation participation = new Participation(this.StartDate, this.EndDate, descriptor);

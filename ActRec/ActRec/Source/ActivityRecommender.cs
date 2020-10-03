@@ -543,6 +543,12 @@ namespace ActivityRecommendation
             this.latestParticipation = loader.LatestParticipation;
             this.recentUserData = loader.RecentUserData;
             this.SuspectLatestActionDate(loader.LatestDate);
+            if (!this.engine.ActivityDatabase.ContainsCustomActivity())
+            {
+                // If the user hasn't entered any data yet, then starting ActivityRecommender counts as taking an action
+                // We wouldn't want to start the participation entry view date at year 0
+                this.LatestActionDate = DateTime.Now;
+            }
 
             this.ActivityDatabase.AssignDefaultParent();
             System.Diagnostics.Debug.WriteLine("Done parsing files");

@@ -1,7 +1,8 @@
 cd $(dirname $0)
 set -e
 echo copying
-fileName="$(adb shell 'ls /storage/emulated/0/ActivityData-2*.txt' | sort | tail -n 1 | head -c 56)"
+fileName="$(adb shell 'ls /storage/emulated/0/ActivityRecommender/ActivityData-2*.txt' | sort | tail -n 1 | tr -d '\r' | tr -d '\n')"
+echo filename is $fileName
 destDir="ActivityData"
 cd
 cd ActivityData

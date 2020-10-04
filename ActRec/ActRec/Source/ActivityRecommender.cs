@@ -460,23 +460,9 @@ namespace ActivityRecommendation
             return data;
         }
 
-        public async Task ExportData(int maxNumLines = -1)
+        public async Task ExportData()
         {
             string content = this.getPersistentUserData().serialize();
-            if (maxNumLines > 0)
-            {
-                int startIndex = content.Length - 1;
-                for (int i = 0; i < maxNumLines; i++)
-                {
-                    startIndex = content.LastIndexOf('\n', startIndex - 1);
-                    if (startIndex < 0)
-                    {
-                        startIndex = 0;
-                        break;
-                    }
-                }
-                content = content.Substring(startIndex);
-            }
 
             DateTime now = DateTime.Now;
             string nowText = now.ToString("yyyy-MM-dd-HH-mm-ss");

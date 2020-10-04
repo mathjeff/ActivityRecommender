@@ -123,18 +123,14 @@ namespace ActivityRecommendation
     // This is used for things like data import and export
     public class PublicFileIo
     {
+        private static string basedir = null;
+        public static void setBasedir(string dir)
+        {
+            basedir = dir;
+        }
         // saves text to a file where the user can do something with it
         public async Task<bool> ExportFile(string fileName, string content)
         {
-            IFilePicker filePicker = CrossFilePicker.Current;
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(content);
-
-            Stream stream = new MemoryStream(bytes);
-            Func<Stream> streamFunc = (() => stream);
-
-            FileData fileData = new FileData(".", fileName, streamFunc);
-            fileData.FileName = fileName;
-
             Permission[] permissions = new Permission[] { Permission.Storage };
             Dictionary<Permission, PermissionStatus> status = await Plugin.Permissions.CrossPermissions.Current.RequestPermissionsAsync(permissions);
 
@@ -145,9 +141,22 @@ namespace ActivityRecommendation
                 System.Diagnostics.Debug.WriteLine("Permissions[" + permission + "] = " + status[permission]);
             }
 
-            // save file
-            Task<bool> task = Task.Run(async () => await filePicker.SaveFile(fileData));
-            return task.Result;
+            string destDir = RootDir;
+            if (!Directory.Exists(destDir))
+                Directory.CreateDirectory(destDir);
+            string path = Path.Combine(destDir, fileName);
+            File.WriteAllText(path, content);
+            return true;
+        }
+
+        private string RootDir
+        {
+            get
+            {
+                if (basedir == null)
+                    basedir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                return basedir;
+            }
         }
 
         // asks the user to choose a file, asynchronously

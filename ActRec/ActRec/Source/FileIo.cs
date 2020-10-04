@@ -131,16 +131,7 @@ namespace ActivityRecommendation
         // saves text to a file where the user can do something with it
         public async Task<bool> ExportFile(string fileName, string content)
         {
-            Permission[] permissions = new Permission[] { Permission.Storage };
-            Dictionary<Permission, PermissionStatus> status = await Plugin.Permissions.CrossPermissions.Current.RequestPermissionsAsync(permissions);
-
-            // print statuses for debugging
-            System.Diagnostics.Debug.WriteLine("Got status for " + status.Count + " statuses ");
-            foreach (Permission permission in status.Keys)
-            {
-                System.Diagnostics.Debug.WriteLine("Permissions[" + permission + "] = " + status[permission]);
-            }
-
+            await this.requestPermission();
             string destDir = RootDir;
             if (!Directory.Exists(destDir))
                 Directory.CreateDirectory(destDir);
@@ -162,8 +153,24 @@ namespace ActivityRecommendation
         // asks the user to choose a file, asynchronously
         public async Task<FileData> PromptUserForFile()
         {
+            await this.requestPermission();
             IFilePicker filePicker = CrossFilePicker.Current;
             return await filePicker.PickFile();
+        }
+
+        private async Task requestPermission()
+        {
+            Permission[] permissions = new Permission[] { Permission.Storage };
+            Dictionary<Permission, PermissionStatus> status = await Plugin.Permissions.CrossPermissions.Current.RequestPermissionsAsync(permissions);
+
+            // print statuses for debugging
+            System.Diagnostics.Debug.WriteLine("Got status for " + status.Count + " statuses ");
+            foreach (Permission permission in status.Keys)
+            {
+                System.Diagnostics.Debug.WriteLine("Permissions[" + permission + "] = " + status[permission]);
+            }
+
+
         }
     }
 }

@@ -10,6 +10,7 @@ using System.IO;
 using ActivityRecommendation.Effectiveness;
 using System.Threading.Tasks;
 using System.Reflection;
+using StatLists;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -57,13 +58,65 @@ namespace ActivityRecommendation
             this.persona = loader.Persona;
         }
 
+        private LayoutDefaults LayoutDefaults
+        {
+            get
+            {
+                string themeName = this.persona.LayoutDefaults_Name;
+                IEnumerable<LayoutDefaults> all = this.AllLayoutDefaults;
+                foreach (LayoutDefaults candidate in all)
+                {
+                    if (candidate.PersistedName == themeName)
+                        return candidate;
+                }
+
+                System.Diagnostics.Debug.WriteLine("Theme '" + themeName + "' not found");
+                return all.First();
+            }
+        }
+
+        private IEnumerable<LayoutDefaults> AllLayoutDefaults
+        {
+            get
+            {
+                List<LayoutDefaults> all = new List<LayoutDefaults>();
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("dark")
+                    .UneditableText_Color(Color.White)
+                    .UneditableText_Background(Color.Black)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("light")
+                    .UneditableText_Color(Color.Black)
+                    .UneditableText_Background(Color.White)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("coding")
+                    .UneditableText_Color(Color.Green)
+                    .UneditableText_Background(Color.Black)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("dinosaur")
+                    .UneditableText_Color(Color.Green)
+                    .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("scifi")
+                    .UneditableText_Color(Color.FromRgb(13, 125, 148))
+                    .UneditableText_Background(Color.FromRgb(1, 20, 38))
+                    .Build());
+                return all;
+            }
+        }
+
         private void setupLoadingScreen()
         {
-            this.parentView.BackgroundColor = Color.Black;
+            LayoutDefaults defaults = this.LayoutDefaults;
+            this.parentView.BackgroundColor = defaults.ApplicationBackground;
             TextblockLayout layout = new TextblockLayout(this.persona.Name + " is loading your data...");
             layout.AlignHorizontally(TextAlignment.Center);
             layout.AlignVertically(TextAlignment.Center);
-            ViewManager viewManager = new ViewManager(this.parentView, layout);
+            ViewManager viewManager = new ViewManager(this.parentView, layout, this.LayoutDefaults);
         }
 
         public void Initialize()
@@ -159,7 +212,7 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
             this.mainLayout = ContainerLayout.SameSize_Scroller(new ScrollView(), this.layoutStack);
-            this.viewManager = new ViewManager(null, this.mainLayout);
+            this.viewManager = new ViewManager(null, this.mainLayout, this.LayoutDefaults);
 
             ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
@@ -257,12 +310,28 @@ namespace ActivityRecommendation
             debuggingBuilder.AddLayout("Compute ActivityRecommender's Accuracy (Very Slow)", new EngineTesterView(this, this.layoutStack));
             debuggingBuilder.AddLayout("View Memory Usage", new ViewMemoryUsageLayout());
 
-            PersonaCustomizationView personaCustomizationView = new PersonaCustomizationView(this.persona);
+            PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.persona);
+            Choose_LayoutDefaults_Layout themeCustomizationView = new Choose_LayoutDefaults_Layout(this.AllLayoutDefaults);
+
+            themeCustomizationView.Chose_LayoutDefaults += ThemeCustomizationView_Chose_LayoutDefaults;
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu);
             introMenu_builder.AddLayout("Start", new StackEntry(usageMenu, "Home", null));
-            introMenu_builder.AddLayout(new StackEntry(personaCustomizationView, "Customization", personaCustomizationView));
+            introMenu_builder.AddLayout(
+                "Customization",
+                (new MenuLayoutBuilder(this.layoutStack)
+                    .AddLayout(
+                        new StackEntry(personaCustomizationView, "Name Me", personaCustomizationView)
+                    )
+                    .AddLayout(
+                        "Change Colors",
+                        themeCustomizationView
+                    )
+                    .Build()
+                )
+            );
+
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             introMenu_builder.AddLayout("Credits (your name could be here!)",
                 (new HelpWindowBuilder()
@@ -311,6 +380,13 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
 
+        private void ThemeCustomizationView_Chose_LayoutDefaults(LayoutDefaults defaults)
+        {
+            this.persona.LayoutDefaults_Name = defaults.PersistedName;
+            this.parentView.BackgroundColor = defaults.ApplicationBackground;
+            this.savePersona();
+            this.viewManager.LayoutDefaults = this.LayoutDefaults;
+        }
 
         private void ParticipationEntryView_VisitActivitiesScreen()
         {
@@ -552,6 +628,11 @@ namespace ActivityRecommendation
         }
 
         private void Persona_NameChanged(string newName)
+        {
+            this.savePersona();
+        }
+
+        private void savePersona()
         {
             this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, this.textConverter.ConvertToString(this.persona));
         }

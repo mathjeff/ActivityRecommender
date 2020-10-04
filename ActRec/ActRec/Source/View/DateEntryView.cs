@@ -90,11 +90,7 @@ namespace ActivityRecommendation
         }
         public void appear_defaultValid()
         {
-            this.chooseDate_button.BackgroundColor = Color.LightGray;
-        }
-        public void appearHappy()
-        {
-            this.chooseDate_button.BackgroundColor = Color.Green;
+            this.chooseDate_button.BackgroundColor = Color.FromRgba(0, 0, 0, 0);
         }
         public void appearConcerned()
         {
@@ -207,7 +203,7 @@ namespace ActivityRecommendation
 
             this.dateFormat = dateFormat;
 
-            this.dateLayout = new TextblockLayout("", Color.Black);
+            this.dateLayout = new TextblockLayout("");
 
             dateLayout.ScoreIfEmpty = true;
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
@@ -371,7 +367,7 @@ namespace ActivityRecommendation
         public void updateValidity()
         {
             if (this.isDateValid())
-                this.dateLayout.setBackgroundColor(Color.LightGray);
+                this.dateLayout.setBackgroundColor(Color.FromRgba(0, 0, 0, 0));
             else
                 this.dateLayout.setBackgroundColor(Color.Red);
         }

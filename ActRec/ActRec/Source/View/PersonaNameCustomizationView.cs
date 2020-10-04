@@ -6,9 +6,9 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    class PersonaCustomizationView : ContainerLayout, OnBack_Listener
+    class PersonaNameCustomizationView : ContainerLayout, OnBack_Listener
     {
-        public PersonaCustomizationView(Persona persona)
+        public PersonaNameCustomizationView(Persona persona)
         {
             this.persona = persona;
 

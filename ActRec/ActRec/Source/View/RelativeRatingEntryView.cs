@@ -17,12 +17,13 @@ namespace ActivityRecommendation
         {
             this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
 
-            this.scaleBlock = new Editor();
-            this.scaleBlock.Keyboard = Keyboard.Numeric;
-            this.scaleBlock.TextChanged += this.ScaleBlock_TextChanged;
+            this.scaleBox = new Editor();
+            this.scaleBox.Keyboard = Keyboard.Numeric;
+            this.scaleBox.TextChanged += this.ScaleBlock_TextChanged;
+            this.scaleBoxLayout = new TextboxLayout(this.scaleBox);
 
             this.Clear();
-            this.mainDisplayGrid.AddLayout(new TextboxLayout(this.scaleBlock));
+            this.mainDisplayGrid.AddLayout(this.scaleBoxLayout);
 
             this.nameBlock = new TextblockLayout();
             this.mainDisplayGrid.AddLayout(this.nameBlock);
@@ -41,10 +42,10 @@ namespace ActivityRecommendation
         }
         public double? GetRatio()
         {
-            string text = this.scaleBlock.Text;
+            string text = this.scaleBox.Text;
             try
             {
-                double value = double.Parse(this.scaleBlock.Text);
+                double value = double.Parse(this.scaleBox.Text);
                 if (value < 0)
                     return null;
                 return value;
@@ -56,11 +57,11 @@ namespace ActivityRecommendation
         }
         public void Placeholder(string text)
         {
-            this.scaleBlock.Placeholder = text;
+            this.scaleBox.Placeholder = text;
         }
         void UpdateDateColor()
         {
-            if (this.IsRatioValid() || this.scaleBlock.Text == "")
+            if (this.IsRatioValid() || this.scaleBox.Text == "")
                 this.AppearValid();
             else
                 this.AppearInvalid();
@@ -69,13 +70,13 @@ namespace ActivityRecommendation
         // alters the appearance to indicate that the given date is not valid
         void AppearValid()
         {
-            this.scaleBlock.BackgroundColor = Color.LightGray;
+            this.scaleBoxLayout.SetBackgroundColor(Color.FromRgba(0, 0, 0, 0));
         }
 
         // alters the appearance to indicate that the given date is not valid
         void AppearInvalid()
         {
-            this.scaleBlock.BackgroundColor = Color.Red;
+            this.scaleBoxLayout.SetBackgroundColor(Color.Red);
         }
 
         public Participation LatestParticipation
@@ -122,12 +123,13 @@ namespace ActivityRecommendation
 
         public void Clear()
         {
-            this.scaleBlock.Text = "";
+            this.scaleBox.Text = "";
         }
 
         private GridLayout mainDisplayGrid;
         private Participation latestParticipation;
         private TextblockLayout nameBlock;
-        private Editor scaleBlock;
+        private Editor scaleBox;
+        private TextboxLayout scaleBoxLayout;
     }
 }

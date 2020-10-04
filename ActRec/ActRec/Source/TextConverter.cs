@@ -316,6 +316,7 @@ namespace ActivityRecommendation
         {
             Dictionary<string, string> properties = new Dictionary<string, string>();
             properties[this.PersonaName_Tag] = persona.Name;
+            properties[this.PersonaAppearance_Tag] = persona.LayoutDefaults_Name;
 
             return this.ConvertToString(properties, this.PersonaTag);
         }
@@ -1252,6 +1253,11 @@ namespace ActivityRecommendation
                     persona.Name = this.ReadText(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.PersonaAppearance_Tag)
+                {
+                    persona.LayoutDefaults_Name = this.ReadText(currentChild);
+                    continue;
+                }
             }
             return persona;
         }
@@ -1944,6 +1950,14 @@ namespace ActivityRecommendation
             get
             {
                 return "Name";
+            }
+        }
+
+        private string PersonaAppearance_Tag
+        {
+            get
+            {
+                return "Theme";
             }
         }
 

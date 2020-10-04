@@ -27,7 +27,10 @@ namespace ActivityRecommendation.View
         public void SetActivity(Activity activity)
         {
             this.activity = activity;
-            this.selectedIndex = 0;
+            if (this.allowChoosingNoMetric)
+                this.selectedIndex = NO_METRIC_INDEX;
+            else
+                this.selectedIndex = 0;
             this.updateLayout();
         }
 
@@ -107,7 +110,7 @@ namespace ActivityRecommendation.View
             if (metric == null)
             {
                 // We have a metric but the user has currently selected null
-                this.buttonLayout.setText("No metric");
+                this.buttonLayout.setText("No metric chosen");
                 this.SubLayout = this.buttonLayout;
                 return;
             }

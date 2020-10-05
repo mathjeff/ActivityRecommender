@@ -82,13 +82,13 @@ namespace ActivityRecommendation
                 List<LayoutDefaults> all = new List<LayoutDefaults>();
                 all.Add(new LayoutDefaults_Builder()
                     .DisplayName("dark")
-                    .UneditableText_Color(Color.White)
+                    .UneditableText_Color(Color.LightGray)
                     .UneditableText_Background(Color.Black)
                     .Build());
                 all.Add(new LayoutDefaults_Builder()
                     .DisplayName("light")
                     .UneditableText_Color(Color.Black)
-                    .UneditableText_Background(Color.White)
+                    .UneditableText_Background(Color.Beige)
                     .Build());
                 all.Add(new LayoutDefaults_Builder()
                     .DisplayName("coding")
@@ -105,6 +105,62 @@ namespace ActivityRecommendation
                     .UneditableText_Color(Color.FromRgb(13, 125, 148))
                     .UneditableText_Background(Color.FromRgb(1, 20, 38))
                     .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("fireball")
+                    .UneditableText_Color(Color.FromRgb(253, 253, 84))
+                    .UneditableText_Background(Color.FromRgb(169, 44, 1))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("sky")
+                    .UneditableText_Color(Color.FromRgb(25, 62, 113))
+                    .UneditableText_Background(Color.FromRgb(150, 193, 235))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("candy")
+                    .UneditableText_Color(Color.FromRgb(219, 76, 119))
+                    .UneditableText_Background(Color.FromRgb(16, 85, 154))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("flower")
+                    .UneditableText_Color(Color.FromRgb(219, 76, 119))
+                    .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("dracula")
+                    .UneditableText_Color(Color.DarkRed)
+                    .UneditableText_Background(Color.Black)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("fish")
+                    .UneditableText_Color(Color.Yellow)
+                    .UneditableText_Background(Color.Blue)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("butterfly")
+                    .UneditableText_Color(Color.FromRgb(255, 204, 0))
+                    .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("goth")
+                    .UneditableText_Color(Color.FromRgb(255, 150, 204))
+                    .UneditableText_Background(Color.Black)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("bubblegum")
+                    .UneditableText_Color(Color.FromRgb(208, 28, 139))
+                    .UneditableText_Background(Color.DarkGreen)
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("brownie")
+                    .UneditableText_Color(Color.FromRgb(175, 99, 81))
+                    .UneditableText_Background(Color.FromRgb(50, 24, 27))
+                    .Build());
+                all.Add(new LayoutDefaults_Builder()
+                    .DisplayName("bumblebee")
+                    .UneditableText_Color(Color.FromRgb(8, 8, 8))
+                    .UneditableText_Background(Color.FromRgb(221, 190, 7))
+                    .Build());
+
                 return all;
             }
         }

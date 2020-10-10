@@ -270,21 +270,13 @@ namespace ActivityRecommendation
             this.mainLayout = ContainerLayout.SameSize_Scroller(new ScrollView(), this.layoutStack);
             this.viewManager = new ViewManager(null, this.mainLayout, this.LayoutDefaults);
 
-            ActivityCreationLayout activityCreationView = new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack);
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
-            InheritanceEditingLayout inheritanceCreationView = new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack);
             ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
-
 
             this.activitiesMenuLayout = new ActivitiesMenuLayout(
                 new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
                 activityImportLayout,
-                (new MenuLayoutBuilder(this.layoutStack)
-                    .AddLayout("Enter New Activity", activityCreationView)
-                    .AddLayout("New Relationship (Between Existing Activities)", inheritanceCreationView)
-                    .AddLayout("New Completion Metric", new MetricEditingLayout(this.ActivityDatabase, this.layoutStack))
-                    .Build()
-                ),
+                new InheritanceEditingLayout(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
                 protoActivitiesLayout,
                 (new HelpWindowBuilder()
                     .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
@@ -349,7 +341,7 @@ namespace ActivityRecommendation
                 .Build();
 
 
-            LayoutChoice_Set usageMenu = new HomeScreen(
+            HomeScreen usageMenu = new HomeScreen(
                 this.activitiesMenuLayout,
                 this.participationEntryView,
                 this.suggestionsView,
@@ -373,20 +365,12 @@ namespace ActivityRecommendation
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro", helpMenu);
-            introMenu_builder.AddLayout("Start", new StackEntry(usageMenu, "Home", null));
+            CustomizeLayout customizeLayout = new CustomizeLayout(personaCustomizationView, themeCustomizationView, this.persona, this.layoutStack);
             introMenu_builder.AddLayout(
-                "Customization",
-                (new MenuLayoutBuilder(this.layoutStack)
-                    .AddLayout(
-                        new StackEntry(personaCustomizationView, "Name Me", personaCustomizationView)
-                    )
-                    .AddLayout(
-                        "Change Colors",
-                        themeCustomizationView
-                    )
-                    .Build()
-                )
+                new AppFeatureCount_ButtonName_Provider("Change Appearance", customizeLayout.GetFeatures()),
+                new StackEntry(customizeLayout, "Change Appearance", null)
             );
+            introMenu_builder.AddLayout(new AppFeatureCount_ButtonName_Provider("Start", usageMenu.GetFeatures()), new StackEntry(usageMenu, "Home", null));
 
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             introMenu_builder.AddLayout("Credits (your name could be here!)",
@@ -792,7 +776,7 @@ namespace ActivityRecommendation
             if (suggestion != null)
             {
                 // we have to separately tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
-                this.engine.PutSuggestionInMemory(suggestion);
+                this.engine.ApplySuggestion(suggestion);
 
                 this.WriteSuggestion(suggestion);
             }
@@ -907,7 +891,7 @@ namespace ActivityRecommendation
         private void AddSkip(ActivitySkip newSkip)
         {
             this.SuspectLatestActionDate(newSkip.CreationDate);
-            this.engine.PutSkipInMemory(newSkip);
+            this.engine.ApplySkip(newSkip);
             this.WriteSkip(newSkip);
         }
         // writes this Skip to a data file
@@ -1156,4 +1140,5 @@ namespace ActivityRecommendation
         public string version;
         public bool debuggerAttached;
     }
+
 }

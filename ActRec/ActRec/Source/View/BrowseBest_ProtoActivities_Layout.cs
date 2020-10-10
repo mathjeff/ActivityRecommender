@@ -115,6 +115,10 @@ namespace ActivityRecommendation.View
             this.invalidate();
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new CompareProtoactivities_Feature(this.protoActivity_database) };
+        }
         private void ExplainScore2Button_Clicked(object sender, EventArgs e)
         {
             this.showScores();
@@ -155,26 +159,28 @@ namespace ActivityRecommendation.View
 
         private void update()
         {
-            List <ProtoActivity_EstimatedInterest> top_protoActivities = this.protoActivity_database.GetMostInteresting(2);
-            if (top_protoActivities.Count == 0)
+            if (this.protoActivity_database.Count < 3)
             {
-                this.SubLayout = new TextblockLayout("No ProtoActivities found!");
+                HelpWindowBuilder builder = new HelpWindowBuilder();
+                int numMissing = 3 - this.protoActivity_database.Count;
+                if (this.protoActivity_database.Count > 0)
+                    builder.AddMessage("Not enough protoactivities! Still need " + numMissing + " more.");
+
+                builder.AddMessage("This screen will allow you to browse your ProtoActivities once you enter some.")
+                    .AddMessage("A ProtoActivity is a note where you brainstorm ideas, and which you may later promote into an Activity if you like.")
+                    .AddMessage("While you browse ProtoActivities in this screen, you will compare which ones you like more and which ones you like less " +
+                    "(you will still be able to edit them, too). This allows ActivityRecommender to show you ideas that you like more often.")
+                    .AddMessage("This is a super easy way to save hundreds of ideas for later!")
+                    .AddMessage("To create a ProtoActivity, go back to the previous screen.");
+                this.SubLayout = builder.Build();
             }
             else
             {
-                if (top_protoActivities.Count == 1) 
-                {
-                    this.SubLayout = this.singleActivityLayout;
-                    this.singleActivityButton.Text = top_protoActivities[0].ProtoActivity.Text;
-                    this.setActivity1(top_protoActivities[0]);
-                }
-                else
-                {
-                    this.SubLayout = this.multiActivitiesLayout;
-                    this.numProtoactivitiesLayout.setText("" + top_protoActivities.Count + "/" + this.protoActivity_database.Count);
-                    this.setActivity1(top_protoActivities[0]);
-                    this.setActivity2(top_protoActivities[1]);
-                }
+                List<ProtoActivity_EstimatedInterest> top_protoActivities = this.protoActivity_database.GetMostInteresting(2);
+                this.SubLayout = this.multiActivitiesLayout;
+                this.numProtoactivitiesLayout.setText("" + top_protoActivities.Count + "/" + this.protoActivity_database.Count);
+                this.setActivity1(top_protoActivities[0]);
+                this.setActivity2(top_protoActivities[1]);
             }
         }
         private void setActivity1(ProtoActivity_EstimatedInterest interest)
@@ -253,4 +259,24 @@ namespace ActivityRecommendation.View
         private Button singleActivityButton;
         private LayoutChoice_Set singleActivityLayout;
     }
+
+    class CompareProtoactivities_Feature : AppFeature
+    {
+        public CompareProtoactivities_Feature(ProtoActivity_Database protoactivityDatabase)
+        {
+            this.protoactivityDatabase = protoactivityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Compare two ProtoActivities";
+        }
+        public bool GetHasBeenUsed()
+        {
+            if (this.protoactivityDatabase.Count < 1)
+                return false;
+            return this.protoactivityDatabase.Get(0).Ratings.Weight > 0;
+        }
+        ProtoActivity_Database protoactivityDatabase;
+    }
+
 }

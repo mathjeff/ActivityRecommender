@@ -17,12 +17,17 @@ namespace ActivityRecommendation
 
             GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
-            SingleSelect_Choice todoType = new SingleSelect_Choice("Type = ToDo", Color.FromRgb(179, 172, 166));
             SingleSelect_Choice categoryType = new SingleSelect_Choice("Type = Category", Color.FromRgb(181, 255, 254));
+            SingleSelect_Choice todoType = new SingleSelect_Choice("Type = ToDo", Color.FromRgb(179, 172, 166));
             SingleSelect_Choice problemType = new SingleSelect_Choice("Type = Problem", Color.FromRgb(235, 228, 134));
-            SingleSelect typeSelector = new SingleSelect(new List<SingleSelect_Choice>() { categoryType, todoType, problemType });
+            SingleSelect_Choice solutionType = new SingleSelect_Choice("Type = Solution", Color.FromRgb(48, 237, 138));
+            List<SingleSelect_Choice> choices = new List<SingleSelect_Choice>() { categoryType, todoType, problemType };
+            if (this.activityDatabase.HasSolution)
+                choices.Add(solutionType);
+            SingleSelect typeSelector = new SingleSelect(choices);
 
             this.typePicker = typeSelector;
+            typeSelector.Clicked += TypeSelector_Clicked;
             mainGrid.AddLayout(ButtonLayout.WithoutBevel(typeSelector));
 
             this.feedbackLayout = new TextblockLayout();
@@ -55,6 +60,10 @@ namespace ActivityRecommendation
                 "Category. For example, Sleeping would be a Category.")
                 .AddMessage("If the thing you're creating is something you plan to complete once and don't plan to do again, then select the type ToDo. For example, \"Reading " +
                 "ActivityRecommender's Built-In Features Overview\" would be a ToDo.")
+                .AddMessage("If the thing you're creating is something measureable that you might try to solve repeatedly but in different ways, then select the type Problem. For example, " +
+                "\"Headache\" (or \"Fixing my Headache\") would be a Problem because it may be addressed in several ways: resting, drinking water, or adjusting your posture")
+                .AddMessage("If the thing you're creating is something that solves a Problem, then select the type Category and choose the appropriate Problem as a parent. Note " +
+                "that there is also a choice named \"Solution\", which is another name for Category, to emphasize this.")
                 .AddLayout(new CreditsButtonBuilder(layoutStack)
                     .AddContribution(ActRecContributor.AARON_SMITH, new DateTime(2019, 8, 17), "Suggested that if Activity is the only valid choice then it should autopopulate")
                     .Build()
@@ -65,6 +74,7 @@ namespace ActivityRecommendation
 
             mainGrid.AddLayout(helpLayout);
 
+            this.explainActivityType();
 
             this.SetContent(mainGrid);
         }
@@ -88,6 +98,20 @@ namespace ActivityRecommendation
                 this.typePicker.SelectedIndex = 1;
             }
         }
+        public bool SelectedActivityTypeIsProblem
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 2;
+            }
+        }
+        public bool SelectedActivityTypeIsSolution
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 3;
+            }
+        }
 
         public string ActivityName
         {
@@ -100,6 +124,16 @@ namespace ActivityRecommendation
                 this.childNameBox.Set_NameText(value);
             }
         }
+        
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() {
+                new CreateActivity_Feature(this.activityDatabase),
+                new CreateTodo_Feature(this.activityDatabase),
+                new CreateProblem_Feature(this.activityDatabase),
+                new CreateSolution_Feature(this.activityDatabase)
+            };
+        }
 
         private void OkButton_Clicked(object sender, EventArgs e)
         {
@@ -109,7 +143,7 @@ namespace ActivityRecommendation
             inheritance.DiscoveryDate = DateTime.Now;
 
             string error;
-            if (this.SelectedActivityTypeIsCategory)
+            if (this.SelectedActivityTypeIsCategory || this.SelectedActivityTypeIsSolution)
             {
                 error = this.activityDatabase.CreateCategory(inheritance);
             }
@@ -136,6 +170,43 @@ namespace ActivityRecommendation
             }
         }
 
+        private void TypeSelector_Clicked(object sender, EventArgs e)
+        {
+            this.explainActivityType();
+        }
+
+        private void explainActivityType()
+        {
+            string text = "";
+            if (this.SelectedActivityTypeIsCategory)
+            {
+                if (!this.activityDatabase.ContainsCustomActivity())
+                    text = "A Category is a class of things you may do multiple times. A Category may have other activities as children.";
+            }
+            else
+            {
+                if (this.SelectedActivityTypeIsToDo)
+                {
+                    if (!this.activityDatabase.HasTodo)
+                        text = "A ToDo is a specific thing that you complete once. A ToDo can't be given children.";
+                }
+                else
+                {
+                    if (this.SelectedActivityTypeIsProblem)
+                    {
+                        if (!this.activityDatabase.HasProblem)
+                            text = "A Problem is something you may want to fix multiple times. Its children may be other Problems or may be other Categories (Solutions).";
+                    }
+                    else
+                    {
+                        if (!this.activityDatabase.HasSolution)
+                            text = "A Solution is another name for a Category. If you assign a Category as a child of a Problem, the Category will be considered a solution to that Problem.";
+                    }
+                }
+            }
+            this.feedbackLayout.setText(text);
+        }
+
         private ActivityNameEntryBox childNameBox;
         private ActivityNameEntryBox parentNameBox;
         private Button okButton;
@@ -143,5 +214,70 @@ namespace ActivityRecommendation
         private ActivityDatabase activityDatabase;
         private TextblockLayout feedbackLayout;
         private VisiPlacement.SingleSelect typePicker;
+    }
+
+    class CreateActivity_Feature : AppFeature
+    {
+        public CreateActivity_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Create an activity";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
+        ActivityDatabase activityDatabase;
+    }
+    class CreateTodo_Feature : AppFeature
+    {
+        public CreateTodo_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Create a Todo";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.HasTodo;
+        }
+        ActivityDatabase activityDatabase;
+    }
+    class CreateProblem_Feature : AppFeature
+    {
+        public CreateProblem_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Declare a Problem";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.HasProblem;
+        }
+        ActivityDatabase activityDatabase;
+    }
+    class CreateSolution_Feature : AppFeature
+    {
+        public CreateSolution_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Declare a Solution";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.HasSolution;
+        }
+        ActivityDatabase activityDatabase;
     }
 }

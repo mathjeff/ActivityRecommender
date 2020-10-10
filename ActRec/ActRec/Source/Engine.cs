@@ -188,7 +188,8 @@ namespace ActivityRecommendation
                 }
             }
         }
-        public void CascadeSuggestion(ActivitySuggestion newSuggestion)
+        // assigns this ActivitySuggestion to each relevant activity
+        private void CascadeSuggestion(ActivitySuggestion newSuggestion)
         {
             ActivityDescriptor descriptor = newSuggestion.ActivityDescriptor;
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
@@ -410,11 +411,7 @@ namespace ActivityRecommendation
             }
             TimeSpan averageIdlenessDuration = activity.ComputeAverageIdlenessDuration(actualStart);
             double averageIdleSeconds = averageIdlenessDuration.TotalSeconds;
-            if (averageIdleSeconds <= 0)
-            {
-                // not enough data
-                return actualStart;
-            }
+
             DateTime latestParticipationEnd = activity.LatestParticipationDate;
             double currentIdleSeconds = actualStart.Subtract(latestParticipationEnd).TotalSeconds;
             double randomSeconds = (currentIdleSeconds + averageIdleSeconds) * this.randomGenerator.NextDouble();
@@ -1093,9 +1090,22 @@ namespace ActivityRecommendation
             this.ActivityDatabase.AddInheritance(newInheritance);
             this.requiresFullUpdate = true;
         }
+        // Adds the given ActivitySkip and marks it for assignment to specific activities later
         public void PutSkipInMemory(ActivitySkip newSkip)
         {
             this.unappliedSkips.Add(newSkip);
+            this.receivedSkip(newSkip);
+        }
+
+        // adds the given ActivitySkip and cascades it to any relevant Activity
+        public void ApplySkip(ActivitySkip newSkip)
+        {
+            this.receivedSkip(newSkip);
+            this.CascadeSkip(newSkip);
+        }
+        // updates some information when we receive a skip
+        private void receivedSkip(ActivitySkip newSkip)
+        {
             this.numSkips++;
 
             this.DiscoveredActionDate(newSkip.CreationDate);
@@ -1111,18 +1121,24 @@ namespace ActivityRecommendation
                 this.weightedRatingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.ThinkingTime, 0);
             }
         }
+
         public void PutActivityRequestInMemory(ActivityRequest newRequest)
         {
-            Rating newRating = newRequest.GetCompleteRating();
-            AbsoluteRating convertedRating = newRating as AbsoluteRating;
-            if (convertedRating != null)
-                this.PutRatingInMemory(convertedRating);
+            if (newRequest.FromCategory != null)
+                this.activityDatabase.RequestedActivityFromCategory = true;
+            if (newRequest.ActivityToBeat != null)
+                this.activityDatabase.RequestedActivityAtLeastAsGoodAsOther = true;
         }
         // tells the Engine about an ActivitySuggestion that wasn't already in memory (but may have been stored on disk)
         public void PutSuggestionInMemory(ActivitySuggestion suggestion)
         {
             this.DiscoveredSuggestion(suggestion);
             this.unappliedSuggestions.Add(suggestion);
+        }
+        // tells the Engine about a new ActivitySuggestion that was just created
+        public void ApplySuggestion(ActivitySuggestion suggestion)
+        {
+            this.CascadeSuggestion(suggestion);
         }
         public void PutExperimentInMemory(PlannedExperiment experiment)
         {
@@ -1567,13 +1583,21 @@ namespace ActivityRecommendation
 
                 if (numActivitiesToChooseFromTotal < minTotalPoolSize)
                 {
+                    // not enough activities for a meaningful experiment
+                    string message = "";
+                    if (this.NumStartedExperiments < 1)
+                    {
+                        // The user never ran an experiment, so explain what an experiment is
+                        message += "This screen is where you will be able to start an experiment for measuring your efficiency. The way it works is you find some specific, " +
+                            "measurable tasks that you want to do, and then I help you choose one at random to do. If you repeat this enough times, you can observe " +
+                            "how your efficiency changes over time.\n";
+                    }
                     int numExtraRequiredActivities = minTotalPoolSize - numActivitiesToChooseFromTotal;
-                    string message = "Don't have enough activities having metrics to run another experiment. Go create " + numExtraRequiredActivities + " more ";
+                    message += "Don't have enough activities having metrics to run another experiment. Go back and create " + numExtraRequiredActivities + " more ";
                     if (numExtraRequiredActivities == 1)
                         message += "activity of type ToDo and/or add " + numExtraRequiredActivities + " Metric to another Activity!";
                     else
                         message += "activities of type ToDo and/or add Metrics to " + numExtraRequiredActivities + " more Activities!";
-                    // no enough activities for a meaningful experiment
                     return new SuggestedMetric_Metadata(message);
                 }
 
@@ -1843,7 +1867,14 @@ namespace ActivityRecommendation
             return (this.findExperimentToUpdate(activity, metricName) != null);
         }
 
-        private int NumCompletedExperiments
+        public int NumStartedExperiments
+        {
+            get
+            {
+                return this.numStartedExperiments;
+            }
+        }
+        public int NumCompletedExperiments
         {
             get
             {

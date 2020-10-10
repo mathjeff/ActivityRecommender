@@ -15,13 +15,18 @@ namespace ActivityRecommendation.View
             this.personaName_box = new Editor();
             this.personaName_box.Text = persona.Name;
 
-            TitledTextbox personaName_holder = new TitledTextbox("My Name", this.personaName_box);
+            TitledTextbox personaName_holder = new TitledTextbox("Hello! I'm your ActivityRecommender. My name is:", this.personaName_box);
             this.SubLayout = personaName_holder;
         }
 
         public void OnBack(LayoutChoice_Set previousLayout)
         {
             this.UpdatePersona();
+        }
+
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new PersonaNameCustomizationFeature(this.persona) };
         }
 
         private void UpdatePersona()
@@ -32,4 +37,42 @@ namespace ActivityRecommendation.View
         private Persona persona;
         private Editor personaName_box;
     }
+
+    class PersonaNameCustomizationFeature : AppFeature
+    {
+        public PersonaNameCustomizationFeature(Persona persona)
+        {
+            this.persona = persona;
+        }
+        public string GetDescription()
+        {
+            return "Change my name";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.persona.Name != "ActivityRecommender";
+        }
+
+        Persona persona;
+    }
+
+    class ChangeTheme_Feature : AppFeature
+    {
+        public ChangeTheme_Feature(Persona persona)
+        {
+            this.persona = persona;
+        }
+        public string GetDescription()
+        {
+            return "Change colors";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.persona.LayoutDefaults_Name != null;
+        }
+
+        Persona persona;
+    }
+
+
 }

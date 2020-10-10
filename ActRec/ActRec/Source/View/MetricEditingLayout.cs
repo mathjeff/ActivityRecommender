@@ -22,7 +22,7 @@ namespace ActivityRecommendation.View
             this.errorMessageHolder = new TextblockLayout();
 
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
-                .AddMessage("This screen lets you add a Metric to an existing activity.")
+                .AddMessage("This screen lets you add a Metric to an existing activity (metrics are required for running experiments).")
                 .AddMessage("A metric is a way of measuring how well a participation accomplishes a goal.")
                 .AddMessage("At the moment, ActivityRecommender only supports adding Metrics that classify a participation as a success or failure.")
                 .AddMessage("(You record the success/failure status when you record having participated in the Activity)")
@@ -30,12 +30,13 @@ namespace ActivityRecommendation.View
                 .AddMessage("Alternatively, if you have a computer game you'd like to beat, another possible metric would be 'Beat 1 Level'.")
                 .AddMessage("The reason you might want to create a Metric is to allow ActivityRecommender to know it can measure your effectiveness on this task.")
                 .AddMessage("Any Activity with a Metric is eligible to take part in effectiveness experiments.")
-                .AddMessage("You can only assign one metric to any Activity at the moment. If you want to assign more, you may want to make sub-activities instead.")
                 .AddMessage("Also note that any Activity of type ToDo already starts with a built-in metric, which is to complete the ToDo.")
+                .AddMessage("Also note that any Activity that is a Problem or inherits from a Problem will receive a metric, which is to solve the Problem.")
                 .Build();
-            
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), new BoundProperty_List(1), LayoutScore.Zero);
+
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(4), new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(new TextblockLayout("Add Metric to Existing Activity"));
+            mainGrid.AddLayout(new TextblockLayout("Metrics are required before running an experiment (and measuring your efficiency).", 12));
             mainGrid.AddLayout(this.errorMessageHolder);
 
             GridLayout bottomGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
@@ -47,6 +48,11 @@ namespace ActivityRecommendation.View
             mainGrid.AddLayout(bottomGrid);
 
             this.SubLayout = mainGrid;
+        }
+
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new AddedMetric_Feature(this.activityDatabase) };
         }
 
         private void OkButton_Clicked(object sender, EventArgs e)
@@ -87,5 +93,27 @@ namespace ActivityRecommendation.View
         private TitledTextbox metricBox;
         private ActivityDatabase activityDatabase;
         private TextblockLayout errorMessageHolder;
+    }
+
+    class AddedMetric_Feature : AppFeature
+    {
+        public AddedMetric_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Create a metric";
+        }
+        public bool GetHasBeenUsed()
+        {
+            foreach (Activity activity in this.activityDatabase.AllActivities)
+            {
+                if (activity.DidUserAssignAMetric)
+                    return true;
+            }
+            return false;
+        }
+        ActivityDatabase activityDatabase;
     }
 }

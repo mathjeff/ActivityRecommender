@@ -7,13 +7,23 @@ using VisiPlacement;
 
 namespace ActivityRecommendation.View
 {
-    public class ProtoActivities_Layout : ContainerLayout
+    class ProtoActivities_Layout : ContainerLayout
     {
         public ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
+            this.protoActivity_database = protoActivity_database;
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
-            menuBuilder.AddLayout("Enter new ProtoActivity", new ProtoActivity_LayoutBuilder(protoActivity_database, activityDatabase, layoutStack));
-            menuBuilder.AddLayout("Browse Best ProtoActivities", new BrowseBest_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
+            this.newProtoactivityBuilder = new ProtoActivity_LayoutBuilder(protoActivity_database, activityDatabase, layoutStack);
+            menuBuilder.AddLayout(
+                new AppFeatureCount_ButtonName_Provider("Enter New Protoactivity", this.newProtoactivityBuilder.GetFeatures()),
+                this.newProtoactivityBuilder
+            );
+
+            this.browseBestProtoactivities_layout = new BrowseBest_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack);
+            menuBuilder.AddLayout(
+                new AppFeatureCount_ButtonName_Provider("Browse Best ProtoActivities", this.browseBestProtoactivities_layout.GetFeatures()),
+                new StackEntry(this.browseBestProtoactivities_layout, "Browse Best ProtoActivities", null));
+                
             menuBuilder.AddLayout("View All ProtoActivities", new BrowseAll_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
             menuBuilder.AddLayout("Search ProtoActivities", new SearchProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
             menuBuilder.AddLayout("Help", new HelpWindowBuilder()
@@ -22,10 +32,22 @@ namespace ActivityRecommendation.View
                 .Build());
             this.SubLayout = menuBuilder.Build();
         }
+
+        public List<AppFeature> GetFeatures()
+        {
+            List<AppFeature> features = new List<AppFeature>(this.newProtoactivityBuilder.GetFeatures());
+            features.AddRange(this.browseBestProtoactivities_layout.GetFeatures());
+            return features;
+        }
+
+        ProtoActivity_Database protoActivity_database;
+        ProtoActivity_LayoutBuilder newProtoactivityBuilder;
+        BrowseBest_ProtoActivities_Layout browseBestProtoactivities_layout;
+
     }
 
 
-    public class ProtoActivity_LayoutBuilder : ValueProvider<StackEntry>
+    class ProtoActivity_LayoutBuilder : ValueProvider<StackEntry>
     {
         public ProtoActivity_LayoutBuilder(ProtoActivity_Database protoActivity_Database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
@@ -41,9 +63,31 @@ namespace ActivityRecommendation.View
             return new StackEntry(layout, "Proto", layout);
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new CreateProtoactivity_Feature(this.protoActivity_database) };
+        }
+
         private ProtoActivity_Database protoActivity_database;
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
+    }
+
+    class CreateProtoactivity_Feature : AppFeature
+    {
+        public CreateProtoactivity_Feature(ProtoActivity_Database protoactivityDatabase)
+        {
+            this.protoactivityDatabase = protoactivityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Create a ProtoActivity";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.protoactivityDatabase.Count > 0;
+        }
+        ProtoActivity_Database protoactivityDatabase;
     }
 
 }

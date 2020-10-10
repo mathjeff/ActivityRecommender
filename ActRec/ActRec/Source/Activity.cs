@@ -292,6 +292,14 @@ namespace ActivityRecommendation
                 return this.numSuggestions;
             }
         }
+
+        public int NumSkips
+        {
+            get
+            {
+                return this.skipProgression.NumItems + this.PendingSkips.Count;
+            }
+        }
         public double MeanParticipationDuration // in seconds
         {
             get
@@ -971,6 +979,17 @@ namespace ActivityRecommendation
                 if (this.intrinsicMetrics != null && this.intrinsicMetrics.Count > 0)
                     return this.intrinsicMetrics[0];
                 return null;
+            }
+        }
+        public bool DidUserAssignAMetric
+        {
+            get
+            {
+                if (this.HasAMetric && this.DefaultMetric == null)
+                    return true;
+                if (this.intrinsicMetrics != null && this.intrinsicMetrics.Count > 1)
+                    return true;
+                return false;
             }
         }
 

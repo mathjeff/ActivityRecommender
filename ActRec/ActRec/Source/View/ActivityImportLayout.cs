@@ -121,6 +121,11 @@ namespace ActivityRecommendation.View
             this.layoutStack = layoutStack;
             this.regenerateEntries();
         }
+
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new ImportPremadeActivity_Feature(this.activityDatabase) };
+        }
         private void regenerateEntries()
         {
             List<Inheritance> inheritances = this.findAvailableInheritances();
@@ -181,5 +186,30 @@ namespace ActivityRecommendation.View
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
         private Dictionary<Button, Inheritance> entries;
+    }
+
+    class ImportPremadeActivity_Feature : AppFeature
+    {
+        public ImportPremadeActivity_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+
+        public string GetDescription()
+        {
+            return "Import a premade activity";
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            foreach (string name in new List<string>() { "Sleeping", "Buying Something", "Reading", "Fun", "Useful", "Interesting" })
+            {
+                if (this.activityDatabase.ResolveDescriptor(new ActivityDescriptor(name)) != null)
+                    return true;
+            }
+            return false;
+        }
+
+        ActivityDatabase activityDatabase;
     }
 }

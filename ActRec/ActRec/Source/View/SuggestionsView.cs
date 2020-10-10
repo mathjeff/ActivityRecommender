@@ -30,6 +30,7 @@ namespace ActivityRecommendation.View
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine)
         {
             this.activityDatabase = activityDatabase;
+            this.engine = engine;
             this.recommender = recommenderToInform;
 
             this.layoutStack = layoutStack;
@@ -103,7 +104,7 @@ namespace ActivityRecommendation.View
                         "having done various activities, and incorporate that too. For example, if you like to Eat Ice Cream, but eating ice cream" +
                         "late at night tends to make it hard to sleep, then maybe ActivityRecommender won't suggest it late at night even if you " +
                         "like it.")
-                        .AddMessage("After you've entered a lot of data, AtivityRecommender will even be able to look for trends in how happy you are " +
+                        .AddMessage("After you've entered a lot of data, ActivityRecommender will even be able to look for trends in how happy you are " +
                         "after suggesting various activities. If you like walking but you don't have any ideas of where to walk, then maybe " +
                         "ActivityRecommender will notice that suggesting Walking never works. However, if you like buying things at the store, then " +
                         "perhaps ActivityRecommender will suggest that instead, if that causes you to walk to the store to buy something.")
@@ -200,6 +201,17 @@ namespace ActivityRecommendation.View
             {
                 this.requestSuggestion_layout.LatestParticipation = value;
             }
+        }
+
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() {
+                new RequestSuggestion_Feature(this.activityDatabase),
+                new DeclineSuggestion_Feature(this.activityDatabase),
+                new RequestSuggestionFromCategory_Feature(this.activityDatabase),
+                new RequestSuggestionToBeat_Feature(this.activityDatabase),
+                new StartExperiment_Feature(this.engine)
+            };
         }
         
         private void UpdateSuggestionsAndMessage()
@@ -307,9 +319,99 @@ namespace ActivityRecommendation.View
         LayoutStack layoutStack;
         List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
         int maxNumSuggestions = 4;
+        Engine engine;
         ActivityRecommender recommender;
         LayoutChoice_Set messageLayout;
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
     }
+
+    class RequestSuggestion_Feature : AppFeature
+    {
+        public RequestSuggestion_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Ask for a suggestion";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.RootActivity.NumSuggestions > 0;
+        }
+        ActivityDatabase activityDatabase;
+    }
+
+    class DeclineSuggestion_Feature : AppFeature
+    {
+        public DeclineSuggestion_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Decline a suggestion";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.RootActivity.NumSkips > 0;
+        }
+        ActivityDatabase activityDatabase;
+
+    }
+    class RequestSuggestionFromCategory_Feature : AppFeature
+    {
+        public RequestSuggestionFromCategory_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Request suggestion from specific category";
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.RequestedActivityFromCategory;
+        }
+        ActivityDatabase activityDatabase;
+    }
+
+    class RequestSuggestionToBeat_Feature : AppFeature
+    {
+        public RequestSuggestionToBeat_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Request a suggestion at least as good as another activity";
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.RequestedActivityAtLeastAsGoodAsOther;
+        }
+        ActivityDatabase activityDatabase;
+    }
+
+    class StartExperiment_Feature : AppFeature
+    {
+        public StartExperiment_Feature(Engine engine)
+        {
+            this.engine = engine;
+        }
+        public string GetDescription()
+        {
+            return "Start an experiment";
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            return this.engine.NumStartedExperiments > 0;
+        }
+        Engine engine;
+    }
+
 }

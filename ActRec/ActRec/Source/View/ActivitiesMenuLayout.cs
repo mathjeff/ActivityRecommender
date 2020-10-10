@@ -9,9 +9,9 @@ namespace ActivityRecommendation.View
     {
         public ActivitiesMenuLayout(
             LayoutChoice_Set browseInheritancesLayout,
-            LayoutChoice_Set importPremadeActivitiesLayout,
-            LayoutChoice_Set addOrEditActivitiesLayout,
-            LayoutChoice_Set protoactivitiesLayout,
+            ActivityImportLayout importPremadeActivitiesLayout,
+            InheritanceEditingLayout addOrEditActivitiesLayout,
+            ProtoActivities_Layout protoactivitiesLayout,
             LayoutChoice_Set helpLayout,            
             LayoutStack layoutStack,
             ActivityDatabase activityDatabase)
@@ -44,26 +44,34 @@ namespace ActivityRecommendation.View
             StackEntry helpEntry = new StackEntry(this.helpLayout, "Help", null);
 
             MenuLayoutBuilder noActivitiesBuilder = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout(importEntry)
-                .AddLayout(addEntry)
-                .AddLayout(protoactivitiesEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Add/Edit Activities", this.addOrEditActivitiesLayout.GetFeatures()), addEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Brainstorm Protoactivities", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry)
                 .AddLayout(helpEntry);
             this.noActivitiesLayout = noActivitiesBuilder.Build();
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout(browseEntry)
-                .AddLayout(importEntry)
-                .AddLayout(addEntry)
-                .AddLayout(protoactivitiesEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Add/Edit Activities", this.addOrEditActivitiesLayout.GetFeatures()), addEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Brainstorm Protoactivities", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry)
                 .AddLayout(helpEntry);
             this.fullLayout = fullBuilder.Build();
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            List<AppFeature> features = new List<AppFeature>(this.importPremadeActivitiesLayout.GetFeatures());
+            features.AddRange(this.addOrEditActivitiesLayout.GetFeatures());
+            features.AddRange(this.protoactivitiesLayout.GetFeatures());
+            return features;
+        }
+
         LayoutStack layoutStack;
         LayoutChoice_Set browseInheritancesLayout;
-        LayoutChoice_Set importPremadeActivitiesLayout;
-        LayoutChoice_Set addOrEditActivitiesLayout;
-        LayoutChoice_Set protoactivitiesLayout;
+        ActivityImportLayout importPremadeActivitiesLayout;
+        InheritanceEditingLayout addOrEditActivitiesLayout;
+        ProtoActivities_Layout protoactivitiesLayout;
         LayoutChoice_Set helpLayout;
 
         ActivityDatabase activityDatabase;

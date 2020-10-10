@@ -44,7 +44,7 @@ namespace ActivityRecommendation
             this.feedbackButton = new Button();
             this.feedbackButton.Clicked += FeedbackButton_Clicked;
             contents.AddLayout(ButtonLayout.HideIfEmpty(new ButtonLayout(this.feedbackButton)));
-            
+
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
             middleGrid.AddLayout(this.ratingBox);
@@ -110,7 +110,7 @@ namespace ActivityRecommendation
                     .Build()
                 )
                 .Build();
-                
+
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
             grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now", 16));
             grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));
@@ -145,7 +145,7 @@ namespace ActivityRecommendation
                     layoutStack
                 )
             );
-            
+
             noActivities_help_builder.AddLayout(new TextblockLayout("Before you can record a participation, ActivityRecommender needs you to go back " +
                 "and add some activities first. Here is a convenient button for jumping directly to the Activities screen:"));
 
@@ -157,6 +157,15 @@ namespace ActivityRecommendation
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>()
+            {
+                new UserLoggedAParticipation_Feature(this.activityDatabase),
+                new UserEnteredAComment_Feature(this.activityDatabase),
+                new UserEnteredARating_Feature(this.activityDatabase)
+            };
+        }
         private void ActivitiesButton_Clicked(object sender, EventArgs e)
         {
             if (this.VisitActivitiesScreen != null)
@@ -1322,11 +1331,11 @@ namespace ActivityRecommendation
             detailsProvider.ComparisonDate = comparisonDate;
             detailsProvider.ParticipationDurationDividedByAverage = durationRatio;
             detailsProvider.ChosenActivity = chosenActivity;
-            
+
             detailsProvider.ExpectedEfficiency = roundedEfficiencyBonus;
             detailsProvider.ComparisonExpectedEfficiency = roudnedComparisonEfficiencyLongtermBonus;
             detailsProvider.ExpectedEfficiencyStddev = roundedEfficiencyStddev;
-            
+
             detailsProvider.ExpectedFutureFun = roundedLongtermBonus;
             detailsProvider.ComparisonExpectedFutureFun = roundedComparisonLongtermBonus;
             detailsProvider.ExpectedFutureFunStddev = roundedLongtermStddev;
@@ -1480,4 +1489,66 @@ namespace ActivityRecommendation
         public Distribution LongtermHappiness;
         public Distribution LongtermEfficiency;
     }
+
+    class UserLoggedAParticipation_Feature : AppFeature
+    {
+        public UserLoggedAParticipation_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Record a participation";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.RootActivity.NumParticipations > 0;
+        }
+        private ActivityDatabase activityDatabase;
+    }
+
+    class UserEnteredARating_Feature : AppFeature
+    {
+        public UserEnteredARating_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Enter a rating";
+        }
+        public bool GetHasBeenUsed()
+        {
+            foreach (Participation participation in this.activityDatabase.RootActivity.Participations)
+            {
+                if (participation.GetAbsoluteRating() != null)
+                    return true;
+            }
+            return false;
+        }
+        private ActivityDatabase activityDatabase;
+    }
+
+    class UserEnteredAComment_Feature : AppFeature
+    {
+        public UserEnteredAComment_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Enter a comment";
+        }
+        public bool GetHasBeenUsed()
+        {
+            foreach (Participation participation in this.activityDatabase.RootActivity.Participations)
+            {
+                if (participation.Comment != null)
+                    return true;
+            }
+            return false;
+        }
+        private ActivityDatabase activityDatabase;
+    }
+
 }

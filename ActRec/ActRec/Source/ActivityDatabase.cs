@@ -114,7 +114,11 @@ namespace ActivityRecommendation
             {
                 Problem parentProblem = parent as Problem;
                 if (parentProblem != null)
+                {
                     child.AddParent(parentProblem);
+                    if (!(child is Problem))
+                        this.hasSolution = true;
+                }
                 else
                     return "Parent " + parent.Name + " is not of type Category or Problem";
             }
@@ -389,6 +393,28 @@ namespace ActivityRecommendation
                 return toDos;
             }
         }
+
+        public bool HasTodo
+        {
+            get
+            {
+                return this.todoCategory.Children.Count > 0;
+            }
+        }
+        public bool HasProblem
+        {
+            get
+            {
+                return this.hasProblem;
+            }
+        }
+        public bool HasSolution
+        {
+            get
+            {
+                return this.hasSolution;
+            }
+        }
         public void Clear()
         {
             this.activitiesByName.Clear();
@@ -456,12 +482,17 @@ namespace ActivityRecommendation
             }
             Problem result = new Problem(sourceDescriptor.ActivityName, this.happinessSummarizer, this.efficiencySummarizer);
             this.AddActivity(result);
+            this.hasProblem = true;
             return result;
         }
 
         // returns a string telling the error, or "" if no error
         public string AddMetric(Activity activity, Metric metric)
         {
+            if (activity.MetricForName(metric.Name) != null)
+            {
+                return "Activity " + activity.Name + " already has metric " + metric.Name;
+            }
             activity.AddIntrinsicMetric(metric);
             this.MetricAdded.Invoke(metric, activity);
             return "";
@@ -478,28 +509,21 @@ namespace ActivityRecommendation
 
         public void AddInheritance(Inheritance inheritance)
         {
+            this.GetActivityOrCreateCategory(inheritance.ChildDescriptor);
             this.GetActivityOrCreateCategory(inheritance.ParentDescriptor);
-            Category parentCategory = this.ResolveDescriptor(inheritance.ParentDescriptor) as Category;
-            Activity child = this.GetActivityOrCreateCategory(inheritance.ChildDescriptor);
-            if (parentCategory != null)
-            {
-                child.AddParent(parentCategory);
-            }
-            else
-            {
-                Problem parentProblem = (Problem)this.ResolveDescriptor(inheritance.ParentDescriptor);
-                child.AddParent(parentProblem);
-            }
-            if (inheritance.DiscoveryDate != null)
-                child.ApplyInheritanceDate((DateTime)inheritance.DiscoveryDate);
-            if (this.InheritanceAdded != null)
-                this.InheritanceAdded.Invoke(inheritance);
+            string message = this.AddParent(inheritance);
+            if (message != "")
+                throw new ArgumentException(message);
         }
 
         public bool ContainsCustomActivity()
         {
             return this.NumActivities > 3;
         }
+
+        public bool RequestedActivityFromCategory { get; set; }
+        public bool RequestedActivityAtLeastAsGoodAsOther { get; set; }
+
 
         #region Functions for ICombiner<List<Activity>>
         public IEnumerable<Activity> Combine(IEnumerable<Activity> list1, IEnumerable<Activity> list2)
@@ -576,6 +600,8 @@ namespace ActivityRecommendation
         private Category todoCategory; // a Category that is the parent of each ToDo
         private Category problemCategory; // a Category that is the parent of each problem
         private StringQueryMatcher stringQueryMatcher = new StringQueryMatcher();
+        private bool hasProblem;
+        private bool hasSolution;
 
         #endregion
     }

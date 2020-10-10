@@ -37,19 +37,6 @@ namespace ActivityRecommendation
         public Rating RawRawing { get; set; }
         public Rating UserPredictedRating { get; set; }
         public TimeSpan? RequestedProcessingTime { get; set; }
-        public Rating GetCompleteRating()
-        {
-            return null;
-            /*
-            Rating rating;
-            if (this.RawRawing != null)
-                rating = this.RawRawing.MakeCopy();
-            else
-                rating = new AbsoluteRating();
-            rating.FillInFromRequest(this);
-            return rating;
-            */
-        }
     }
 
     public enum ActivityRequestOptimizationProperty

@@ -8,9 +8,9 @@ namespace ActivityRecommendation.View
     class HomeScreen : ContainerLayout
     {
         public HomeScreen(
-            LayoutChoice_Set activitiesLayout,
-            LayoutChoice_Set participationsLayout,
-            LayoutChoice_Set suggestionsLayout,
+            ActivitiesMenuLayout activitiesLayout,
+            ParticipationEntryView participationsLayout,
+            SuggestionsView suggestionsLayout,
             LayoutChoice_Set statisticsLayout,
             LayoutChoice_Set importExportLayout,
             LayoutStack layoutStack)
@@ -34,16 +34,23 @@ namespace ActivityRecommendation.View
             StackEntry importExportEntry = new StackEntry(this.importExportLayout, "Import/Export", null);
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack);
-            fullBuilder.AddLayout(activitiesEntry);
-            fullBuilder.AddLayout(participationsEntry);
-            fullBuilder.AddLayout(suggestionsEntry);
+            fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Activities", this.activitiesLayout.GetFeatures()), activitiesEntry);
+            fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Record Participations", this.participationsLayout.GetFeatures()), participationsEntry);
+            fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Get Suggestions", this.suggestionsLayout.GetFeatures()), suggestionsEntry);
             fullBuilder.AddLayout(statisticsEntry);
             fullBuilder.AddLayout(importExportEntry);
             this.SubLayout = fullBuilder.Build();
         }
-        private LayoutChoice_Set activitiesLayout;
-        private LayoutChoice_Set participationsLayout;
-        private LayoutChoice_Set suggestionsLayout;
+        public List<AppFeature> GetFeatures()
+        {
+            List<AppFeature> features = new List<AppFeature>(this.activitiesLayout.GetFeatures());
+            features.AddRange(this.participationsLayout.GetFeatures());
+            features.AddRange(this.suggestionsLayout.GetFeatures());
+            return features;
+        }
+        private ActivitiesMenuLayout activitiesLayout;
+        private ParticipationEntryView participationsLayout;
+        private SuggestionsView suggestionsLayout;
         private LayoutChoice_Set statisticsLayout;
         private LayoutChoice_Set importExportLayout;
 

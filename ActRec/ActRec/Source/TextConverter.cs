@@ -306,7 +306,7 @@ namespace ActivityRecommendation
         public string ConvertToString(ProtoActivity protoActivity)
         {
             Dictionary<string, string> properties = new Dictionary<string, string>();
-            properties[this.ProtoActivity_Text_Tag] = protoActivity.Text;
+            properties[this.ProtoActivity_Text_Tag] = this.XmlEscape(protoActivity.Text);
             properties[this.ProtoActivity_Ratings_Tag] = this.ConvertToStringBody(protoActivity.Ratings);
             properties[this.ProtoActivity_LastInteracted_Tag] = this.ConvertToStringBody(protoActivity.LastInteractedWith);
 

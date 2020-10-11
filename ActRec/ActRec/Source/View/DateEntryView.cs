@@ -66,7 +66,15 @@ namespace ActivityRecommendation
 
         private void ChooseDate_button_Clicked(object sender, EventArgs e)
         {
-            this.implView.DateText = this.getDateText();
+            // If the user is pressing this button, then they want to change the date
+            // So, one or more components of the date are wrong
+            // So, we automatically do some backspacing before showing the screen to the user, so the user doesn't need to immediately delete the minutes+seconds
+            string suggestedDateText = this.getDateText();
+            int length = 13; // yyyy-MM-ddTHH
+            if (suggestedDateText.Length > length)
+                suggestedDateText = suggestedDateText.Substring(0, length);
+            this.implView.DateText = suggestedDateText;
+            this.implView.NowText = DateTime.Now.ToString(this.getDateFormatString()) + " is the current time.";
             this.layoutStack.AddLayout(this.implView, this.title, this);
         }
 
@@ -195,18 +203,19 @@ namespace ActivityRecommendation
         private string title;
     }
 
-    class FullscreenDateEntryView : TitledControl
+    class FullscreenDateEntryView : ContainerLayout
     {
         public FullscreenDateEntryView(string title, List<DateCharacter> dateFormat, LayoutStack layoutStack)
         {
-            this.SetTitle(title);
-
             this.dateFormat = dateFormat;
 
             this.dateLayout = new TextblockLayout("");
+            this.nowLayout = new TextblockLayout("");
 
             dateLayout.ScoreIfEmpty = true;
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(4), new BoundProperty_List(1), LayoutScore.Zero);
+            mainGrid.AddLayout(nowLayout);
+            mainGrid.AddLayout(new TextblockLayout("Enter " + title + ":"));
             mainGrid.AddLayout(dateLayout);
 
             GridLayout buttonGrid = GridLayout.New(BoundProperty_List.Uniform(4), BoundProperty_List.Uniform(3), LayoutScore.Zero);
@@ -233,12 +242,12 @@ namespace ActivityRecommendation
             buttonGrid.AddLayout(new HelpButtonLayout(helpWindow, layoutStack));
             buttonGrid.AddLayout(this.makeButtonNumber(0));
             buttonGrid.AddLayout(this.makeBackspaceButton());
-            //grid.AddLayout(this.makeDoneButton());
 
             mainGrid.AddLayout(buttonGrid);
-
-            this.SetContent(mainGrid);
             this.DateText = DateText;
+
+            this.SubLayout = mainGrid;
+
         }
 
         public void Add_TextChanged_Handler(EventHandler<TextChangedEventArgs> h)
@@ -264,6 +273,14 @@ namespace ActivityRecommendation
             {
                 this.dateLayout.setText(value);
                 this.updateValidity();
+            }
+        }
+
+        public string NowText
+        {
+            set
+            {
+                this.nowLayout.setText(value);
             }
         }
         private ButtonLayout makeButtonNumber(int value)
@@ -394,6 +411,7 @@ namespace ActivityRecommendation
         }
 
 
+        TextblockLayout nowLayout;
         TextblockLayout dateLayout;
         List<Button> buttons = new List<Button>();
         List<DateCharacter> dateFormat = new List<DateCharacter>();

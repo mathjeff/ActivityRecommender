@@ -910,6 +910,9 @@ namespace ActivityRecommendation
             return subCategories;
         }
 
+        // Whether the user has ever asked for a suggestion specifically from this activity
+        public bool EverRequestedFromDirectly { get; set; }
+
         // Returns a list of Metrics that are attached to this Activity directly rather than to another Activity
         // Any Metric in this list should have a stable index across runs even if the user adds another inheritance
         public List<Metric> IntrinsicMetrics

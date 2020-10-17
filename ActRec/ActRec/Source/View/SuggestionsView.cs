@@ -427,13 +427,42 @@ namespace ActivityRecommendation.View
 
         public bool GetHasBeenUsed()
         {
-            return this.engine.NumStartedExperiments > 0;
+            return this.engine.HasInitiatedExperiment;
         }
         public bool GetIsUsable()
         {
             return this.engine.Test_ChooseExperimentOption().Error == "";
         }
         Engine engine;
+    }
+
+    class RequestSolution_Feature : AppFeature
+    {
+        public RequestSolution_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+
+        public string GetDescription()
+        {
+            return "Request a solution to a Problem";
+        }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.HasProblem;
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            foreach (Problem problem in this.activityDatabase.AllProblems)
+            {
+                if (problem.EverRequestedFromDirectly)
+                    return true;
+            }
+            return false;
+
+        }
+        ActivityDatabase activityDatabase;
     }
 
 }

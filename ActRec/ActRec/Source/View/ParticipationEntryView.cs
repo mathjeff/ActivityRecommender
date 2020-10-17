@@ -163,7 +163,8 @@ namespace ActivityRecommendation
             {
                 new UserLoggedAParticipation_Feature(this.activityDatabase),
                 new UserEnteredAComment_Feature(this.activityDatabase),
-                new UserEnteredARating_Feature(this.activityDatabase)
+                new UserEnteredARating_Feature(this.activityDatabase),
+                new RecordExperimentParticipation_Feature(this.engine)
             };
         }
         private void ActivitiesButton_Clicked(object sender, EventArgs e)
@@ -1563,4 +1564,25 @@ namespace ActivityRecommendation
         private ActivityDatabase activityDatabase;
     }
 
+    class RecordExperimentParticipation_Feature : AppFeature
+    {
+        public RecordExperimentParticipation_Feature(Engine engine)
+        {
+            this.engine = engine;
+        }
+        public string GetDescription()
+        {
+            return "Complete an experiment";
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.engine.NumCompletedExperiments > 0;
+        }
+        public bool GetIsUsable()
+        {
+            return this.engine.HasInitiatedExperiment;
+        }
+        private Engine engine;
+
+    }
 }

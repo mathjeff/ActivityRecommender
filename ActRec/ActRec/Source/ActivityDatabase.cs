@@ -401,6 +401,22 @@ namespace ActivityRecommendation
                 return this.todoCategory.Children.Count > 0;
             }
         }
+
+        public IEnumerable<Problem> AllProblems
+        {
+            get
+            {
+                List<Problem> problems = new List<Problem>();
+                List<Activity> candidates = this.problemCategory.GetChildrenRecursive();
+                foreach (Activity activity in candidates)
+                {
+                    // Determine whether this particular child is another Problem or is a solution
+                    Problem p = activity as Problem;
+                    problems.Add(p);
+                }
+                return problems;
+            }
+        }
         public bool HasProblem
         {
             get

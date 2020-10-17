@@ -1040,7 +1040,7 @@ namespace ActivityRecommendation
                         // found the first participation in the experiment; no longer have to update this experiment if this Activity gets completed
                         // (and we can add this Activity+Metric into a new Experiment)
                         experiment.FirstParticipation = newParticipation;
-                        this.numStartedExperiments++;
+                        this.numExperimentStartParticipations++;
                     }
                     this.experimentToUpdate[activity].Remove(metricName);
                 }
@@ -1125,7 +1125,11 @@ namespace ActivityRecommendation
         public void PutActivityRequestInMemory(ActivityRequest newRequest)
         {
             if (newRequest.FromCategory != null)
+            {
                 this.activityDatabase.RequestedActivityFromCategory = true;
+                Activity activity = this.activityDatabase.ResolveDescriptor(newRequest.FromCategory);
+                activity.EverRequestedFromDirectly = true;
+            }
             if (newRequest.ActivityToBeat != null)
                 this.activityDatabase.RequestedActivityAtLeastAsGoodAsOther = true;
         }
@@ -1585,7 +1589,7 @@ namespace ActivityRecommendation
                 {
                     // not enough activities for a meaningful experiment
                     string message = "";
-                    if (this.NumStartedExperiments < 1)
+                    if (!this.HasInitiatedExperiment)
                     {
                         // The user never ran an experiment, so explain what an experiment is
                         message += "This screen is where you will be able to start an experiment for measuring your efficiency. The way it works is you find some specific, " +
@@ -1867,11 +1871,11 @@ namespace ActivityRecommendation
             return (this.findExperimentToUpdate(activity, metricName) != null);
         }
 
-        public int NumStartedExperiments
+        public bool HasInitiatedExperiment
         {
             get
             {
-                return this.numStartedExperiments;
+                return this.experimentToUpdate.Count > 0 || this.numCompletedExperiments > 0;
             }
         }
         public int NumCompletedExperiments
@@ -1886,7 +1890,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.NumCompletedExperiments + this.numStartedExperiments;
+                return this.NumCompletedExperiments + this.numExperimentStartParticipations;
             }
         }
         // returns a list of Activities that are available to be added into a new Experiment
@@ -1987,7 +1991,7 @@ namespace ActivityRecommendation
         // for each of several activities and metrics, tells which PlannedExperiment that needs updating if the user participates in that activity
         Dictionary<Activity, Dictionary<string, PlannedExperiment>> experimentToUpdate = new Dictionary<Activity, Dictionary<string, PlannedExperiment>>();
         int numCompletedExperiments;
-        int numStartedExperiments;
+        int numExperimentStartParticipations;
         ActivityRecommendationsAnalysis currentRecommendationsCache;
 
         LongtermValuePredictor happinessFromEfficiency_predictor;

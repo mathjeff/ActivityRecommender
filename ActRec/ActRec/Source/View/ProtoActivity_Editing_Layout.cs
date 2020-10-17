@@ -92,8 +92,7 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
-                creationLayout.SelectedActivityTypeIsToDo = true;
+                ActivityCreationLayout creationLayout = new CreateToDo_Layout(this.activityDatabase, this.layoutStack);
                 creationLayout.ActivityName = this.textBox.Text;
                 this.layoutStack.AddLayout(new StackEntry(creationLayout, "Proto", this));
             }

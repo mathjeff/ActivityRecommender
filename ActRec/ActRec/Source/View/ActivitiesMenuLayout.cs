@@ -26,14 +26,6 @@ namespace ActivityRecommendation.View
             this.setupLayouts();
         }
 
-        public override SpecificLayout GetBestLayout(LayoutQuery query)
-        {
-            if (this.activityDatabase.ContainsCustomActivity())
-                this.SubLayout = this.fullLayout;
-            else
-                this.SubLayout = this.noActivitiesLayout;
-            return base.GetBestLayout(query);
-        }
 
         private void setupLayouts()
         {
@@ -43,20 +35,13 @@ namespace ActivityRecommendation.View
             StackEntry protoactivitiesEntry = new StackEntry(this.protoactivitiesLayout, "Brainstorm Protoactivities", null);
             StackEntry helpEntry = new StackEntry(this.helpLayout, "Help", null);
 
-            MenuLayoutBuilder noActivitiesBuilder = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("Add/Edit Activities", this.addOrEditActivitiesLayout.GetFeatures()), addEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("Brainstorm Protoactivities", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry)
-                .AddLayout(helpEntry);
-            this.noActivitiesLayout = noActivitiesBuilder.Build();
-
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout(browseEntry)
+                .AddLayout(new ActivitiesMenuNamer(this.activityDatabase), browseEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Add/Edit Activities", this.addOrEditActivitiesLayout.GetFeatures()), addEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Brainstorm Protoactivities", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry)
                 .AddLayout(helpEntry);
-            this.fullLayout = fullBuilder.Build();
+            this.SubLayout = fullBuilder.Build();
         }
 
         public List<AppFeature> GetFeatures()
@@ -76,8 +61,23 @@ namespace ActivityRecommendation.View
 
         ActivityDatabase activityDatabase;
 
-        LayoutChoice_Set noActivitiesLayout;
-        LayoutChoice_Set fullLayout;
+    }
 
+    class ActivitiesMenuNamer : ValueProvider<MenuItem>
+    {
+        public ActivitiesMenuNamer(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+
+        public MenuItem Get()
+        {
+            int count = this.activityDatabase.NumCustomActivities;
+            string title = "Browse My Activities (" + count + ")";
+            return new MenuItem(title, null);
+        }
+
+
+        ActivityDatabase activityDatabase;
     }
 }

@@ -534,7 +534,15 @@ namespace ActivityRecommendation
 
         public bool ContainsCustomActivity()
         {
-            return this.NumActivities > 3;
+            return this.NumCustomActivities > 0;
+        }
+
+        public int NumCustomActivities
+        {
+            get
+            {
+                return this.NumActivities - 3;
+            }
         }
 
         public bool RequestedActivityFromCategory { get; set; }

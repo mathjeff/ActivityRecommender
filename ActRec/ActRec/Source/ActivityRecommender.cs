@@ -169,7 +169,7 @@ namespace ActivityRecommendation
         {
             LayoutDefaults defaults = this.LayoutDefaults;
             this.parentView.BackgroundColor = defaults.ApplicationBackground;
-            TextblockLayout layout = new TextblockLayout(this.persona.Name + " is loading your data...");
+            TextblockLayout layout = new TextblockLayout("I'm loading your data! Sincerely, " + this.persona.Name);
             layout.AlignHorizontally(TextAlignment.Center);
             layout.AlignVertically(TextAlignment.Center);
             ViewManager viewManager = new ViewManager(this.parentView, layout, this.LayoutDefaults);

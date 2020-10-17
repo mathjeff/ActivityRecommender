@@ -52,6 +52,10 @@ namespace ActivityRecommendation.View
         {
             return this.persona.Name != "ActivityRecommender";
         }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
 
         Persona persona;
     }
@@ -69,6 +73,11 @@ namespace ActivityRecommendation.View
         public bool GetHasBeenUsed()
         {
             return this.persona.LayoutDefaults_Name != null;
+        }
+
+        public bool GetIsUsable()
+        {
+            return true;
         }
 
         Persona persona;

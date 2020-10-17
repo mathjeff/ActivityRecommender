@@ -87,6 +87,11 @@ namespace ActivityRecommendation.View
         {
             return this.protoactivityDatabase.Count > 0;
         }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+
         ProtoActivity_Database protoactivityDatabase;
     }
 

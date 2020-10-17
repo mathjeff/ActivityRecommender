@@ -106,6 +106,12 @@ namespace ActivityRecommendation
             }
             return false;
         }
+
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
+
         ActivityDatabase activityDatabase;
 
     }

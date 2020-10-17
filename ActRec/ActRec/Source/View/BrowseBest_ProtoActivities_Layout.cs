@@ -276,6 +276,12 @@ namespace ActivityRecommendation.View
                 return false;
             return this.protoactivityDatabase.Get(0).Ratings.Weight > 0;
         }
+
+        public bool GetIsUsable()
+        {
+            return this.protoactivityDatabase.Count >= 3;
+        }
+
         ProtoActivity_Database protoactivityDatabase;
     }
 

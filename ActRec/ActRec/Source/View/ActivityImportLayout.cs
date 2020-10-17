@@ -210,6 +210,11 @@ namespace ActivityRecommendation.View
             return false;
         }
 
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+
         ActivityDatabase activityDatabase;
     }
 }

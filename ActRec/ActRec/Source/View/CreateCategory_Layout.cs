@@ -46,6 +46,12 @@ namespace ActivityRecommendation.View
         {
             return this.activityDatabase.ContainsCustomActivity();
         }
+
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+
         ActivityDatabase activityDatabase;
     }
 

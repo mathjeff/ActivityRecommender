@@ -340,6 +340,10 @@ namespace ActivityRecommendation.View
         {
             return this.activityDatabase.RootActivity.NumSuggestions > 0;
         }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
         ActivityDatabase activityDatabase;
     }
 
@@ -356,6 +360,10 @@ namespace ActivityRecommendation.View
         public bool GetHasBeenUsed()
         {
             return this.activityDatabase.RootActivity.NumSkips > 0;
+        }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.RootActivity.NumSuggestions > 0;
         }
         ActivityDatabase activityDatabase;
 
@@ -375,6 +383,11 @@ namespace ActivityRecommendation.View
         {
             return this.activityDatabase.RequestedActivityFromCategory;
         }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
+
         ActivityDatabase activityDatabase;
     }
 
@@ -393,6 +406,11 @@ namespace ActivityRecommendation.View
         {
             return this.activityDatabase.RequestedActivityAtLeastAsGoodAsOther;
         }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
+
         ActivityDatabase activityDatabase;
     }
 
@@ -410,6 +428,10 @@ namespace ActivityRecommendation.View
         public bool GetHasBeenUsed()
         {
             return this.engine.NumStartedExperiments > 0;
+        }
+        public bool GetIsUsable()
+        {
+            return this.engine.Test_ChooseExperimentOption().Error == "";
         }
         Engine engine;
     }

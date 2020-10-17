@@ -44,6 +44,10 @@ namespace ActivityRecommendation.View
         {
             return this.activityDatabase.HasTodo;
         }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
         ActivityDatabase activityDatabase;
     }
 

@@ -43,6 +43,11 @@ namespace ActivityRecommendation.View
         {
             return this.activityDatabase.HasSolution;
         }
+
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.HasProblem;
+        }
         ActivityDatabase activityDatabase;
     }
 

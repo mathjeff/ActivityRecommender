@@ -11,8 +11,9 @@ namespace ActivityRecommendation
         string GetDescription();
         // Whether the user has used this feature
         bool GetHasBeenUsed();
-        // Other features that must be used before this one
-        // List<AppFeature> GetDependencies();
+
+        // Whether all of the prerequisites of this feature have been completed
+        bool GetIsUsable();
     }
 
     class AppFeatureCount_ButtonName_Provider : ValueProvider<MenuItem>
@@ -20,49 +21,101 @@ namespace ActivityRecommendation
         public AppFeatureCount_ButtonName_Provider(string name, List<AppFeature> features)
         {
             this.name = name;
-            this.unusedFeatures = features;
+            this.newUsableFeatures = new List<AppFeature>();
+            this.lockedFeatures = features;
         }
 
         // ValueProvider.Get
         public MenuItem Get()
         {
-            string subtitle;
+            // re-ask each Feature what its status is
+            this.updateStatuses();
 
-            int numUnusedFeatures = this.NumUnusedFeatures;
-            if (numUnusedFeatures == 0)
+            // some counts
+            int numNewUsableFeatures = this.newUsableFeatures.Count;
+            int numNewFeatures = numNewUsableFeatures + this.lockedFeatures.Count;
+            int numUsedFeatures = this.numUsedFeatures;
+
+            // Determine how to describe the number of unused features
+            string numFeaturesLabel;
+            // Determine how to describe a sample, unused feature, if any
+            string sampleFeatureLabel = "";
+
+            // Do we have any new features we should tell the user about?
+            if (numNewUsableFeatures > 0)
             {
-                subtitle = "";
-            }
-            else
-            {
-                string numFeaturesLabel = "";
-                string sampleFeatureLabel = "";
-                if (unusedFeatures.Count > 0)
+                // Determine how to count the new features
+                // We have at least one feature that the user can try! How many features has the user not tried?
+                if (numNewFeatures == 1)
                 {
-                    // An unused feature exists
-                    if (unusedFeatures.Count == 1)
+                    // We have exactly 1 new feature (at least 1 of which is usable). Are there any non-new features?
+                    if (numUsedFeatures == 0)
                     {
-                        if (this.numUsedFeatures == 0)
-                        {
-                            // There is 1 new feature, and no existing features. So, the entire screen is new to the user
-                            numFeaturesLabel = "New!";
-                        }
-                        else
-                        {
-                            // There is 1 new feature in a screen the user has already used before
-                            numFeaturesLabel = "1 new feature!";
-                        }
+                        // There is just 1 new feature, and there are no existing features. So, the entire screen is new to the user
+                        numFeaturesLabel = "New!";
                     }
                     else
                     {
-                        // There are multiple new features in this screen
-                        numFeaturesLabel = "" + unusedFeatures.Count + " new features!";
+                        // There is 1 new feature in a screen the user has already used before
+                        numFeaturesLabel = "1 new feature!";
                     }
-                    if (this.numUsedFeatures > 0)
+                }
+                else
+                {
+                    // There are multiple new features in this screen (at least 1 of which is usable)
+                    numFeaturesLabel = "" + numNewFeatures + " new features!";
+                }
+                // Determine how to give an example of an unused feature
+                if (numUsedFeatures > 0)
+                {
+                    // The user has tried at least one feature but not all of them
+                    // We list one feature that the user hasn't tried, in case they didn't realize that this feature existed
+                    sampleFeatureLabel = "\n" + this.newUsableFeatures[0].GetDescription() + "?";
+                }
+                else
+                {
+                    // The user hasn't used even one feature
+                    // We think our description should be good enough for the user to identify at least one feature, so we don't need to also list an example feature
+                    // Extra text can be distracting, especially when it duplicates other text
+                }
+            }
+            else
+            {
+                // There are no features that are both new and usable. Are there any features that are new and unusable?
+                int numNewUnusableFeatures = this.lockedFeatures.Count;
+                if (numNewUnusableFeatures == 0)
+                {
+                    // All features have been used! We don't need to inform the user about anything new
+                    return new MenuItem(this.name, "");
+                }
+                else
+                {
+                    // There are no features that are both new and usable, but there are new features that are locked
+                    // We tell the user about one of the locked features
+                    if (numNewUnusableFeatures == 1)
+                    {
+                        // There is exactly 1 locked feasture
+                        numFeaturesLabel = "1 locked feature!";
+                    }
+                    else
+                    {
+                        numFeaturesLabel = "" + numNewUnusableFeatures + " locked features!";
+                    }
+                    // Do we want to tell the user about a sample locked feature?
+                    if (numUsedFeatures > 0)
                     {
                         // The user has tried at least one feature but not all of them
-                        // We list one feature that the user hasn't tried, in case they didn't realize that this feature existed
-                        sampleFeatureLabel = "\n" + unusedFeatures[0].GetDescription() + "?";
+                        // How many features are locked?
+                        if (numNewUnusableFeatures == 1)
+                        {
+                            // 1 feature is locked
+                            sampleFeatureLabel = "\n(" + this.lockedFeatures[0].GetDescription() + ")";
+                        }
+                        else
+                        {
+                            // multiple features are locked
+                            sampleFeatureLabel = "\n(" + this.lockedFeatures[0].GetDescription() + ", ...)";
+                        }
                     }
                     else
                     {
@@ -71,30 +124,48 @@ namespace ActivityRecommendation
                         // Extra text can be distracting, especially when it duplicates other text
                     }
                 }
-                subtitle = numFeaturesLabel + sampleFeatureLabel;
+
             }
-            return new MenuItem(this.name, subtitle);
+            return new MenuItem(this.name, numFeaturesLabel + sampleFeatureLabel);
         }
 
-        private int NumUnusedFeatures
+        private void updateStatuses()
         {
-            get
+            // check for features that have become usable
+            for (int i = 0; i < this.lockedFeatures.Count; )
             {
-                for (int i = this.unusedFeatures.Count - 1; i >= 0; i--)
+                AppFeature feature = this.lockedFeatures[i];
+                if (feature.GetIsUsable())
                 {
-                    AppFeature feature = this.unusedFeatures[i];
-                    if (feature.GetHasBeenUsed())
-                    {
-                        this.numUsedFeatures++;
-                        this.unusedFeatures.RemoveAt(i);
-                    }
+                    this.newUsableFeatures.Add(feature);
+                    this.lockedFeatures.RemoveAt(i);
                 }
-                return this.unusedFeatures.Count;
+                else
+                {
+                    i++;
+                }
+            }
+            // check for features that have become used
+            for (int i = 0; i < this.newUsableFeatures.Count; )
+            {
+                AppFeature feature = this.newUsableFeatures[i];
+                if (feature.GetHasBeenUsed())
+                {
+                    this.numUsedFeatures++;
+                    this.newUsableFeatures.RemoveAt(i);
+                }
+                else
+                {
+                    i++;
+                }
             }
         }
 
         private int numUsedFeatures;
         private string name;
-        private List<AppFeature> unusedFeatures;
+        // features that can be used but that haven't yet been used
+        private List<AppFeature> newUsableFeatures;
+        // features that can't be used because of dependencies
+        private List<AppFeature> lockedFeatures;
     }
 }

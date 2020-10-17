@@ -1504,6 +1504,10 @@ namespace ActivityRecommendation
         {
             return this.activityDatabase.RootActivity.NumParticipations > 0;
         }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
         private ActivityDatabase activityDatabase;
     }
 
@@ -1526,6 +1530,10 @@ namespace ActivityRecommendation
             }
             return false;
         }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
         private ActivityDatabase activityDatabase;
     }
 
@@ -1547,6 +1555,10 @@ namespace ActivityRecommendation
                     return true;
             }
             return false;
+        }
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
         }
         private ActivityDatabase activityDatabase;
     }

@@ -263,7 +263,7 @@ namespace ActivityRecommendation
             {
                 // If the user has given another activity that they're tempted to try instead, then evaluate that activity
                 // Use its short-term value as a minimum when considering other activities
-                this.UpdateSuggestionValue(activityToBeat, when);
+                this.EnsureCalculatedSuggestionValue(activityToBeat, when);
                 recommendationsCache.futureEfficiencies[activityToBeat] = this.Get_OverallEfficiency_ParticipationEstimate(activityToBeat, when);
                 recommendationsCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "You asked for an activity at least as fun as this one");
                 if (candidates.Contains(activityToBeat))
@@ -285,7 +285,7 @@ namespace ActivityRecommendation
                 if (candidate.Suggestible)
                 {
                     // estimate how good it is for us to suggest this particular activity
-                    this.UpdateSuggestionValue(candidate, when);
+                    this.EnsureCalculatedSuggestionValue(candidate, when);
                     Distribution currentRating = recommendationsCache.suggestionValues[candidate].Distribution;
                     bool better = false;
                     if (request.Optimize == ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY)
@@ -557,18 +557,21 @@ namespace ActivityRecommendation
         public Prediction EstimateSuggestionValue(Activity activity, DateTime when)
         {
             this.EnsureRatingsAreAssociated();
-            this.UpdateSuggestionValue(activity, when);
+            this.EnsureCalculatedSuggestionValue(activity, when);
             return this.currentRecommendationsCache.suggestionValues[activity];
         }
 
         // update the estimate of how good it would be to suggest this activity now, unless the computation is already up-to-date
-        private void UpdateSuggestionValue(Activity activity, DateTime when)
+        private void EnsureCalculatedSuggestionValue(Activity activity, DateTime when)
         {
             ActivityRecommendationsAnalysis recommendationsCache = this.cacheForDate(when);
             // Now we estimate how useful it would be to suggest this activity to the user
 
-            Prediction suggestionPrediction = this.Get_OverallHappiness_SuggestionEstimate(activity, when);
-            recommendationsCache.suggestionValues[activity] = suggestionPrediction;
+            if (!recommendationsCache.suggestionValues.ContainsKey(activity))
+            {
+                Prediction suggestionPrediction = this.Get_OverallHappiness_SuggestionEstimate(activity, when);
+                recommendationsCache.suggestionValues[activity] = suggestionPrediction;
+            }
         }
 
         // attempt to calculate the probability that the user would do this activity if we suggested it at this time
@@ -796,7 +799,7 @@ namespace ActivityRecommendation
             explanation.Suggestion = activitySuggestion;
             explanation.PrimaryReason = bestReason;
             explanation.Score = this.currentRecommendationsCache.ratings[activity].Distribution.Mean;
-            explanation.SuggestionValue = this.currentRecommendationsCache.suggestionValues[activity].Distribution.Mean;
+            explanation.SuggestionValue = this.EstimateSuggestionValue(activity, when).Distribution.Mean;
             // also list all of the reasons for clarity
             List<SuggestionJustification> clauses = new List<SuggestionJustification>(predictions.Count);
             foreach (Prediction contributor in predictions)

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using VisiPlacement;
+using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
@@ -9,10 +10,16 @@ namespace ActivityRecommendation.View
     {
         public ActivityInheritancesView(Activity activity, ActivityDatabase activityDatabase)
         {
+            this.activityDatabase = activityDatabase;
+            this.setup(activity);
+        }
+
+        public void setup(Activity activity)
+        {
             List<Activity> children = activity.GetChildren();
             List<Activity> parents = activity.Parents;
             string title;
-            if (activity == activityDatabase.RootActivity)
+            if (activity == this.activityDatabase.RootActivity)
             {
                 title = activity.Name + " is the built-in root activity.";
             }
@@ -64,7 +71,7 @@ namespace ActivityRecommendation.View
                 gridBuilder.AddLayout(new TextblockLayout("Inherited metric: " + metric.Name));
             }
             if (parents.Count > 0)
-                gridBuilder.AddLayout(new ActivityListView(parents.Count.ToString() + " Parents:", parents));
+                gridBuilder.AddLayout(this.newListView(parents.Count.ToString() + " Parents:", parents));
 
             List<Activity> childTodos = new List<Activity>();
             List<Activity> childCategories = new List<Activity>();
@@ -91,36 +98,59 @@ namespace ActivityRecommendation.View
 
             if (children.Count > 0)
             {
-                gridBuilder.AddLayout(new ActivityListView(" " + childCategories.Count.ToString() + " Children of type Category:", childCategories));
-                gridBuilder.AddLayout(new ActivityListView(" " + childTodos.Count.ToString() + " Children of type ToDo:", childTodos));
-                gridBuilder.AddLayout(new ActivityListView(" " + childProblems.Count.ToString() + " Children of type Problem:", childProblems));
+                if (childCategories.Count > 0)
+                    gridBuilder.AddLayout(this.newListView(" " + childCategories.Count.ToString() + " Children of type Category:", childCategories));
+                if (childTodos.Count > 0)
+                    gridBuilder.AddLayout(this.newListView(" " + childTodos.Count.ToString() + " Children of type ToDo:", childTodos));
+                if (childProblems.Count > 0)
+                    gridBuilder.AddLayout(this.newListView(" " + childProblems.Count.ToString() + " Children of type Problem:", childProblems));
             }
 
             this.SetContent(gridBuilder.Build());
         }
+
+        private ActivityListView newListView(string title, List<Activity> activities)
+        {
+            ActivityListView listView = new ActivityListView(title, activities);
+            listView.SelectedActivity += ListView_SelectedActivity;
+            return listView;
+        }
+
+        private void ListView_SelectedActivity(Activity activity)
+        {
+            this.setup(activity);
+        }
+
+        ActivityDatabase activityDatabase;
     }
 
     class ActivityListView : TitledControl
     {
+        public event SelectedActivityHandler SelectedActivity;
+        public delegate void SelectedActivityHandler(Activity activity);
+
         public ActivityListView(string name, List<Activity> activities)
         {
-            if (activities.Count > 1)
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            foreach (Activity activity in activities)
             {
-                Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-                foreach (Activity activity in activities)
-                {
-                    gridBuilder.AddLayout(new TextblockLayout(activity.Name, 16));
-                }
-                LayoutChoice_Set scrollLayout = ScrollLayout.New(gridBuilder.Build());
-                this.SetContent(scrollLayout);
+                Button otherActivityButton = new Button();
+                otherActivityButton.Clicked += OtherActivityButton_Clicked;
+                this.activitiesByButton[otherActivityButton] = activity;
+                gridBuilder.AddLayout(new ButtonLayout(otherActivityButton, activity.Name, 16));
             }
-            else
-            {
-                if (activities.Count > 0)
-                    this.SetContent(new TextblockLayout(activities[0].Name, 16));
-            }
+            LayoutChoice_Set scrollLayout = ScrollLayout.New(gridBuilder.BuildAnyLayout());
+            this.SetContent(scrollLayout);
 
             this.SetTitle(name);
         }
+
+        private void OtherActivityButton_Clicked(object sender, EventArgs e)
+        {
+            Button button = sender as Button;
+            Activity activity = this.activitiesByButton[button];
+            this.SelectedActivity.Invoke(activity);
+        }
+        Dictionary<Button, Activity> activitiesByButton = new Dictionary<Button, Activity>();
     }
 }

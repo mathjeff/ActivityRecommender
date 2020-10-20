@@ -28,7 +28,10 @@ namespace ActivityRecommendation.View
                 title = activity.Name;
                 if (activity is Category)
                 {
-                    title += " (Category)";
+                    if (activity.IsSolution)
+                        title += " (Category, Solution)";
+                    else
+                        title += " (Category)";
                 }
                 else if (activity is ToDo)
                 {

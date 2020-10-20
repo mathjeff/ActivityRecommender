@@ -955,6 +955,20 @@ namespace ActivityRecommendation
                 return metricList;
             }
         }
+
+        // Tells whether this Activity is a Solution
+        public bool IsSolution
+        {
+            get
+            {
+                if (this is Problem)
+                    return false;
+                foreach (Activity parent in this.parents)
+                    if (parent is Problem)
+                        return true;
+                return false;
+            }
+        }
         public List<Metric> AllMetrics
         {
             get

@@ -655,7 +655,7 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Like fireworks!";
+                                        remark = "Fireworks!";
                                     else
                                         remark = "Solid work!";
                                 }
@@ -704,7 +704,7 @@ namespace ActivityRecommendation
                                     // This activity is soothing but this time is not
                                     // This time is efficient but this activity is not
                                     if (fast)
-                                        remark = "Super crazy schedule?";
+                                        remark = "What a crazy schedule";
                                     else
                                         remark = "Crazy schedule?";
                                 }
@@ -748,9 +748,9 @@ namespace ActivityRecommendation
                                     // it's not a soothing activity but it is a soothing time
                                     // it's not an efficient activity but it is an efficient time
                                     if (fast)
-                                        remark = "Good idea, but something else might be more wholesome";
+                                        remark = "A good idea, but something else might be more wholesome";
                                     else
-                                        remark = "Good timing, but something else might be more wholesome";
+                                        remark = "Not a bad time, but something else might be more wholesome";
                                 }
                                 else // !efficientTime
                                 {
@@ -789,7 +789,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "Try doing something more wholesome next?";
                                     else
-                                        remark = "Have you tried looking for a more wholesome thing to do?";
+                                        remark = "Have you tried looking for a more wholesome activity?";
                                 }
                                 else // !efficientTime
                                 {
@@ -924,9 +924,9 @@ namespace ActivityRecommendation
                                     // it's not a soothing activity but it is a soothing time
                                     // it's not an efficient activity but it is an efficient time
                                     if (fast)
-                                        remark = "Decent timing, but is there something better you could do?";
+                                        remark = "A decent idea. Is there something better you could do, though?";
                                     else
-                                        remark = "Decent timing, but is there something better you could be doing?";
+                                        remark = "This is a decent time, but is there something better you could be doing?";
                                 }
                                 else // !efficientTime
                                 {
@@ -1009,9 +1009,9 @@ namespace ActivityRecommendation
                                 if (efficientTime)
                                 {
                                     if (fast)
-                                        remark = "Good scheduling! Maybe do something different next though?";
+                                        remark = "If you had to do this, at least you chose a good time";
                                     else
-                                        remark = "Good scheduling! Maybe do something different though?";
+                                        remark = "If this was necessary, at least you chose a good time";
                                 }
                                 else // !efficientTime
                                 {
@@ -1048,7 +1048,7 @@ namespace ActivityRecommendation
                                     // This activity is soothing but this time is not
                                     // This time is efficient but this activity is not
                                     if (fast)
-                                        remark = "Super insane schedule?";
+                                        remark = "A completely insane schedule";
                                     else
                                         remark = "Insane schedule?";
                                 }
@@ -1073,7 +1073,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "Efficiency!";
                                     else
-                                        remark = "Impressive! Do you this is sustainable?";
+                                        remark = "Impressive! Do you think this is sustainable?";
                                 }
                                 else // !efficientTime
                                 {
@@ -1092,9 +1092,9 @@ namespace ActivityRecommendation
                                     // it's not a soothing activity but it is a soothing time
                                     // it's not an efficient activity but it is an efficient time
                                     if (fast)
-                                        remark = "Good idea, but something else might be more enjoyable";
+                                        remark = "A good idea, but something else might be more enjoyable";
                                     else
-                                        remark = "Good timing, but something else might be more enjoyable";
+                                        remark = "Not a bad time, but something else might be more enjoyable";
                                 }
                                 else // !efficientTime
                                 {
@@ -1200,7 +1200,7 @@ namespace ActivityRecommendation
                                     // soothing but not a soothing time
                                     // efficient and an efficient time
                                     if (fast)
-                                        remark = "Solid work! It's ok to take breaks if you need to";
+                                        remark = "Solid work! Yeah, it's ok to take breaks if you need to";
                                     else
                                         remark = "Solid work! Remember to take breaks if you need them";
                                 }

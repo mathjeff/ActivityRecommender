@@ -247,12 +247,25 @@ namespace ActivityRecommendation
 
             // However, if both this version and the last version were running in the debugger, then we already have a recent backup (the one from when the debugger was first enabled)
             // and the developer is probably doing testing that they don't care to back up.
-            if ((!oldExecution.version.Equals(newExecution.version)))
+            if (!oldExecution.version.Equals(newExecution.version))
             {
-                if (this.persona.Name == "ActivityRecommender")
-                    this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version;
+                if (oldExecution.version == "")
+                {
+                    // This is the first execution, so we give the user a brief description of what ActivityRecommender does
+                    this.welcomeMessage = "Hello! I'm ActivityRecommender.\n" +
+                        "I use math to make your life as awesome as possible.\n" +
+                        "Do you want cheerful but honest feedback?\n" +
+                        "Do you want suggestions?\n" +
+                        "Do you want to measure your efficiency?\n" +
+                        "I can do all that and more!";
+                }
                 else
-                    this.welcomeMessage += "Hi! I'm now a version " + newExecution.version + " ActivityRecommender! Sincerely, " + this.persona.Name + ".";
+                {
+                    if (this.persona.Name == "ActivityRecommender")
+                        this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version;
+                    else
+                        this.welcomeMessage += "Hi! I'm now version " + newExecution.version + "! Sincerely, " + this.persona.Name + ".";
+                }
                 if (!oldExecution.debuggerAttached || !newExecution.debuggerAttached)
                 {
                     //string status = this.ExportData();
@@ -357,6 +370,9 @@ namespace ActivityRecommendation
             debuggingBuilder.AddLayout("Change Screen Size", new Change_ViewSize_Layout(this.viewManager));
             debuggingBuilder.AddLayout("Compute ActivityRecommender's Accuracy (Very Slow)", new EngineTesterView(this, this.layoutStack));
             debuggingBuilder.AddLayout("View Memory Usage", new ViewMemoryUsageLayout());
+            ResetVersionNumberLayout resetVersionNumberLayout = new ResetVersionNumberLayout();
+            resetVersionNumberLayout.RequestChangeVersion += ResetVersionNumberLayout_RequestChangeVersion;
+            debuggingBuilder.AddLayout("Reset Version Number", resetVersionNumberLayout);
 
             PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.persona);
             Choose_LayoutDefaults_Layout themeCustomizationView = new Choose_LayoutDefaults_Layout(this.AllLayoutDefaults);
@@ -364,13 +380,13 @@ namespace ActivityRecommendation
             themeCustomizationView.Chose_LayoutDefaults += ThemeCustomizationView_Chose_LayoutDefaults;
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
-            introMenu_builder.AddLayout("Intro", helpMenu);
+            introMenu_builder.AddLayout("Intro/Info", helpMenu);
             CustomizeLayout customizeLayout = new CustomizeLayout(personaCustomizationView, themeCustomizationView, this.persona, this.layoutStack);
             introMenu_builder.AddLayout(
-                new AppFeatureCount_ButtonName_Provider("Change Appearance", customizeLayout.GetFeatures()),
-                new StackEntry(customizeLayout, "Change Appearance", null)
+                new AppFeatureCount_ButtonName_Provider("Appearance", customizeLayout.GetFeatures()),
+                new StackEntry(customizeLayout, "Appearance", null)
             );
-            introMenu_builder.AddLayout(new AppFeatureCount_ButtonName_Provider("Start", usageMenu.GetFeatures()), new StackEntry(usageMenu, "Home", null));
+            introMenu_builder.AddLayout(new AppFeatureCount_ButtonName_Provider("Start!", usageMenu.GetFeatures()), new StackEntry(usageMenu, "Home", null));
 
             introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
             introMenu_builder.AddLayout("Credits (your name could be here!)",
@@ -411,13 +427,27 @@ namespace ActivityRecommendation
 
             if (this.welcomeMessage != "")
             {
-                startLayouts.Insert(0, new TextblockLayout(this.welcomeMessage));
+                List<LayoutChoice_Set> welcomeOptions = new List<LayoutChoice_Set>();
+                // It's extra important for the welcome screen to use all of the space
+                // Also, there aren't many things on it, so it's not hard to check lots of sizes
+                // So, we check lots of possible sizes for the welcome message
+                for (int fontSize = 12; fontSize <= 30; fontSize += 2)
+                {
+                    welcomeOptions.Add(new TextblockLayout(this.welcomeMessage, fontSize));
+                }
+
+                startLayouts.Insert(0, new LayoutUnion(welcomeOptions));
                 this.welcomeMessage = "";
             }
 
             helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
+        }
+
+        private void ResetVersionNumberLayout_RequestChangeVersion(string version)
+        {
+            this.internalFileIo.EraseFileAndWriteContent(this.versionFilename, version);
         }
 
         private void ThemeCustomizationView_Chose_LayoutDefaults(LayoutDefaults defaults)

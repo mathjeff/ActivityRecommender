@@ -23,9 +23,6 @@ namespace ActRec.iOS
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             global::Xamarin.Forms.Forms.Init();
-            Uniforms.Misc.iOS.ScreenUtils.Init();
-            Uniforms.Misc.iOS.ImageUtils.Init();
-            Uniforms.Misc.iOS.KeyboardUtils.Init();
             Uniforms.Misc.iOS.TextUtils.Init();
             string version = NSBundle.MainBundle.InfoDictionary["CFBundleVersion"].ToString();
             LoadApplication(new App(new AppParams(version, null)));

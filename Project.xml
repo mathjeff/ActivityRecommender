@@ -1,17 +1,17 @@
 
-<Project>  
+<Project>
   <name>ActivityRecommender</name>
   <source><GitRepo/></source>
   <version><GitVersion/></version>
-  <dependencies>  
-    <DependencyList>  
-      <item>  
+  <dependencies>
+    <DependencyList>
+      <item>
         <name>AdaptiveInterpolator</name>
         <version>6573625d03a6216904de5b9f310b4a85d39dfece</version>
-        <syncher>  
-          <Git>  
-            <origin>  
-              <Url>  
+        <syncher>
+          <Git>
+            <origin>
+              <Url>
                 <server>https://github.com</server>
                 <path>mathjeff/AdaptiveInterpolator</path>
               </Url>
@@ -19,10 +19,10 @@
           </Git>
         </syncher>
       </item>
-      
-      <item>  
+
+      <item>
         <name>VisiPlacer</name>
-        <version>3772ca04a4d05d8aed957894f19342770f771455</version>
+        <version>38c4e94b5ea6d5b3c2dbd9635cf9186f24df31be</version>
         <syncher>  
           <Git>  
             <origin>  
@@ -34,6 +34,23 @@
           </Git>
         </syncher>
       </item>
+
+
+      <item>
+        <name>Fonts</name>
+        <version>ce039db592328731ab1d181c2f9521a957c88cea</version>
+        <syncher>
+          <Git>
+            <origin>
+              <Url>
+                <server>https://github.com</server>
+                <path>mathjeff/Fonts</path>
+              </Url>
+            </origin>
+          </Git>
+        </syncher>
+      </item>
+
     </DependencyList>
   </dependencies>
 </Project>

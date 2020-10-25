@@ -19,8 +19,8 @@ namespace ActivityRecommendation.View
                     new StackEntry(this.nameLayout, "Name Me", this.nameLayout)
                 )
                 .AddLayout(
-                    new AppFeatureCount_ButtonName_Provider("Change Colors", themeFeatures),
-                    new StackEntry(this.themeLayout, "Change Colors", null)
+                    new AppFeatureCount_ButtonName_Provider("Color/Font", themeFeatures),
+                    new StackEntry(this.themeLayout, "Change Color and Font", null)
                 )
                 .Build();
         }

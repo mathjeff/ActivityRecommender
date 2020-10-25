@@ -25,8 +25,6 @@ namespace ActRec.Droid
             base.OnCreate(bundle);
 
             global::Xamarin.Forms.Forms.Init(this, bundle);
-            Uniforms.Misc.Droid.ScreenUtils.Init();
-            Uniforms.Misc.Droid.ImageUtils.Init();
             Uniforms.Misc.Droid.TextUtils.Init();
 
             PublicFileIo.setBasedir(Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "ActivityRecommender"));

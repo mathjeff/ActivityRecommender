@@ -60,9 +60,6 @@
     <PackageReference Include="Plugin.CurrentActivity">
       <Version>2.1.0.4</Version>
     </PackageReference>
-    <PackageReference Include="Uniforms.Misc">
-      <Version>0.9.1</Version>
-    </PackageReference>
     <PackageReference Include="Xamarin.Forms" Version="4.5.0.617" />
     <PackageReference Include="Xamarin.Android.Support.Design" Version="28.0.0.3" />
     <PackageReference Include="Xamarin.Android.Support.v7.AppCompat" Version="28.0.0.3" />
@@ -98,6 +95,10 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\launcher_foreground.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\deps\Uniforms-Misc\Uniforms.Misc.Droid\Uniforms.Misc.Droid.csproj">
+      <Project>{f03d6b60-ab98-4c16-aa3e-51a57abbf2ca}</Project>
+      <Name>Uniforms.Misc.Droid</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj">
       <Project>{aa997f58-2326-4cd7-a489-66193106f584}</Project>
       <Name>VisiPlacer</Name>

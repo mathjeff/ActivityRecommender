@@ -58,13 +58,13 @@ namespace ActivityRecommendation
             this.persona = loader.Persona;
         }
 
-        private LayoutDefaults LayoutDefaults
+        private VisualDefaults VisualDefaults
         {
             get
             {
                 string themeName = this.persona.LayoutDefaults_Name;
-                IEnumerable<LayoutDefaults> all = this.AllLayoutDefaults;
-                foreach (LayoutDefaults candidate in all)
+                IEnumerable<VisualDefaults> all = this.AllLayoutDefaults;
+                foreach (VisualDefaults candidate in all)
                 {
                     if (candidate.PersistedName == themeName)
                         return candidate;
@@ -75,104 +75,124 @@ namespace ActivityRecommendation
             }
         }
 
-        private IEnumerable<LayoutDefaults> AllLayoutDefaults
+        private IEnumerable<VisualDefaults> AllLayoutDefaults
         {
             get
             {
-                List<LayoutDefaults> all = new List<LayoutDefaults>();
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("dark")
+                if (this.allLayoutDefaults == null)
+                    this.allLayoutDefaults = this.build_AlllayoutDefaults();
+                return this.allLayoutDefaults;
+            }
+        }
+        private List<VisualDefaults> build_AlllayoutDefaults()
+        {
+            List<VisualDefaults> all = new List<VisualDefaults>();
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Dark")
                     .UneditableText_Color(Color.LightGray)
                     .UneditableText_Background(Color.Black)
+                    .FontName("")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("light")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Light")
                     .UneditableText_Color(Color.Black)
                     .UneditableText_Background(Color.Beige)
+                    .FontName("")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("coding")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Coding")
                     .UneditableText_Color(Color.Green)
                     .UneditableText_Background(Color.Black)
+                    .FontName("MinimalFont5x7")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("dinosaur")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Dinosaur")
                     .UneditableText_Color(Color.Green)
                     .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                    .FontName("Hand Drawn Shapes")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("scifi")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Scifi")
                     .UneditableText_Color(Color.FromRgb(13, 125, 148))
                     .UneditableText_Background(Color.FromRgb(1, 20, 38))
+                    .FontName("Satella")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("fireball")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Fireball")
                     .UneditableText_Color(Color.FromRgb(253, 253, 84))
                     .UneditableText_Background(Color.FromRgb(169, 44, 1))
+                    .FontName("BlackChancery")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("sky")
-                    .UneditableText_Color(Color.FromRgb(25, 62, 113))
-                    .UneditableText_Background(Color.FromRgb(150, 193, 235))
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Sky")
+                    .UneditableText_Color(Color.FromRgb(150, 193, 235))
+                    .UneditableText_Background(Color.FromRgb(25, 62, 113))
+                    .FontName("Pruistine Script")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("candy")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Candy")
                     .UneditableText_Color(Color.FromRgb(219, 76, 119))
                     .UneditableText_Background(Color.FromRgb(16, 85, 154))
+                    .FontName("QDBetterComicSans")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("flower")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Flower")
                     .UneditableText_Color(Color.FromRgb(219, 76, 119))
                     .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                    .FontName("Pruistine Script")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("dracula")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Dracula")
                     .UneditableText_Color(Color.DarkRed)
                     .UneditableText_Background(Color.Black)
+                    .FontName("BlackChancery")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("fish")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Fish")
                     .UneditableText_Color(Color.Yellow)
                     .UneditableText_Background(Color.Blue)
-                    .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("butterfly")
+                    .FontName("QDBetterComicSans")
+                   .Build());
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Butterfly")
                     .UneditableText_Color(Color.FromRgb(255, 204, 0))
                     .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                    .FontName("aArushShiny")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("goth")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Goth")
                     .UneditableText_Color(Color.FromRgb(255, 150, 204))
                     .UneditableText_Background(Color.Black)
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("bubblegum")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Bubblegum")
                     .UneditableText_Color(Color.FromRgb(208, 28, 139))
                     .UneditableText_Background(Color.DarkGreen)
+                    .FontName("MinimalFont5x7")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("brownie")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Brownie")
                     .UneditableText_Color(Color.FromRgb(175, 99, 81))
                     .UneditableText_Background(Color.FromRgb(50, 24, 27))
+                    .FontName("TitanOne")
                     .Build());
-                all.Add(new LayoutDefaults_Builder()
-                    .DisplayName("bumblebee")
+                all.Add(new VisualDefaults_Builder()
+                    .DisplayName("Bumblebee")
                     .UneditableText_Color(Color.FromRgb(8, 8, 8))
                     .UneditableText_Background(Color.FromRgb(221, 190, 7))
+                    .FontName("Satella")
                     .Build());
-
                 return all;
-            }
         }
 
         private void setupLoadingScreen()
         {
-            LayoutDefaults defaults = this.LayoutDefaults;
-            this.parentView.BackgroundColor = defaults.ApplicationBackground;
+            VisualDefaults defaults = this.VisualDefaults;
+            this.parentView.BackgroundColor = defaults.ViewDefaults.ApplicationBackground;
             TextblockLayout layout = new TextblockLayout("I'm loading your data! Sincerely, " + this.persona.Name);
             layout.AlignHorizontally(TextAlignment.Center);
             layout.AlignVertically(TextAlignment.Center);
-            ViewManager viewManager = new ViewManager(this.parentView, layout, this.LayoutDefaults);
+            ViewManager viewManager = new ViewManager(this.parentView, layout, this.VisualDefaults);
         }
 
         public void Initialize()
@@ -281,7 +301,7 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
             this.mainLayout = ContainerLayout.SameSize_Scroller(new ScrollView(), this.layoutStack);
-            this.viewManager = new ViewManager(null, this.mainLayout, this.LayoutDefaults);
+            this.viewManager = new ViewManager(null, this.mainLayout, this.VisualDefaults);
 
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
             ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
@@ -377,7 +397,7 @@ namespace ActivityRecommendation
             PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.persona);
             Choose_LayoutDefaults_Layout themeCustomizationView = new Choose_LayoutDefaults_Layout(this.AllLayoutDefaults);
 
-            themeCustomizationView.Chose_LayoutDefaults += ThemeCustomizationView_Chose_LayoutDefaults;
+            themeCustomizationView.Chose_VisualDefaults += ThemeCustomizationView_Chose_LayoutDefaults;
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro/Info", helpMenu);
@@ -450,12 +470,12 @@ namespace ActivityRecommendation
             this.internalFileIo.EraseFileAndWriteContent(this.versionFilename, version);
         }
 
-        private void ThemeCustomizationView_Chose_LayoutDefaults(LayoutDefaults defaults)
+        private void ThemeCustomizationView_Chose_LayoutDefaults(VisualDefaults defaults)
         {
             this.persona.LayoutDefaults_Name = defaults.PersistedName;
-            this.parentView.BackgroundColor = defaults.ApplicationBackground;
+            this.parentView.BackgroundColor = defaults.ViewDefaults.ApplicationBackground;
             this.savePersona();
-            this.viewManager.LayoutDefaults = this.LayoutDefaults;
+            this.viewManager.VisualDefaults = this.VisualDefaults;
         }
 
         private void ParticipationEntryView_VisitActivitiesScreen()
@@ -1163,6 +1183,8 @@ namespace ActivityRecommendation
         string welcomeMessage = "";
         ProtoActivity_Database protoActivities_database;
         Persona persona;
+        private List<VisualDefaults> allLayoutDefaults;
+
     }
 
     class ApplicationExecution

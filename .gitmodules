@@ -7,3 +7,9 @@
 [submodule "deps/VisiPlacer"]
 	path = deps/VisiPlacer
 	url = ../VisiPlacer
+[submodule "deps/Uniforms-Misc"]
+	path = deps/Uniforms-Misc
+	url = ../Uniforms-Misc
+[submodule "deps/Fonts"]
+	path = deps/Fonts
+	url = ../Fonts

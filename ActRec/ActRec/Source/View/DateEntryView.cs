@@ -74,7 +74,27 @@ namespace ActivityRecommendation
             if (suggestedDateText.Length > length)
                 suggestedDateText = suggestedDateText.Substring(0, length);
             this.implView.DateText = suggestedDateText;
-            this.implView.NowText = DateTime.Now.ToString(this.getDateFormatString()) + " is the current time.";
+
+            // Tell the user which day or time is today
+            DateTime suggestedDate;
+            bool hasValidDate = this.Parse(out suggestedDate);
+            DateTime now = DateTime.Now;
+            if (hasValidDate)
+            {
+                if (suggestedDate.Day.CompareTo(now.Day) != 0)
+                {
+                    this.implView.NowText = now.ToString("yyyy-MM-dd") + " = today";
+                }
+                else
+                {
+                    this.implView.NowText = "now = " + now.ToString("HH:mm:ss");
+                }
+            }
+            else
+            {
+                this.implView.NowText = now.ToString(this.getDateFormatString()) + " = now";
+            }
+
             this.layoutStack.AddLayout(this.implView, this.title, this);
         }
 

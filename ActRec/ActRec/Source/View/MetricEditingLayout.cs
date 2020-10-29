@@ -70,6 +70,11 @@ namespace ActivityRecommendation.View
                 this.setError("Metric name is required");
                 return;
             }
+            if (metricName.Contains("\n") || metricName.Contains("\r"))
+            {
+                this.setError("Newlines not allowed in metric name");
+                return;
+            }
             Metric metric = new CompletionMetric(metricName, activity);
             metric.DiscoveryDate = DateTime.Now;
             string error = this.activityDatabase.AddMetric(activity, metric);

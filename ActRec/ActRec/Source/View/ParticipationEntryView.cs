@@ -633,6 +633,34 @@ namespace ActivityRecommendation
             bool efficientTime = (efficiencyBonusInHours.Mean >= comparisonEfficiencyBonusInHours.Mean);
             bool suggested = this.get_wasSuggested(chosenActivity.MakeDescriptor());
 
+            bool comparisonDateIsLaterDay = (comparisonDate.Date.CompareTo(startDate.Date) > 0);
+            bool comparisonDateIsEarlierDay = (comparisonDate.Date.CompareTo(startDate.Date) < 0);
+            bool comparisonDateIsEarlierTime = (comparisonDate.TimeOfDay.CompareTo(startDate.TimeOfDay) < 0);
+
+            string recommendedTime;
+            if (comparisonDateIsLaterDay)
+            {
+                recommendedTime = "another day";
+            }
+            else
+            {
+                if (comparisonDateIsEarlierDay)
+                {
+                    recommendedTime = "an earlier day";
+                }
+                else
+                {
+                    if (comparisonDateIsEarlierTime)
+                    {
+                        recommendedTime = "an earlier time";
+                    }
+                    else
+                    {
+                        recommendedTime = "a later time";
+                    }
+                }
+            }
+
             string remark;
 
             if (funActivity)
@@ -692,9 +720,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Good job! But could you choose a different time?";
+                                        remark = "Good job! But could you choose " + recommendedTime + "?";
                                     else
-                                        remark = "Great job! But could you choose a different time?";
+                                        remark = "Great job! But could you choose " + recommendedTime + "?";
                                 }
                             }
                             else // !efficientActivity
@@ -711,9 +739,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Maybe choose another time with fewer interruptions?";
+                                        remark = "Maybe choose " + recommendedTime + " with fewer interruptions?";
                                     else
-                                        remark = "Any chance that you could choose a different time?";
+                                        remark = "Any chance that you could choose " + recommendedTime + "?";
                                 }
                             }
                         }
@@ -775,9 +803,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Good work! You might burn out less if you choose another time though";
+                                        remark = "Good work! You might burn out less if you choose " + recommendedTime + " though";
                                     else
-                                        remark = "Good job! You might burn out less if you choose another time though";
+                                        remark = "Good job! You might burn out less if you choose " + recommendedTime + " though";
                                 }
                             }
                             else // !efficientActivity
@@ -863,9 +891,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Good work, but you should choose a different time";
+                                        remark = "Good work, but you should choose " + recommendedTime;
                                     else
-                                        remark = "Good work, but please choose a different time";
+                                        remark = "Good work, but please choose " + recommendedTime;
                                 }
                             }
                             else // !efficientActivity
@@ -914,7 +942,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "Isn't there a better time for this? :p";
                                     else
-                                        remark = "Can you find a better time for this?";
+                                        remark = "I think " + recommendedTime + " would be better.";
                                 }
                             }
                             else // !efficientActivity
@@ -1036,9 +1064,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Good job! But I recommend another time if possible";
+                                        remark = "Good job! But I recommend " + recommendedTime + " if possible";
                                     else
-                                        remark = "Great job! But I recommend another time if possible";
+                                        remark = "Great job! But I recommend " + recommendedTime + " if possible";
                                 }
                             }
                             else // !efficientActivity
@@ -1055,9 +1083,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Maybe choose another time to avoid being interrupted?";
+                                        remark = "Maybe try " + recommendedTime + " to avoid being interrupted?";
                                     else
-                                        remark = "I think another time would be less chaotic";
+                                        remark = "I think " + recommendedTime + " would be less chaotic";
                                 }
                             }
                         }
@@ -1164,9 +1192,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Pretty good! But have you considered any other times?";
+                                        remark = "Pretty good! But have you considered " + recommendedTime + "?";
                                     else
-                                        remark = "Not bad! But have you considered any other times?";
+                                        remark = "Not bad! But have you considered " + recommendedTime + "?";
                                 }
                             }
                             else // !efficientActivity
@@ -1207,9 +1235,9 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "Good work, but you can choose a different time";
+                                        remark = "Good work, but you can choose " + recommendedTime;
                                     else
-                                        remark = "Good work, but you'd be better off choosing a different time";
+                                        remark = "Good work, but you'd be better off choosing " + recommendedTime;
                                 }
                             }
                             else // !efficientActivity
@@ -1227,7 +1255,7 @@ namespace ActivityRecommendation
                                 else // !efficientTime
                                 {
                                     if (fast)
-                                        remark = "I think you would prefer another time";
+                                        remark = "I think you would prefer " + recommendedTime;
                                     else
                                         remark = "I definitely recommend rescheduling";
                                 }

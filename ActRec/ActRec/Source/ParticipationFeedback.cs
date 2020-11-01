@@ -9,15 +9,17 @@ namespace ActivityRecommendation
 {
     class ParticipationFeedback
     {
-        public ParticipationFeedback(Activity activity, string summary, ValueProvider<LayoutChoice_Set> detailsProvider)
+        public ParticipationFeedback(Activity activity, string summary, Color? summaryColor, ValueProvider<LayoutChoice_Set> detailsProvider)
         {
             this.Activity = activity;
             this.Summary = summary;
+            this.SummaryColor = summaryColor;
             this.detailsProvider = detailsProvider;
         }
         public Activity Activity { get; set; }
 
         public string Summary { get; set; }
+        public Color? SummaryColor { get; set; }
         private ValueProvider<LayoutChoice_Set> detailsProvider;
         public LayoutChoice_Set Details
         {

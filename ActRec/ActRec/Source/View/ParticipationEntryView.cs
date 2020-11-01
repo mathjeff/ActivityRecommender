@@ -41,9 +41,10 @@ namespace ActivityRecommendation
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
-            this.feedbackButton = new Button();
-            this.feedbackButton.Clicked += FeedbackButton_Clicked;
-            contents.AddLayout(ButtonLayout.HideIfEmpty(new ButtonLayout(this.feedbackButton)));
+            Button feedbackButton = new Button();
+            feedbackButton.Clicked += FeedbackButton_Clicked;
+            this.feedbackButtonLayout = new ButtonLayout(feedbackButton);
+            contents.AddLayout(ButtonLayout.HideIfEmpty(this.feedbackButtonLayout));
 
             GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
@@ -246,7 +247,7 @@ namespace ActivityRecommendation
             this.ratingBox.Clear();
             this.nameBox.Clear();
             this.CommentText = "";
-            this.feedbackButton.Text = "";
+            this.feedbackButtonLayout.setText("");
             this.updateMetricSelectorVisibility();
         }
         public Engine Engine
@@ -530,12 +531,20 @@ namespace ActivityRecommendation
                     ParticipationFeedback participationFeedback = this.computeFeedback(activity, startDate, endDate);
                     if (participationFeedback != null)
                     {
-                        this.feedbackButton.Text = participationFeedback.Summary;
+                        this.feedbackButtonLayout.setText(participationFeedback.Summary);
+                        if (participationFeedback.SummaryColor != null)
+                        {
+                            this.feedbackButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
+                        }    
+                        else
+                        {
+                            this.feedbackButtonLayout.resetTextColor();
+                        }
                         this.participationFeedback = participationFeedback;
                     }
                     else
                     {
-                        this.feedbackButton.Text = "";
+                        this.feedbackButtonLayout.setText("");
                     }
                 }
             }
@@ -553,7 +562,7 @@ namespace ActivityRecommendation
                     "in the evening that you may choose to skip doing difficult tasks and save them for the morning. This could cause you to " +
                     "take more time working on any individual task in the morning than in the evening, which could incorrectly suggest that " +
                     "your efficiency is lower in the morning than in the evening.";
-                return new ParticipationFeedback(chosenActivity, summary, new ConstantValueProvider<LayoutChoice_Set>(new TextblockLayout(details)));
+                return new ParticipationFeedback(chosenActivity, summary, Color.Red, new ConstantValueProvider<LayoutChoice_Set>(new TextblockLayout(details)));
             }
             ParticipationFeedback standardFeedback = this.computeStandardFeedback(chosenActivity, startDate, endDate);
             if (standardFeedback != null)
@@ -571,7 +580,7 @@ namespace ActivityRecommendation
                     .AddMessage("Isn't that cool?")
                     .Build();
 
-                return new ParticipationFeedback(chosenActivity, summary, new ConstantValueProvider<LayoutChoice_Set>(detailedLayout));
+                return new ParticipationFeedback(chosenActivity, summary, null, new ConstantValueProvider<LayoutChoice_Set>(detailedLayout));
             }
             return null;
         }
@@ -1375,7 +1384,15 @@ namespace ActivityRecommendation
 
             detailsProvider.Suggested = suggested;
 
-            return new ParticipationFeedback(chosenActivity, remark, detailsProvider);
+
+            Color summaryColor;
+
+            if (soothingActivity)
+                summaryColor = Color.Green;
+            else
+                summaryColor = Color.Red;
+
+            return new ParticipationFeedback(chosenActivity, remark, summaryColor, detailsProvider);
         }
 
         private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
@@ -1493,7 +1510,7 @@ namespace ActivityRecommendation
         Button setStartdateButton;
         Button setEnddateButton;
         Button okButton;
-        Button feedbackButton;
+        ButtonLayout feedbackButtonLayout;
         Engine engine;
         ChooseMetric_View metricChooser;
         LayoutStack layoutStack;

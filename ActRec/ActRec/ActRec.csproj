@@ -16,33 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\aArushShiny.otf" Link="Resources\aArushShiny.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\BlackChancery.ttf" Link="Resources\BlackChancery.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf" Link="Resources\HandDrawnShapes.otf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf" Link="Resources\MinimalFont5x7.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\PruistineScript.ttf" Link="Resources\PruistineScript.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\Qdbettercomicsans.ttf" Link="Resources\Qdbettercomicsans.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\SatellaRegular.ttf" Link="Resources\SatellaRegular.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\..\deps\Fonts\Resources\TitanOne.ttf" Link="Resources\TitanOne.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="PCLStorage" Version="1.0.2" />
     <PackageReference Include="Plugin.Permissions" Version="3.0.0.12" />
     <PackageReference Include="SkiaSharp" Version="1.68.0" />
@@ -53,7 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\deps\AdaptiveInterpolator\AdaptiveInterpolator.csproj" />
-    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj" />
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer\VisiPlacer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

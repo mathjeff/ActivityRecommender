@@ -38,6 +38,17 @@
     <true/>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
+    <key>UIAppFonts</key>
+    <array>
+        <string>aArushShiny.otf</string>
+        <string>MinimalFont5x7.ttf</string>
+        <string>PruistineScript.ttf</string>
+        <string>TitanOne.ttf</string>
+        <string>BlackChancery.ttf</string>
+        <string>HandDrawnShapes.otf</string>
+        <string>Qdbettercomicsans.ttf</string>
+        <string>SatellaRegular.ttf</string>
+    </array>
 
     <!-- ActivityRecommender makes use of libraries for requesting permissions, and those libraries know how to request lots of permissions. Because ActivityRecommender never asks for those permissions, if a library every requests them on ActivityRecommender's behalf, that's an error -->
     <key>NSCalendarsUsageDescription</key>

@@ -4,6 +4,7 @@ using System.Linq;
 
 using Foundation;
 using UIKit;
+using VisiPlacement.iOS;
 
 namespace ActRec.iOS
 {
@@ -14,6 +15,7 @@ namespace ActRec.iOS
         {
             // if you want to use a different Application Delegate class from "AppDelegate"
             // you can specify it here.
+            iOSTextMeasurer.Initialize();
             UIApplication.Main(args, null, "AppDelegate");
         }
     }

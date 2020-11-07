@@ -73,6 +73,30 @@
     <Compile Include="Source\TextItemEffect.cs" />
   </ItemGroup>
   <ItemGroup>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\aArushShiny.otf">
+      <Link>Assets\aArushShiny.otf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
+      <Link>Assets\BlackChancery.ttf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf">
+      <Link>Assets\HandDrawnShapes.otf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf">
+      <Link>Assets\MinimalFont5x7.ttf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\PruistineScript.ttf">
+      <Link>Assets\PruistineScript.ttf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\Qdbettercomicsans.ttf">
+      <Link>Assets\Qdbettercomicsans.ttf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\SatellaRegular.ttf">
+      <Link>Assets\SatellaRegular.ttf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\TitanOne.ttf">
+      <Link>Assets\TitanOne.ttf</Link>
+    </AndroidAsset>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
     <None Include="Properties\AndroidManifest.xml" />
@@ -95,12 +119,12 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\launcher_foreground.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\deps\Uniforms-Misc\Uniforms.Misc.Droid\Uniforms.Misc.Droid.csproj">
-      <Project>{f03d6b60-ab98-4c16-aa3e-51a57abbf2ca}</Project>
-      <Name>Uniforms.Misc.Droid</Name>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.Android\VisiPlacer.Android.csproj">
+      <Project>{5911e1a9-9c98-42ba-9878-90ed3f946e57}</Project>
+      <Name>VisiPlacer.Android</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj">
-      <Project>{aa997f58-2326-4cd7-a489-66193106f584}</Project>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer\VisiPlacer.csproj">
+      <Project>{69ec4a5f-a26b-4dc5-a7ab-d1d7bde9355c}</Project>
       <Name>VisiPlacer</Name>
     </ProjectReference>
     <ProjectReference Include="..\ActRec\ActRec.csproj">

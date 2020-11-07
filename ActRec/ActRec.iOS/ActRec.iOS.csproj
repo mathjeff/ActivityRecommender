@@ -98,6 +98,38 @@
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
     <Compile Include="Source\ButtonEffect.cs" />
+    <BundleResource Include="..\..\deps\Fonts\Resources\aArushShiny.otf">
+      <Link>Resources\aArushShiny.otf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
+      <Link>Resources\BlackChancery.ttf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf">
+      <Link>Resources\HandDrawnShapes.otf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf">
+      <Link>Resources\MinimalFont5x7.ttf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\PruistineScript.ttf">
+      <Link>Resources\PruistineScript.ttf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\Qdbettercomicsans.ttf">
+      <Link>Resources\Qdbettercomicsans.ttf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\SatellaRegular.ttf">
+      <Link>Resources\SatellaRegular.ttf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\TitanOne.ttf">
+      <Link>Resources\TitanOne.ttf</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
     <None Include="Entitlements.plist" />
     <None Include="Info.plist" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -158,14 +190,14 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\deps\Uniforms-Misc\Uniforms.Misc.iOS\Uniforms.Misc.iOS.csproj">
-      <Project>{d13a4cca-6f79-4d18-9da0-a37163c0bc55}</Project>
-      <Name>Uniforms.Misc.iOS</Name>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.iOS\VisiPlacer.iOS.csproj">
+      <Project>{de461a19-e352-4a79-855b-4fcc38da6bb6}</Project>
+      <Name>VisiPlacer.iOS</Name>
       <IsAppExtension>false</IsAppExtension>
       <IsWatchApp>false</IsWatchApp>
     </ProjectReference>
-    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj">
-      <Project>{AA997F58-2326-4CD7-A489-66193106F584}</Project>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer\VisiPlacer.csproj">
+      <Project>{69ec4a5f-a26b-4dc5-a7ab-d1d7bde9355c}</Project>
       <Name>VisiPlacer</Name>
     </ProjectReference>
     <ProjectReference Include="..\ActRec\ActRec.csproj">

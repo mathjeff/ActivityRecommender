@@ -150,8 +150,12 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.1.5" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.csproj">
-      <Project>{aa997f58-2326-4cd7-a489-66193106f584}</Project>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer.UWP\VisiPlacer.UWP.csproj">
+      <Project>{9323f653-bb21-4967-9341-88dbad2728c3}</Project>
+      <Name>VisiPlacer.UWP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\deps\VisiPlacer\VisiPlacer\VisiPlacer.csproj">
+      <Project>{69ec4a5f-a26b-4dc5-a7ab-d1d7bde9355c}</Project>
       <Name>VisiPlacer</Name>
     </ProjectReference>
     <ProjectReference Include="..\ActRec\ActRec.csproj">

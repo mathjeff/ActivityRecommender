@@ -143,9 +143,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Uniforms.Misc">
-      <Version>0.9.1</Version>
-    </PackageReference>
     <PackageReference Include="Xamarin.Forms" Version="4.5.0.617" />
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.1.5" />
   </ItemGroup>
@@ -162,6 +159,46 @@
       <Project>{F702C131-C522-4CBF-9F4D-0911C7DAD864}</Project>
       <Name>ActRec</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\aArushShiny.otf">
+      <Link>Assets\Fonts\aArushShiny.otf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
+      <Link>Assets\Fonts\BlackChancery.ttf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf">
+      <Link>Assets\Fonts\HandDrawnShapes.otf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf">
+      <Link>Assets\Fonts\MinimalFont5x7.ttf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\PruistineScript.ttf">
+      <Link>Assets\Fonts\PruistineScript.ttf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\Qdbettercomicsans.ttf">
+      <Link>Assets\Fonts\Qdbettercomicsans.ttf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\SatellaRegular.ttf">
+      <Link>Assets\Fonts\SatellaRegular.ttf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\TitanOne.ttf">
+      <Link>Assets\Fonts\TitanOne.ttf</Link>
+    </Content>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

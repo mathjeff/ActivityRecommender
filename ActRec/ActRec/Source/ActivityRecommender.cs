@@ -104,6 +104,7 @@ namespace ActivityRecommendation
                     .UneditableText_Color(Color.Green)
                     .UneditableText_Background(Color.Black)
                     .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
+                    .FontSizeMultiplier(1.5)
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Dinosaur")
@@ -169,6 +170,7 @@ namespace ActivityRecommendation
                     .UneditableText_Color(Color.FromRgb(208, 28, 139))
                     .UneditableText_Background(Color.DarkGreen)
                     .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
+                    .FontSizeMultiplier(1.5)
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Brownie")

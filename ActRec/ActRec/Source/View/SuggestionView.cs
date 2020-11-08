@@ -19,7 +19,7 @@ namespace ActivityRecommendation
         public event VisitParticipationScreenHandler VisitParticipationScreen;
         public delegate void VisitParticipationScreenHandler();
 
-        public SuggestionView(ActivitySuggestion suggestion, bool isFirstSuggestion, LayoutStack layoutStack)
+        public SuggestionView(ActivitySuggestion suggestion, bool isFirstSuggestion, bool repeatingDeclinedSuggestion, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
@@ -46,7 +46,7 @@ namespace ActivityRecommendation
             }
 
             // add content
-            mainGrid.PutLayout(new TextblockLayout(this.summarize(suggestion)), 1, 0);
+            mainGrid.PutLayout(new TextblockLayout(this.summarize(suggestion, repeatingDeclinedSuggestion)), 1, 0);
 
             // Add buttons on the right
             this.cancelButton = new Button();
@@ -125,7 +125,7 @@ namespace ActivityRecommendation
             return "be overjoyed with";
         }
 
-        private string summarize(ActivitySuggestion suggestion)
+        private string summarize(ActivitySuggestion suggestion, bool repeatingDeclinedSuggestion)
         {
             // Summarize participation probability and predicted score
             string text = "You";
@@ -146,6 +146,8 @@ namespace ActivityRecommendation
             {
                 // For a normal suggestion, we tell them how likely we think it is that they will do it, and
                 // how we think they will feel about it
+                if (repeatingDeclinedSuggestion)
+                    text = "No, really: you";
                 if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
                 {
                     text += " " + this.getProbabilityAdjective(suggestion.ParticipationProbability.Value);

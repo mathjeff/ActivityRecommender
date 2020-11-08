@@ -175,6 +175,7 @@ namespace ActivityRecommendation.View
         public void AddSuggestion(ActivitySuggestion suggestion)
         {
             this.suggestions.Add(suggestion);
+            this.previousDeclinedSuggestion = null;
             this.UpdateSuggestionsAndMessage();
         }
         public void AddSuggestions(IEnumerable<ActivitySuggestion> suggestions)
@@ -249,7 +250,10 @@ namespace ActivityRecommendation.View
             bool addDoNowButton = true;
             foreach (ActivitySuggestion suggestion in this.suggestions)
             {
-                layouts.Add(this.makeLayout(suggestion, addDoNowButton));
+                bool repeatingDeclinedSuggestion = false;
+                if (this.previousDeclinedSuggestion != null && suggestion.ActivityDescriptor.CanMatch(previousDeclinedSuggestion.ActivityDescriptor))
+                    repeatingDeclinedSuggestion = true;
+                layouts.Add(this.makeLayout(suggestion, addDoNowButton, repeatingDeclinedSuggestion));
                 addDoNowButton = false;
             }
             // show the button for getting more suggestions if there's room
@@ -275,9 +279,9 @@ namespace ActivityRecommendation.View
             this.SetContent(grid);
         }
 
-        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool doNowButton)
+        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool doNowButton, bool repeatingDeclinedSuggestion)
         {
-            SuggestionView suggestionView = new SuggestionView(suggestion, doNowButton, this.layoutStack);
+            SuggestionView suggestionView = new SuggestionView(suggestion, doNowButton, repeatingDeclinedSuggestion, this.layoutStack);
             suggestionView.Dismissed += SuggestionView_Dismissed;
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
             suggestionView.VisitParticipationScreen += SuggestionView_VisitParticipationScreen;
@@ -301,6 +305,7 @@ namespace ActivityRecommendation.View
 
         private void DeclineSuggestion(ActivitySuggestion suggestion)
         {
+            this.previousDeclinedSuggestion = suggestion;
             this.suggestions.Remove(suggestion);
             ActivitySkip skip = this.recommender.DeclineSuggestion(suggestion);
             double numSecondsThinking = skip.ThinkingTime.TotalSeconds;
@@ -324,6 +329,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set messageLayout;
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
+        ActivitySuggestion previousDeclinedSuggestion;
     }
 
     class RequestSuggestion_Feature : AppFeature

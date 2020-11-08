@@ -1398,7 +1398,22 @@ namespace ActivityRecommendation
             else
                 summaryColor = Color.Red;
 
-            return new ParticipationFeedback(chosenActivity, remark, summaryColor, detailsProvider);
+            int longtermBonus = (int)longtermBonusInDays.Mean;
+            string longtermBonusText;
+            if (longtermBonus > 0)
+            {
+                longtermBonusText = "+" + longtermBonus + "! ";
+            }
+            else
+            {
+                if (longtermBonus < 0)
+                    longtermBonusText = "" + longtermBonus + ": ";
+                else
+                    longtermBonusText = "";
+            }
+            string summary = longtermBonusText + remark;
+
+            return new ParticipationFeedback(chosenActivity, summary, summaryColor, detailsProvider);
         }
 
         private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)

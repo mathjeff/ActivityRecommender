@@ -37,7 +37,6 @@ namespace ActivityRecommendation
             this.nameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack);
             this.nameBox.AutoAcceptAutocomplete = false;
             this.nameBox.PreferSuggestibleActivities = true;
-            this.nameBox.AddTextChangedHandler(new EventHandler<TextChangedEventArgs>(this.nameBox_TextChanged));
             this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
             contents.AddLayout(this.nameBox);
 
@@ -58,15 +57,27 @@ namespace ActivityRecommendation
             this.metricChooser = new ChooseMetric_View(true);
             this.metricChooser.ChoseNewMetric += TodoCompletionLabel_ChoseNewMetric;
 
-            Horizontal_GridLayout_Builder todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
-            todoInfo_builder.AddLayout(new Vertical_GridLayout_Builder().Uniform()
-                .AddLayout(this.metricChooser)
-                .AddLayout(this.todoCompletionStatusHolder)
-                .Build());
+            LayoutChoice_Set metricLayout = new Vertical_GridLayout_Builder().Uniform()
+                    .AddLayout(this.metricChooser)
+                    .AddLayout(this.todoCompletionStatusHolder)
+                    .Build();
             this.helpStatusHolder = new ContainerLayout();
-            todoInfo_builder.AddLayout(this.helpStatusHolder);
+            Horizontal_GridLayout_Builder centered_todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
+            centered_todoInfo_builder.AddLayout(metricLayout);
+            centered_todoInfo_builder.AddLayout(this.helpStatusHolder);
+            Horizontal_GridLayout_Builder offset_todoInfo_builder = new Horizontal_GridLayout_Builder();
+            offset_todoInfo_builder.AddLayout(metricLayout);
+            offset_todoInfo_builder.AddLayout(this.helpStatusHolder);
 
-            contents.AddLayout(todoInfo_builder.Build());
+            contents.AddLayout(
+                new LayoutUnion(
+                    centered_todoInfo_builder.Build(),
+                    new ScoreShifted_Layout(
+                        offset_todoInfo_builder.Build(),
+                        LayoutScore.Get_UnCentered_LayoutScore(1)
+                    )
+                )
+            );
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
@@ -235,11 +246,6 @@ namespace ActivityRecommendation
                     this.endDateBox.appearInvalid();
                 }
             }
-        }
-
-        void nameBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            //this.setEnddateButton.Highlight();
         }
 
         public void Clear()

@@ -9,12 +9,12 @@ using Xamarin.Forms;
 // the ParticipationEntryView provides a place for the user to describe what they've done recently
 namespace ActivityRecommendation
 {
-    class ParticipationEntryView : TitledControl
+    class ParticipationEntryView : ContainerLayout
     {
         public event VisitActivitiesScreenHandler VisitActivitiesScreen;
         public delegate void VisitActivitiesScreenHandler();
 
-        public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack) : base("Type What You've Been Doing")
+        public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
@@ -23,36 +23,39 @@ namespace ActivityRecommendation
             rowHeights.BindIndices(0, 1);
             rowHeights.BindIndices(0, 2);
             rowHeights.BindIndices(0, 3);
-            rowHeights.BindIndices(0, 4);
-            rowHeights.BindIndices(0, 5);
-            rowHeights.SetPropertyScale(0, 2);
-            rowHeights.SetPropertyScale(1, 1);
-            rowHeights.SetPropertyScale(2, 1.5);
-            rowHeights.SetPropertyScale(3, 1);
-            rowHeights.SetPropertyScale(4, 1.15);
-            rowHeights.SetPropertyScale(5, 1);
+            rowHeights.SetPropertyScale(0, 5); // activity name and feedback
+            rowHeights.SetPropertyScale(1, 5); // rating, comments, and metrics
+            rowHeights.SetPropertyScale(2, 2.3); // start and end times
+            rowHeights.SetPropertyScale(3, 2); // buttons
+
+            // activity name and feedback
+            Vertical_GridLayout_Builder nameAndFeedback_builder = new Vertical_GridLayout_Builder();
 
             GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
-            this.nameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack);
+            this.nameBox = new ActivityNameEntryBox("What Have You Been Doing?", activityDatabase, layoutStack);
             this.nameBox.AutoAcceptAutocomplete = false;
             this.nameBox.PreferSuggestibleActivities = true;
-            this.nameBox.NameMatchedSuggestion += new NameMatchedSuggestionHandler(this.ActivityName_BecameValid);
-            contents.AddLayout(this.nameBox);
+            this.nameBox.NameMatchedSuggestion += this.ActivityName_ValidityChanged;
+            this.nameBox.NameUnmatchedSuggestion += this.ActivityName_ValidityChanged;
+            nameAndFeedback_builder.AddLayout(this.nameBox);
 
             Button feedbackButton = new Button();
             feedbackButton.Clicked += FeedbackButton_Clicked;
             this.feedbackButtonLayout = new ButtonLayout(feedbackButton);
-            contents.AddLayout(ButtonLayout.HideIfEmpty(this.feedbackButtonLayout));
+            nameAndFeedback_builder.AddLayout(ButtonLayout.HideIfEmpty(this.feedbackButtonLayout));
+            contents.AddLayout(nameAndFeedback_builder.BuildAnyLayout());
 
-            GridLayout middleGrid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            Vertical_GridLayout_Builder detailsBuilder = new Vertical_GridLayout_Builder();
+
+            GridLayout commentAndRating_grid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
-            middleGrid.AddLayout(this.ratingBox);
+            commentAndRating_grid.AddLayout(this.ratingBox);
             this.commentBox = new PopoutTextbox("Comment", layoutStack);
             this.commentBox.Placeholder("(Optional)");
-            middleGrid.AddLayout(this.commentBox);
+            commentAndRating_grid.AddLayout(this.commentBox);
 
-            contents.AddLayout(middleGrid);
+            detailsBuilder.AddLayout(commentAndRating_grid);
             this.todoCompletionStatusHolder = new ContainerLayout();
             this.metricChooser = new ChooseMetric_View(true);
             this.metricChooser.ChoseNewMetric += TodoCompletionLabel_ChoseNewMetric;
@@ -69,15 +72,15 @@ namespace ActivityRecommendation
             offset_todoInfo_builder.AddLayout(metricLayout);
             offset_todoInfo_builder.AddLayout(this.helpStatusHolder);
 
-            contents.AddLayout(
-                new LayoutUnion(
+            LayoutChoice_Set metricStatusLayout = new LayoutUnion(
                     centered_todoInfo_builder.Build(),
                     new ScoreShifted_Layout(
                         offset_todoInfo_builder.Build(),
                         LayoutScore.Get_UnCentered_LayoutScore(1)
                     )
-                )
-            );
+                );
+            detailsBuilder.AddLayout(metricStatusLayout);
+            contents.AddLayout(detailsBuilder.BuildAnyLayout());
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
@@ -193,9 +196,9 @@ namespace ActivityRecommendation
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
             if (this.hasActivities)
-                this.SetContent(this.mainLayout);
+                this.SubLayout = this.mainLayout;
             else
-                this.SetContent(this.noActivities_explanationLayout);
+                this.SubLayout = this.noActivities_explanationLayout;
 
             if (!this.feedbackIsUpToDate)
                 this.Update_FeedbackBlock_Text();
@@ -440,7 +443,7 @@ namespace ActivityRecommendation
 
         }
 
-        public void ActivityName_BecameValid(object sender, TextChangedEventArgs e)
+        public void ActivityName_ValidityChanged(object sender, TextChangedEventArgs e)
         {
             this.Invalidate_FeedbackBlock_Text();
             this.updateMetricSelectorVisibility();
@@ -527,32 +530,33 @@ namespace ActivityRecommendation
 
         private void Update_FeedbackBlock_Text()
         {
-            if (this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid() && this.nameBox.ActivityDescriptor != null)
+            Activity activity = this.nameBox.Activity;
+            if (activity != null && this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid())
             {
                 DateTime startDate = this.startDateBox.GetDate();
                 DateTime endDate = this.endDateBox.GetDate();
-                Activity activity = this.engine.ActivityDatabase.ResolveDescriptor(this.nameBox.ActivityDescriptor);
-                if (activity != null)
+                ParticipationFeedback participationFeedback = this.computeFeedback(activity, startDate, endDate);
+                if (participationFeedback != null)
                 {
-                    ParticipationFeedback participationFeedback = this.computeFeedback(activity, startDate, endDate);
-                    if (participationFeedback != null)
+                    this.feedbackButtonLayout.setText(participationFeedback.Summary);
+                    if (participationFeedback.SummaryColor != null)
                     {
-                        this.feedbackButtonLayout.setText(participationFeedback.Summary);
-                        if (participationFeedback.SummaryColor != null)
-                        {
-                            this.feedbackButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
-                        }    
-                        else
-                        {
-                            this.feedbackButtonLayout.resetTextColor();
-                        }
-                        this.participationFeedback = participationFeedback;
+                        this.feedbackButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
                     }
                     else
                     {
-                        this.feedbackButtonLayout.setText("");
+                        this.feedbackButtonLayout.resetTextColor();
                     }
+                    this.participationFeedback = participationFeedback;
                 }
+                else
+                {
+                    this.feedbackButtonLayout.setText("");
+                }
+            }
+            else
+            {
+                this.feedbackButtonLayout.setText("");
             }
             this.feedbackIsUpToDate = true;
         }

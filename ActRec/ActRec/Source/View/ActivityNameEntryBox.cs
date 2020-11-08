@@ -41,6 +41,7 @@ namespace ActivityRecommendation.View
 
             // the autocomplete above the text box
             this.autocompleteLayout = new TextblockLayout();
+            this.autocompleteLayout.ScoreIfEmpty = false;
 
             // button that gives help with autocomplete
             this.helpWindow = new HelpWindowBuilder()
@@ -118,6 +119,7 @@ namespace ActivityRecommendation.View
 
         private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            bool didNameMatch = this.NameMatchesSuggestion;
             string oldText = e.OldTextValue;
             if (oldText == null)
                 oldText = "";
@@ -131,8 +133,19 @@ namespace ActivityRecommendation.View
 
             if (this.NameMatchesSuggestion)
             {
+                // Whenever the user enters a name that matches the suggestion, that is treated as selecting that option,
+                // so we announce that the user has chosen something
                 if (this.NameMatchedSuggestion != null)
                     this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
+            }
+            else
+            {
+                if (didNameMatch)
+                {
+                    // If the user has no longer selected a valid option, announce that too
+                    if (this.NameUnmatchedSuggestion != null)
+                        this.NameUnmatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
+                }
             }
         }
 
@@ -356,6 +369,7 @@ namespace ActivityRecommendation.View
             }
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
+        public event NameUnmatchedSuggestionHandler NameUnmatchedSuggestion;
 
         Button sideButton;
         ButtonLayout sideButtonLayout;
@@ -375,5 +389,6 @@ namespace ActivityRecommendation.View
     }
 
     public delegate void NameMatchedSuggestionHandler(object sender, TextChangedEventArgs e);
+    public delegate void NameUnmatchedSuggestionHandler(object sender, TextChangedEventArgs e);
 
 }

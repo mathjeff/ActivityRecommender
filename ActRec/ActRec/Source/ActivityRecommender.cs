@@ -120,8 +120,8 @@ namespace ActivityRecommendation
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Fireball")
-                    .UneditableText_Color(Color.FromRgb(253, 253, 84))
-                    .UneditableText_Background(Color.FromRgb(169, 44, 1))
+                    .UneditableText_Color(Color.FromRgb(243, 241, 37))
+                    .UneditableText_Background(Color.FromRgb(177, 57, 57))
                     .FontName("BlackChancery.ttf#BlackChancery")
                     .Build());
                 all.Add(new VisualDefaults_Builder()
@@ -132,8 +132,8 @@ namespace ActivityRecommendation
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Candy")
-                    .UneditableText_Color(Color.FromRgb(219, 76, 119))
-                    .UneditableText_Background(Color.FromRgb(16, 85, 154))
+                    .UneditableText_Color(Color.FromRgb(2, 43, 160))
+                    .UneditableText_Background(Color.FromRgb(188, 2, 7))
                     .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                     .Build());
                 all.Add(new VisualDefaults_Builder()
@@ -150,15 +150,15 @@ namespace ActivityRecommendation
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Fish")
-                    .UneditableText_Color(Color.Yellow)
-                    .UneditableText_Background(Color.Blue)
+                    .UneditableText_Color(Color.FromRgb(253, 230, 180))
+                    .UneditableText_Background(Color.FromRgb(2, 43, 160))
                     .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                    .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Butterfly")
                     .UneditableText_Color(Color.FromRgb(255, 204, 0))
                     .UneditableText_Background(Color.FromRgb(64, 0, 75))
-                    .FontName("aArushShiny.otf#aArushShiny")
+                    .FontName("TitanOne.ttf#TitanOne")
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Goth")
@@ -166,9 +166,9 @@ namespace ActivityRecommendation
                     .UneditableText_Background(Color.Black)
                     .Build());
                 all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Bubblegum")
-                    .UneditableText_Color(Color.FromRgb(208, 28, 139))
-                    .UneditableText_Background(Color.DarkGreen)
+                    .DisplayName("Forest")
+                    .UneditableText_Color(Color.FromRgb(240, 245, 95))
+                    .UneditableText_Background(Color.FromRgb(21, 60, 8))
                     .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
                     .FontSizeMultiplier(1.5)
                     .Build());
@@ -180,8 +180,8 @@ namespace ActivityRecommendation
                     .Build());
                 all.Add(new VisualDefaults_Builder()
                     .DisplayName("Bumblebee")
-                    .UneditableText_Color(Color.FromRgb(8, 8, 8))
-                    .UneditableText_Background(Color.FromRgb(221, 190, 7))
+                    .UneditableText_Color(Color.FromRgb(221, 190, 7))
+                    .UneditableText_Background(Color.FromRgb(8, 8, 8))
                     .FontName("SatellaRegular.ttf#Satella")
                     .Build());
                 return all;

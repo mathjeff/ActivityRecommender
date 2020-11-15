@@ -1,7 +1,7 @@
 ﻿using System.Dynamic;
 using VisiPlacement;
 
-// This file serves two pruposes:
+// This file serves two purposes:
 // #1. It generates the instructions screen in the application
 // #2. It can describe the usage instructions to people that don't have the application installed
 
@@ -36,9 +36,12 @@ namespace ActivityRecommendation.View
                 .AddMessage("Step 4c: Explore! ActivityRecommender has more features than are mentioned here :)")
                 .Build());
 
+            menuBuilder.AddLayout("Discoveries made with ActivityRecommender", DiscoveriesLayout.New(layoutStack));
+
             menuBuilder.AddLayout("Credits", new CreditsWindowBuilder(layoutStack)
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new System.DateTime(2019, 8, 18), "Discussed the organization of the introduction and get-excited screens")
                 .Build());
+
 
             mainLayout.SetContent(menuBuilder.Build());
 

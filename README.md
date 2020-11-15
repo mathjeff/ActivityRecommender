@@ -11,6 +11,8 @@ For an overview of key features, see the in-app documentation at [FeatureOvervie
 
 For usage instructions, see the in-app documentation at [InstructionsLayout.cs](./ActRec/ActRec/Source/View/InstructionsLayout.cs)
 
+For a list of properties observed about human behavior as a result of ActivityRecommender, see the in-app documentation at [DiscoveriesLayout.cs](./ActRec/ActRec/Source/View/DiscoveriesLayout.cs)
+
 To build/edit ActivityRecommender, see [Building.md](Building.md)
 
 Other questions?

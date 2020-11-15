@@ -22,7 +22,7 @@
       
       <item>  
         <name>VisiPlacer</name>
-        <version>86bb579a7e43d9d51bd61203378536d153b3cb80</version>
+        <version>470ba2dba12b6fd70aab5b32b4d092bca55a8bdb</version>
         <syncher>  
           <Git>  
             <origin>  
@@ -37,7 +37,7 @@
       
       <item>  
         <name>Fonts</name>
-        <version>f06da1bc8e9e407ad80b5b27060082284cadef3f</version>
+        <version>1b31f5ada75853df445afb982c8b6e553d36d2ef</version>
         <syncher>  
           <Git>  
             <origin>  

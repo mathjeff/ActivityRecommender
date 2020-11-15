@@ -161,11 +161,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\deps\Fonts\Resources\aArushShiny.otf">
-      <Link>Assets\Fonts\aArushShiny.otf</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
       <Link>Assets\Fonts\BlackChancery.ttf</Link>
     </Content>
@@ -198,6 +193,11 @@
   <ItemGroup>
     <Content Include="..\..\deps\Fonts\Resources\TitanOne.ttf">
       <Link>Assets\Fonts\TitanOne.ttf</Link>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\Fonts\Resources\Beyond-Wonderland.ttf">
+      <Link>Assets\Fonts\Beyond-Wonderland.ttf</Link>
     </Content>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

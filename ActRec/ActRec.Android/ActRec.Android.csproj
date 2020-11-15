@@ -73,9 +73,6 @@
     <Compile Include="Source\TextItemEffect.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidAsset Include="..\..\deps\Fonts\Resources\aArushShiny.otf">
-      <Link>Assets\aArushShiny.otf</Link>
-    </AndroidAsset>
     <AndroidAsset Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
       <Link>Assets\BlackChancery.ttf</Link>
     </AndroidAsset>
@@ -96,6 +93,9 @@
     </AndroidAsset>
     <AndroidAsset Include="..\..\deps\Fonts\Resources\TitanOne.ttf">
       <Link>Assets\TitanOne.ttf</Link>
+    </AndroidAsset>
+    <AndroidAsset Include="..\..\deps\Fonts\Resources\Beyond-Wonderland.ttf">
+      <Link>Assets\Beyond-Wonderland.ttf</Link>
     </AndroidAsset>
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />

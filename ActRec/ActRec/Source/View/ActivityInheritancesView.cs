@@ -109,6 +109,8 @@ namespace ActivityRecommendation.View
                     gridBuilder.AddLayout(this.newListView(" " + childProblems.Count.ToString() + " Children of type Problem:", childProblems));
             }
 
+            gridBuilder.AddLayout(new TextblockLayout("You've done this " + activity.NumParticipations + " times since " + activity.DiscoveryDate.ToString("yyyy-MM-dd")));
+
             this.SetContent(gridBuilder.Build());
         }
 

@@ -525,6 +525,7 @@ namespace ActivityRecommendation
         }
         public void AddEfficiencyMeasurement(EfficiencyMeasurement efficiencyMeasurement)
         {
+            // make a note to use this efficiency measurement in calculations
             this.PendingEfficiencyMeasurements.Add(efficiencyMeasurement);
         }
         private void ApplyPendingEfficiencies()
@@ -1375,20 +1376,15 @@ namespace ActivityRecommendation
 
         private RatingProgression ratingProgression;
         private ExpectedRatingProgression expectedRatingProgression;
-        //private PredictionLink predictorFromOwnRatings;
         private AutoSmoothed_ParticipationProgression participationProgression;
-        //private PredictionLink predictorFromOwnParticipations;
         private IdlenessProgression idlenessProgression;
-        //private PredictionLink predictorFromOwnIdleness;
         private TimeProgression timeOfDayProgression;
-        //private PredictionLink predictorFromTimeOfDay;
         private TimeProgression timeOfWeekProgression;
 
         private List<IProgression> participationTrainingProgressions;
         private List<IProgression> participationTestingProgressions;
         AdaptiveLinearInterpolator<WillingnessSummary> participationInterpolator;
         private List<IPredictionLink> extraParticipationPredictionLinks;
-        //private List<IPredictionLink> participationProbabilityPredictors;
 
         private ConsiderationProgression considerationProgression;
         private SkipProgression skipProgression;

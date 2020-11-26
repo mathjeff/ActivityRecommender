@@ -29,16 +29,28 @@ namespace ActivityRecommendation
             return DateTime.TryParse(text, out result);
         }
 
-        public DateEntryView(string title, LayoutStack layoutStack)
+        public DateEntryView(string title, LayoutStack layoutStack, bool placeTitleAbove = true)
         {
             this.layoutStack = layoutStack;
             this.chooseDate_button = new Button();
             this.chooseDate_button.Clicked += ChooseDate_button_Clicked;
             this.title = title;
-            this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
-                .AddLayout(new TextblockLayout(title).AlignHorizontally(TextAlignment.Center))
-                .AddLayout(ButtonLayout.WithoutBevel(this.chooseDate_button))
-                .Build();
+            LayoutChoice_Set titleLayout = new TextblockLayout(title).AlignHorizontally(TextAlignment.Center);
+            LayoutChoice_Set contentLayout = ButtonLayout.WithoutBevel(this.chooseDate_button);
+            if (placeTitleAbove)
+            {
+                this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
+                    .AddLayout(titleLayout)
+                    .AddLayout(contentLayout)
+                    .Build();
+            }
+            else
+            {
+                this.SubLayout = new Horizontal_GridLayout_Builder().Uniform()
+                    .AddLayout(titleLayout)
+                    .AddLayout(contentLayout)
+                    .Build();
+            }
 
             // Use a dateFormat of "yyyy-MM-ddTHH:mm:ss";
             this.dateFormat.Add(new DateCharacter('y', true));

@@ -6,9 +6,9 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    class ActivityNameEntryBox : TitledControl
+    class ActivityNameEntryBox : ContainerLayout
     {
-        public ActivityNameEntryBox(string startingTitle, ReadableActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false) : base(startingTitle)
+        public ActivityNameEntryBox(string title, ReadableActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false, bool placeTitleAbove = true)
         {
             // some settings
             this.layoutStack = layoutStack;
@@ -45,7 +45,7 @@ namespace ActivityRecommendation.View
 
             // button that gives help with autocomplete
             this.helpWindow = new HelpWindowBuilder()
-                .AddMessage("This screen explains how to enter " + startingTitle + " in the previous screen. " +
+                .AddMessage("This screen explains how to enter " + title + " in the previous screen. " +
                 "If you haven't already created the activity that you want to enter here, you will have to go back and create it first in the Activities screen.")
                 .AddMessage("")
                 .AddMessage("To input an activity name, you may type it in using the letters on the keyboard.")
@@ -96,7 +96,23 @@ namespace ActivityRecommendation.View
 
             this.updateSideButton();
 
-            base.SetContent(content);
+            TextblockLayout titleLayout = new TextblockLayout(title);
+            titleLayout.AlignHorizontally(TextAlignment.Center);
+            if (placeTitleAbove)
+            {
+                this.SubLayout = new Vertical_GridLayout_Builder()
+                    .AddLayout(titleLayout)
+                    .AddLayout(content)
+                    .Build();
+            }
+            else
+            {
+                this.SubLayout = new Horizontal_GridLayout_Builder()
+                    .AddLayout(titleLayout)
+                    .AddLayout(content)
+                    .Build();
+
+            }
         }
 
         public void Placeholder(string text)

@@ -202,4 +202,19 @@ namespace ActivityRecommendation
             return scoreA.CompareTo(scoreB);
         }
     }
+
+    public class ParticipationEfficiencyComparer : IComparer<Participation>
+    {
+        public int Compare(Participation a, Participation b)
+        {
+            return this.getEfficiency(a).CompareTo(this.getEfficiency(b));
+        }
+
+        private double getEfficiency(Participation participation)
+        {
+            if (participation.RelativeEfficiencyMeasurement != null)
+                return participation.RelativeEfficiencyMeasurement.RecomputedEfficiency.Mean;
+            return 1; // no data, treat as default
+        }
+    }
 }

@@ -1035,8 +1035,18 @@ namespace ActivityRecommendation
                     PlannedExperiment experiment = experimentsForThisActivity[metricName];
                     if (experiment.InProgress)
                     {
-                        // found the second participation in the experiment, so mark the experiment as complete
+                        // Found the second participation in the experiment, so mark the experiment as complete
                         this.numCompletedExperiments++;
+                        if (newParticipation.RelativeEfficiencyMeasurement != null)
+                        {
+                            // If we were able to compute an efficiency for this second participation, then we must have an efficiency for the matching first participation too
+                            // (If this participation updated an experiment without computing an efficiency, it's possible that both participations failed to complete their metrics)
+
+                            // Find the earlier participation and tell it about its measured efficiency too
+                            Activity earlierActivity = this.activityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
+                            Metric earlierMetric = earlierActivity.MetricForName(experiment.Earlier.MetricName);
+                            experiment.FirstParticipation.setRelativeEfficiencyMeasurement(newParticipation.RelativeEfficiencyMeasurement.Earlier, earlierMetric);
+                        }
                     }
                     else
                     {

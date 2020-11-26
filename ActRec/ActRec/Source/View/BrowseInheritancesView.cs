@@ -172,8 +172,18 @@ namespace ActivityRecommendation.View
             this.protoActivity_database = protoActivity_database;
             this.textBox = new Editor();
             this.textBox.TextChanged += TextBox_TextChanged;
-            this.autocompleteGridlayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
-            this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(ScrollLayout.New(this.autocompleteGridlayout)).AddLayout(new TextboxLayout(this.textBox)).BuildAnyLayout();
+            this.largeFont_autocomplete_gridLayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
+            this.smallFont_autocomplete_gridLayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
+
+            this.SubLayout = new Vertical_GridLayout_Builder()
+                .AddLayout(
+                    new LayoutUnion(
+                        this.largeFont_autocomplete_gridLayout,
+                        this.smallFont_autocomplete_gridLayout)
+                )
+                .AddLayout(new TextboxLayout(this.textBox))
+                .BuildAnyLayout();
+
             this.titleLayout = new TextblockLayout("Activity name (and/or ProtoActivity name):");
             this.updateAutocomplete();
         }
@@ -202,7 +212,7 @@ namespace ActivityRecommendation.View
             this.putAutocomplete(activities, protoActivities);
             if (activities.Count < 1 && protoActivities.Count < 1)
             {
-                this.autocompleteGridlayout.PutLayout(this.titleLayout, 0, 0);
+                this.largeFont_autocomplete_gridLayout.PutLayout(this.titleLayout, 0, 0);
             }
         }
         private void putAutocomplete(List<Activity> activities, List<ProtoActivity> protoActivities)
@@ -235,38 +245,55 @@ namespace ActivityRecommendation.View
 
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
 
-            for (int i = 0; i < this.autocompleteGridlayout.NumRows; i++)
-            {
-                this.autocompleteGridlayout.PutLayout(null, 0, i);
-            }
-
             for (int i = 0; i < activities.Count; i++)
             {
                 Activity activity = activities[i];
-                Button button = this.getButton(i);
-                string text = "Activity: " + activity.Name;
+                this.ensureButtonLayout(i);
+
+                Button button = this.buttons[i];
                 this.activitiesByButton[button] = activity;
-                this.autocompleteGridlayout.PutLayout(new ButtonLayout(button, text), 0, i);
+
+                this.showResult("Activity: " + activity.Name, i);
             }
             for (int i = 0; i < protoActivities.Count; i++)
             {
                 int y = i + activities.Count;
                 ProtoActivity protoActivity = protoActivities[i];
-                Button button = this.getButton(y);
-                string text = "ProtoActivity: " + protoActivity.Summarize();
+                this.ensureButtonLayout(y);
+
+                Button button = this.buttons[y];
                 this.protoActivities_byButton[button] = protoActivity;
-                autocompleteGridlayout.PutLayout(new ButtonLayout(button, text), 0, y);
+                this.showResult("ProtoActivity: " + protoActivity.Summarize(), y);
+
+            }
+            for (int i = activities.Count + protoActivities.Count; i < this.largeFont_autocomplete_gridLayout.NumRows; i++)
+            {
+                this.largeFont_autocomplete_gridLayout.PutLayout(null, 0, i);
+                this.smallFont_autocomplete_gridLayout.PutLayout(null, 0, i);
             }
         }
-        private Button getButton(int index)
+
+        private void showResult(string text, int index)
+        {
+            ButtonLayout largeLayout = this.largeFont_buttonLayouts[index];
+            largeLayout.setText(text);
+            this.largeFont_autocomplete_gridLayout.PutLayout(largeLayout, 0, index);
+
+            ButtonLayout smallLayout = this.smallFont_buttonLayouts[index];
+            largeLayout.setText(text);
+            this.smallFont_autocomplete_gridLayout.PutLayout(smallLayout, 0, index);
+        }
+
+        private void ensureButtonLayout(int index)
         {
             while (this.buttons.Count <= index)
             {
                 Button button = new Button();
                 button.Clicked += Button_Click;
                 this.buttons.Add(button);
+                this.largeFont_buttonLayouts.Add(new ButtonLayout(button, "", 24));
+                this.smallFont_buttonLayouts.Add(new ButtonLayout(button, "", 12));
             }
-            return this.buttons[index];
         }
 
         private void Button_Click(object sender, EventArgs e)
@@ -295,7 +322,13 @@ namespace ActivityRecommendation.View
         Dictionary<Button, Activity> activitiesByButton = new Dictionary<Button, Activity>();
         Dictionary<Button, ProtoActivity> protoActivities_byButton = new Dictionary<Button, ProtoActivity>();
         List<Button> buttons = new List<Button>();
-        GridLayout autocompleteGridlayout;
+        
+        List<ButtonLayout> largeFont_buttonLayouts = new List<ButtonLayout>();
+        GridLayout largeFont_autocomplete_gridLayout;
+        
+        List<ButtonLayout> smallFont_buttonLayouts = new List<ButtonLayout>();
+        GridLayout smallFont_autocomplete_gridLayout;
+        
         private TextblockLayout titleLayout;
         private int maxNumResults = 6;
     }

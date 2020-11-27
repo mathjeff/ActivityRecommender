@@ -31,8 +31,11 @@ namespace ActivityRecommendation.View
             // layouts controlling the alignment of the main text box and the side button
             this.sideLayout = new ContainerLayout();
             this.sideLayout.SubLayout = this.sideButtonLayout;
-            GridLayout evenBox = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.WithRatios(new List<double>() { 7, 1 }), LayoutScore.Zero);
-            GridLayout unevenBox = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+            
+            GridView gridView = new GridView();
+            GridLayout evenBox = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.WithRatios(new List<double>() { 7, 1 }), LayoutScore.Zero, 1, gridView);
+            GridLayout unevenBox = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1), 1, gridView);
+
             evenBox.AddLayout(this.nameBox_layout);
             evenBox.AddLayout(this.sideLayout);
             unevenBox.AddLayout(this.nameBox_layout);

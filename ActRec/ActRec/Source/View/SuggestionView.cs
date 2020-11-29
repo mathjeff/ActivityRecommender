@@ -44,6 +44,10 @@ namespace ActivityRecommendation
                 ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "Doing it?");
                 mainGrid.PutLayout(doButtonLayout, 0, 0);
             }
+            else
+            {
+                mainGrid.PutLayout(new TextblockLayout(), 0, 0);
+            }
 
             // add content
             mainGrid.PutLayout(new TextblockLayout(this.summarize(suggestion, repeatingDeclinedSuggestion)), 1, 0);

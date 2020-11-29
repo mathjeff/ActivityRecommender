@@ -98,10 +98,6 @@
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
     <Compile Include="Source\ButtonEffect.cs" />
-    <BundleResource Include="..\..\deps\Fonts\Resources\aArushShiny.otf">
-      <Link>Resources\aArushShiny.otf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
     <BundleResource Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
       <Link>Resources\BlackChancery.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -129,6 +125,9 @@
     <BundleResource Include="..\..\deps\Fonts\Resources\TitanOne.ttf">
       <Link>Resources\TitanOne.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </BundleResource>
+    <BundleResource Include="..\..\deps\Fonts\Resources\Beyond-Wonderland.ttf">
+      <Link>Resources\Beyond-Wonderland.ttf</Link>
     </BundleResource>
     <None Include="Entitlements.plist" />
     <None Include="Info.plist" />

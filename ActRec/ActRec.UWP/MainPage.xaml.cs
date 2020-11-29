@@ -16,6 +16,7 @@ namespace ActRec.UWP
             InitializeComponent();
             AppParams appParams = new AppParams("", new ConstantValueProvider<StreamReader>(null));
             VisiPlacement.UWP.UWPTextMeasurer.Initialize();
+            VisiPlacement.UWP.UWPButtonClicker.Initialize();
             LoadApplication(new ActRec.App(appParams));
         }
     }

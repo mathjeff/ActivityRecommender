@@ -420,6 +420,7 @@ namespace ActivityRecommendation
             ResetVersionNumberLayout resetVersionNumberLayout = new ResetVersionNumberLayout();
             resetVersionNumberLayout.RequestChangeVersion += ResetVersionNumberLayout_RequestChangeVersion;
             debuggingBuilder.AddLayout("Reset Version Number", resetVersionNumberLayout);
+            debuggingBuilder.AddLayout("View Demo", new DemoLayout(this.viewManager, this.ActivityDatabase));
 
             PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.persona);
             Choose_LayoutDefaults_Layout themeCustomizationView = new Choose_LayoutDefaults_Layout(this.AllLayoutDefaults);

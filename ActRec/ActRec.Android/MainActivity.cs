@@ -27,6 +27,7 @@ namespace ActRec.Droid
             global::Xamarin.Forms.Forms.Init(this, bundle);
 
             VisiPlacement.Android.AndroidTextMeasurer.Initialize();
+            VisiPlacement.Android.AndroidButtonClicker.Initialize();
 
             PublicFileIo.setBasedir(Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "ActivityRecommender"));
 

@@ -399,8 +399,19 @@ namespace ActivityRecommendation
         public DateTime GuessParticipationEndDate(Activity activity, DateTime start)
         {
             ParticipationsSummary participationSummary = activity.SummarizeParticipationsBetween(new DateTime(), start);
-            double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
-            return start.Add(TimeSpan.FromSeconds(typicalNumSeconds));
+            TimeSpan estimatedDuration;
+            if (participationSummary.CumulativeIntensity.TotalSeconds > 0)
+            {
+                double typicalNumSeconds = Math.Exp(participationSummary.LogActiveTime.Mean);
+                estimatedDuration = TimeSpan.FromSeconds(typicalNumSeconds);
+            }
+            else
+            {
+                // No data, so we guess that the user will spend 1 hour doing this activity
+                estimatedDuration = TimeSpan.FromHours(1);
+            }
+
+            return start.Add(estimatedDuration);
         }
         public DateTime chooseRandomBelievableParticipationStart(Activity activity, DateTime actualStart)
         {

@@ -40,12 +40,11 @@
     <true/>
     <key>UIAppFonts</key>
     <array>
-        <string>aArushShiny.otf</string>
+        <string>Beyond-Wonderland.ttf</string>
         <string>MinimalFont5x7.ttf</string>
         <string>PruistineScript.ttf</string>
         <string>TitanOne.ttf</string>
         <string>BlackChancery.ttf</string>
-        <string>HandDrawnShapes.otf</string>
         <string>Qdbettercomicsans.ttf</string>
         <string>SatellaRegular.ttf</string>
     </array>

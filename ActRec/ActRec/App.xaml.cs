@@ -6,14 +6,6 @@ using System.Text;
 using VisiPlacement;
 using Xamarin.Forms;
 
-[assembly: ExportFont("SatellaRegular.ttf", Alias = "Satella")]
-[assembly: ExportFont("aArushShiny.otf", Alias = "ArushShiny")]
-[assembly: ExportFont("HandDrawnShapes.otf", Alias = "Hand Drawn Shapes")]
-[assembly: ExportFont("PruistineScript.ttf", Alias = "Pruistine Script")]
-[assembly: ExportFont("TitanOne.ttf", Alias = "TitanOne")]
-[assembly: ExportFont("BlackChancery.ttf", Alias = "BlackChancery")]
-[assembly: ExportFont("MinimalFont5x7.ttf", Alias = "MinimalFont5x7")]
-[assembly: ExportFont("Qdbettercomicsans.ttf", Alias = "QDBetterComicSans")]
 namespace ActRec
 {
     public partial class App : Application

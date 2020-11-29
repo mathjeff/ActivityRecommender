@@ -63,7 +63,7 @@ namespace ActivityRecommendation
             get
             {
                 string themeName = this.persona.LayoutDefaults_Name;
-                IEnumerable<VisualDefaults> all = this.AllLayoutDefaults;
+                List<VisualDefaults> all = this.AllLayoutDefaults;
                 foreach (VisualDefaults candidate in all)
                 {
                     if (candidate.PersistedName == themeName)
@@ -71,11 +71,11 @@ namespace ActivityRecommendation
                 }
 
                 System.Diagnostics.Debug.WriteLine("Theme '" + themeName + "' not found");
-                return all.First();
+                return this.defaultVisualDefaults;
             }
         }
 
-        private IEnumerable<VisualDefaults> AllLayoutDefaults
+        private List<VisualDefaults> AllLayoutDefaults
         {
             get
             {
@@ -84,130 +84,138 @@ namespace ActivityRecommendation
                 return this.allLayoutDefaults;
             }
         }
-        private List<VisualDefaults> build_AlllayoutDefaults()
+        private VisualDefaults defaultVisualDefaults
         {
-            List<VisualDefaults> all = new List<VisualDefaults>();
-                all.Add(new VisualDefaults_Builder()
+            get
+            {
+                return new VisualDefaults_Builder()
                     .DisplayName("Night")
                     .UneditableText_Color(Color.LightGray)
                     .UneditableText_Background(Color.Black)
                     .ApplicationBackground(Color.Black)
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Watch")
-                    .UneditableText_Color(Color.FromRgb(246, 246, 245))
-                    .UneditableText_Background(Color.FromRgb(114, 76, 56))
-                    .ApplicationBackground(Color.FromRgb(96, 96, 96))
-                    .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
-                    .FontSizeMultiplier(1.5)
-                    .Build());
+                    .Build();
+            }
 
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Science")
-                    .UneditableText_Color(Color.FromRgb(13, 125, 148))
-                    .UneditableText_Background(Color.FromRgb(1, 20, 38))
-                    .ApplicationBackground(Color.FromRgb(7, 72, 93))
-                    .FontName("SatellaRegular.ttf#Satella")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Fiction")
-                    .UneditableText_Color(Color.FromRgb(150, 193, 235))
-                    .UneditableText_Background(Color.FromRgb(25, 62, 113))
-                    .ApplicationBackground(Color.FromRgb(87, 127, 174))
-                    .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
-                    .Build());
+        }
+        private List<VisualDefaults> build_AlllayoutDefaults()
+        {
+            List<VisualDefaults> all = new List<VisualDefaults>();
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Vampire")
+                .UneditableText_Color(Color.DarkRed)
+                .UneditableText_Background(Color.Black)
+                .ApplicationBackground(Color.Gray)
+                .FontName("BlackChancery.ttf#BlackChancery")
+                .Build());
+            all.Add(this.defaultVisualDefaults); // night
 
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Vampire")
-                    .UneditableText_Color(Color.DarkRed)
-                    .UneditableText_Background(Color.Black)
-                    .ApplicationBackground(Color.Gray)
-                    .FontName("BlackChancery.ttf#BlackChancery")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Bat")
-                    .UneditableText_Color(Color.FromRgb(216, 138, 48))
-                    .UneditableText_Background(Color.FromRgb(59, 89, 42))
-                    .ApplicationBackground(Color.FromRgb(228, 218, 218))
-                    .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
-                    .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Scifi")
+                .UneditableText_Color(Color.FromRgb(13, 125, 148))
+                .UneditableText_Background(Color.FromRgb(1, 20, 38))
+                .ApplicationBackground(Color.FromRgb(7, 72, 93))
+                .FontName("SatellaRegular.ttf#Satella")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Terminal")
+                .UneditableText_Color(Color.Green)
+                .UneditableText_Background(Color.Black)
+                .ApplicationBackground(Color.Black)
+                .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
+                .FontSizeMultiplier(1.5)
+                .Build());
 
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Airport")
-                    .UneditableText_Color(Color.FromRgb(225, 225, 225))
-                    .UneditableText_Background(Color.FromRgb(65, 102, 153))
-                    .ApplicationBackground(Color.FromRgb(145, 163, 189))
-                    .FontName("PruistineScript.ttf#Pruistine-Script")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Terminal")
-                    .UneditableText_Color(Color.Green)
-                    .UneditableText_Background(Color.Black)
-                    .ApplicationBackground(Color.Black)
-                    .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
-                    .FontSizeMultiplier(1.5)
-                    .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Sweet")
+                .UneditableText_Color(Color.FromRgb(219, 76, 119))
+                .UneditableText_Background(Color.FromRgb(64, 0, 75))
+                .ApplicationBackground(Color.FromRgb(64, 0, 75))
+                .FontName("PruistineScript.ttf#Pruistine-Script")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Dreams")
+                //.UneditableText_Color(Color.FromRgb(200, 191, 231))
+                .UneditableText_Color(Color.FromRgb(158, 158, 176))
+                .UneditableText_Background(Color.FromRgb(30, 0, 55))
+                .ApplicationBackground(Color.FromRgb(51, 43, 142))
+                .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
+                .Build());
 
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Cocoa")
+                .UneditableText_Color(Color.FromRgb(175, 99, 81))
+                .UneditableText_Background(Color.FromRgb(50, 24, 27))
+                .ApplicationBackground(Color.FromRgb(112, 61, 54))
+                .FontName("TitanOne.ttf#TitanOne")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Butter")
+                .UneditableText_Color(Color.FromRgb(255, 204, 0))
+                .UneditableText_Background(Color.FromRgb(32, 0, 37))
+                .ApplicationBackground(Color.FromRgb(199, 153, 9))
+                .FontName("TitanOne.ttf#TitanOne")
+                .Build());
 
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Hot")
-                    .UneditableText_Color(Color.FromRgb(243, 241, 37))
-                    .UneditableText_Background(Color.FromRgb(175, 46, 14))
-                    .ApplicationBackground(Color.FromRgb(209, 143, 25))
-                    .FontName("BlackChancery.ttf#BlackChancery")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Fudge")
-                    .UneditableText_Color(Color.FromRgb(175, 99, 81))
-                    .UneditableText_Background(Color.FromRgb(50, 24, 27))
-                    .ApplicationBackground(Color.FromRgb(112, 61, 54))
-                    .FontName("TitanOne.ttf#TitanOne")
-                    .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Story")
+                .UneditableText_Color(Color.FromRgb(150, 193, 235))
+                .UneditableText_Background(Color.FromRgb(25, 62, 113))
+                .ApplicationBackground(Color.FromRgb(87, 127, 174))
+                .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Time")
+                .UneditableText_Color(Color.FromRgb(246, 246, 245))
+                .UneditableText_Background(Color.FromRgb(113, 75, 55))
+                .ApplicationBackground(Color.FromRgb(96, 96, 96))
+                .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
+                .FontSizeMultiplier(1.5)
+                .Build());
+                
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Salt Water")
+                .UneditableText_Color(Color.FromRgb(225, 225, 225))
+                .UneditableText_Background(Color.FromRgb(62, 99, 150))
+                .ApplicationBackground(Color.FromRgb(145, 163, 189))
+                .FontName("PruistineScript.ttf#Pruistine-Script")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Taffy")
+                .UneditableText_Color(Color.FromRgb(241, 80, 133))
+                .UneditableText_Background(Color.FromRgb(29, 114, 171))
+                .ApplicationBackground(Color.White)
+                .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
+                .Build());
 
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Butter")
-                    .UneditableText_Color(Color.FromRgb(255, 204, 0))
-                    .UneditableText_Background(Color.FromRgb(64, 0, 75))
-                    .ApplicationBackground(Color.Black)
-                    .FontName("TitanOne.ttf#TitanOne")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Fly")
-                    .UneditableText_Color(Color.FromRgb(134, 224, 215))
-                    .UneditableText_Background(Color.FromRgb(26, 25, 18))
-                    .ApplicationBackground(Color.FromRgb(165, 69, 73))
-                    .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
-                    .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Garden")
+                .UneditableText_Color(Color.FromRgb(240, 245, 95))
+                .UneditableText_Background(Color.FromRgb(21, 60, 8))
+                .ApplicationBackground(Color.Black)
+                .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Salad")
+                .UneditableText_Color(Color.FromRgb(130, 50, 34))
+                .UneditableText_Background(Color.FromRgb(119, 165, 53))
+                .ApplicationBackground(Color.FromRgb(247, 225, 168))
+                .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
+                .Build());
 
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Ice Cream")
-                    .UneditableText_Color(Color.FromRgb(240, 81, 134))
-                    .UneditableText_Background(Color.FromRgb(33, 118, 174))
-                    .ApplicationBackground(Color.White)
-                    .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Truck")
-                    .UneditableText_Color(Color.FromRgb(96, 96, 96))
-                    .UneditableText_Background(Color.FromRgb(236, 236, 236))
-                    .ApplicationBackground(Color.FromRgb(166, 166, 166))
-                    .FontName("SatellaRegular.ttf#Satella")
-                    .Build());
-
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Flower")
-                    .UneditableText_Color(Color.FromRgb(219, 76, 119))
-                    .UneditableText_Background(Color.FromRgb(64, 0, 75))
-                    .ApplicationBackground(Color.Green)
-                    .FontName("PruistineScript.ttf#Pruistine-Script")
-                    .Build());
-                all.Add(new VisualDefaults_Builder()
-                    .DisplayName("Garden")
-                    .UneditableText_Color(Color.FromRgb(240, 245, 95))
-                    .UneditableText_Background(Color.FromRgb(21, 60, 8))
-                    .ApplicationBackground(Color.Black)
-                    .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
-                    .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Fire")
+                .UneditableText_Color(Color.FromRgb(243, 241, 37))
+                .UneditableText_Background(Color.FromRgb(177, 46, 14))
+                .ApplicationBackground(Color.FromRgb(209, 143, 25))
+                .FontName("BlackChancery.ttf#BlackChancery")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Truck")
+                .UneditableText_Color(Color.FromRgb(96, 96, 96))
+                .UneditableText_Background(Color.FromRgb(236, 236, 236))
+                .ApplicationBackground(Color.FromRgb(166, 166, 166))
+                .FontName("SatellaRegular.ttf#Satella")
+                .Build());
 
             return all;
         }

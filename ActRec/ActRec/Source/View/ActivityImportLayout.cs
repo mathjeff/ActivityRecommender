@@ -155,8 +155,10 @@ namespace ActivityRecommendation.View
                     Button button = new Button();
                     this.entries[button] = inheritance;
                     button.Clicked += Button_Clicked;
-                    ButtonLayout buttonLayout = new ButtonLayout(button, inheritance.ChildDescriptor.ActivityName + " (" + inheritance.ParentDescriptor.ActivityName + ")");
-                    gridBuilder.AddLayout(buttonLayout);
+                    string text = inheritance.ChildDescriptor.ActivityName + " (" + inheritance.ParentDescriptor.ActivityName + ")";
+                    ButtonLayout bigLayout = new ButtonLayout(button, text, 30);
+                    ButtonLayout smallLayout = new ButtonLayout(button, text, 24);
+                    gridBuilder.AddLayout(new LayoutUnion(bigLayout, smallLayout));
                 }
                 this.SubLayout = ScrollLayout.New(gridBuilder.Build());
             }

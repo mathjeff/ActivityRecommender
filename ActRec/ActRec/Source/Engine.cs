@@ -392,7 +392,7 @@ namespace ActivityRecommendation
             suggestion.ParticipationProbability = this.EstimateParticipationProbability(activity, when).Distribution.Mean;
             double average = this.ActivityDatabase.RootActivity.Ratings.Mean;
             if (average == 0)
-                average = 1;
+                average = 0.5;
             suggestion.PredictedScoreDividedByAverage = this.EstimateRating(activity, when).Distribution.Mean / average;
             return suggestion;
         }

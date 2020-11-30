@@ -153,6 +153,25 @@ namespace ActivityRecommendation.View
                         .AddMessage("Are you excited to measure your efficiency!?")
                         .Build()
                     )
+                    .AddLayout("Save ideas and organize them later", (new HelpWindowBuilder())
+                        .AddMessage("Have you ever had an idea for something cool you wanted to think about, but you didn't know where to write it down and then you forgot?")
+                        .AddMessage("Have you ever made a list of interesting ideas, and then found that this list became hard to read because there were so many less-interesting " +
+                        "ideas before the ones that you wanted? Has this ever caused you to completely give up on the less-interesting ideas and make a new list?")
+                        .AddMessage("ActivityRecommender can help you with this idea-sorting problem too!")
+                        .AddMessage("If you have an idea that's interesting to think about and that might be interesting to act on in the future, you can create a ProtoActivity. " +
+                        "Creating a ProtoActivity only requires typing a brief description of what the idea is.")
+                        .AddMessage("Later, when you would like to be reminded about the interesting ideas that you've previously entered, " +
+                        "you can browse them in several ways. The most interesting way to browse ProtoActivities is to look at the ones that you have declared as being most " +
+                        "interesting in the past. You will see two ProtoActivities onscren  at one time, and have the opportunity to edit one, or to declare one of them as " +
+                        "being more interesting than the other. When you compare them, both will be dismissed, but the one you liked more will return sooner and the one you " +
+                        "liked less will return later. This allows you to enter lots of ideas whenever you think of them, and to later decide how interesting they are, " +
+                        "based on comparing them to your other ideas and making edits to them over time.")
+                        .AddMessage("After you've thought enough about a ProtoActivity and you're satisfied with it, you can either delete it if you don't need it anymore, " +
+                        "or you can promote it into a ToDo if you plan to do it eventually. This ToDo can then be suggested by ActivityRecommender in the Suggestions " +
+                        "screen, and it can also take part in experiments, too.")
+                        .AddMessage("In summary, a ProtoActivity is great for a partially formed idea that you want to revisit later.")
+                        .Build()
+                    )
                     .Build()
                 )
             );

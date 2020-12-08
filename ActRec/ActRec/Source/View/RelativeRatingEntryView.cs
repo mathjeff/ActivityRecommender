@@ -25,8 +25,20 @@ namespace ActivityRecommendation
             this.Clear();
             this.mainDisplayGrid.AddLayout(this.scaleBoxLayout);
 
-            this.nameBlock = new TextblockLayout();
-            this.mainDisplayGrid.AddLayout(this.nameBlock);
+            // We try to use large font for the name layout and we also try to use as many clarifying words as possible
+            // If not all of the words fit onscreen at large font, we will shrink the font and also potentially remove some words
+            this.fullNameLayout = new TextblockLayout();
+            this.shortenedNameLayout = new TextblockLayout("", 10);
+            this.mainDisplayGrid.AddLayout(
+                new LayoutUnion(
+                    new List<LayoutChoice_Set>()
+                    {
+                        this.fullNameLayout,
+                        // We don't want to remove the clarifying words (so we give it a score penalty), but it is better than cropping
+                        new ScoreShifted_Layout(this.shortenedNameLayout, LayoutScore.Get_ReducedContent_Score(1))
+                    }
+                )
+            );
 
             this.SetContent(this.mainDisplayGrid);
             this.Placeholder("(Optional)");
@@ -94,7 +106,9 @@ namespace ActivityRecommendation
                         dateFormatString = "yyyy-MM-ddTHH:mm:ss";
                     else
                         dateFormatString = "HH:mm:ss";
-                    this.nameBlock.setText("times the score of your latest participation in " + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString));
+                    string prevDescription = "" + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
+                    this.fullNameLayout.setText("times the score of your latest participation in " + prevDescription);
+                    this.shortenedNameLayout.setText("times " + prevDescription);
                     this.SetContent(this.mainDisplayGrid);
                 }
                 else
@@ -128,7 +142,8 @@ namespace ActivityRecommendation
 
         private GridLayout mainDisplayGrid;
         private Participation latestParticipation;
-        private TextblockLayout nameBlock;
+        private TextblockLayout fullNameLayout;
+        private TextblockLayout shortenedNameLayout;
         private Editor scaleBox;
         private TextboxLayout scaleBoxLayout;
     }

@@ -167,11 +167,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf">
-      <Link>Assets\Fonts\HandDrawnShapes.otf</Link>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf">
       <Link>Assets\Fonts\MinimalFont5x7.ttf</Link>
     </Content>

@@ -102,10 +102,6 @@
       <Link>Resources\BlackChancery.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
-    <BundleResource Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf">
-      <Link>Resources\HandDrawnShapes.otf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </BundleResource>
     <BundleResource Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf">
       <Link>Resources\MinimalFont5x7.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

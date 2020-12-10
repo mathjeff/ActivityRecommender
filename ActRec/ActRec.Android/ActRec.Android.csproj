@@ -77,9 +77,6 @@
     <AndroidAsset Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
       <Link>Assets\BlackChancery.ttf</Link>
     </AndroidAsset>
-    <AndroidAsset Include="..\..\deps\Fonts\Resources\HandDrawnShapes.otf">
-      <Link>Assets\HandDrawnShapes.otf</Link>
-    </AndroidAsset>
     <AndroidAsset Include="..\..\deps\Fonts\Resources\MinimalFont5x7.ttf">
       <Link>Assets\MinimalFont5x7.ttf</Link>
     </AndroidAsset>

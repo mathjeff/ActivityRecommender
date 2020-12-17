@@ -68,6 +68,7 @@ namespace ActivityRecommendation.View
                 .AddLayout(new CreditsButtonBuilder(layoutStack)
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 8, 1), "Suggested that when the user asks for a suggestion at least as fun as a certain activity, ActivityRecommender should always suggest a different activity than the one they mentioned")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 7, 18), "Pointed out that buttons on iOS weren't visually responding to touch")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 12, 17), "Mentioned that the suggestions were sometimes more repetitive than desired")
                     .Build()
                  )
                 .Build();

@@ -689,7 +689,8 @@ namespace ActivityRecommendation
         {
             this.ApplyPendingSuggestions();
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates));            
+            Distribution noise = Distribution.MakeDistribution(0.5, 0.5, 2);
+            Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates)).Plus(noise);
             return estimate;
         }
         public Distribution GetAverageLongtermValueWhenSuggested()
@@ -702,7 +703,8 @@ namespace ActivityRecommendation
         public Distribution Predict_LongtermValue_If_Participated(DateTime when)
         {
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates));
+            Distribution noise = Distribution.MakeDistribution(0.5, 0.5, 2);
+            Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates)).Plus(noise);
             return estimate;
         }
         public Distribution GetAverageLongtermValueWhenParticipated()
@@ -1115,13 +1117,16 @@ namespace ActivityRecommendation
         }
         public void UpdateNext_RatingSummaries(int numRatingsToUpdate)
         {
-            // If the interpolators don't exist yet, then it means we don't need them yet
-            // Only do the update if the interpolators do exist already
-            if (this.longTerm_participationValue_interpolator != null)
+            if (numRatingsToUpdate > 0)
             {
-                this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
-                this.longTerm_suggestionValue_interpolator.UpdateMany(numRatingsToUpdate);
-                this.longTerm_efficiency_interpolator.UpdateMany(numRatingsToUpdate);
+                // If the interpolators don't exist yet, then it means we don't need them yet
+                // Only do the update if the interpolators do exist already
+                if (this.longTerm_participationValue_interpolator != null)
+                {
+                    this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
+                    this.longTerm_suggestionValue_interpolator.UpdateMany(numRatingsToUpdate);
+                    this.longTerm_efficiency_interpolator.UpdateMany(numRatingsToUpdate);
+                }
             }
         }
 

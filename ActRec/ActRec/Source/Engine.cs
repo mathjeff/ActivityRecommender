@@ -372,7 +372,6 @@ namespace ActivityRecommendation
                 double currentScore = this.GetCombinedValue(bestActivity, candidate, recommendationsCache);
                 if (currentScore > bestCombinedScore)
                 {
-                    //System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + candidate.SuggestionValue.Distribution.Mean + " replaced " + bestActivityToPairWith + " as most important suggestion to make");
                     bestActivityToPairWith = candidate;
                     bestCombinedScore = currentScore;
                 }
@@ -438,8 +437,8 @@ namespace ActivityRecommendation
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
             // Convert to BinomialDistribution
-            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * 0.5 * a.Weight, (a.Mean + 1) * 0.5 * a.Weight);
-            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * 0.5 * b.Weight, (b.Mean + 1) * 0.5 * b.Weight);
+            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight, a.Mean * a.Weight);
+            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * b.Weight, b.Mean * b.Weight);
 
             // We weight our time exponentially, estimating that it takes two years for our time to double            
             // Here are the scales by which the importances are expected to multiply every time we consider these activities
@@ -486,27 +485,31 @@ namespace ActivityRecommendation
             Distribution unluckyScoreB = GetCombinedValue(distributionA, weightScaleA, unluckyB, weightScaleB, numIterations);
             Distribution scoreB = luckyScoreB.CopyAndReweightBy(distributionB.Mean).Plus(unluckyScoreB.CopyAndReweightBy(1 - distributionB.Mean));
 
-            Distribution earlyScore, lateScore;
-            double lateWeight;
-            if (scoreA.Mean > scoreB.Mean)
+            Distribution overallScoreA, overallScoreB;
+
             {
-                // choose option A
-                earlyScore = Distribution.MakeDistribution(distributionA.Mean, 0, 1);
-                lateScore = scoreA;
-                lateWeight = weightScaleA;
+                // calculate overall score if choosing option A
+                Distribution earlyScore = Distribution.MakeDistribution(distributionA.Mean, 0, 1);
+                Distribution lateScore = scoreA;
+                double lateWeight = weightScaleA;
+                double earlyWeight = 1 - lateWeight;
+                overallScoreA = earlyScore.CopyAndReweightBy(earlyWeight).Plus(lateScore.CopyAndReweightBy(lateWeight));
             }
+            {
+                // calculate overall score if choosing option B
+                Distribution earlyScore = Distribution.MakeDistribution(distributionB.Mean, 0, 1);
+                Distribution lateScore = scoreB;
+                double lateWeight = weightScaleB;
+                double earlyWeight = 1 - lateWeight;
+                overallScoreB = earlyScore.CopyAndReweightBy(earlyWeight).Plus(lateScore.CopyAndReweightBy(lateWeight));
+            }
+
+            if (overallScoreA.Mean > overallScoreB.Mean)
+                return overallScoreA;
             else
-            {
-                // choose option B
-                earlyScore = Distribution.MakeDistribution(distributionB.Mean, 0, 1);
-                lateScore = scoreB;
-                lateWeight = weightScaleB;
-            }
-            double earlyWeight = 1;
-            double totalWeight = earlyWeight + lateWeight;
-            Distribution score = earlyScore.Plus(lateScore.CopyAndReweightBy(lateWeight));
-            return score;
+                return overallScoreB;
         }
+
         // update the estimate of what rating the user would give to this activity now
         public Prediction EstimateRating(Activity activity, DateTime when)
         {
@@ -757,6 +760,8 @@ namespace ActivityRecommendation
         {
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
             Prediction prediction = this.CombineRatingPredictions(predictions);
+            // We don't allow a weight of < 1 because in GetCombinedValue we will be adding a 0 or a 1 and checking the mean of the new distribution
+            prediction.Distribution.Weight += 1;
             return prediction;
         }
 

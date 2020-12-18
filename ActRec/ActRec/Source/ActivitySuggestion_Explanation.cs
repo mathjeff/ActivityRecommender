@@ -12,14 +12,14 @@ namespace ActivityRecommendation
         public ActivitySuggestion Suggestion { get; set; }
         public double Score { get; set; } // normally an ActivitySuggestion only records its score divided by average
         public double SuggestionValue { get; set; } // not normally needed after MakeRecommendation completes
-        public List<SuggestionJustification> Reasons { get; set; }
+        public List<Justification> Reasons { get; set; }
     }
-    public abstract class SuggestionJustification
+    public abstract class Justification
     {
         public string Label { get;set; }
         public Distribution Value { get; set; }
     }
-    public class InterpolatorSuggestion_Justification : SuggestionJustification
+    public class InterpolatorSuggestion_Justification : Justification
     {
         public InterpolatorSuggestion_Justification(Activity Activity, Distribution currentPrediction, Distribution averagePrediction, double[] coords)
         {
@@ -37,34 +37,34 @@ namespace ActivityRecommendation
         // The individual coordinates like how long ago the user did this activity and what time of day it is now
         public double[] Coordinates { get; set; }
     }
-    public class StringJustification: SuggestionJustification
+    public class LabeledDistributionJustification: Justification
     {
-        public StringJustification(Distribution value, string Text)
+        public LabeledDistributionJustification(Distribution value, string Text)
         {
             this.Label = Text;
             this.Value = value;
         }
     }
-    public class Composite_SuggestionJustification: SuggestionJustification
+    public class Composite_SuggestionJustification: Justification
     {
         public Composite_SuggestionJustification(Distribution value)
         {
-            this.initialize(value, new List<SuggestionJustification>());
+            this.initialize(value, new List<Justification>());
         }
-        public Composite_SuggestionJustification(Distribution value, SuggestionJustification a, SuggestionJustification b)
+        public Composite_SuggestionJustification(Distribution value, Justification a, Justification b)
         {
-            this.initialize(value, new List<SuggestionJustification>() { a, b });
+            this.initialize(value, new List<Justification>() { a, b });
         }
-        public Composite_SuggestionJustification(Distribution value, List<SuggestionJustification> children)
+        public Composite_SuggestionJustification(Distribution value, List<Justification> children)
         {
             this.initialize(value, children);
         }
-        private void initialize(Distribution value, List<SuggestionJustification> children)
+        private void initialize(Distribution value, List<Justification> children)
         {
             this.Value = value;
             this.Children = children;
             this.Label = "Combination of " + this.Children.Count + " estimates:";
         }
-        public List<SuggestionJustification> Children;
+        public List<Justification> Children;
     }
 }

@@ -8,10 +8,10 @@ namespace ActivityRecommendation
     public class Prediction
     {
         public Prediction(Activity activity, Distribution distribution, DateTime when, string justification)
-            : this(activity, distribution, when, new StringJustification(distribution, justification))
+            : this(activity, distribution, when, new LabeledDistributionJustification(distribution, justification))
         {
         }
-        public Prediction(Activity activity, Distribution distribution, DateTime when, SuggestionJustification justification)
+        public Prediction(Activity activity, Distribution distribution, DateTime when, Justification justification)
         {
             this.Activity = activity;
             this.Distribution = distribution;
@@ -19,7 +19,7 @@ namespace ActivityRecommendation
             this.CreationDate = when;
             this.Justification = justification;
         }
-        public SuggestionJustification Justification { get; set; } // the primary reason that the PredictedScore is as high as it is
+        public Justification Justification { get; set; } // the primary reason that the PredictedScore is as high as it is
         public Distribution Distribution { get; set; }    // the expected rating that the user would assign to the activity
         public Activity Activity { get; set; }              // the Activity that is being suggested
         public DateTime ApplicableDate { get; set; }                  // The date that this Prediction describes

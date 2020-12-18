@@ -43,7 +43,7 @@ namespace ActivityRecommendation.View
         {
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
             builder.AddLayout(new TextblockLayout("Suggestion quality: " + Math.Round(explanation.SuggestionValue, 3)));
-            foreach (SuggestionJustification child in this.explanation.Reasons)
+            foreach (Justification child in this.explanation.Reasons)
             {
                 builder.AddLayouts(this.renderJustification(child, 1));
             }
@@ -70,9 +70,9 @@ namespace ActivityRecommendation.View
                 result += value;
             return result;                
         }
-        private List<LayoutChoice_Set> renderJustification(SuggestionJustification justification, int indent)
+        private List<LayoutChoice_Set> renderJustification(Justification justification, int indent)
         {
-            string prefix = this.times("| ", indent);
+            string prefix = this.times("| ", indent - 1);
 
             // add any custom description
             List<LayoutChoice_Set> results = new List<LayoutChoice_Set>();
@@ -97,16 +97,16 @@ namespace ActivityRecommendation.View
                     whatText += c;
                 }
             }
-            results.Add(this.newTextBlock(prefix, whatText, indent));
+            results.Add(this.newTextBlock(prefix + "|-", whatText, indent));
 
             Composite_SuggestionJustification compositeJustification = justification as Composite_SuggestionJustification;
             if (compositeJustification != null)
             {
                 // if there are multiple children, explain that this value was computed based on the children
                 int childIndent;
-                results.Add(this.newTextBlock(prefix + "\\- Why:", "" + compositeJustification.Children.Count + " reasons:", indent));
+                results.Add(this.newTextBlock(prefix + "|\\- Why:", "" + compositeJustification.Children.Count + " reasons:", indent));
                 childIndent = indent + 1;
-                foreach (SuggestionJustification child in compositeJustification.Children)
+                foreach (Justification child in compositeJustification.Children)
                 {
                     List<LayoutChoice_Set> childLayouts = this.renderJustification(child, childIndent);
                     results.AddRange(childLayouts);

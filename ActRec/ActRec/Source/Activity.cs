@@ -867,7 +867,7 @@ namespace ActivityRecommendation
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
             Distribution typicalParticipationProbability = new Distribution(this.participationInterpolator.GetAverage());
-            SuggestionJustification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, typicalParticipationProbability, null);
+            Justification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, typicalParticipationProbability, null);
             Prediction prediction = new Prediction(this, finalEstimate, when, "Participation probability");
             results.Add(prediction);
 

@@ -12,6 +12,7 @@ namespace ActivityRecommendation
             this.ActivityDescriptor = descriptor;
         }
         public ActivityDescriptor ActivityDescriptor { get; set; }
+        public ActivityDescriptor BestActivityIfWeCanNoLongerLearn { get; set; } // what the best activity would be if we weren't going to learn anything from this suggestion
         public DateTime StartDate { get; set; }                 // the date that we want the user to start the activity
         public DateTime? EndDate { get; set; }                   // the date that we want the user to stop the activity
         public DateTime CreatedDate { get; set; }               // the date at which the suggestion was created

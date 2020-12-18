@@ -796,24 +796,8 @@ namespace ActivityRecommendation
             Activity activity = this.ActivityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
             DateTime when = this.currentRecommendationsCache.ApplicableDate;
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, when);
-            double lowestScore = 1;
-            SuggestionJustification bestReason = null;
-            foreach (Prediction candidate in predictions)
-            {
-                // make a list of all predictions except this one
-                List<Prediction> predictionsMinusOne = new List<Prediction>(predictions);
-                predictionsMinusOne.Remove(candidate);
-                Prediction prediction = this.CombineRatingPredictions(predictionsMinusOne);
-                Distribution scoreDistribution = prediction.Distribution;
-                if ((scoreDistribution.Mean < lowestScore) || (bestReason == null))
-                {
-                    lowestScore = scoreDistribution.Mean;
-                    bestReason = candidate.Justification;
-                }
-            }
             ActivitySuggestion_Explanation explanation = new ActivitySuggestion_Explanation();
             explanation.Suggestion = activitySuggestion;
-            explanation.PrimaryReason = bestReason;
             explanation.Score = this.currentRecommendationsCache.ratings[activity].Distribution.Mean;
             explanation.SuggestionValue = this.EstimateSuggestionValue(activity, when).Distribution.Mean;
             // also list all of the reasons for clarity

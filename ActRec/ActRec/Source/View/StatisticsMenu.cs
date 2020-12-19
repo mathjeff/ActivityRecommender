@@ -42,10 +42,11 @@ namespace ActivityRecommendation.View
             {
                 if (this.normalContent == null)
                 {
-                    MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(layoutStack);
-                    visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(layoutStack, this.ActivityDatabase, this.engine));
-                    visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(engine, layoutStack));
-                    visualizationBuilder.AddLayout("Browse Participations", new BrowseParticipations_Layout(this.ActivityDatabase, layoutStack));
+                    MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
+                    visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
+                    visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
+                    visualizationBuilder.AddLayout("Browse Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.layoutStack));
+                    visualizationBuilder.AddLayout("Recent Best/Worst Activities", new Browse_RecentSignificantActivities_Layout(this.engine, this.layoutStack));
 
                     this.normalContent = visualizationBuilder.Build();
                 }

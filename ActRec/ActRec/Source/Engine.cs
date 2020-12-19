@@ -918,6 +918,44 @@ namespace ActivityRecommendation
         {
             return this.CombineRatingDistributions(distributions);
         }
+        public List<ActivityHappinessContribution> GetMostSignificantRecentActivities(DateTime windowStart, int maxCount)
+        {
+            // For each activity, compute its total contribution in change of happiness since windowStart
+            double averageRating = this.ActivityDatabase.RootActivity.Ratings.Mean;
+            List<ActivityHappinessContribution> contributions = new List<ActivityHappinessContribution>();
+            foreach (Activity activity in this.ActivityDatabase.AllActivities)
+            {
+                double contributionInSeconds = 0;
+                List<Participation> participations = activity.getParticipationsSince(windowStart);
+                foreach (Participation participation in participations)
+                {
+                    AbsoluteRating rating = participation.GetAbsoluteRating();
+                    if (rating != null)
+                    {
+                        double score = rating.Score;
+                        double difference = score - averageRating;
+                        double duration = participation.Duration.TotalSeconds;
+                        contributionInSeconds += difference * duration;
+                    }
+                }
+                ActivityHappinessContribution contribution = new ActivityHappinessContribution();
+                contribution.Activity = activity;
+                contribution.TotalHappinessIncreaseInSeconds = contributionInSeconds;
+                contributions.Add(contribution);
+            }
+            // sort
+            ActivityHappinessContributionComparer comparer = new ActivityHappinessContributionComparer();
+            contributions.Sort(comparer);
+            // select the highest and lowest few results
+            maxCount = Math.Min(contributions.Count, maxCount);
+            int earlyCount = maxCount / 2;
+            int lateCount = maxCount - earlyCount;
+            List<ActivityHappinessContribution> results = new List<ActivityHappinessContribution>();
+            results.AddRange(contributions.GetRange(0, earlyCount));
+            results.AddRange(contributions.GetRange(contributions.Count - lateCount, lateCount));
+            return results;
+        }
+
         // checks the type of the rating and proceeds accordinly
         public void PutRatingInMemory(Rating newRating)
         {

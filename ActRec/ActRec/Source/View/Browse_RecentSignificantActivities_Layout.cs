@@ -22,9 +22,9 @@ namespace ActivityRecommendation.View
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             gridBuilder.AddLayout(new TextblockLayout("This screen allows you to identify the activities that contributed the most total increase or decrease to your " +
                 "happiness during the given time period."));
-            gridBuilder.AddLayout(new TitledControl("Since", durationLayout));
+            gridBuilder.AddLayout(new TitledControl("In the last:", durationLayout));
             gridBuilder.AddLayout(new ButtonLayout(okButton, "OK"));
-            this.SetContent(gridBuilder.Build());
+            this.SetContent(ScrollLayout.New(gridBuilder.Build()));
         }
 
         private void OkButton_Clicked(object sender, EventArgs e)
@@ -38,30 +38,28 @@ namespace ActivityRecommendation.View
             TimeSpan windowSize = this.durationLayout.GetDuration();
             DateTime windowEnd = DateTime.Now;
             DateTime windowStart = windowEnd.Subtract(windowSize);
-            List<ActivityHappinessContribution> activities = this.engine.GetMostSignificantRecentActivities(windowStart, 10);
+            Activities_HappinessContributions activities = this.engine.GetMostSignificantRecentActivities(windowStart, 10);
             this.showResults(activities, windowStart, windowEnd);
         }
-        private void showResults(List<ActivityHappinessContribution> activities, DateTime start, DateTime end)
+        private void showResults(Activities_HappinessContributions contributions, DateTime start, DateTime end)
         {
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             // title
             string title = "Activities adding or subtracting the most happiness from " + start + " to " + end;
+            gridBuilder.AddLayout(new TextblockLayout(title));
             // contents
-            foreach (ActivityHappinessContribution item in activities)
+            // Show the top activities from best to worst
+            foreach (ActivityHappinessContribution item in contributions.Best)
             {
-                double extraSeconds = item.TotalHappinessIncreaseInSeconds;
-                TimeSpan bonus = TimeSpan.FromSeconds(extraSeconds);
-                string bonusText;
-                if (extraSeconds > 0)
-                {
-                    bonusText = "+" + bonus;
-                }
-                else
-                {
-                    bonusText = "" + bonus;
-                }
-                string text = item.Activity.Name + ": " + bonusText;
-                gridBuilder.AddLayout(new TextblockLayout(text));
+                gridBuilder.AddLayout(this.renderContribution(item));
+            }
+            // show a divider if we get all of them
+            if (contributions.ActivitiesRemain)
+                gridBuilder.AddLayout(new TextblockLayout("..."));
+            // Show the bottom activities, also from best to worst
+            for (int i = contributions.Worst.Count - 1; i >= 0; i--)
+            {
+                gridBuilder.AddLayout(this.renderContribution(contributions.Worst[i]));
             }
             // more details
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
@@ -78,6 +76,23 @@ namespace ActivityRecommendation.View
             gridBuilder.AddLayout(new TextblockLayout("If you want to see more details about the participations in a specific activity, " +
                 "you can go back and select Browse Participations"));
             this.layoutStack.AddLayout(gridBuilder.Build(), "Significant Activities");
+        }
+
+        private LayoutChoice_Set renderContribution(ActivityHappinessContribution contribution)
+        {
+            double extraSeconds = contribution.TotalHappinessIncreaseInSeconds;
+            TimeSpan bonus = TimeSpan.FromSeconds(extraSeconds);
+            string bonusText;
+            if (extraSeconds > 0)
+            {
+                bonusText = "+" + bonus;
+            }
+            else
+            {
+                bonusText = "" + bonus;
+            }
+            string text = contribution.Activity.Name + ": " + bonusText;
+            return new TextblockLayout(text);
         }
 
         private DurationEntryView durationLayout;

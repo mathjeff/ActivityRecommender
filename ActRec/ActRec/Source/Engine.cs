@@ -918,7 +918,7 @@ namespace ActivityRecommendation
         {
             return this.CombineRatingDistributions(distributions);
         }
-        public List<ActivityHappinessContribution> GetMostSignificantRecentActivities(DateTime windowStart, int maxCount)
+        public Activities_HappinessContributions GetMostSignificantRecentActivities(DateTime windowStart, int maxCount)
         {
             // For each activity, compute its total contribution in change of happiness since windowStart
             double averageRating = this.ActivityDatabase.RootActivity.Ratings.Mean;
@@ -947,13 +947,74 @@ namespace ActivityRecommendation
             ActivityHappinessContributionComparer comparer = new ActivityHappinessContributionComparer();
             contributions.Sort(comparer);
             // select the highest and lowest few results
-            maxCount = Math.Min(contributions.Count, maxCount);
-            int earlyCount = maxCount / 2;
-            int lateCount = maxCount - earlyCount;
-            List<ActivityHappinessContribution> results = new List<ActivityHappinessContribution>();
-            results.AddRange(contributions.GetRange(0, earlyCount));
-            results.AddRange(contributions.GetRange(contributions.Count - lateCount, lateCount));
+            List<ActivityHappinessContribution> bests = new List<ActivityHappinessContribution>();
+            List<ActivityHappinessContribution> worsts = new List<ActivityHappinessContribution>();
+            int lowIndex = 0;
+            int highIndex = contributions.Count - 1;
+            bool activityRemains = true;
+            while (true)
+            {
+                // check whether we're done
+                if (highIndex < lowIndex)
+                {
+                    // No activities left to add
+                    activityRemains = false;
+                    break;
+                }
+                if (bests.Count + worsts.Count >= maxCount)
+                {
+                    // We've found as many activities as was requested
+                    break;
+                }
+                // add next most extreme activity
+                if (bests.Count <= worsts.Count)
+                {
+                    this.addContribution(bests, contributions[highIndex]);
+                    highIndex--;
+                }
+                else
+                {
+                    this.addContribution(worsts, contributions[lowIndex]);
+                    lowIndex++;
+                }
+                // determine whether one listed activity is an ancestor of another listed activity, and if so, remove it
+            }
+
+            Activities_HappinessContributions results = new Activities_HappinessContributions();
+            // put the best contributions first
+            results.Best = bests;
+            results.Worst = worsts;
+            results.ActivitiesRemain = activityRemains;
+
             return results;
+        }
+
+        // adds newContribution to existingContribution and removes any duplicate ancestors
+        private void addContribution(List<ActivityHappinessContribution> existingContributions, ActivityHappinessContribution newContribution)
+        {
+            // determine whether this activity is an ancestor of another existing activity
+            Activity newActivity = newContribution.Activity;
+            foreach (ActivityHappinessContribution other in existingContributions)
+            {
+                foreach (Activity ancestor in this.FindAllSupercategoriesOf(other.Activity))
+                {
+                    if (ancestor == newActivity)
+                    {
+                        // this activity is already included; no need to add it
+                        return;
+                    }
+                }
+            }
+            // determine whether any existing activities are ancestors of this new activity
+            List<Activity> ancestors = this.FindAllSupercategoriesOf(newActivity);
+            for (int i = existingContributions.Count - 1; i >= 0; i--)
+            {
+                if (ancestors.Contains(existingContributions[i].Activity))
+                {
+                    existingContributions.RemoveAt(i);
+                }
+            }
+            existingContributions.Add(newContribution);
         }
 
         // checks the type of the rating and proceeds accordinly

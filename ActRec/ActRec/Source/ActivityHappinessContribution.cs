@@ -23,4 +23,14 @@ namespace ActivityRecommendation
             return a.TotalHappinessIncreaseInSeconds.CompareTo(b.TotalHappinessIncreaseInSeconds);
         }
     }
+
+    public class Activities_HappinessContributions
+    {
+        // The top N best activities
+        public List<ActivityHappinessContribution> Best;
+        // The worst N activities
+        public List<ActivityHappinessContribution> Worst;
+        // Whether there are any activities worse than the top N and better than the bottom N
+        public bool ActivitiesRemain;
+    }
 }

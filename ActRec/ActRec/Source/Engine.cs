@@ -553,15 +553,21 @@ namespace ActivityRecommendation
             double probabilitySuggested = suggestedParticipation_probability / (suggestedParticipation_probability + nonsuggestedParticipation_probability);
 
             // Now compute the expected amount of wasted time
-            double averageWastedSeconds = this.thinkingTime.Mean * (-1 + 1 / (1 - skipProbability));
+            double estimatedNumFutureSkips;
+            if (skipProbability < 1)
+                estimatedNumFutureSkips = (-1 + 1 / (1 - skipProbability));
+            else
+                estimatedNumFutureSkips = 1000;
+            double averageWastedSeconds = this.thinkingTime.Mean * estimatedNumFutureSkips;
 
             // Let p be the probability of skipping this activity. The expected number of skips then is p + p^2 ... = -1 + 1 + p + p^2... = -1 + 1 / (1 - p)
             // = -1 + 1 / (1 - (the probability that the user will skip the activity))
             // So the amount of waste is (the average length of a skip) * (-1 + 1 / (1 - (the probability that the user will skip the activity)))
 
             Distribution valueWhenChosen = rating.CopyAndReweightTo(probabilitySuggested).Plus(this.ratingsOfUnpromptedActivities.CopyAndReweightTo(1 - probabilitySuggested));
-            // TODO: for activities other than this one, use a better estimate of the participation duration than just the usual duration of the current activity
-            Distribution overallValue = valueWhenChosen.CopyAndReweightTo(meanParticipationDuration).Plus(Distribution.MakeDistribution(0, 0, averageWastedSeconds)).CopyAndReweightTo(rating.Weight);
+            // reweight such that more rating data increases certainty, and more confidence in more skips will increases certainty too
+            double weight = rating.Weight + estimatedNumFutureSkips;
+            Distribution overallValue = valueWhenChosen.CopyAndReweightTo(meanParticipationDuration).Plus(Distribution.MakeDistribution(0, 0, averageWastedSeconds)).CopyAndReweightTo(weight);
 
             return overallValue;
         }
@@ -702,8 +708,8 @@ namespace ActivityRecommendation
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
             shortTerm_prediction.Justification.Label = "How much you'll enjoy doing this";
-            double shortWeight = 1;
-            shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration).CopyAndReweightTo(shortWeight);
+            shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration);
+            double shortWeight = shortTerm_prediction.Distribution.Weight;
             Justification shortTermJustification = new Composite_SuggestionJustification(shortTerm_prediction.Distribution, shortTerm_prediction.Justification, probabilityPrediction.Justification);
             shortTermJustification.Label = "Short-term happiness estimate";
             shortTerm_prediction.Justification = shortTermJustification;
@@ -722,12 +728,12 @@ namespace ActivityRecommendation
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
 
 
-            double mediumWeight = activity.NumConsiderations * participationProbability * activityExistenceWeightMultiplier * 160;
+            double mediumWeight = shortWeight * activity.NumConsiderations * participationProbability * activityExistenceWeightMultiplier * 160;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
 
-            double longWeight = activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 6;
+            double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 6;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
@@ -746,7 +752,7 @@ namespace ActivityRecommendation
                 foreach (Activity parent in activity.Parents)
                 {
                     Distribution parentDistribution = parent.Predict_LongtermValue_If_Participated(when);
-                    double parentWeight = Math.Min(parent.NumParticipations + 1, 40) * participationProbability * 3;
+                    double parentWeight = shortWeight * Math.Min(parent.NumParticipations + 1, 40);
                     parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
                     distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
                 }

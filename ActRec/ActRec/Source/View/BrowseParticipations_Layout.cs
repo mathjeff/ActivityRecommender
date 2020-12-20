@@ -288,7 +288,7 @@ namespace ActivityRecommendation.View
             int highIndex = participations.Count - 1;
             List<Participation> chosenParticipations = new List<Participation>();
             bool lowNext = false;
-            while (chosenParticipations.Count < this.maxNumTopParticipationsToShow && lowIndex < highIndex)
+            while (chosenParticipations.Count < this.maxNumTopParticipationsToShow && lowIndex <= highIndex)
             {
                 if (lowNext)
                 {

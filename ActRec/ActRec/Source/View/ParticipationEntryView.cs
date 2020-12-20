@@ -659,7 +659,7 @@ namespace ActivityRecommendation
             string recommendedTime;
             if (comparisonDateIsLaterDay)
             {
-                recommendedTime = "another day";
+                recommendedTime = "a later day";
             }
             else
             {
@@ -1159,7 +1159,7 @@ namespace ActivityRecommendation
                                 if (efficientTime)
                                 {
                                     if (fast)
-                                        remark = "Way to go!";
+                                        remark = "You are powerful!";
                                     else
                                         remark = "Such hard work!";
                                 }

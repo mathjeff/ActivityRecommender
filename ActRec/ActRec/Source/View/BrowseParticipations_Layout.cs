@@ -279,33 +279,26 @@ namespace ActivityRecommendation.View
 
         private LayoutChoice_Set make_extremeParticipations_layout()
         {
+            // Find the participations, filter them, and sort them
             List<Participation> participations = this.SortedParticipations;
             int availableCount = participations.Count;
             if (participations.Count < 1)
                 return this.Get_NoParticipations_Layout();
 
-            int lowIndex = 0;
-            int highIndex = participations.Count - 1;
-            List<Participation> chosenParticipations = new List<Participation>();
-            bool lowNext = false;
-            while (chosenParticipations.Count < this.maxNumTopParticipationsToShow && lowIndex <= highIndex)
-            {
-                if (lowNext)
-                {
-                    Participation low = participations[lowIndex];
-                    chosenParticipations.Add(low);
-                    lowIndex++;
-                }
-                else
-                {
-                    Participation high = participations[highIndex];
-                    chosenParticipations.Add(high);
-                    highIndex--;
-                }
-                lowNext = !lowNext;
-            }
+            // determine how many best and worst participations to show
+            int maxCount = Math.Min(participations.Count, this.maxNumTopParticipationsToShow);
+            int lowCount = maxCount / 2;
+            int highCount = maxCount - lowCount;
 
-            TitledControl mainView = new TitledControl("" + chosenParticipations.Count + " matching participations with most extreme " + this.sortBy_box.SelectedItem + " (of " + availableCount + ") in " + this.Category.Name, 30);
+            // get the best and worst participations
+            // The participations are already in the right order (decreasing score), we just want to take the beginning and end of the list
+            List<Participation> highParticipations = participations.GetRange(0, lowCount);
+            List<Participation> lowParticipations = participations.GetRange(participations.Count - highCount, highCount);
+            List<Participation> chosenParticipations = highParticipations;
+            chosenParticipations.AddRange(lowParticipations);
+
+            // build layout
+            TitledControl mainView = new TitledControl("" + chosenParticipations.Count + " matching participations with most extreme " + this.sortBy_box.SelectedItem.ToLower() + " (of " + availableCount + ") in " + this.Category.Name, 30);
             mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.randomGenerator));
             return mainView;
         }

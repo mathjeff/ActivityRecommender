@@ -105,6 +105,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.DarkRed)
                 .UneditableText_Background(Color.Black)
                 .ApplicationBackground(Color.Gray)
+                .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
+                .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .FontName("BlackChancery.ttf#BlackChancery")
                 .Build());
             all.Add(this.defaultVisualDefaults); // night
@@ -114,6 +116,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(13, 125, 148))
                 .UneditableText_Background(Color.FromRgb(1, 20, 38))
                 .ApplicationBackground(Color.FromRgb(7, 72, 93))
+                .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
+                .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .FontName("SatellaRegular.ttf#Satella")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -130,14 +134,17 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(219, 76, 119))
                 .UneditableText_Background(Color.FromRgb(64, 0, 75))
                 .ApplicationBackground(Color.FromRgb(64, 0, 75))
+                .ButtonInnerBevelColor(Color.FromRgb(32, 96, 32))
+                .ButtonOuterBevelColor(Color.FromRgb(64, 192, 64))
                 .FontName("PruistineScript.ttf#Pruistine-Script")
                 .Build());
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Dreams")
-                //.UneditableText_Color(Color.FromRgb(200, 191, 231))
                 .UneditableText_Color(Color.FromRgb(158, 158, 176))
                 .UneditableText_Background(Color.FromRgb(30, 0, 55))
                 .ApplicationBackground(Color.FromRgb(51, 43, 142))
+                .ButtonInnerBevelColor(Color.FromRgb(175, 164, 175))
+                .ButtonOuterBevelColor(Color.FromRgb(185, 185, 195))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
 
@@ -146,6 +153,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(175, 99, 81))
                 .UneditableText_Background(Color.FromRgb(50, 24, 27))
                 .ApplicationBackground(Color.FromRgb(112, 61, 54))
+                .ButtonInnerBevelColor(Color.FromRgb(30, 15, 15))
+                .ButtonOuterBevelColor(Color.FromRgb(200, 190, 190))
                 .FontName("TitanOne.ttf#TitanOne")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -153,6 +162,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(255, 204, 0))
                 .UneditableText_Background(Color.FromRgb(32, 0, 37))
                 .ApplicationBackground(Color.FromRgb(199, 153, 9))
+                .ButtonInnerBevelColor(Color.FromRgb(208, 208, 208))
+                .ButtonOuterBevelColor(Color.FromRgb(169, 169, 169))
                 .FontName("TitanOne.ttf#TitanOne")
                 .Build());
 
@@ -161,6 +172,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(150, 193, 235))
                 .UneditableText_Background(Color.FromRgb(25, 62, 113))
                 .ApplicationBackground(Color.FromRgb(87, 127, 174))
+                .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
+                .ButtonOuterBevelColor(Color.FromRgb(210, 210, 210))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -168,6 +181,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(246, 246, 245))
                 .UneditableText_Background(Color.FromRgb(113, 75, 55))
                 .ApplicationBackground(Color.FromRgb(96, 96, 96))
+                .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
+                .ButtonOuterBevelColor(Color.FromRgb(215, 215, 215))
                 .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
                 .FontSizeMultiplier(1.5)
                 .Build());
@@ -183,7 +198,9 @@ namespace ActivityRecommendation
                 .DisplayName("Taffy")
                 .UneditableText_Color(Color.FromRgb(241, 80, 133))
                 .UneditableText_Background(Color.FromRgb(29, 114, 171))
-                .ApplicationBackground(Color.White)
+                .ApplicationBackground(Color.Gray)
+                .ButtonInnerBevelColor(Color.FromRgb(3, 45, 120))
+                .ButtonOuterBevelColor(Color.FromRgb(4, 60, 150))
                 .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                 .Build());
 
@@ -192,13 +209,17 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(240, 245, 95))
                 .UneditableText_Background(Color.FromRgb(21, 60, 8))
                 .ApplicationBackground(Color.Black)
+                .ButtonInnerBevelColor(Color.FromRgb(160, 160, 160))
+                .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Salad")
-                .UneditableText_Color(Color.FromRgb(130, 50, 34))
+                .UneditableText_Color(Color.FromRgb(135, 40, 30))
                 .UneditableText_Background(Color.FromRgb(119, 165, 53))
-                .ApplicationBackground(Color.FromRgb(247, 225, 168))
+                .ApplicationBackground(Color.FromRgb(227, 205, 148))
+                .ButtonInnerBevelColor(Color.FromRgb(60, 60, 60))
+                .ButtonOuterBevelColor(Color.FromRgb(80, 80, 80))
                 .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                 .Build());
 
@@ -207,6 +228,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(243, 241, 37))
                 .UneditableText_Background(Color.FromRgb(177, 46, 14))
                 .ApplicationBackground(Color.FromRgb(209, 143, 25))
+                .ButtonInnerBevelColor(Color.FromRgb(100, 100, 100))
+                .ButtonOuterBevelColor(Color.FromRgb(130, 130, 130))
                 .FontName("BlackChancery.ttf#BlackChancery")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -214,6 +237,8 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(96, 96, 96))
                 .UneditableText_Background(Color.FromRgb(236, 236, 236))
                 .ApplicationBackground(Color.FromRgb(166, 166, 166))
+                .ButtonInnerBevelColor(Color.FromRgb(10, 10, 10))
+                .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .FontName("SatellaRegular.ttf#Satella")
                 .Build());
 

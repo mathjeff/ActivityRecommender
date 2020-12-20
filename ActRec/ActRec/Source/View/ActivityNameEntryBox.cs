@@ -110,11 +110,13 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                this.SubLayout = new Horizontal_GridLayout_Builder()
-                    .AddLayout(titleLayout)
-                    .AddLayout(content)
-                    .Build();
-
+                GridLayout evenGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+                GridLayout unevenGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+                evenGrid.AddLayout(titleLayout);
+                unevenGrid.AddLayout(titleLayout);
+                evenGrid.AddLayout(content);
+                unevenGrid.AddLayout(content);
+                this.SubLayout = new LayoutUnion(evenGrid, unevenGrid);
             }
         }
 

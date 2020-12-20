@@ -54,20 +54,20 @@ namespace ActivityRecommendation.View
             
 
             Button browseTopParticipations_button = new Button();
-            ButtonLayout browseTopParticipations_layout = new ButtonLayout(browseTopParticipations_button, "Browse top " + this.maxNumTopParticipationsToShow + " highest rated");
+            ButtonLayout browseTopParticipations_layout = new ButtonLayout(browseTopParticipations_button, "Top " + this.maxNumTopParticipationsToShow);
             browseTopParticipations_button.Clicked += BrowseTopParticipations_Button_Clicked;
 
             Button browseExtremeParticipations_button = new Button();
-            ButtonLayout browseExtremeParticipations_layout = new ButtonLayout(browseExtremeParticipations_button, "Browse " + this.maxNumTopParticipationsToShow + " best/worst");
+            ButtonLayout browseExtremeParticipations_layout = new ButtonLayout(browseExtremeParticipations_button, "" + this.maxNumTopParticipationsToShow + " best/worst");
             browseExtremeParticipations_button.Clicked += BrowseExtremeParticipations_button_Clicked;
             
 
             Button seeGoodRandomParticipation_button = new Button();
-            ButtonLayout seeGoodRandomParticipation_layout = new ButtonLayout(seeGoodRandomParticipation_button, "See a random good one (better ones appear more often)");
+            ButtonLayout seeGoodRandomParticipation_layout = new ButtonLayout(seeGoodRandomParticipation_button, "A random, probably good one");
             seeGoodRandomParticipation_button.Clicked += SeeGoodRandomParticipation_Clicked;
 
             Button seeRandomParticipations_button = new Button();
-            ButtonLayout seeRandomParticipations_layout = new ButtonLayout(seeRandomParticipations_button, "See " + this.maxNumRandomActivitiesToShow + " chosen (uniformly) at random");
+            ButtonLayout seeRandomParticipations_layout = new ButtonLayout(seeRandomParticipations_button, "" + this.maxNumRandomActivitiesToShow + " (uniformly) random");
             seeRandomParticipations_button.Clicked += SeeRandomParticipations_button_Clicked;
 
             this.SubLayout = new Vertical_GridLayout_Builder()

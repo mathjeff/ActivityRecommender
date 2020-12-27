@@ -6,6 +6,7 @@ using Xamarin.Forms;
 using ActivityRecommendation;
 using System.IO;
 using Windows.UI.Xaml;
+using Windows.ApplicationModel;
 
 namespace ActRec.UWP
 {
@@ -14,7 +15,9 @@ namespace ActRec.UWP
         public UWPMainPage()
         {
             InitializeComponent();
-            AppParams appParams = new AppParams("", new ConstantValueProvider<StreamReader>(null));
+            PackageVersion version = Package.Current.Id.Version;
+            string versionText = "" + version.Major + "." + version.Minor + "." + version.Revision + "." + version.Build;
+            AppParams appParams = new AppParams(versionText, new ConstantValueProvider<StreamReader>(null));
             VisiPlacement.UWP.UWPTextMeasurer.Initialize();
             VisiPlacement.UWP.UWPButtonClicker.Initialize();
             LoadApplication(new ActRec.App(appParams));

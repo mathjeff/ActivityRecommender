@@ -332,12 +332,9 @@ namespace ActivityRecommendation
                 if (oldExecution.version == "")
                 {
                     // This is the first execution, so we give the user a brief description of what ActivityRecommender does
-                    this.welcomeMessage = "Hello! I'm ActivityRecommender.\n" +
-                        "I use math to make your life as awesome as possible.\n" +
-                        "Do you want cheerful but honest feedback?\n" +
-                        "Do you want suggestions?\n" +
-                        "Do you want to measure your efficiency?\n" +
-                        "I can do all that and more!";
+                    this.welcomeMessage = "You should try to improve your life a little bit every day.\n" +
+                        "Soon your life will be awesome!\n" +
+                        "If this sounds inconvenient, don't worry: I am ActivityRecommender and I make improvement super easy by helping you keep track of and analyze everything.";
                 }
                 else
                 {
@@ -512,7 +509,7 @@ namespace ActivityRecommendation
                 // It's extra important for the welcome screen to use all of the space
                 // Also, there aren't many things on it, so it's not hard to check lots of sizes
                 // So, we check lots of possible sizes for the welcome message
-                for (int fontSize = 12; fontSize <= 30; fontSize += 2)
+                for (int fontSize = 12; fontSize <= 40; fontSize += 2)
                 {
                     welcomeOptions.Add(new TextblockLayout(this.welcomeMessage, fontSize));
                 }

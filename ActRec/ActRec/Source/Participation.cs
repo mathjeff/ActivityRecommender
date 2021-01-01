@@ -217,4 +217,22 @@ namespace ActivityRecommendation
             return 1; // no data, treat as default
         }
     }
+
+    public class Participation_NetPresentHappiness_Comparer : IComparer<Participation>
+    {
+        public Participation_NetPresentHappiness_Comparer(ScoreSummarizer scoreSummarizer)
+        {
+            this.scoreSummarizer = scoreSummarizer;
+        }
+        public int Compare(Participation a, Participation b)
+        {
+            return this.get_netPresentHappiness(a).CompareTo(this.get_netPresentHappiness(b));
+        }
+
+        private double get_netPresentHappiness(Participation participation)
+        {
+            return this.scoreSummarizer.GetValueDistributionForDates(participation.StartDate, this.scoreSummarizer.LatestKnownDate, true, true).Mean;
+        }
+        private ScoreSummarizer scoreSummarizer;
+    }
 }

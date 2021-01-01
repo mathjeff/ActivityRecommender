@@ -11,10 +11,11 @@ namespace ActivityRecommendation.View
 {
     class BrowseParticipations_Layout : ContainerLayout
     {
-        public BrowseParticipations_Layout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
+        public BrowseParticipations_Layout(ActivityDatabase activityDatabase, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
+            this.scoreSummarizer = scoreSummarizer;
 
             TextblockLayout helpLayout = new TextblockLayout("Browse participations");
 
@@ -45,7 +46,7 @@ namespace ActivityRecommendation.View
                 .AddLayout(new TextblockLayout("Require success status ="))
                 .AddLayout(new ButtonLayout(this.requireSuccessful_box))
                 .BuildAnyLayout();
-            this.sortBy_box = new VisiPlacement.SingleSelect(new List<string>() { this.sortByFun_text, this.sortByEfficiency_text });
+            this.sortBy_box = new VisiPlacement.SingleSelect(new List<string>() { this.sortByFun_text, this.sortBy_netPresentHappiness_text, this.sortByEfficiency_text });
             LayoutChoice_Set sortBy_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Sort by"))
@@ -208,23 +209,34 @@ namespace ActivityRecommendation.View
                 }
                 else
                 {
-                    // sort by efficiency
-                    foreach (Participation participation in correctSuccess_participations)
+                    if (this.sortsByEfficiency)
                     {
-                        if (participation.RelativeEfficiencyMeasurement != null)
+                        foreach (Participation participation in correctSuccess_participations)
                         {
-                            if (participation.DismissedActivity && !participation.CompletedMetric)
+                            if (participation.RelativeEfficiencyMeasurement != null)
                             {
-                                // If the participation dismissed the activity without completing it, then this participation really just recorded that this activity was obsolete,
-                                // which doesn't really count as low efficiency
-                            }
-                            else
-                            {
-                                hasProperty_participations.Add(participation);
+                                if (participation.DismissedActivity && !participation.CompletedMetric)
+                                {
+                                    // If the participation dismissed the activity without completing it, then this participation really just recorded that this activity was obsolete,
+                                    // which doesn't really count as low efficiency
+                                }
+                                else
+                                {
+                                    hasProperty_participations.Add(participation);
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        // sorts by net present happiness
+
+                        // When sorting by net present happiness, the only requirement is that we have a happiness estimate.
+                        // The existence of the participation is enough information for a happiness estimate
+                        hasProperty_participations = correctSuccess_participations;
+                    }
                 }
+
                 return hasProperty_participations;
             }
         }
@@ -241,6 +253,12 @@ namespace ActivityRecommendation.View
             participations.Reverse();
         }
 
+        private void SortByDecreasing_NetPresentHappiness(List<Participation> participations)
+        {
+            participations.Sort(new Participation_NetPresentHappiness_Comparer(this.scoreSummarizer));
+            participations.Reverse();
+        }
+
         private void Sort(List<Participation> participations)
         {
             if (this.sortsByFun)
@@ -248,7 +266,13 @@ namespace ActivityRecommendation.View
                 this.SortByDecreasingScore(participations);
                 return;
             }
-            this.SortByDecreasingEfficiency(participations);
+            if (this.sortsByEfficiency)
+            {
+                this.SortByDecreasingEfficiency(participations);
+                return;
+            }
+            this.SortByDecreasing_NetPresentHappiness(participations);
+
         }
 
 
@@ -273,7 +297,7 @@ namespace ActivityRecommendation.View
                 participations = participations.GetRange(0, this.maxNumTopParticipationsToShow);
 
             TitledControl mainView = new TitledControl("" + participations.Count + " matching participations with highest " + this.sortBy_box.SelectedItem + " (of " + availableCount + ") in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
             return mainView;
         }
 
@@ -299,7 +323,7 @@ namespace ActivityRecommendation.View
 
             // build layout
             TitledControl mainView = new TitledControl("" + chosenParticipations.Count + " matching participations with most extreme " + this.sortBy_box.SelectedItem.ToLower() + " (of " + availableCount + ") in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
             return mainView;
         }
 
@@ -311,7 +335,7 @@ namespace ActivityRecommendation.View
                 return this.Get_NoParticipations_Layout();
 
             TitledControl result = new TitledControl("Remember this?", 30);
-            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, this.ShowRatings, this.randomGenerator));
+            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
             return result;
         }
 
@@ -337,7 +361,7 @@ namespace ActivityRecommendation.View
                 participations = participations.GetRange(0, numParticipationsToShow);
 
             TitledControl mainView = new TitledControl("" + participations.Count + " random participations (of " + availableCount + " matches) in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
             return mainView;
         }
 
@@ -361,6 +385,7 @@ namespace ActivityRecommendation.View
 
         private string sortByFun_text = "Fun";
         private string sortByEfficiency_text = "Efficiency";
+        private string sortBy_netPresentHappiness_text = "Future Happiness";
         private bool sortsByFun
         {
             get
@@ -375,11 +400,19 @@ namespace ActivityRecommendation.View
                 return this.sortBy_box.SelectedItem == this.sortByEfficiency_text;
             }
         }
+        private bool sortsBy_netPresentHappiness
+        {
+            get
+            {
+                return this.sortBy_box.SelectedItem == this.sortBy_netPresentHappiness_text;
+            }
+        }
 
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
         private ActivityNameEntryBox categoryBox;
         private Random randomGenerator;
+        private ScoreSummarizer scoreSummarizer;
         private int maxNumTopParticipationsToShow = 10;
         private int maxNumRandomActivitiesToShow = 2;
         private VisiPlacement.CheckBox displayRatings_box;

@@ -10,10 +10,11 @@ namespace ActivityRecommendation.View
 {
     class ListParticipations_Layout : ContainerLayout
     {
-        public ListParticipations_Layout(List<Participation> participations, bool showRatings, Random randomGenerator)
+        public ListParticipations_Layout(List<Participation> participations, bool showRatings, ScoreSummarizer scoreSummarizer, Random randomGenerator)
         {
             this.randomGenerator = randomGenerator;
             this.participations = participations;
+            this.scoreSummarizer = scoreSummarizer;
             this.initialize(showRatings);
         }
         private void initialize(bool showRatings)
@@ -25,7 +26,7 @@ namespace ActivityRecommendation.View
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             foreach (Participation participation in participations)
             {
-                gridBuilder.AddLayout(new ParticipationView(participation, showRatings));
+                gridBuilder.AddLayout(new ParticipationView(participation, scoreSummarizer, showRatings));
             }
             if (!showRatings)
             {
@@ -56,6 +57,7 @@ namespace ActivityRecommendation.View
 
         List<Participation> participations;
         Random randomGenerator;
+        ScoreSummarizer scoreSummarizer;
 
     }
 }

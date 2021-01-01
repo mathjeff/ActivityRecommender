@@ -266,36 +266,30 @@ namespace ActivityRecommendation
         // Otherwise, returns a number that gets larger if it's more likely that the user meant to match <activity>
         public double MatchQuality(ActivityDescriptor descriptor, Activity activity)
         {
-            int stringScore = 0;
             if (descriptor.RequiresPerfectMatch)
             {
                 // make sure the name matches
                 if (descriptor.ActivityName != null && !descriptor.ActivityName.Equals(activity.Name))
                     return 0;
-                // make sure the 'Choosable' property matches
-                // require that the 'Choosable' property matches
-                if (descriptor.Suggestible != null && descriptor.Suggestible.Value != activity.Suggestible)
-                    return 0;
                 return 1;
+            }
+
+            int stringScore = 0;
+            // points based on string similarity
+            string desiredName = descriptor.ActivityName;
+            if (desiredName.Length < 2 * activity.Name.Length)
+            {
+                stringScore = this.stringScore(activity.Name, desiredName);
             }
             else
             {
-                // points based on string similarity
-                string desiredName = descriptor.ActivityName;
-                if (desiredName.Length < 2 * activity.Name.Length)
-                {
-                    stringScore = this.stringScore(activity.Name, desiredName);
-                }
-                else
-                {
-                    // if the user enters a string that it ridiculously long, then we don't bother comparing it
-                    stringScore = 0;
-                }
-                if (desiredName.Length > 0 && stringScore <= 0)
-                {
-                    // name has nothing in common
-                    return 0;
-                }
+                // if the user enters a string that it ridiculously long, then we don't bother comparing it
+                stringScore = 0;
+            }
+            if (desiredName.Length > 0 && stringScore <= 0)
+            {
+                // name has nothing in common
+                return 0;
             }
             // now that we've verified that this activity is allowed to be a match, we calculate its score
 
@@ -308,8 +302,25 @@ namespace ActivityRecommendation
 
             // more points if the 'Suggestible' property matches
             double suggestibleScore = 0;
-            if (descriptor.Suggestible != null && descriptor.Suggestible.Value == activity.Suggestible)
-                suggestibleScore += 1;
+            if (descriptor.Suggestible != null)
+            {
+                if (descriptor.Suggestible.Value)
+                {
+                    // If we're looking for a suggestible activity, then we give more points to activities that are willing to be suggested
+                    if (activity.Suggestible)
+                        suggestibleScore += 1;
+                    // If we're looking for a suggestible activity, then we give more points to activities that have no children
+                    // (activities having child categories are generally less interesting than their children)
+                    if (!activity.HasChildCategory)
+                        suggestibleScore++;
+                }
+                else
+                {
+                    // If we're looking for a non-suggestible activity, then we give more points to an activity that's not willing to be suggested
+                    if (!activity.Suggestible)
+                        suggestibleScore += 1;
+                }
+            }
 
 
             double participationScore = 0;

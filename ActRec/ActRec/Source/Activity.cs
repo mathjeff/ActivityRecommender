@@ -893,6 +893,19 @@ namespace ActivityRecommendation
             return new List<Activity>(0);
         }
 
+        public bool HasChildCategory
+        {
+            get
+            {
+                foreach (Activity child in this.GetChildren())
+                {
+                    if (child is Category)
+                        return true;
+                }
+                return false;
+            }
+        }
+
         // returns a list containing this activity and all of its descendents
         public List<Activity> GetChildrenRecursive()
         {
@@ -911,6 +924,39 @@ namespace ActivityRecommendation
                 }
             }
             return subCategories;
+        }
+
+        // Tells whether this activity has exactly one descendant such that that descendant has no other descendants.
+        // This property could be interesting because an activity having only one leaf descendant might be more worth suggesting than its single leaf descendant
+        public Activity GetUniqueLeafDescendant()
+        {
+            List<Activity> candidates = new List<Activity>();
+            candidates.Add(this);
+            Activity leaf = this; // if this activity has no children, we're counting itself as a leaf
+            int numLeaves = 0;
+            int i = 0;
+            for (i = 0; i < candidates.Count; i++)
+            {
+                Activity activity = candidates[i];
+                if (activity.GetChildren().Count < 1)
+                {
+                    numLeaves++;
+                    if (numLeaves > 1)
+                        return null;
+                    leaf = activity;
+                }
+                else
+                {
+                    foreach (Activity child in activity.GetChildren())
+                    {
+                        if (!candidates.Contains(child))
+                        {
+                            candidates.Add(child);
+                        }
+                    }
+                }
+            }
+            return leaf;
         }
 
         // Whether the user has ever asked for a suggestion specifically from this activity

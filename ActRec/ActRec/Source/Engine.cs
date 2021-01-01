@@ -208,9 +208,12 @@ namespace ActivityRecommendation
             return this.activityDatabase.GetAllSuperactivitiesOf(child);
         }
         // performs Depth First Search to find all subCategories of the given Activity
-        public List<Activity> FindAllSubCategoriesOf(Activity parent)
+        public IEnumerable<Activity> FindAllSubCategoriesOf(Activity parent)
         {
-            return parent.GetChildrenRecursive();
+            if (parent == this.activityDatabase.RootActivity)
+                return this.activityDatabase.AllActivities;
+            else
+                return parent.GetChildrenRecursive();
         }
         public ActivitySuggestion MakeRecommendation()
         {
@@ -228,16 +231,119 @@ namespace ActivityRecommendation
             List<Activity> candidates;
             if (request.LeafActivitiesToConsider != null)
             {
+                // caller specified which activities to consider
                 candidates = request.LeafActivitiesToConsider;
             }
             else
             {
+                // caller requested a certain category
+                Activity category;
                 if (request.FromCategory != null)
-                    candidates = this.activityDatabase.ResolveDescriptor(request.FromCategory).GetChildrenRecursive();
+                    category = this.activityDatabase.ResolveDescriptor(request.FromCategory);
                 else
-                    candidates = new List<Activity>(this.activityDatabase.AllActivities);
+                    category = this.activityDatabase.RootActivity;
+                // Now we identify the relevant subcategories from within the given category
+                candidates = this.getActivitiesToConsider(category);
             }
             return candidates;
+        }
+        // which activities to consider suggesting given that the user asked for a suggestion from <fromCategory>
+        private List<Activity> getActivitiesToConsider(Activity fromCategory)
+        {
+            // Note that the question of whether a category is suggestible depends on some interesting interactions among inheritances
+            // Suppose an inheritance hierarchy like this:
+            //   A
+            //  / \
+            // B   C   D
+            //      \ / \
+            //       E   F
+            // If the user asks for a suggestion from A, then we consider B and C. We don't consider E, however, because we believe that suggesting C is already clear enough.
+            // It's possible that C could have more children in reality that the user hasn't considered it important enough to enter, and that
+            // if we suggest C then that's more clear and more generalizable than if we suggest E.
+            //
+            // However, if the user asks for a suggestion from E, then we consider E and F. The reason we consider E now is because D has multiple children that the user
+            // has considered it worthwhile to distinguish.
+            //
+            // The main reason we might have an inheritance hierarchy like this (a parent having exactly one child) is if activities are classified by multiple overlapping
+            // criteria. For example, suppose that each of these activities above represents:
+            //
+            // A = The set of activities that can improve communication with other people
+            // B = Waiting to communicate until a later time
+            // C = Communicating face-to-face
+            // D = Talking to some specific people
+            // E = Communicating face-to-face with some specific people
+            // F = Some specific activity with these people
+            //
+            // Note that activity A and activity D are different types of classifications: Activity A describes how to communicate better with people in general,
+            // whereas Activity D describes communicating with a specific set of people. It's possible to do one, the other, both, or neither at once.
+            // So, if the user hasn't yet decided that it's interesting to break C up into smaller sub-categories, then we limit our suggestions to the parent activities
+            //
+            // If, in the future, the user does add more ways to communicate face-to-face, then the user will have to add a few more categories, splitting it up into
+            // one category of generic communication methods, and another category for communicating with each relevant group of people.
+            // These categories could be named things like:
+            // Communication // includes both generic and specific suggestions
+            // Generic Communication Suggestions // only includes suggestions that don't include specific groups of people
+            // Communicating with Group X
+            // Talking Face-to-Face to Group X // is a child of Communicating with Group X
+            //
+            // Then, in the future, if the user just wants to communicate with anybody, the user can ask for a Communication suggestion
+            // If the user wants to communicate with someone specific but not yet known to ActivityRecommender, the user can ask for a Generic Communication Suggestions
+            // If the user wants to communicate with Group X, the user can ask for a suggestion from Communicating with Group X
+            //
+            // The user can still enter these activities lazily over time, though, as they become relevant, because if a certain category is too specific to enter at first,
+            // ActivityRecommender will use the parent activity (because the user will have created the parent activity). The user will also be able to start to create
+            // overlapping hierarchies, and if only one child has been entered, the parent will still be used because it's more generic and sufficiently clear
+
+            // Start by finding all subcategories
+            List<Activity> availableCandidateList = new List<Activity>();
+            foreach (Activity candidate in this.FindAllSubCategoriesOf(fromCategory))
+            {
+                // filter out candidates that will never want to be suggested, like Problems, completed ToDos, and the root activity
+                if (candidate.Suggestible)
+                {
+                    availableCandidateList.Add(candidate);
+                }
+            }
+            // Set of candidates that could be acceptable to suggest (might include some candidates that are strictly less interesting than others)
+            HashSet<Activity> availableCandidateFilter = null;
+            if ((fromCategory != this.activityDatabase.RootActivity))
+                availableCandidateFilter = new HashSet<Activity>(availableCandidateList);
+            // Set of candidates that we will allow suggesting (will only include candidates that are not strictly less interesting than others)
+            HashSet<Activity> interestingCandidates = new HashSet<Activity>(availableCandidateList);
+            // Now filter out categories where their children are more interesting
+            foreach (Activity candidate in availableCandidateList)
+            {
+                // Some categories might be strictly less interesting than other categories. Usually, child categories are more interesting than their parents
+                if (candidate is Category)
+                {
+                    // Each activity is considered to be a subset of each of its parents.
+                    // If an activity is a subset of a parent, then it must either equal the parent or be a strict subset of the parent. In either case, we should be
+                    // able to identify which of the two is more interesting to suggest.
+                    foreach (Activity parent in candidate.Parents)
+                    {
+                        if (availableCandidateFilter == null || availableCandidateFilter.Contains(parent))
+                        {
+                            Activity uniqueLeaf = parent.GetUniqueLeafDescendant();
+                            if (uniqueLeaf != null && uniqueLeaf is Category)
+                            {
+                                // If this parent has exactly one leaf descendant category, and the user is considering entering new children for this parent, then:
+                                // If we suggest the only child, then that could be weird if the user would be better off entering a new child activity and choosing that.
+                                // If we suggest the parent, then that is still clear even if the user ends up choosing the only child anyway.
+                                interestingCandidates.Remove(candidate);
+                            }
+                            else
+                            {
+                                // If the parent has multiple descendents, then the child is more specific than the parent in some meaningful
+                                // way, so it would be more interesting to suggest the child
+                                interestingCandidates.Remove(parent);
+                            }
+                        }
+                    }
+                }
+            }
+            // This returns activities in a potentially random order but that's ok
+            // We intentionally process them in a random order later anyway
+            return new List<Activity>(interestingCandidates);
         }
         public ActivitySuggestion MakeRecommendation(ActivityRequest request)
         {
@@ -282,76 +388,75 @@ namespace ActivityRecommendation
                 int index = this.randomGenerator.Next(candidates.Count);
                 Activity candidate = candidates[index];
                 candidates.RemoveAt(index);
-                if (candidate.Suggestible)
+
+                // estimate how good it is for us to suggest this particular activity
+                this.EnsureCalculatedSuggestionValue(candidate, when);
+                Distribution currentRating = recommendationsCache.suggestionValues[candidate].Distribution;
+                bool better = false;
+                if (request.Optimize == ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY)
                 {
-                    // estimate how good it is for us to suggest this particular activity
-                    this.EnsureCalculatedSuggestionValue(candidate, when);
-                    Distribution currentRating = recommendationsCache.suggestionValues[candidate].Distribution;
-                    bool better = false;
-                    if (request.Optimize == ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY)
-                    {
-                        recommendationsCache.futureEfficiencies[candidate] = this.Get_OverallEfficiency_ParticipationEstimate(candidate, when);
-                    }
-                    if (activityToBeat != null && recommendationsCache.utilities[candidate] < recommendationsCache.utilities[activityToBeat])
-                    {
-                        better = false; // user doesn't have enough will power to do this activity
-                    }
+                    recommendationsCache.futureEfficiencies[candidate] = this.Get_OverallEfficiency_ParticipationEstimate(candidate, when);
+                }
+                if (activityToBeat != null && recommendationsCache.utilities[candidate] < recommendationsCache.utilities[activityToBeat])
+                {
+                    better = false; // user doesn't have enough will power to do this activity
+                }
+                else
+                {
+                    if (bestActivity == null)
+                        better = true; // found a better activity
                     else
                     {
-                        if (bestActivity == null)
-                            better = true; // found a better activity
-                        else
+                        switch (request.Optimize)
                         {
-                            switch (request.Optimize)
-                            {
-                                case ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS:
-                                    better = recommendationsCache.suggestionValues[candidate].Distribution.Mean >= recommendationsCache.suggestionValues[bestActivity].Distribution.Mean;
-                                    break;
-                                case ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY:
-                                    better = recommendationsCache.participationProbabilities[candidate].Distribution.Mean >= recommendationsCache.participationProbabilities[bestActivity].Distribution.Mean;
-                                    break;
-                                case ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY:
-                                    better = recommendationsCache.futureEfficiencies[candidate].Distribution.Mean >= recommendationsCache.futureEfficiencies[candidate].Distribution.Mean;
-                                    break;                                default:
-                                    throw new ArgumentException("Unsupported activity request optimization property: " + request.Optimize);
-                            }
+                            case ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS:
+                                better = recommendationsCache.suggestionValues[candidate].Distribution.Mean >= recommendationsCache.suggestionValues[bestActivity].Distribution.Mean;
+                                break;
+                            case ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY:
+                                better = recommendationsCache.participationProbabilities[candidate].Distribution.Mean >= recommendationsCache.participationProbabilities[bestActivity].Distribution.Mean;
+                                break;
+                            case ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY:
+                                better = recommendationsCache.futureEfficiencies[candidate].Distribution.Mean >= recommendationsCache.futureEfficiencies[candidate].Distribution.Mean;
+                                break;
+                            default:
+                                throw new ArgumentException("Unsupported activity request optimization property: " + request.Optimize);
                         }
                     }
-                    if (better)
+                }
+                if (better)
+                {
+                    /*
+                    if (bestActivity != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + recommendationsCache.suggestionValues[candidate].Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + recommendationsCache.suggestionValues[bestActivity].Distribution.Mean + " as highest-value suggestion");
+                    }
+                    */
+                    bestActivity = candidate;
+                }
+                if (activityToBeat != null)
+                {
+                    if (mostFunActivity == null || recommendationsCache.utilities[candidate] >= recommendationsCache.utilities[mostFunActivity])
                     {
                         /*
-                        if (bestActivity != null)
+                        if (mostFunActivity != null)
                         {
-                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + recommendationsCache.suggestionValues[candidate].Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + recommendationsCache.suggestionValues[bestActivity].Distribution.Mean + " as highest-value suggestion");
+                            System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with utility value " + recommendationsCache.utilities[candidate] + " replaced " + mostFunActivity + " with suggestion value " + recommendationsCache.utilities[mostFunActivity] + " as most-fun suggestion");
                         }
                         */
-                        bestActivity = candidate;
+                        mostFunActivity = candidate;
                     }
-                    if (activityToBeat != null)
+                }
+                consideredCandidates.Add(candidate);
+                if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
+                {
+                    // check whether we've used up all of our processing time, but always consider at least two activities
+                    DateTime now = DateTime.Now;
+                    TimeSpan spentDuration = now.Subtract(processingStartTime);
+                    if (spentDuration.CompareTo(requestedProcessingTime.Value) >= 0)
                     {
-                        if (mostFunActivity == null || recommendationsCache.utilities[candidate] >= recommendationsCache.utilities[mostFunActivity])
-                        {
-                            /*
-                            if (mostFunActivity != null)
-                            {
-                                System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with utility value " + recommendationsCache.utilities[candidate] + " replaced " + mostFunActivity + " with suggestion value " + recommendationsCache.utilities[mostFunActivity] + " as most-fun suggestion");
-                            }
-                            */
-                            mostFunActivity = candidate;
-                        }
-                    }
-                    consideredCandidates.Add(candidate);
-                    if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
-                    {
-                        // check whether we've used up all of our processing time, but always consider at least two activities
-                        DateTime now = DateTime.Now;
-                        TimeSpan spentDuration = now.Subtract(processingStartTime);
-                        if (spentDuration.CompareTo(requestedProcessingTime.Value) >= 0)
-                        {
-                            // we've used up all of our processing time; clean up and return
-                            System.Diagnostics.Debug.WriteLine("Spent " + spentDuration + " to consider " + consideredCandidates.Count + " activities");
-                            break;
-                        }
+                        // we've used up all of our processing time; clean up and return
+                        System.Diagnostics.Debug.WriteLine("Spent " + spentDuration + " to consider " + consideredCandidates.Count + " activities");
+                        break;
                     }
                 }
             }

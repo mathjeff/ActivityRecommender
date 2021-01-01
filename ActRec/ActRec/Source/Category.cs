@@ -57,14 +57,6 @@ namespace ActivityRecommendation
 
         protected override bool isSuggestible()
         {
-            foreach (Activity activity in this.children)
-            {
-                if (activity is Category)
-                {
-                    this.suggestible = false;
-                    break;
-                }
-            }
             return this.suggestible;
         }
         

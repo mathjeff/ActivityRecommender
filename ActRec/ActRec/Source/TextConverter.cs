@@ -1008,8 +1008,6 @@ namespace ActivityRecommendation
         private ActivityDescriptor ReadActivityDescriptor(XmlNode nodeRepresentation)
         {
             string name = null;
-            bool? suggestible = null;
-            //ActivityDescriptor descriptor = new ActivityDescriptor();
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.ActivityNameTag)
@@ -1017,16 +1015,10 @@ namespace ActivityRecommendation
                     name = this.ReadText(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.ChoosableTag)
-                {
-                    suggestible = this.ReadBool(currentChild);
-                    continue;
-                }
             }
             if (!this.activityDescriptors.ContainsKey(name))
             {
                 ActivityDescriptor result = new ActivityDescriptor(name);
-                result.Suggestible = suggestible;
                 this.activityDescriptors[name] = result;
             }
             return this.activityDescriptors[name];
@@ -1559,13 +1551,6 @@ namespace ActivityRecommendation
             get
             {
                 return "Problem";
-            }
-        }
-        public string ChoosableTag
-        {
-            get
-            {
-                return "Choose";
             }
         }
         public string DiscoveryDateTag

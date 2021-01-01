@@ -52,10 +52,11 @@ namespace ActivityRecommendation.View
 
             GridLayout grid = GridLayout.New(rowHeights, columnWidths, LayoutScore.Zero);
 
-            this.numProtoactivitiesLayout = new TextblockLayout();
-            grid.PutLayout(this.numProtoactivitiesLayout, 0, 0);
-            
-            grid.PutLayout(new TextblockLayout("Browse Best ProtoActivities"), 1, 0);
+            this.numBrowsesPerProtoactivity_Layout = new TextblockLayout();
+            grid.PutLayout(this.numBrowsesPerProtoactivity_Layout, 0, 0);
+
+            this.titleLayout = new TextblockLayout("Browse Best ProtoActivities");
+            grid.PutLayout(this.titleLayout, 1, 0);
             LayoutChoice_Set helpButton = new HelpButtonLayout(
                 new HelpWindowBuilder()
                 .AddMessage("If you have entered any ProtoActivities (which are ideas that are not yet fully-formed enough for you to want them to be suggested), then you can browse them here.")
@@ -178,10 +179,27 @@ namespace ActivityRecommendation.View
             {
                 List<ProtoActivity_EstimatedInterest> top_protoActivities = this.protoActivity_database.GetMostInteresting(2);
                 this.SubLayout = this.multiActivitiesLayout;
-                this.numProtoactivitiesLayout.setText("" + top_protoActivities.Count + "/" + this.protoActivity_database.Count);
+                double numProtos = this.protoActivity_database.Count;
+                this.titleLayout.setText("Browse Best Protoactivities (2/" + numProtos + ")");
+
+                int numBrowses = this.computeNumBrowses();
+                double numBrowsesPerProto = numBrowses / numProtos;
+                string browsesPerProto_text = Math.Round(numBrowsesPerProto, 3).ToString();
+                this.numBrowsesPerProtoactivity_Layout.setText(browsesPerProto_text + " browses per proto\n(" + numBrowses + " browses,\n" + numProtos + " protos)");
+
                 this.setActivity1(top_protoActivities[0]);
                 this.setActivity2(top_protoActivities[1]);
             }
+        }
+        private int computeNumBrowses()
+        {
+            // compute the total number of browses among all existent protoactivities
+            double totalWeight = 0;
+            foreach (ProtoActivity p in this.protoActivity_database.ProtoActivities)
+            {
+                totalWeight += p.Ratings.Weight;
+            }
+            return (int)(totalWeight / 2);
         }
         private void setActivity1(ProtoActivity_EstimatedInterest interest)
         {
@@ -250,7 +268,8 @@ namespace ActivityRecommendation.View
         private ButtonLayout explainScore1Button;
         private ButtonLayout explainScore2Button;
 
-        private TextblockLayout numProtoactivitiesLayout;
+        private TextblockLayout numBrowsesPerProtoactivity_Layout;
+        private TextblockLayout titleLayout;
         private LayoutChoice_Set multiActivitiesLayout;
         private ProtoActivity activity1;
         private ProtoActivity activity2;

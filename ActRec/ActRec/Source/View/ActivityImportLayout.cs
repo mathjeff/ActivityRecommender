@@ -128,9 +128,10 @@ namespace ActivityRecommendation.View
         }
         private void regenerateEntries()
         {
-            List<Inheritance> inheritances = this.findAvailableInheritances();
+            List<Inheritance> unchosenInheritances = this.findUnchosenInheritances();
+            List<Inheritance> immediatelyUsableInheritances = this.selectUsableInheritances(unchosenInheritances);
             this.entries = new Dictionary<Button, Inheritance>();
-            if (inheritances.Count < 1)
+            if (immediatelyUsableInheritances.Count < 1)
             {
                 this.SubLayout = new TextblockLayout("You have already accepted all of the built-in activity inheritances. There are none left to add!");
             }
@@ -149,8 +150,9 @@ namespace ActivityRecommendation.View
 
                 gridBuilder.AddLayout(new TextblockLayout("Press everything you like to do! Then go back.").AlignHorizontally(TextAlignment.Center));
                 gridBuilder.AddLayout(new HelpButtonLayout(helpLayout, this.layoutStack));
+                gridBuilder.AddLayout(new TextblockLayout("" + unchosenInheritances.Count + " remaining, built-in activity ideas:"));
 
-                foreach (Inheritance inheritance in inheritances)
+                foreach (Inheritance inheritance in immediatelyUsableInheritances)
                 {
                     Button button = new Button();
                     this.entries[button] = inheritance;
@@ -173,18 +175,31 @@ namespace ActivityRecommendation.View
             this.regenerateEntries();
         }
 
-        private List<Inheritance> findAvailableInheritances()
+        private List<Inheritance> findUnchosenInheritances()
         {
             List<Inheritance> result = new List<Inheritance>();
             foreach (Inheritance inheritance in DefaultInheritances)
             {
-                if (activityDatabase.HasActivity(inheritance.ParentDescriptor) && !activityDatabase.HasActivity(inheritance.ChildDescriptor))
+                if (!activityDatabase.HasActivity(inheritance.ChildDescriptor))
                 {
                     result.Add(inheritance);
                 }
             }
             return result;
         }
+        private List<Inheritance> selectUsableInheritances(List<Inheritance> candidates)
+        {
+            List<Inheritance> result = new List<Inheritance>();
+            foreach (Inheritance inheritance in candidates)
+            {
+                if (activityDatabase.HasActivity(inheritance.ParentDescriptor))
+                {
+                    result.Add(inheritance);
+                }
+            }
+            return result;
+        }
+
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
         private Dictionary<Button, Inheritance> entries;

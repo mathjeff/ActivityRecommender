@@ -165,6 +165,9 @@ namespace ActivityRecommendation.View
 
             this.updateSideButton();
             this.UpdateFeedback();
+
+            if (this.NameTextChanged != null)
+                this.NameTextChanged.Invoke();
         }
 
         private void updateSideButton()
@@ -239,17 +242,25 @@ namespace ActivityRecommendation.View
         {
             this.nameText = text;
             if (this.nameBox.Text != text)
+            {
+                // this triggers NameBox_TextChanged
                 this.nameBox.Text = text;
+            }
         }
+        // Equal to <true> if the entered activity name matches the autocomplete suggestion
+        // If the entered name matches the autocomplete suggestion, that is interpreted as having chosen that activity
         bool NameMatchesSuggestion
         {
             get
             {
+                if (this.suggestedActivityName == "")
+                {
+                    // If the activity name is "" and the suggestion is "", we don't count that as matching the suggestion
+                    return false;
+                }
                 return (this.NameText == this.suggestedActivityName);
             }
         }
-
-        bool nameMatchedSuggestion = false;
 
         // update feedback based on a change in the text
         void UpdateFeedback()
@@ -314,25 +325,6 @@ namespace ActivityRecommendation.View
             {
                 this.AnnounceChange(true);
             }
-
-            // inform
-            if (this.NameMatchesSuggestion)
-            {
-                // Whenever the user enters a name that matches the suggestion, that is treated as selecting that option,
-                // so we announce that the user has chosen something
-                if (this.NameMatchedSuggestion != null)
-                    this.NameMatchedSuggestion.Invoke();
-            }
-            else
-            {
-                if (this.nameMatchedSuggestion)
-                {
-                    // If the user has no longer selected a valid option, announce that too
-                    if (this.NameUnmatchedSuggestion != null)
-                        this.NameUnmatchedSuggestion.Invoke();
-                }
-            }
-            this.nameMatchedSuggestion = this.NameMatchesSuggestion;
         }
 
         public bool AutoAcceptAutocomplete { get; set; } // Whether to treat a partially entered activity as equivalent to the one recommended by autocomplete
@@ -415,8 +407,7 @@ namespace ActivityRecommendation.View
             this.UpdateFeedback();
         }
 
-        public event NameMatchedSuggestionHandler NameMatchedSuggestion;
-        public event NameUnmatchedSuggestionHandler NameUnmatchedSuggestion;
+        public event NameTextChangedHandler NameTextChanged;
 
         // X/? button on the side
         Button sideButton;
@@ -444,7 +435,6 @@ namespace ActivityRecommendation.View
         LayoutStack layoutStack;
     }
 
-    public delegate void NameMatchedSuggestionHandler();
-    public delegate void NameUnmatchedSuggestionHandler();
+    public delegate void NameTextChangedHandler();
 
 }

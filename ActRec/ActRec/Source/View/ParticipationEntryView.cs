@@ -14,6 +14,9 @@ namespace ActivityRecommendation
         public event VisitActivitiesScreenHandler VisitActivitiesScreen;
         public delegate void VisitActivitiesScreenHandler();
 
+        public event VisitActivitiesScreenHandler VisitSuggestionsScreen;
+        public delegate void VisitSuggestionsScreenHandler();
+
         public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
@@ -36,14 +39,13 @@ namespace ActivityRecommendation
             this.nameBox = new ActivityNameEntryBox("What Have You Been Doing?", activityDatabase, layoutStack);
             this.nameBox.AutoAcceptAutocomplete = false;
             this.nameBox.PreferSuggestibleActivities = true;
-            this.nameBox.NameMatchedSuggestion += this.ActivityName_ValidityChanged;
-            this.nameBox.NameUnmatchedSuggestion += this.ActivityName_ValidityChanged;
+            this.nameBox.NameTextChanged += this.ActivityNameText_Changed;
             nameAndFeedback_builder.AddLayout(this.nameBox);
 
-            Button feedbackButton = new Button();
-            feedbackButton.Clicked += FeedbackButton_Clicked;
-            this.feedbackButtonLayout = new ButtonLayout(feedbackButton);
-            nameAndFeedback_builder.AddLayout(ButtonLayout.HideIfEmpty(this.feedbackButtonLayout));
+            Button responseButton = new Button();
+            responseButton.Clicked += ResponseButton_Clicked;
+            this.responseButtonLayout = new ButtonLayout(responseButton);
+            nameAndFeedback_builder.AddLayout(ButtonLayout.HideIfEmpty(this.responseButtonLayout));
             contents.AddLayout(nameAndFeedback_builder.BuildAnyLayout());
 
             Vertical_GridLayout_Builder detailsBuilder = new Vertical_GridLayout_Builder();
@@ -188,9 +190,19 @@ namespace ActivityRecommendation
                 this.VisitActivitiesScreen.Invoke();
         }
 
-        private void FeedbackButton_Clicked(object sender, EventArgs e)
+        private void ResponseButton_Clicked(object sender, EventArgs e)
         {
-            this.layoutStack.AddLayout(this.participationFeedback.Details, "Feedback");
+            if (this.participationFeedback != null)
+            {
+                // The response button had feedback about the most recent participation
+                this.layoutStack.AddLayout(this.participationFeedback.Details, "Feedback");
+            }
+            else
+            {
+                // The response button suggested requesting another suggestion
+                if (this.VisitSuggestionsScreen != null)
+                    this.VisitSuggestionsScreen.Invoke();
+            }
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -256,8 +268,8 @@ namespace ActivityRecommendation
             this.ratingBox.Clear();
             this.nameBox.Clear();
             this.CommentText = "";
-            this.feedbackButtonLayout.setText("");
             this.updateMetricSelectorVisibility();
+            this.Update_FeedbackBlock_Text();
         }
         public Engine Engine
         {
@@ -314,7 +326,6 @@ namespace ActivityRecommendation
             if (newName != this.ActivityName)
             {
                 this.nameBox.Set_NameText(newName);
-                this.Invalidate_FeedbackBlock_Text();
             }
         }
         public string ActivityName
@@ -443,7 +454,7 @@ namespace ActivityRecommendation
 
         }
 
-        public void ActivityName_ValidityChanged()
+        public void ActivityNameText_Changed()
         {
             this.Invalidate_FeedbackBlock_Text();
             this.updateMetricSelectorVisibility();
@@ -530,34 +541,44 @@ namespace ActivityRecommendation
 
         private void Update_FeedbackBlock_Text()
         {
+            ParticipationFeedback participationFeedback = null;
             Activity activity = this.nameBox.Activity;
             if (activity != null && this.startDateBox.IsDateValid() && this.endDateBox.IsDateValid())
             {
+                // We have a valid activity and valid dates, so give feedback about the participation
                 DateTime startDate = this.startDateBox.GetDate();
                 DateTime endDate = this.endDateBox.GetDate();
-                ParticipationFeedback participationFeedback = this.computeFeedback(activity, startDate, endDate);
+                participationFeedback = this.computeFeedback(activity, startDate, endDate);
                 if (participationFeedback != null)
                 {
-                    this.feedbackButtonLayout.setText(participationFeedback.Summary);
+                    this.responseButtonLayout.setText(participationFeedback.Summary);
                     if (participationFeedback.SummaryColor != null)
-                    {
-                        this.feedbackButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
-                    }
+                        this.responseButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
                     else
-                    {
-                        this.feedbackButtonLayout.resetTextColor();
-                    }
-                    this.participationFeedback = participationFeedback;
+                        this.responseButtonLayout.resetTextColor();
                 }
                 else
-                {
-                    this.feedbackButtonLayout.setText("");
-                }
+                    this.responseButtonLayout.setText("");
             }
             else
             {
-                this.feedbackButtonLayout.setText("");
+                if (this.nameBox.NameText == null || this.nameBox.NameText == "")
+                {
+                    // If we have no text in the activity name box, we can remind the user to get another suggestion,
+                    // and we can give them a convenient button for going there
+                    this.responseButtonLayout.setText("What's next?");
+                    this.responseButtonLayout.resetTextColor();
+                }
+                else
+                {
+                    // If we have no valid activity name but we do have some text in the name box, then we don't need to say anything
+                    // The name entry box will offer autocomplete suggestions and/or help
+                    this.responseButtonLayout.setText("");
+                }
             }
+            // Note that this is the only method that modifies either participationFeedback or responseButtonLayout.text,
+            // so we can ensure that they match
+            this.participationFeedback = participationFeedback;
             this.feedbackIsUpToDate = true;
         }
 
@@ -1535,7 +1556,8 @@ namespace ActivityRecommendation
         Button setStartdateButton;
         Button setEnddateButton;
         Button okButton;
-        ButtonLayout feedbackButtonLayout;
+        ButtonLayout responseButtonLayout;
+        string feedback;
         Engine engine;
         ChooseMetric_View metricChooser;
         LayoutStack layoutStack;

@@ -383,6 +383,7 @@ namespace ActivityRecommendation
                 this.participationEntryView.SetActivityName(this.recentUserData.Suggestions.First().ActivityDescriptor.ActivityName);
             }
             this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
+            this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);
@@ -536,6 +537,12 @@ namespace ActivityRecommendation
         {
             this.layoutStack.GoBack();
             this.layoutStack.AddLayout(this.participationEntryView, "Record Participations");
+        }
+
+        private void ParticipationEntryView_VisitSuggestionsScreen()
+        {
+            this.layoutStack.GoBack();
+            this.layoutStack.AddLayout(this.suggestionsView, "Get Suggestions", this.suggestionsView);
         }
 
         private void VisualizationMenu_VisitActivitiesScreen()

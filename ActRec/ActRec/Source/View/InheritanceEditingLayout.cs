@@ -7,10 +7,9 @@ namespace ActivityRecommendation.View
 {
     class InheritanceEditingLayout : ContainerLayout
     {
-        public InheritanceEditingLayout(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
+        public InheritanceEditingLayout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
-            this.protoActivity_database = protoActivity_database;
 
             this.createCategory_layout = new CreateCategory_Layout(activityDatabase, layoutStack);
             this.createToDo_layout = new CreateToDo_Layout(activityDatabase, layoutStack);
@@ -60,9 +59,19 @@ namespace ActivityRecommendation.View
             return features;
         }
 
+        public string ChildName
+        {
+            set
+            {
+                this.createToDo_layout.ActivityName = value;
+                this.createCategory_layout.ActivityName = value;
+                this.createProblem_layout.ActivityName = value;
+                this.createSolution_layout.ActivityName = value;
+            }
+        }
+
 
         ActivityDatabase activityDatabase;
-        ProtoActivity_Database protoActivity_database;
 
         CreateProblem_Layout createProblem_layout;
         CreateToDo_Layout createToDo_layout;

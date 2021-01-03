@@ -366,7 +366,7 @@ namespace ActivityRecommendation
             this.activitiesMenuLayout = new ActivitiesMenuLayout(
                 new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
                 activityImportLayout,
-                new InheritanceEditingLayout(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
+                new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack),
                 protoActivitiesLayout,
                 (new HelpWindowBuilder()
                     .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")

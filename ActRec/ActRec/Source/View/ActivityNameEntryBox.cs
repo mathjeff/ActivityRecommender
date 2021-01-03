@@ -8,13 +8,13 @@ namespace ActivityRecommendation.View
 {
     class ActivityNameEntryBox : ContainerLayout
     {
-        public ActivityNameEntryBox(string title, ReadableActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false, bool placeTitleAbove = true)
+        public ActivityNameEntryBox(string title, ActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false, bool placeTitleAbove = true)
         {
             // some settings
             this.layoutStack = layoutStack;
             this.AutoAcceptAutocomplete = true;
             this.createNewActivity = createNewActivity;
-            this.database = activityDatabase;
+            this.activityDatabase = activityDatabase;
             this.numAutocompleteRowsToShow = 1;
 
             // the box the user is typing in
@@ -78,7 +78,14 @@ namespace ActivityRecommendation.View
                     .Build()
                  )
                 .Build();
-            this.autocomplete_longHelpLayout = new HelpButtonLayout(this.helpWindow, layoutStack);
+
+            // help buttons that appear when the user types something invalid
+            Button help_createNew_button = new Button();
+            help_createNew_button.Clicked += help_createNew_button_Clicked;
+            this.autocomplete_longHelpLayout = new Horizontal_GridLayout_Builder().Uniform()
+                .AddLayout(new ButtonLayout(help_createNew_button, "Create"))
+                .AddLayout(new HelpButtonLayout(this.helpWindow, layoutStack))
+                .Build();
 
             // the main layout that contains everything
             LayoutChoice_Set content;
@@ -118,6 +125,13 @@ namespace ActivityRecommendation.View
                 unevenGrid.AddLayout(content);
                 this.SubLayout = new LayoutUnion(evenGrid, unevenGrid);
             }
+        }
+
+        private void help_createNew_button_Clicked(object sender, EventArgs e)
+        {
+            InheritanceEditingLayout editingLayout = new InheritanceEditingLayout(this.activityDatabase, this.layoutStack);
+            editingLayout.ChildName = this.nameText;
+            this.layoutStack.AddLayout(editingLayout, "New Activity");
         }
 
         public void Placeholder(string text)
@@ -229,9 +243,9 @@ namespace ActivityRecommendation.View
         }
         public void autoselectRootActivity_if_noCustomActivities()
         {
-            if (!this.database.ContainsCustomActivity())
+            if (!this.activityDatabase.ContainsCustomActivity())
             {
-                this.Set_NameText(this.database.GetRootActivity().Name);
+                this.Set_NameText(this.activityDatabase.GetRootActivity().Name);
             }
         }
         public void Clear()
@@ -375,7 +389,7 @@ namespace ActivityRecommendation.View
                 ActivityDescriptor descriptor = this.ActivityDescriptor;
                 if (descriptor == null)
                     return null;
-                return this.database.ResolveDescriptor(descriptor);
+                return this.activityDatabase.ResolveDescriptor(descriptor);
             }
         }
         public IEnumerable<Activity> Autocompletes
@@ -385,26 +399,35 @@ namespace ActivityRecommendation.View
                 ActivityDescriptor descriptor = this.WorkInProgressActivityDescriptor;
                 if (descriptor == null)
                     return new List<Activity>(0);
-                IEnumerable<Activity> matches = this.database.FindBestMatches(descriptor, this.numAutocompleteRowsToShow);
+                IEnumerable<Activity> matches = this.activityDatabase.FindBestMatches(descriptor, this.numAutocompleteRowsToShow);
                 return matches;
             }
         }
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
         public event NameUnmatchedSuggestionHandler NameUnmatchedSuggestion;
 
+        // X/? button on the side
         Button sideButton;
         ButtonLayout sideButtonLayout;
-        LayoutChoice_Set helpWindow;
-        LayoutChoice_Set nameBoxWithSideLayout;
         ContainerLayout sideLayout;
-        TextboxLayout nameBox_layout;
-        string nameText;
+
+        // the box the user is typing into
         Editor nameBox;
-        LayoutChoice_Set autocomplete_longHelpLayout;
-        TextblockLayout autocompleteLayout;
-        ContainerLayout responseLayout = new ContainerLayout();
-        ReadableActivityDatabase database;
+        string nameText;
+        TextboxLayout nameBox_layout;
+        LayoutChoice_Set nameBoxWithSideLayout;
+
+        // autocomplete suggestion
         string suggestedActivityName = "";
+        TextblockLayout autocompleteLayout;
+        LayoutChoice_Set autocomplete_longHelpLayout;
+        ContainerLayout responseLayout = new ContainerLayout();
+
+        // layout that appears if the user requests help
+        LayoutChoice_Set helpWindow;
+
+        // some more information
+        ActivityDatabase activityDatabase;
         bool createNewActivity;
         LayoutStack layoutStack;
     }

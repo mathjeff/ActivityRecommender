@@ -141,7 +141,10 @@ namespace ActivityRecommendation
                 this.childNameBox.Set_NameText(value);
             }
         }
-        
+
+        public bool GoBackAfterCreation { get; set; }
+
+
         public List<AppFeature> GetFeatures()
         {
             return new List<AppFeature>() {
@@ -180,6 +183,8 @@ namespace ActivityRecommendation
                 this.childNameBox.Clear();
                 this.parentNameBox.Clear();
                 this.feedbackLayout.setText("Created " + childDescriptor.ActivityName);
+                if (this.GoBackAfterCreation)
+                    this.layoutStack.GoBack();
             }
             else
             {

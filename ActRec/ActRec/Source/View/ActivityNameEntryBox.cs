@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    class ActivityNameEntryBox : ContainerLayout
+    class ActivityNameEntryBox : ContainerLayout, OnBack_Listener
     {
         public ActivityNameEntryBox(string title, ActivityDatabase activityDatabase, LayoutStack layoutStack, bool createNewActivity = false, bool placeTitleAbove = true)
         {
@@ -131,7 +131,8 @@ namespace ActivityRecommendation.View
         {
             ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
             creationLayout.ActivityName = this.nameText;
-            this.layoutStack.AddLayout(creationLayout, "New Activity");
+            creationLayout.GoBackAfterCreation = true;
+            this.layoutStack.AddLayout(creationLayout, "New Activity", this);
         }
 
         public void Placeholder(string text)
@@ -154,7 +155,6 @@ namespace ActivityRecommendation.View
 
         private void NameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            bool didNameMatch = this.NameMatchesSuggestion;
             string oldText = e.OldTextValue;
             if (oldText == null)
                 oldText = "";
@@ -163,25 +163,8 @@ namespace ActivityRecommendation.View
             if (newText != this.nameText)
                 this.userEnteredText(oldText, newText);
 
-            this.UpdateFeedback();
             this.updateSideButton();
-
-            if (this.NameMatchesSuggestion)
-            {
-                // Whenever the user enters a name that matches the suggestion, that is treated as selecting that option,
-                // so we announce that the user has chosen something
-                if (this.NameMatchedSuggestion != null)
-                    this.NameMatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
-            }
-            else
-            {
-                if (didNameMatch)
-                {
-                    // If the user has no longer selected a valid option, announce that too
-                    if (this.NameUnmatchedSuggestion != null)
-                        this.NameUnmatchedSuggestion.Invoke(this, new TextChangedEventArgs(oldText, this.nameText));
-                }
-            }
+            this.UpdateFeedback();
         }
 
         private void updateSideButton()
@@ -266,9 +249,12 @@ namespace ActivityRecommendation.View
             }
         }
 
-        // update the UI based on a change in the text that the user has typed
+        bool nameMatchedSuggestion = false;
+
+        // update feedback based on a change in the text
         void UpdateFeedback()
         {
+            // update user interface
             ActivityDescriptor descriptor = this.WorkInProgressActivityDescriptor;
             string oldText = this.suggestedActivityName;
             if (descriptor == null)
@@ -321,12 +307,32 @@ namespace ActivityRecommendation.View
                     // show a help button
                     this.responseLayout.SubLayout = this.autocomplete_longHelpLayout;
                 }
-
             }
+
+            // inform the layout engine that there was a change in the text
             if (oldText == null || oldText == "")
             {
                 this.AnnounceChange(true);
             }
+
+            // inform
+            if (this.NameMatchesSuggestion)
+            {
+                // Whenever the user enters a name that matches the suggestion, that is treated as selecting that option,
+                // so we announce that the user has chosen something
+                if (this.NameMatchedSuggestion != null)
+                    this.NameMatchedSuggestion.Invoke();
+            }
+            else
+            {
+                if (this.nameMatchedSuggestion)
+                {
+                    // If the user has no longer selected a valid option, announce that too
+                    if (this.NameUnmatchedSuggestion != null)
+                        this.NameUnmatchedSuggestion.Invoke();
+                }
+            }
+            this.nameMatchedSuggestion = this.NameMatchesSuggestion;
         }
 
         public bool AutoAcceptAutocomplete { get; set; } // Whether to treat a partially entered activity as equivalent to the one recommended by autocomplete
@@ -403,6 +409,12 @@ namespace ActivityRecommendation.View
                 return matches;
             }
         }
+
+        public void OnBack(LayoutChoice_Set layout)
+        {
+            this.UpdateFeedback();
+        }
+
         public event NameMatchedSuggestionHandler NameMatchedSuggestion;
         public event NameUnmatchedSuggestionHandler NameUnmatchedSuggestion;
 
@@ -432,7 +444,7 @@ namespace ActivityRecommendation.View
         LayoutStack layoutStack;
     }
 
-    public delegate void NameMatchedSuggestionHandler(object sender, TextChangedEventArgs e);
-    public delegate void NameUnmatchedSuggestionHandler(object sender, TextChangedEventArgs e);
+    public delegate void NameMatchedSuggestionHandler();
+    public delegate void NameUnmatchedSuggestionHandler();
 
 }

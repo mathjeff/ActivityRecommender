@@ -443,7 +443,7 @@ namespace ActivityRecommendation
 
         }
 
-        public void ActivityName_ValidityChanged(object sender, TextChangedEventArgs e)
+        public void ActivityName_ValidityChanged()
         {
             this.Invalidate_FeedbackBlock_Text();
             this.updateMetricSelectorVisibility();

@@ -10,7 +10,7 @@ using Xamarin.Forms;
 // A SuggestionsView provides a user interface for requesting and receiving suggestions for which Activity to do
 namespace ActivityRecommendation.View
 {
-    class SuggestionsView : TitledControl
+    class SuggestionsView : TitledControl, OnBack_Listener
     {
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment();
@@ -34,8 +34,6 @@ namespace ActivityRecommendation.View
             this.recommender = recommenderToInform;
 
             this.layoutStack = layoutStack;
-
-            this.SetTitle("Get Suggestions");
 
             this.messageLayout = new TextblockLayout("What kind of suggestion would you like?");
 
@@ -134,6 +132,8 @@ namespace ActivityRecommendation.View
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
+            this.updateNumCandidateActivities();
+
             // show/hide the noActivities_explanationLayout as needed
             bool shouldShowActivityCreationHelp = !this.activityDatabase.ContainsCustomActivity();
             if (shouldShowActivityCreationHelp)
@@ -150,6 +150,25 @@ namespace ActivityRecommendation.View
             }
             // call parent
             return base.GetBestLayout(query);
+        }
+
+        private void updateNumCandidateActivities()
+        {
+            if (this.numCandidates < 0)
+            {
+                int count = this.engine.GetActivitiesToConsider(new ActivityRequest()).Count;
+                this.SetTitle("Get Suggestions (" + count + " candidates)");
+                this.numCandidates = count;
+            }
+        }
+        public void OnBack(LayoutChoice_Set layout)
+        {
+            this.invalidateNumCandidates();
+        }
+
+        private void invalidateNumCandidates()
+        {
+            this.numCandidates = -1;
         }
 
         private void RequestSuggestion_layout_RequestSuggestion(ActivityRequest activityRequest)
@@ -331,6 +350,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
         ActivitySuggestion previousDeclinedSuggestion;
+        int numCandidates = -1;
     }
 
     class RequestSuggestion_Feature : AppFeature

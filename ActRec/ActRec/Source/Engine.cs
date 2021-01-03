@@ -226,7 +226,7 @@ namespace ActivityRecommendation
             return this.MakeRecommendation(request);
         }
 
-        private List<Activity> getActivitiesToConsider(ActivityRequest request)
+        public List<Activity> GetActivitiesToConsider(ActivityRequest request)
         {
             List<Activity> candidates;
             if (request.LeafActivitiesToConsider != null)
@@ -350,7 +350,7 @@ namespace ActivityRecommendation
             DateTime when = request.Date;
             Activity activityToBeat = this.activityDatabase.ResolveDescriptor(request.ActivityToBeat);
 
-            List<Activity> candidates = this.getActivitiesToConsider(request);
+            List<Activity> candidates = this.GetActivitiesToConsider(request);
             TimeSpan? requestedProcessingTime = request.RequestedProcessingTime;
 
             DateTime processingStartTime = DateTime.Now;

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using VisiPlacement;
 using Xamarin.Forms;
 
-namespace ActivityRecommendation.View
+namespace ActivityRecommendation
 {
-    abstract class ActivityCreationLayout : TitledControl
+    class ActivityCreationLayout : TitledControl
     {
         public ActivityCreationLayout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
@@ -14,30 +14,34 @@ namespace ActivityRecommendation.View
             this.layoutStack = layoutStack;
 
             this.SetTitle("Add New Activity to Choose From");
+            LayoutChoice_Set typeList = new TextblockLayout("Activity types: Category, ToDo, Problem, Solution");
+            SingleSelect typeSelector = new SingleSelect(this.typeChoices);
 
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), new BoundProperty_List(1), LayoutScore.Zero);
-
-            mainGrid.AddLayout(new TextblockLayout(this.getShortExplanation()));
-
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(4), new BoundProperty_List(1), LayoutScore.Zero);
+            mainGrid.AddLayout(typeList);
+            mainGrid.AddLayout(ButtonLayout.WithoutBevel(typeSelector));
             this.feedbackLayout = new TextblockLayout();
             mainGrid.AddLayout(this.feedbackLayout);
 
-            GridLayout entryLayout = GridLayout.New(new BoundProperty_List(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-            mainGrid.AddLayout(entryLayout);
+            GridLayout bottomGrid = GridLayout.New(new BoundProperty_List(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            mainGrid.AddLayout(bottomGrid);
+
+            this.typePicker = typeSelector;
+            typeSelector.Clicked += TypeSelector_Clicked;
 
             this.childNameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack, true);
             this.childNameBox.AutoAcceptAutocomplete = false;
-            entryLayout.AddLayout(this.childNameBox);
+            bottomGrid.AddLayout(this.childNameBox);
 
             this.parentNameBox = new ActivityNameEntryBox("Parent Name", activityDatabase, layoutStack);
             this.parentNameBox.AutoAcceptAutocomplete = false;
             // for first-time users, make it extra obvious that the root activity exists
             this.parentNameBox.autoselectRootActivity_if_noCustomActivities();
-            entryLayout.AddLayout(this.parentNameBox);
+            bottomGrid.AddLayout(this.parentNameBox);
 
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Clicked;
-            entryLayout.AddLayout(new ButtonLayout(this.okButton, "OK"));
+            bottomGrid.AddLayout(new ButtonLayout(this.okButton, "OK"));
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("This screen is for you to enter activities to do, to use as future suggestions.")
                 .AddMessage("In the left text box, choose a name for the activity.")
@@ -64,9 +68,66 @@ namespace ActivityRecommendation.View
 
             HelpButtonLayout helpLayout = new HelpButtonLayout(helpWindow, layoutStack);
 
-            entryLayout.AddLayout(helpLayout);
+            bottomGrid.AddLayout(helpLayout);
+
+            this.explainActivityType();
 
             this.SetContent(mainGrid);
+        }
+
+        private List<SingleSelect_Choice> typeChoices
+        {
+            get
+            {
+                SingleSelect_Choice categoryType = new SingleSelect_Choice("Type = Category", Color.FromRgb(181, 255, 254));
+                SingleSelect_Choice todoType = new SingleSelect_Choice("Type = ToDo", Color.FromRgb(179, 172, 166));
+                SingleSelect_Choice problemType = new SingleSelect_Choice("Type = Problem", Color.FromRgb(235, 228, 134));
+                List<SingleSelect_Choice> choices = new List<SingleSelect_Choice>() { categoryType, todoType, problemType };
+                // If the user has already entered a solution, then they probably already know that a category can be used as a solution,
+                // so we don't need to remind them. They can check the Help if they'd like a reminder.
+                // If the user hasn't yet entered a solution, we may need to explicitly call out Solution as a separate menu option
+                if (!this.activityDatabase.HasSolution)
+                {
+                    SingleSelect_Choice solutionType = new SingleSelect_Choice("Type = Solution", Color.FromRgb(48, 237, 138));
+                    choices.Add(solutionType);
+                }
+                return choices;
+            }
+        }
+
+        // returns true if the type of Activity to create is Category
+        bool SelectedActivityTypeIsCategory
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 0;
+            }
+        }
+        public bool SelectedActivityTypeIsToDo
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 1;
+            }
+            set
+            {
+                this.typePicker.SelectedIndex = 1;
+                this.explainActivityType();
+            }
+        }
+        public bool SelectedActivityTypeIsProblem
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 2;
+            }
+        }
+        public bool SelectedActivityTypeIsSolution
+        {
+            get
+            {
+                return this.typePicker.SelectedIndex == 3;
+            }
         }
 
         public string ActivityName
@@ -80,8 +141,17 @@ namespace ActivityRecommendation.View
                 this.childNameBox.Set_NameText(value);
             }
         }
+        
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() {
+                new CreateActivity_Feature(this.activityDatabase),
+                new CreateTodo_Feature(this.activityDatabase),
+                new CreateProblem_Feature(this.activityDatabase),
+                new CreateSolution_Feature(this.activityDatabase)
+            };
+        }
 
-        public abstract List<AppFeature> GetFeatures();
         private void OkButton_Clicked(object sender, EventArgs e)
         {
             ActivityDescriptor childDescriptor = this.childNameBox.ActivityDescriptor;
@@ -89,7 +159,22 @@ namespace ActivityRecommendation.View
             Inheritance inheritance = new Inheritance(parentDescriptor, childDescriptor);
             inheritance.DiscoveryDate = DateTime.Now;
 
-            string error = this.doCreate(inheritance);
+            string error;
+            if (this.SelectedActivityTypeIsCategory || this.SelectedActivityTypeIsSolution)
+            {
+                error = this.activityDatabase.CreateCategory(inheritance);
+            }
+            else
+            {
+                if (this.SelectedActivityTypeIsToDo)
+                {
+                    error = this.activityDatabase.CreateToDo(inheritance);
+                }
+                else
+                {
+                    error = this.activityDatabase.CreateProblem(inheritance);
+                }
+            }
             if (error == "")
             {
                 this.childNameBox.Clear();
@@ -101,18 +186,138 @@ namespace ActivityRecommendation.View
                 this.feedbackLayout.setText(error);
             }
         }
-        protected abstract string doCreate(Inheritance inheritance);
 
-        protected abstract string getShortExplanation();
+        private void TypeSelector_Clicked(object sender, EventArgs e)
+        {
+            if (this.SelectedActivityTypeIsSolution)
+            {
+                if (!this.activityDatabase.HasProblem)
+                {
+                    // If the user hasn't entered a Problem yet, then it doesn't make sense to try to enter a solution yet
+                    this.typePicker.Advance();
+                }
+            }
+            this.explainActivityType();
+        }
 
-        protected ActivityDatabase activityDatabase;
+        private void explainActivityType()
+        {
+            string text;
+            if (this.SelectedActivityTypeIsCategory)
+            {
+                text = "A Category is a class of things you may do multiple times. A Category may have other activities as children.";
+            }
+            else
+            {
+                if (this.SelectedActivityTypeIsToDo)
+                {
+                    text = "A ToDo is a specific thing that you complete once. A ToDo can't be given children.";
+                }
+                else
+                {
+                    if (this.SelectedActivityTypeIsProblem)
+                    {
+                        text = "A Problem is something you may want to fix multiple times. Its children may be other Problems or may be other Categories (Solutions).";
+                    }
+                    else
+                    {
+                        text = "A Solution is another name for a Category. If you assign a Category as a child of a Problem, the Category will be considered a solution to that Problem.";
+                    }
+                }
+            }
+            this.feedbackLayout.setText(text);
+        }
 
         private ActivityNameEntryBox childNameBox;
         private ActivityNameEntryBox parentNameBox;
         private Button okButton;
         private LayoutStack layoutStack;
+        private ActivityDatabase activityDatabase;
         private TextblockLayout feedbackLayout;
         private VisiPlacement.SingleSelect typePicker;
     }
 
+    class CreateActivity_Feature : AppFeature
+    {
+        public CreateActivity_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Create an activity";
+        }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.ContainsCustomActivity();
+        }
+        ActivityDatabase activityDatabase;
+    }
+    class CreateTodo_Feature : AppFeature
+    {
+        public CreateTodo_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Create a Todo";
+        }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.HasTodo;
+        }
+        ActivityDatabase activityDatabase;
+    }
+    class CreateProblem_Feature : AppFeature
+    {
+        public CreateProblem_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Declare a Problem";
+        }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.HasProblem;
+        }
+        ActivityDatabase activityDatabase;
+    }
+    class CreateSolution_Feature : AppFeature
+    {
+        public CreateSolution_Feature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            return "Declare a Solution";
+        }
+        public bool GetIsUsable()
+        {
+            return true;
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            return this.activityDatabase.HasSolution;
+        }
+        ActivityDatabase activityDatabase;
+    }
 }

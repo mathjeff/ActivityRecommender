@@ -129,9 +129,9 @@ namespace ActivityRecommendation.View
 
         private void help_createNew_button_Clicked(object sender, EventArgs e)
         {
-            InheritanceEditingLayout editingLayout = new InheritanceEditingLayout(this.activityDatabase, this.layoutStack);
-            editingLayout.ChildName = this.nameText;
-            this.layoutStack.AddLayout(editingLayout, "New Activity");
+            ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
+            creationLayout.ActivityName = this.nameText;
+            this.layoutStack.AddLayout(creationLayout, "New Activity");
         }
 
         public void Placeholder(string text)

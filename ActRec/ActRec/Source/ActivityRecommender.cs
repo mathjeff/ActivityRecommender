@@ -366,24 +366,9 @@ namespace ActivityRecommendation
             this.activitiesMenuLayout = new ActivitiesMenuLayout(
                 new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
                 activityImportLayout,
-                new InheritanceEditingLayout(this.ActivityDatabase, this.layoutStack),
+                new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack),
+                new ActivityEditingLayout(this.ActivityDatabase, this.layoutStack),
                 protoActivitiesLayout,
-                (new HelpWindowBuilder()
-                    .AddMessage("This screen allows you to browse the types of activity that you have informed ActivityRecommender that you're interested in.")
-                    .AddMessage("This screen also allows you to add new types of activities.")
-                    .AddMessage("When you ask ActivityRecommender for a recommendation later, it will only suggest activities that you have entered here.")
-                    .AddMessage("Additionally, if you plan to ask ActivityRecommender to measure how quickly (your Effectiveness) you complete various Activities, you have to enter a " +
-                    "Metric for those activities, so ActivityRecommender can know that it makes sense to measure (for example, it wouldn't make sense to measure how quickly you sleep at " +
-                    "once: it wouldn't count as twice effective to do two sleeps of half duration each).")
-                    .AddMessage("To undo, remove, or modify an entry, you have to edit the data file directly. Go back to the Export screen and export all of your data as a .txt file. " +
-                    "Then make some changes, and go to the Import screen to load your changed file.")
-                    .AddLayout(new CreditsButtonBuilder(layoutStack)
-                        .AddContribution(ActRecContributor.CORY_JALBERT, new DateTime(2017, 12, 14), "Suggested having pre-chosen activities available for easy import")
-                        .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 8), "Pointed out that linebreaks in buttons didn't work correctly on iOS")
-                        .Build()
-                    )
-                    .Build()
-                ),
                 this.layoutStack,
                 this.ActivityDatabase);
 

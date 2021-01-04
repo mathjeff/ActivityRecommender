@@ -135,7 +135,7 @@ namespace ActivityRecommendation
             grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now", 16));
             contents.AddLayout(grid4);
 
-            this.mainLayout = contents;
+            this.mainLayout = LayoutCache.For(contents);
 
             Vertical_GridLayout_Builder noActivities_help_builder = new Vertical_GridLayout_Builder();
             noActivities_help_builder.AddLayout(new TextblockLayout("This screen is where you will be able to record having participated in an activity.\n"));

@@ -926,6 +926,26 @@ namespace ActivityRecommendation
             return subCategories;
         }
 
+        public List<ToDo> OtherOpenTodos
+        {
+            get
+            {
+                List<ToDo> openTodos = new List<ToDo>();
+                foreach (Activity activity in this.GetChildrenRecursive())
+                {
+                    if (activity == this)
+                        continue;
+                    ToDo todo = activity as ToDo;
+                    if (todo != null)
+                    {
+                        if (!todo.IsCompleted())
+                            openTodos.Add(todo);
+                    }
+                }
+                return openTodos;
+            }
+        }
+
         // Tells whether this activity has exactly one descendant such that that descendant has no other descendants.
         // This property could be interesting because an activity having only one leaf descendant might be more worth suggesting than its single leaf descendant
         public Activity GetUniqueLeafDescendant()

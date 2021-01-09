@@ -364,7 +364,7 @@ namespace ActivityRecommendation
             ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
 
             this.activitiesMenuLayout = new ActivitiesMenuLayout(
-                new BrowseInheritancesView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
+                new ActivitySearchView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
                 activityImportLayout,
                 new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack),
                 new ActivityEditingLayout(this.ActivityDatabase, this.layoutStack),
@@ -577,7 +577,7 @@ namespace ActivityRecommendation
 
         private void SuggestionsView_ExperimentRequested()
         {
-            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase, this.engine, 3 - this.recentUserData.NumRecent_UserChosen_ExperimentSuggestions);
+            ExperimentInitializationLayout experimentationLayout = new ExperimentInitializationLayout(this.layoutStack, this, this.ActivityDatabase, this.protoActivities_database, this.engine, 3 - this.recentUserData.NumRecent_UserChosen_ExperimentSuggestions);
             experimentationLayout.LatestParticipation = this.LatestParticipation;
             this.layoutStack.AddLayout(experimentationLayout, "Experiment");
             experimentationLayout.RequestedExperiment += ExperimentationInitializationLayout_RequestedExperiment;

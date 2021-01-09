@@ -375,17 +375,8 @@ namespace ActivityRecommendation
         {
             get
             {
-                List<ToDo> results = new List<ToDo>();
-                foreach (ToDo todo in this.AllTodos)
-                {
-                    if (!todo.IsCompleted())
-                    {
-                        results.Add(todo);
-                    }
-                }
-                return results;
+                return this.rootActivity.OtherOpenTodos;
             }
-
         }
         public IEnumerable<ToDo> AllTodos
         {

@@ -76,14 +76,19 @@ namespace ActivityRecommendation.View
             if (parents.Count > 0)
                 gridBuilder.AddLayout(this.newListView(parents.Count.ToString() + " Parents:", parents));
 
-            List<Activity> childTodos = new List<Activity>();
+            List<Activity> openChildTodos = new List<Activity>();
+            List<Activity> completedChildTodos = new List<Activity>();
             List<Activity> childCategories = new List<Activity>();
             List<Activity> childProblems = new List<Activity>();
             foreach (Activity child in children)
             {
-                if (child is ToDo)
+                ToDo childToDo = child as ToDo;
+                if (childToDo != null)
                 {
-                    childTodos.Add(child);
+                    if (childToDo.IsCompleted())
+                        completedChildTodos.Add(childToDo);
+                    else
+                        openChildTodos.Add(childToDo);
                 }
                 else if (child is Category)
                 {
@@ -101,12 +106,22 @@ namespace ActivityRecommendation.View
 
             if (children.Count > 0)
             {
+                List<Activity> sortedToDos = new List<Activity>();
+                sortedToDos.AddRange(openChildTodos);
+                sortedToDos.AddRange(completedChildTodos);
+
+                List<Activity> allOpenTodos = new List<Activity>();
+                foreach (Activity otherToDo in activity.OtherOpenTodos)
+                    allOpenTodos.Add(otherToDo);
+
                 if (childCategories.Count > 0)
                     gridBuilder.AddLayout(this.newListView(" " + childCategories.Count.ToString() + " Children of type Category:", childCategories));
-                if (childTodos.Count > 0)
-                    gridBuilder.AddLayout(this.newListView(" " + childTodos.Count.ToString() + " Children of type ToDo:", childTodos));
+                if (sortedToDos.Count > 0)
+                    gridBuilder.AddLayout(this.newListView(" " + sortedToDos.Count.ToString() + " Children of type ToDo:", sortedToDos));
                 if (childProblems.Count > 0)
                     gridBuilder.AddLayout(this.newListView(" " + childProblems.Count.ToString() + " Children of type Problem:", childProblems));
+                if (allOpenTodos.Count > openChildTodos.Count)
+                    gridBuilder.AddLayout(this.newListView(" " + allOpenTodos.Count.ToString() + " Total open ToDos:", allOpenTodos));
             }
 
             gridBuilder.AddLayout(new TextblockLayout("You've done this " + activity.NumParticipations + " times since " + activity.DiscoveryDate.ToString("yyyy-MM-dd")));
@@ -114,11 +129,22 @@ namespace ActivityRecommendation.View
             this.SetContent(gridBuilder.Build());
         }
 
-        private ActivityListView newListView(string title, List<Activity> activities)
+        private LayoutChoice_Set newListView(string title, List<Activity> activities)
         {
             ActivityListView listView = new ActivityListView(title, activities);
             listView.SelectedActivity += ListView_SelectedActivity;
-            return listView;
+
+            Shrunken_ActivityListView shrunkenListView = new Shrunken_ActivityListView(title, activities);
+            shrunkenListView.SelectedActivities += ShrunkenListView_SelectedActivities;
+
+            return new LayoutUnion(shrunkenListView, listView);
+        }
+
+        private void ShrunkenListView_SelectedActivities(string name, List<Activity> activities)
+        {
+            ActivityListView fullListView = new ActivityListView(name, activities);
+            fullListView.SelectedActivity += ListView_SelectedActivity;
+            this.SetContent(ScrollLayout.New(fullListView));
         }
 
         private void ListView_SelectedActivity(Activity activity)
@@ -136,16 +162,18 @@ namespace ActivityRecommendation.View
 
         public ActivityListView(string name, List<Activity> activities)
         {
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            double fontSize = 16;
+
+            // inline layout
+            Vertical_GridLayout_Builder inlineBuilder = new Vertical_GridLayout_Builder().Uniform();
             foreach (Activity activity in activities)
             {
                 Button otherActivityButton = new Button();
                 otherActivityButton.Clicked += OtherActivityButton_Clicked;
                 this.activitiesByButton[otherActivityButton] = activity;
-                gridBuilder.AddLayout(new ButtonLayout(otherActivityButton, activity.Name, 16));
+                inlineBuilder.AddLayout(new ButtonLayout(otherActivityButton, activity.Name, fontSize));
             }
-            LayoutChoice_Set scrollLayout = ScrollLayout.New(gridBuilder.BuildAnyLayout());
-            this.SetContent(scrollLayout);
+            this.SetContent(inlineBuilder.BuildAnyLayout());
 
             this.SetTitle(name);
         }
@@ -157,5 +185,32 @@ namespace ActivityRecommendation.View
             this.SelectedActivity.Invoke(activity);
         }
         Dictionary<Button, Activity> activitiesByButton = new Dictionary<Button, Activity>();
+    }
+    class Shrunken_ActivityListView : TitledControl
+    {
+        public event SelectedActivitiesHandler SelectedActivities;
+        public delegate void SelectedActivitiesHandler(string name, List<Activity> activities);
+
+        public Shrunken_ActivityListView(string name, List<Activity> activities)
+        {
+            this.activities = activities;
+            this.name = name;
+            double fontSize = 16;
+
+            // expand layout
+            Button expandButton = new Button();
+            expandButton.Clicked += ExpandButton_Clicked;
+            this.SetContent(new ButtonLayout(expandButton, "See List", fontSize));
+            this.SetTitle(name);
+        }
+
+        private void ExpandButton_Clicked(object sender, EventArgs e)
+        {
+            if (this.SelectedActivities != null)
+                this.SelectedActivities.Invoke(this.name, this.activities);
+        }
+
+        string name;
+        List<Activity> activities;
     }
 }

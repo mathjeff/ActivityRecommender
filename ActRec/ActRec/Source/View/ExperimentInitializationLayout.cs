@@ -10,7 +10,7 @@ namespace ActivityRecommendation.View
         public event RequestedExperimentHandler RequestedExperiment;
         public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
 
-        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase, Engine engine, int numActivitiesThatMayBeRequestedDirectly)
+        public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, Engine engine, int numActivitiesThatMayBeRequestedDirectly)
         {
             this.SetTitle("Experiment");
             this.activityRecommender = activityRecommender;
@@ -31,7 +31,7 @@ namespace ActivityRecommendation.View
             this.statusHolder = new ContainerLayout();
             GridLayout topGrid = new Horizontal_GridLayout_Builder()
                 .AddLayout(helpButton)
-                .AddLayout(new HelpButtonLayout("List Open ToDos", new ListOpenTodosView(activityDatabase), layoutStack))
+                .AddLayout(new HelpButtonLayout("Browse Activities", new ActivitySearchView(activityDatabase, protoActivity_database, layoutStack), layoutStack))
                 .Uniform()
                 .Build();
 

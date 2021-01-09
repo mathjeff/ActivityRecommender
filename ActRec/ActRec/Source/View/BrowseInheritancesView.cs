@@ -5,175 +5,22 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
-    public class BrowseInheritancesView : ContainerLayout
-    {
-        public BrowseInheritancesView(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
-        {
-            ListInheritancesView listView = new ListAllActivitiesView(activityDatabase);
-            ListInheritancesView todosView = new ListOpenTodosView(activityDatabase);
-            ActivitySearchView searchView = new ActivitySearchView(activityDatabase, protoActivity_database, layoutStack);
-            listView.ActivityChosen += this.activityChosen;
-            todosView.ActivityChosen += this.activityChosen;
-            searchView.ActivityChosen += this.activityChosen;
-            searchView.ProtoActivity_Chosen += this.protoActivity_chosen;
-
-            this.menuLayout = new MenuLayoutBuilder(layoutStack)
-                .AddLayout(new StackEntry(listView, "List All Activities", listView))
-                .AddLayout(new StackEntry(todosView, "List Open ToDos", todosView))
-                .AddLayout("Find Activity By Name", searchView)
-                .Build();
-
-            this.SubLayout = this.menuLayout;
-            this.layoutStack = layoutStack;
-            this.activityDatabase = activityDatabase;
-            this.protoActivity_database = protoActivity_database;
-        }
-
-        private void activityChosen(object sender, Activity activity)
-        {
-            this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase), "Activity");
-        }
-
-        private void protoActivity_chosen(object sender, ProtoActivity protoActivity)
-        {
-            ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack);
-            this.layoutStack.AddLayout(layout, "Proto", layout);
-        }
-
-        public override SpecificLayout GetBestLayout(LayoutQuery query)
-        {
-            return this.menuLayout.GetBestLayout(query);
-        }
-
-        LayoutChoice_Set menuLayout;
-        LayoutStack layoutStack;
-        ActivityDatabase activityDatabase;
-        ProtoActivity_Database protoActivity_database;
-    }
-
-    abstract class ListInheritancesView : TitledControl, OnBack_Listener
-    {
-        public event ActivityChosenHandler ActivityChosen;
-        public delegate void ActivityChosenHandler(object sender, Activity activity);
-
-        public ListInheritancesView(ActivityDatabase activityDatabase) : base("Activities", 30)
-        {
-            this.activityDatabase = activityDatabase;
-
-            this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
-        }
-
-        private void ActivityDatabase_ActivityAdded(Activity a)
-        {
-            this.invalidateChildren();
-        }
-
-        public void OnBack(LayoutChoice_Set layout)
-        {
-            if (!this.isCacheable())
-            {
-                this.invalidateChildren();
-            }
-        }
-        public override SpecificLayout GetBestLayout(LayoutQuery query)
-        {
-            if (this.GetContent() == null)
-                this.generateChildren();
-            return base.GetBestLayout(query);
-        }
-
-        private void generateChildren()
-        {
-            IEnumerable<Activity> activities = this.getActivities(this.activityDatabase);
-            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
-            this.activityButtons = new Dictionary<Button, Activity>();
-            foreach (Activity activity in activities)
-            {
-                Button button = new Button();
-                button.Clicked += Button_Clicked;
-                this.activityButtons[button] = activity;
-                builder.AddLayout(new ButtonLayout(button, activity.Name, 24));
-            }
-            this.SetContent(ScrollLayout.New(builder.Build()));
-        }
-
-        protected abstract IEnumerable<Activity> getActivities(ActivityDatabase activityDatabase);
-
-        private void Button_Clicked(object sender, System.EventArgs e)
-        {
-            Button button = sender as Button;
-            Activity activity = this.activityButtons[button];
-            this.selected(activity);
-        }
-
-        private void selected(Activity activity)
-        {
-            if (this.ActivityChosen != null)
-            {
-                this.ActivityChosen.Invoke(this, activity);
-            }
-        }
-
-        private void invalidateChildren()
-        {
-            this.SetContent(null);
-        }
-
-        protected virtual bool isCacheable()
-        {
-            return true;
-        }
-
-
-        Dictionary<Button, Activity> activityButtons;
-        ActivityDatabase activityDatabase;
-    }
-
-    class ListAllActivitiesView: ListInheritancesView
-    {
-        public ListAllActivitiesView(ActivityDatabase activityDatabase) : base(activityDatabase)
-        {
-            this.SetTitle("Activities You Have Entered");
-        }
-        protected override IEnumerable<Activity> getActivities(ActivityDatabase activityDatabase)
-        {
-            return activityDatabase.AllActivities;
-        }
-    }
-
-    class ListOpenTodosView: ListInheritancesView
-    {
-        public ListOpenTodosView(ActivityDatabase activityDatabase) : base(activityDatabase)
-        {
-            this.SetTitle("Remaining ToDos");
-        }
-        protected override IEnumerable<Activity> getActivities(ActivityDatabase activityDatabase)
-        {
-            return activityDatabase.AllOpenTodos;
-        }
-        protected override bool isCacheable()
-        {
-            return false;
-        }
-    }
-
     class ActivitySearchView : ContainerLayout
     {
-        public event ActivityChosenHandler ActivityChosen;
-        public delegate void ActivityChosenHandler(object sender, Activity activity);
-
-        public event ProtoActivityChosen_Handler ProtoActivity_Chosen;
-        public delegate void ProtoActivityChosen_Handler(object sender, ProtoActivity protoActivity);
-
-
         public ActivitySearchView(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
         {
+            this.layoutStack = layoutStack;
             this.activityDatabase = activityDatabase;
             this.protoActivity_database = protoActivity_database;
             this.textBox = new Editor();
             this.textBox.TextChanged += TextBox_TextChanged;
             this.largeFont_autocomplete_gridLayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
             this.smallFont_autocomplete_gridLayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
+
+            Button rootActivity_button = new Button();
+            rootActivity_button.Clicked += RootActivity_button_Clicked;
+            this.rootActivity_buttonLayout = new ButtonLayout(rootActivity_button, "Or, see the root activity");
+            this.footer = new ContainerLayout();
 
             this.SubLayout = new Vertical_GridLayout_Builder()
                 .AddLayout(
@@ -182,10 +29,16 @@ namespace ActivityRecommendation.View
                         this.smallFont_autocomplete_gridLayout)
                 )
                 .AddLayout(new TextboxLayout(this.textBox))
+                .AddLayout(footer)
                 .BuildAnyLayout();
 
             this.titleLayout = new TextblockLayout("Activity name (and/or ProtoActivity name):");
             this.updateAutocomplete();
+        }
+
+        private void RootActivity_button_Clicked(object sender, EventArgs e)
+        {
+            this.choseActivity(this.activityDatabase.RootActivity);
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -212,7 +65,16 @@ namespace ActivityRecommendation.View
             this.putAutocomplete(activities, protoActivities);
             if (activities.Count < 1 && protoActivities.Count < 1)
             {
+                // If there are no results, show an explanatory title
                 this.largeFont_autocomplete_gridLayout.PutLayout(this.titleLayout, 0, 0);
+
+                // If there are no matches, also show a button for jumping directly to the root
+                this.footer.SubLayout = this.rootActivity_buttonLayout;
+            }
+            else
+            {
+                // If there are matches, don't need to show the button for jumping to the root
+                this.footer.SubLayout = null;
             }
         }
         private void putAutocomplete(List<Activity> activities, List<ProtoActivity> protoActivities)
@@ -242,8 +104,6 @@ namespace ActivityRecommendation.View
                 return;
             this.activitiesByButton = new Dictionary<Button, Activity>();
             this.protoActivities_byButton = new Dictionary<Button, ProtoActivity>();
-
-            List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
 
             for (int i = 0; i < activities.Count; i++)
             {
@@ -280,7 +140,7 @@ namespace ActivityRecommendation.View
             this.largeFont_autocomplete_gridLayout.PutLayout(largeLayout, 0, index);
 
             ButtonLayout smallLayout = this.smallFont_buttonLayouts[index];
-            largeLayout.setText(text);
+            smallLayout.setText(text);
             this.smallFont_autocomplete_gridLayout.PutLayout(smallLayout, 0, index);
         }
 
@@ -304,19 +164,24 @@ namespace ActivityRecommendation.View
                 Activity activity;
                 if (this.activitiesByButton.TryGetValue(button, out activity))
                 {
-                    if (this.ActivityChosen != null)
-                        this.ActivityChosen.Invoke(this, activity);
+                    this.choseActivity(activity);
                 }
                 else
                 {
                     ProtoActivity protoActivity = this.protoActivities_byButton[button];
-                    if (this.ProtoActivity_Chosen != null)
-                        this.ProtoActivity_Chosen.Invoke(this, protoActivity);
+
+                    ProtoActivity_Editing_Layout layout = new ProtoActivity_Editing_Layout(protoActivity, this.protoActivity_database, this.activityDatabase, this.layoutStack);
+                    this.layoutStack.AddLayout(layout, "Proto", layout);
                 }
             }
         }
+        private void choseActivity(Activity activity)
+        {
+            this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase), "Activity");
+        }
 
         Editor textBox;
+        LayoutStack layoutStack;
         ActivityDatabase activityDatabase;
         ProtoActivity_Database protoActivity_database;
         Dictionary<Button, Activity> activitiesByButton = new Dictionary<Button, Activity>();
@@ -329,7 +194,9 @@ namespace ActivityRecommendation.View
         List<ButtonLayout> smallFont_buttonLayouts = new List<ButtonLayout>();
         GridLayout smallFont_autocomplete_gridLayout;
         
-        private TextblockLayout titleLayout;
-        private int maxNumResults = 6;
+        TextblockLayout titleLayout;
+        ButtonLayout rootActivity_buttonLayout;
+        ContainerLayout footer;
+        int maxNumResults = 6;
     }
 }

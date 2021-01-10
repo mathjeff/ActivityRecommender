@@ -19,7 +19,7 @@ namespace ActRec.Droid
     {
         protected override void OnAttached()
         {
-            System.Diagnostics.Debug.WriteLine("Attaching " + this + " to element " + this.Element + " and control " + this.Control);
+            //System.Diagnostics.Debug.WriteLine("Attaching " + this + " to element " + this.Element + " and control " + this.Control);
         }
         protected override void OnDetached()
         {

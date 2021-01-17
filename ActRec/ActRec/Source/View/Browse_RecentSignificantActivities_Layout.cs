@@ -78,16 +78,16 @@ namespace ActivityRecommendation.View
 
         private LayoutChoice_Set renderContribution(ActivityHappinessContribution contribution, DateTime start)
         {
-            double extraSeconds = contribution.TotalHappinessIncreaseInSeconds;
-            TimeSpan bonus = TimeSpan.FromSeconds(extraSeconds);
+            double extraHours = contribution.TotalHappinessIncreaseInSeconds / 3600;
+            double roundedHours = Math.Round(extraHours, 2);
             string bonusText;
-            if (extraSeconds > 0)
+            if (extraHours > 0)
             {
-                bonusText = "+" + bonus;
+                bonusText = "+" + roundedHours + " hours";
             }
             else
             {
-                bonusText = "" + bonus;
+                bonusText = "" + roundedHours + " hours";
             }
             string text = contribution.Activity.Name + ": " + bonusText;
             return new SignificantActivity_Layout(text, contribution.Activity, start, this.scoreSummarizer, this.layoutStack);

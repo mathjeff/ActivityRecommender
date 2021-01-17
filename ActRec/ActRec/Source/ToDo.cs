@@ -25,7 +25,7 @@ namespace ActivityRecommendation
 
         public override string ToString()
         {
-            return "ToDo " + base.Name;
+            return "ToDo: " + base.Name;
         }
         
         public bool IsCompleted()

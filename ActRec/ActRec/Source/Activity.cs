@@ -110,7 +110,7 @@ namespace ActivityRecommendation
         }
         public override string ToString()
         {
-            return "Activity " + this.name;
+            return "Activity: " + this.name;
         }
 
         public List<AbsoluteRating> PendingRatings = new List<AbsoluteRating>();

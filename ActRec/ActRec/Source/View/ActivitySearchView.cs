@@ -113,7 +113,7 @@ namespace ActivityRecommendation.View
                 Button button = this.buttons[i];
                 this.activitiesByButton[button] = activity;
 
-                this.showResult("Activity: " + activity.Name, i);
+                this.showResult(activity.ToString(), i);
             }
             for (int i = 0; i < protoActivities.Count; i++)
             {

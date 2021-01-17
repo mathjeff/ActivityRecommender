@@ -17,6 +17,12 @@ namespace ActivityRecommendation.View
             this.scoreSummarizer = scoreSummarizer;
             this.initialize(showRatings);
         }
+        public ListParticipations_Layout(List<Participation> participations, ScoreSummarizer scoreSummarizer)
+        {
+            this.participations = participations;
+            this.scoreSummarizer = scoreSummarizer;
+            this.initialize(true);
+        }
         private void initialize(bool showRatings)
         {
             List<Participation> participations = new List<Participation>(this.participations);

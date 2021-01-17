@@ -8,10 +8,11 @@ namespace ActivityRecommendation.View
 {
     class Browse_RecentSignificantActivities_Layout : TitledControl
     {
-        public Browse_RecentSignificantActivities_Layout(Engine engine, LayoutStack layoutStack)
+        public Browse_RecentSignificantActivities_Layout(Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
             this.SetTitle("Find most significant recent activities");
             this.engine = engine;
+            this.scoreSummarizer = scoreSummarizer;
             this.layoutStack = layoutStack;
 
             Button okButton = new Button();
@@ -51,7 +52,7 @@ namespace ActivityRecommendation.View
             // Show the top activities from best to worst
             foreach (ActivityHappinessContribution item in contributions.Best)
             {
-                gridBuilder.AddLayout(this.renderContribution(item));
+                gridBuilder.AddLayout(this.renderContribution(item, start));
             }
             // show a divider if we get all of them
             if (contributions.ActivitiesRemain)
@@ -59,7 +60,7 @@ namespace ActivityRecommendation.View
             // Show the bottom activities, also from best to worst
             for (int i = contributions.Worst.Count - 1; i >= 0; i--)
             {
-                gridBuilder.AddLayout(this.renderContribution(contributions.Worst[i]));
+                gridBuilder.AddLayout(this.renderContribution(contributions.Worst[i], start));
             }
             // more details
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
@@ -72,13 +73,10 @@ namespace ActivityRecommendation.View
                 .Build();
             gridBuilder.AddLayout(new HelpButtonLayout(helpWindow, this.layoutStack));
 
-            // TODO: each entry here should be probably be a button that lists the participations that contributed to it
-            gridBuilder.AddLayout(new TextblockLayout("If you want to see more details about the participations in a specific activity, " +
-                "you can go back and select Browse Participations"));
             this.layoutStack.AddLayout(gridBuilder.Build(), "Significant Activities");
         }
 
-        private LayoutChoice_Set renderContribution(ActivityHappinessContribution contribution)
+        private LayoutChoice_Set renderContribution(ActivityHappinessContribution contribution, DateTime start)
         {
             double extraSeconds = contribution.TotalHappinessIncreaseInSeconds;
             TimeSpan bonus = TimeSpan.FromSeconds(extraSeconds);
@@ -92,11 +90,56 @@ namespace ActivityRecommendation.View
                 bonusText = "" + bonus;
             }
             string text = contribution.Activity.Name + ": " + bonusText;
-            return new TextblockLayout(text);
+            return new SignificantActivity_Layout(text, contribution.Activity, start, this.scoreSummarizer, this.layoutStack);
         }
 
         private DurationEntryView durationLayout;
+        private ScoreSummarizer scoreSummarizer;
         private Engine engine;
         private LayoutStack layoutStack;
+    }
+
+    class SignificantActivity_Layout : ContainerLayout
+    {
+        public SignificantActivity_Layout(string text, Activity activity, DateTime start, ScoreSummarizer scoreSummarizer,  LayoutStack layoutStack)
+        {
+            this.activity = activity;
+            this.start = start;
+            this.scoreSummarizer = scoreSummarizer;
+            this.layoutStack = layoutStack;
+
+            Button button = new Button();
+            button.Clicked += Button_Clicked;
+            ButtonLayout buttonLayout = new ButtonLayout(button, text);
+            this.SubLayout = buttonLayout;
+        }
+
+        private void Button_Clicked(object sender, EventArgs e)
+        {
+            this.show();
+        }
+        private void show()
+        {
+            List<Participation> participations = this.activity.getParticipationsSince(this.start);
+            // we reduce the number of visible participations
+            string title;
+            int maxNumParticipations = 20;
+            if (participations.Count > maxNumParticipations)
+            {
+                title = "Last " + maxNumParticipations + " participations in " + this.activity.Name;
+                participations = participations.GetRange(participations.Count - maxNumParticipations, maxNumParticipations);
+            }
+            else
+            {
+                title = "Participations in " + this.activity.Name + " since " + this.start;
+            }
+            ListParticipations_Layout content = new ListParticipations_Layout(participations, this.scoreSummarizer);
+            TitledControl results = new TitledControl(title, content, 20);
+            this.layoutStack.AddLayout(results, "Participations");
+        }
+        Activity activity;
+        DateTime start;
+        LayoutStack layoutStack;
+        ScoreSummarizer scoreSummarizer;
     }
 }

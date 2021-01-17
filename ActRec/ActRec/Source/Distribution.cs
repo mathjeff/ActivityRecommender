@@ -43,6 +43,12 @@ namespace ActivityRecommendation
             this.sumSquaredValue = totalSquaredValue;
             this.sumWeight = totalWeight;
         }
+        public Distribution(BinomialDistribution other)
+        {
+            this.sumValue = other.NumOnes;
+            this.sumSquaredValue = other.NumOnes;
+            this.sumWeight = other.NumItems;
+        }
         public double Mean
         {
             get

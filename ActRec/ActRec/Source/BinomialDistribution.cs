@@ -5,25 +5,36 @@ using System.Text;
 
 namespace ActivityRecommendation
 {
-    class BinomialDistribution
+    public class BinomialDistribution
     {
         public BinomialDistribution(double numZeros, double numOnes)
         {
-            if (numZeros < 0)
-                throw new ArgumentException("numZeros (" + numZeros + ") in a BinomialDistribution cannot be negative");
-            if (numOnes < 0)
-                throw new ArgumentException("numOnes (" + numOnes + ") in a BinomialDistribution cannot be negative");
             this.NumZeros = numZeros;
             this.NumOnes = numOnes;
+            this.validate();
         }
         public BinomialDistribution(BinomialDistribution original)
         {
             this.CopyFrom(original);
         }
+
+        public BinomialDistribution(Distribution distribution)
+        {
+            this.NumOnes = distribution.Weight * distribution.Mean;
+            this.NumZeros = distribution.Weight - this.NumOnes;
+            this.validate();
+        }
         public void CopyFrom(BinomialDistribution original)
         {
             this.NumOnes = original.NumOnes;
             this.NumZeros = original.NumZeros;
+        }
+        private void validate()
+        {
+            if (this.NumZeros < 0)
+                throw new ArgumentException("numZeros (" + this.NumZeros + ") in a BinomialDistribution cannot be negative");
+            if (this.NumOnes < 0)
+                throw new ArgumentException("numOnes (" + this.NumOnes + ") in a BinomialDistribution cannot be negative");
         }
         public double NumZeros { get; set; }
         public double NumOnes { get; set; }

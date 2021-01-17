@@ -165,16 +165,23 @@ namespace ActivityRecommendation
             ProtoActivity_EstimatedInterest interest = new ProtoActivity_EstimatedInterest();
             interest.ProtoActivity = activity;
 
-            Distribution distribution = activity.Ratings;
-            interest.RatingMean = distribution.Plus(Distribution.MakeDistribution(0.5, 0.5, 2)).Mean;
+
+            // We want to estimate the relative probability that this protoactivity will be the next one to be promoted to a protoactivity.
+            // We're not doing any fancy machine-learning at the moment, just some simple guesses based on how many times it has been marked better or worse.
+            BinomialDistribution distribution = new BinomialDistribution(activity.Ratings);
+            // Being marked better indicates a higher probability, and being marked worse indicates a lower probability
+            // Being marked better and then being marked worse overall indicates a lower probability, because it means the user is interacting with this protoactivity and not promoting it
+            // So, we use the number of worses to first compute a ceiling on the score, and then we incorporate the number of betters to decide where in that zone the score will be
+            // For example, if (numZeros,numOnes)=(0,0) then intrinsicInterest = 1*1/2=1/2 whereas for (1,1) intrinisicInterest = 1/2*2/3 = 1/3
+            interest.IntrinsicInterest = (1.0 / (distribution.NumZeros + 1)) * (1.0 - 1.0 / (distribution.NumOnes + 2));
             interest.NumIdleSeconds = this.when.Subtract(activity.LastInteractedWith).TotalSeconds;
-            interest.Interest = interest.RatingMean * interest.NumIdleSeconds;
+            interest.CurrentInterest = interest.IntrinsicInterest * interest.NumIdleSeconds;
 
             return interest;
         }
         public int Compare(ProtoActivity_EstimatedInterest a, ProtoActivity_EstimatedInterest b)
         {
-            return a.Interest.CompareTo(b.Interest);
+            return a.CurrentInterest.CompareTo(b.CurrentInterest);
         }
 
         private DateTime when;
@@ -182,10 +189,13 @@ namespace ActivityRecommendation
 
     public class ProtoActivity_EstimatedInterest
     {
-        public double Interest;
-        public double NumIdleSeconds;
-        public double RatingMean;
+        // The ProtoActivity being described
         public ProtoActivity ProtoActivity;
-
+        // How interesting we believe this ProtoActivity to be now
+        public double CurrentInterest;
+        // How long since the user last interacted with this protoactivity
+        public double NumIdleSeconds;
+        // How interesting we believe this protoactivity is to the user in general
+        public double IntrinsicInterest;
     }
 }

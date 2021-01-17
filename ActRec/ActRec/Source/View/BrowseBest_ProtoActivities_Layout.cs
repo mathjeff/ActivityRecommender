@@ -226,8 +226,8 @@ namespace ActivityRecommendation.View
         private string describeScore(ProtoActivity_EstimatedInterest interest)
         {
             double numIdleDays = interest.NumIdleSeconds / 60 / 60 / 24;
-            double scoreInDays = interest.Interest / 60 / 60 / 24;
-            return "Estimate score = " + Math.Round(scoreInDays, 0) + " (" + Math.Round(interest.RatingMean, 2) + " * " + Math.Round(numIdleDays) + " days)";
+            double scoreInDays = interest.CurrentInterest / 60 / 60 / 24;
+            return "Estimate score = " + Math.Round(scoreInDays, 0) + " (" + Math.Round(interest.IntrinsicInterest, 2) + " * " + Math.Round(numIdleDays) + " days)";
         }
 
         private void Mark1Worse_button_Clicked(object sender, EventArgs e)

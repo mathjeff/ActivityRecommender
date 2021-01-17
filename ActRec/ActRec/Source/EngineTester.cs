@@ -651,9 +651,10 @@ namespace ActivityRecommendation
         // runs the engine on the given activity at the given date, and keeps track of the overall error
         public void UpdateScoreError(AbsoluteRating rating, DateTime when, double correctScore)
         {
+            ActivityRequest request = new ActivityRequest(when);
             // compute estimated score
             Activity activity = this.activityDatabase.ResolveDescriptor(rating.ActivityDescriptor);
-            this.engine.EstimateSuggestionValue(activity, when);
+            this.engine.EstimateSuggestionValue(activity, request);
             Prediction prediction = this.engine.EstimateRating(activity, when);
             double expectedRating = prediction.Distribution.Mean;
 
@@ -686,11 +687,12 @@ namespace ActivityRecommendation
         }
         public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
         {
+            ActivityRequest request = new ActivityRequest(when);
             if (actualIntensity > 1 || actualIntensity < 0)
                 System.Diagnostics.Debug.WriteLine("Invalid participation intensity: " + actualIntensity);
             // compute the estimate participation probability
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            Prediction predictionForSuggestion =  this.engine.EstimateSuggestionValue(activity, when);
+            Prediction predictionForSuggestion =  this.engine.EstimateSuggestionValue(activity, request);
 
             if (predictionForSuggestion.Distribution.Weight > 0)
             {
@@ -699,7 +701,7 @@ namespace ActivityRecommendation
 
                 if (actualIntensity >= 1)
                 {
-                    Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, when);
+                    Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, request);
                     this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
 
                     ScoreSummary efficiencySummary = new ScoreSummary(when);

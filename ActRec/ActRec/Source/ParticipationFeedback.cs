@@ -96,7 +96,7 @@ namespace ActivityRecommendation
             request.RequestedProcessingTime = TimeSpan.FromSeconds(0.5);
             ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
             Activity betterActivity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
-            Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, this.StartDate);
+            Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, request);
             string redirectionText;
             Color redirectionColor;
             Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution);

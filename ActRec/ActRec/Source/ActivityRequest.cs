@@ -13,6 +13,10 @@ namespace ActivityRecommendation
         {
             this.Date = DateTime.Now;
         }
+        public ActivityRequest(DateTime when)
+        {
+            this.Date = when;
+        }
         public ActivityRequest(ActivityDescriptor fromCategory, ActivityDescriptor activityToBeat, DateTime when)
         {
             this.FromCategory = fromCategory;
@@ -37,6 +41,10 @@ namespace ActivityRecommendation
         public Rating RawRawing { get; set; }
         public Rating UserPredictedRating { get; set; }
         public TimeSpan? RequestedProcessingTime { get; set; }
+
+        // The number of suggestions that must be accepted divided by the number of suggestions that will be done.
+        // In most cases, this is 1, but an experiment requires consenting to multiple activities and then doing only one.
+        public int NumAcceptancesPerParticipation = 1;
     }
 
     public enum ActivityRequestOptimizationProperty

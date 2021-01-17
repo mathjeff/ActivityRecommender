@@ -1443,8 +1443,9 @@ namespace ActivityRecommendation
 
         private Distribution compute_estimatedRating_ratio(Activity chosenActivity, DateTime startDate)
         {
+            ActivityRequest request = new ActivityRequest(startDate);
             Activity rootActivity = this.engine.ActivityDatabase.RootActivity;
-            this.engine.EstimateSuggestionValue(chosenActivity, startDate);
+            this.engine.EstimateSuggestionValue(chosenActivity, request);
             Prediction prediction = this.engine.EstimateRating(chosenActivity, startDate);
             return this.compute_estimatedRating_ratio(prediction.Distribution, rootActivity.Ratings);
         }
@@ -1465,13 +1466,9 @@ namespace ActivityRecommendation
         // given an activity and a DateTime for its Participation to start, estimates the change in longterm happiness (measured in days) caused by doing it
         private Distribution compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
-            Distribution endValue = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, startDate).Distribution;
+            ActivityRequest request = new ActivityRequest(startDate);
+            Distribution endValue = this.engine.Get_OverallHappiness_ParticipationEstimate(chosenActivity, request).Distribution;
             this.currentPrediction.LongtermHappiness = endValue;
-            return this.compute_longtermValue_increase(endValue);
-        }
-        private Distribution compute_longtermValue_increase(Activity chosenActivity)
-        {
-            Distribution endValue = this.engine.GetAverageLongtermValueWhenParticipated(chosenActivity);
             return this.compute_longtermValue_increase(endValue);
         }
         private Distribution compute_longtermValue_increase(Distribution endValue)

@@ -23,7 +23,7 @@ namespace ActivityRecommendation.TextSummary
             List<Participation> containedParticipations = this.engine.ActivityDatabase.RootActivity.getParticipationsSince(startDate);
 
             // summarize some individual participations
-            List<Participation> sampleParticipations = this.chooseRandomParticipations(containedParticipations, 40);
+            List<Participation> sampleParticipations = this.chooseRandomParticipations(containedParticipations, 80);
             foreach (Participation participation in sampleParticipations)
             {
                 components.Add(this.summarizeParticipation(participation));
@@ -31,7 +31,7 @@ namespace ActivityRecommendation.TextSummary
             // find the most interesting summaries and remove the rest
             components.Sort(new LifeSummaryItem_InterestComparer());
             components.Reverse();
-            int maxCount = 10;
+            int maxCount = 20;
             if (components.Count > maxCount)
                 components = components.GetRange(0, maxCount);
             // reorder the summaries based on the order we want to display them
@@ -51,55 +51,104 @@ namespace ActivityRecommendation.TextSummary
         {
             Distribution thisQuality = engine.RatingSummarizer.GetValueDistributionForDates(startDate, endDate, true, true);
 
-            DateTime baselineStartDate = this.computeBaselineStartDate(engine.ActivityDatabase.RootActivity.DiscoveryDate, startDate, endDate);
-
-            Distribution baselineQuality = engine.RatingSummarizer.GetValueDistributionForDates(baselineStartDate, endDate, true, true);
-
-            double qualityRatio = thisQuality.Mean / baselineQuality.Mean;
-            double randomizedQualityRatio = qualityRatio + this.generator.NextDouble() * 0.05 - 0.025;
-
             string during = TimeFormatter.summarizeTimespan(startDate, endDate);
             string subject = this.randomString(new List<string>() { "life has been", "life was", "things have been", "things were" });
-            string obj = this.summarizeQuality(randomizedQualityRatio);
+            string obj = this.summarizeQuality(thisQuality.Mean, this.ActivityDatabase.RootActivity.Ratings);
 
             string text = during + " " + subject + " " + obj;
             return new LifeSummaryItem(text, double.PositiveInfinity, startDate);
         }
 
-        private string summarizeQuality(double qualityDividedByAverage)
+        private string summarizeQuality(double participationScore, Distribution usualActivityScore)
         {
-            double quality = qualityDividedByAverage;
+            string qualitySummary = this.summarizeQuality(participationScore);
+            if (usualActivityScore.Weight < 1)
+            {
+                // We don't have much data about how this activity usually goes, so we just describe how it went
+                return qualitySummary + ".";
+            }
+            // We do have information about how this activity usually goes, so we can include that in the description too
+            double difference = participationScore - usualActivityScore.Mean;
+            string surpriseQualifier = "";
+            // If this activity is usually extreme but this time was less extreme, we might a qualifier like "just" to make something like "just good"
+            if ((difference >= 0) == (participationScore < 0.5))
+            {
+                // the surprise is that this participation was closer to average than normal for this activity
+                surpriseQualifier = this.randomString(new List<string>() { "just ", "simply ", "merely " });
+            }
+            if (Math.Abs(difference) < 0.1)
+            {
+                if (usualActivityScore.StdDev < 0.1)
+                    return qualitySummary + ", like always.";
+                if (usualActivityScore.StdDev < 0.2)
+                    return qualitySummary + this.randomString(new List<string>() { ", like usual.", "." });
+                return "unsurprisingly " + qualitySummary + ".";
+            }
+            if (Math.Abs(difference) < 0.2)
+            {
+                if (usualActivityScore.StdDev < 0.2)
+                    return "unexpectedly " + surpriseQualifier + qualitySummary + ".";
+                return "unusually " + surpriseQualifier + qualitySummary + ".";
+            }
+            if (Math.Abs(difference) < 0.3)
+            {
+                if (usualActivityScore.StdDev < 0.3)
+                    return "surprisingly " + surpriseQualifier + qualitySummary + ".";
+                return this.randomString(new List<string>() { "quite ", "really " }) + qualitySummary + ".";
+            }
+            if (Math.Abs(difference) < usualActivityScore.StdDev)
+            {
+                // a large but not unusual difference
+                return qualitySummary + "!";
+            }
+            else
+            {
+                // a large, unusual difference
+                return "astonishingly " + surpriseQualifier + qualitySummary + "!";
+            }
+        }
+
+        private string summarizeQuality(double quality)
+        {
+            if (quality < 0.05)
+                return "unbelievable";
             if (quality < 0.1)
-                return "unbelievable.";
+                return "disastrous";
+            if (quality < 0.15)
+                return "horrendous";
             if (quality < 0.2)
-                return "disastrous.";
+                return "miserable";
+            if (quality < 0.25)
+                return "terrible";
             if (quality < 0.3)
-                return "horrendous.";
-            if (quality < 0.3)
-                return "miserable.";
+                return "awful";
+            if (quality < 0.35)
+                return "bad";
+            if (quality < 0.4)
+                return "sad";
+            if (quality < 0.45)
+                return "disappointing";
             if (quality < 0.5)
-                return "terrible.";
+                return "so-so";
+            if (quality < 0.55)
+                return "ok";
             if (quality < 0.6)
-                return "awful.";
+                return "nice";
+            if (quality < 0.65)
+                return "good";
             if (quality < 0.7)
-                return "bad.";
+                return "great";
+            if (quality < 0.75)
+                return "awesome";
             if (quality < 0.8)
-                return "sad.";
+                return "wonderful";
+            if (quality < 0.85)
+                return "amazing";
             if (quality < 0.9)
-                return "disappointing.";
-            if (quality < 1)
-                return "so-so.";
-            if (quality < 1.1)
-                return "nice.";
-            if (quality < 1.2)
-                return "good.";
-            if (quality < 1.3)
-                return "great.";
-            if (quality < 1.4)
-                return "awesome.";
-            if (quality < 1.4)
-                return "spectacular!";
-            return "phenomenal!";
+                return "incredible";
+            if (quality < 0.95)
+                return "spectacular";
+            return "phenomenal";
         }
 
 
@@ -107,20 +156,22 @@ namespace ActivityRecommendation.TextSummary
         {
             string timespan = TimeFormatter.summarizeTimespan(participation.StartDate, participation.EndDate);
             string activityName = participation.ActivityDescriptor.ActivityName;
-            double score;
+            double participationScore;
             AbsoluteRating rating = participation.GetAbsoluteRating();
             if (rating != null)
-                score = rating.Score;
+                participationScore = rating.Score;
             else
-                score = 0.5;
-            string quality = this.summarizeQuality(score * 2);
+                participationScore = 0.5;
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(participation.ActivityDescriptor);
+            Distribution usualScore = activity.Ratings;
+            string quality = this.summarizeQuality(participationScore, usualScore);
             string summary;
             if (this.generator.Next(2) == 0)
                 summary = timespan + ", " + activityName;
             else
                 summary = activityName + " " + timespan.ToLower();
             summary += " was " + quality;
-            double interest = Math.Abs(score - 0.5);
+            double interest = Math.Abs(participationScore - 0.5);
             if (participation.Comment != null)
             {
                 summary += " " + participation.Comment;
@@ -183,6 +234,14 @@ namespace ActivityRecommendation.TextSummary
                 participations.Add(choices[i]);
             }
             return participations;
+        }
+
+        private ActivityDatabase ActivityDatabase
+        {
+            get
+            {
+                return this.engine.ActivityDatabase;
+            }
         }
 
         private Engine engine;

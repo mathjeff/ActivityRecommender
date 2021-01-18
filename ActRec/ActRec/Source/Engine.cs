@@ -780,14 +780,14 @@ namespace ActivityRecommendation
                 // before we have much data, we predict that the happiness after doing this activity resembles that after doing its parent activities
                 foreach (Activity parent in activity.ParentsUsedForPrediction)
                 {
-                    Distribution parentDistribution = this.Get_OverallHappiness_ParticipationEstimate(parent, request).Distribution.CopyAndReweightTo(4);
+                    Distribution parentDistribution = this.Get_OverallHappiness_ParticipationEstimate(parent, request).Distribution.CopyAndReweightTo(8);
                     distributions.Add(parentDistribution);
                 }
             }
             // if this activity is correlated with efficiency, and if efficiency is correlated with happiness,
             // then this activity is correlated with happiness too
             Distribution efficiency = this.Get_OverallEfficiency_ParticipationEstimate(activity, when).Distribution;
-            Distribution happinessFromEfficiency_prediction = this.Predict_LongtermHappiness_From_LongtermEfficiency(efficiency).CopyAndReweightTo(4);
+            Distribution happinessFromEfficiency_prediction = this.Predict_LongtermHappiness_From_LongtermEfficiency(efficiency).CopyAndReweightTo(8);
             distributions.Add(happinessFromEfficiency_prediction);
 
             Distribution distribution = this.CombineRatingDistributions(distributions);
@@ -870,11 +870,9 @@ namespace ActivityRecommendation
             double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
 
-
             double mediumWeight = shortWeight * activity.NumConsiderations * participationProbability * activityExistenceWeightMultiplier * 160;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
-
 
             double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 6;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);

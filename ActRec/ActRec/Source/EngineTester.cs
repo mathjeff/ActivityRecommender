@@ -587,6 +587,15 @@ Means.MeanErr: 3.6219, StdDevs.MeanErr: 3.4153, efficiency
 Means.MeanErr: 1.7385, StdDevs.MeanErr: 1.5702, longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:09.9540600
 
+updated results after adjusting some weights, especially for tuning standard deviations
+Means.MeanErr: 0.0476, StdDevs.MeanErr: 0.0946, longtermHappinessIfSuggested
+Means.MeanErr: 0.0240, StdDevs.MeanErr: 0.0954, longtermHappinessIfParticipated
+Means.MeanErr: 0.1403, StdDevs.MeanErr: 0.1040, score
+0.9609,                                         equivalentWeightedProbability
+Means.MeanErr: 3.6219, StdDevs.MeanErr: 3.4153, efficiency
+Means.MeanErr: 1.7385, StdDevs.MeanErr: 1.5702, longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:10.3737859
+
 */
 
 namespace ActivityRecommendation

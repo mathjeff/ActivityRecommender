@@ -689,8 +689,7 @@ namespace ActivityRecommendation
         {
             this.ApplyPendingSuggestions();
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution noise = Distribution.MakeDistribution(0.5, 0.5, 2);
-            Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates)).Plus(noise);
+            Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates)).Plus(this.noiseForLongtermEstimates);
             return estimate;
         }
         public Distribution GetAverageLongtermValueWhenSuggested()
@@ -703,9 +702,22 @@ namespace ActivityRecommendation
         public Distribution Predict_LongtermValue_If_Participated(DateTime when)
         {
             double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution noise = Distribution.MakeDistribution(0.5, 0.5, 2);
-            Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates)).Plus(noise);
+            Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates)).Plus(this.noiseForLongtermEstimates);
             return estimate;
+        }
+
+        // We add some noise to any of our estimates, to prevent appearing to claim infinite accuracy.
+        // However, when we're predicting the value of longterm/future happinesses, we don't need to add much noise.
+        // Although it's technically possible for there to be large variance in future happinesses over very long periods of time,
+        // that requires that the user has multiple years of maximum happiness followed by multiple years of minimum happiness.
+        // We think it is much more likely that the user will have approximately consistent happiness over time.
+        // If all values of future happiness were equally likely, it would be a uniform distribution from 0 to 1 with stddev of about 0.25, so we decrease the stddev to 0.125
+        private Distribution noiseForLongtermEstimates
+        {
+            get
+            {
+                return Distribution.MakeDistribution(0.5, 0.125, 2);
+            }
         }
         public Distribution GetAverageLongtermValueWhenParticipated()
         {
@@ -817,9 +829,9 @@ namespace ActivityRecommendation
             Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
 
             // add a little bit of uncertainty
-            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
+            Distribution extraError = Distribution.MakeDistribution(0.5, 0.25, 2);
 
-            // also figure out what is a norma result
+            // also figure out what is a normal result
             Distribution typicalAverage = new Distribution(this.shortTerm_ratingInterpolator.GetAverage()).Plus(extraError);
 
             InterpolatorSuggestion_Justification justification = new InterpolatorSuggestion_Justification(this, estimate, typicalAverage, coordinates);
@@ -864,7 +876,7 @@ namespace ActivityRecommendation
             Distribution scaledEstimate = estimate.CopyAndReweightTo(weight);
 
             // add a little bit of uncertainty
-            Distribution extraError = Distribution.MakeDistribution(0.5, 0.5, 2);
+            Distribution extraError = Distribution.MakeDistribution(0.5, 0.25, 2);
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
             Distribution typicalParticipationProbability = new Distribution(this.participationInterpolator.GetAverage());
             Justification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, typicalParticipationProbability, null);

@@ -195,8 +195,8 @@ namespace ActivityRecommendation.View
         public void AddSuggestion(ActivitySuggestion suggestion)
         {
             this.suggestions.Add(suggestion);
-            this.previousDeclinedSuggestion = null;
             this.UpdateSuggestionsAndMessage();
+            this.previousDeclinedSuggestion = null;
         }
         public void AddSuggestions(IEnumerable<ActivitySuggestion> suggestions)
         {

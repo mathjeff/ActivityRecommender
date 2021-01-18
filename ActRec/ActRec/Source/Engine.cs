@@ -372,7 +372,7 @@ namespace ActivityRecommendation
                 // Use its short-term value as a minimum when considering other activities
                 this.EnsureCalculatedSuggestionValue(activityToBeat, request);
                 ratingsCache.futureEfficiencies[activityToBeat] = this.Get_OverallEfficiency_ParticipationEstimate(activityToBeat, when);
-                utilitiesCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "You asked for an activity at least as fun as this one");
+                utilitiesCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "you asked for an activity at least as fun as this one");
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);
@@ -487,6 +487,29 @@ namespace ActivityRecommendation
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
             return this.SuggestActivity(bestActivityToPairWith, bestActivity, request);
         }
+        // identifies the Justification that had the largest positive impact on the suggestion value for this activity at this time
+        private Justification getMostSignificantJustification(Activity activity, ActivityRequest request)
+        {
+            List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, request);
+            double lowestScore = 1;
+            Justification bestReason = null;
+            foreach (Prediction candidate in predictions)
+            {
+                // make a list of all predictions except this one
+                List<Prediction> predictionsMinusOne = new List<Prediction>(predictions);
+                predictionsMinusOne.Remove(candidate);
+                Prediction prediction = this.CombineRatingPredictions(predictionsMinusOne);
+                Distribution scoreDistribution = prediction.Distribution;
+                if ((scoreDistribution.Mean < lowestScore) || (bestReason == null))
+                {
+                    lowestScore = scoreDistribution.Mean;
+                    bestReason = candidate.Justification;
+                }
+            }
+
+            return bestReason;
+        }
+
         private ActivitySuggestion SuggestActivity(Activity activity, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request)
         {
             DateTime when = request.Date;
@@ -501,6 +524,7 @@ namespace ActivityRecommendation
             if (average == 0)
                 average = 0.5;
             suggestion.PredictedScoreDividedByAverage = this.EstimateRating(activity, when).Distribution.Mean / average;
+            suggestion.MostSignificantJustification = this.getMostSignificantJustification(activity, request);
             return suggestion;
         }
         public DateTime GuessParticipationEndDate(Activity activity, DateTime start)
@@ -826,11 +850,11 @@ namespace ActivityRecommendation
             double participationProbability = probabilityPrediction.Distribution.Mean;
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            shortTerm_prediction.Justification.Label = "How much you'll enjoy doing this";
+            shortTerm_prediction.Justification.Label = "How much you should enjoy doing this";
             shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration, request.NumAcceptancesPerParticipation);
             double shortWeight = shortTerm_prediction.Distribution.Weight;
             Justification shortTermJustification = new Composite_SuggestionJustification(shortTerm_prediction.Distribution, shortTerm_prediction.Justification, probabilityPrediction.Justification);
-            shortTermJustification.Label = "Short-term happiness estimate";
+            shortTermJustification.Label = shortTerm_prediction.Justification.Label;
             shortTerm_prediction.Justification = shortTermJustification;
             distributions.Add(shortTerm_prediction);
 
@@ -857,12 +881,12 @@ namespace ActivityRecommendation
 
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
                 activity, mediumTerm_distribution, activity.GetAverageLongtermValueWhenParticipated(), null);
-            mediumJustification.Label = "Happiness after participated";
+            mediumJustification.Label = "How happy you are after doing this";
             distributions.Add(new Prediction(activity, mediumTerm_distribution, when, mediumJustification));
 
             InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
                 activity, longTerm_distribution, activity.GetAverageLongtermValueWhenSuggested(), null);
-            longtermJustification.Label = "Happiness after suggested";
+            longtermJustification.Label = "How happy you are after this is suggested";
             distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
 
             // also include parent activities in the prediction if this activity is one that the user hasn't done often

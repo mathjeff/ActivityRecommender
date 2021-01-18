@@ -78,71 +78,89 @@ namespace ActivityRecommendation
         // given a probability, returns an adjective to describe it
         private string getProbabilityAdjective(double probability)
         {
-            //if (probability <= 0)
-            //    return "won't";
             if (probability <= 0.1)
-                return "could";
+                return "could be";
             if (probability <= 0.2)
-                return "will occasionally";
+                return "will occasionally be";
             if (probability <= 0.3)
-                return "can sometimes";
+                return "can potentially be";
             if (probability <= 0.4)
-                return "might";
+                return "might be";
             if (probability <= 0.5)
-                return "may";
+                return "may be";
             if (probability <= 0.6)
-                return "often";
+                return "often will be";
             if (probability < 0.7)
-                return "are likely to";
+                return "is likely to be";
             if (probability <= 0.8)
-                return "usually";
+                return "usually will be";
             if (probability <= 0.9)
-                return "probably will";
+                return "probably will be";
             if (probability < 1)
-                return "will almost definitely";
-            return "will certainly";
+                return "will almost definitely be";
+            return "will certainly be";
         }
 
         // given a rating (relative to the average rating), returns a verb to describe it
-        private string getRatingVerb(double ratingTimesAverage)
+        private string getRatingAdjective(double ratingTimesAverage)
         {
             if (ratingTimesAverage <= 0.3)
-                return "despise";
+                return "miserable";
             if (ratingTimesAverage <= 0.5)
-                return "tolerate";
+                return "terrible";
             if (ratingTimesAverage <= 0.6)
-                return "dislike";
+                return "poor";
             if (ratingTimesAverage <= 0.7)
-                return "not like";
+                return "bad";
             if (ratingTimesAverage <= 0.8)
-                return "accept";
+                return "annoying";
             if (ratingTimesAverage <= 0.9)
-                return "do";
+                return "decent";
             if (ratingTimesAverage <= 1)
-                return "appreciate";
+                return "worthwhile";
             if (ratingTimesAverage <= 1.1)
-                return "like";
+                return "ok";
             if (ratingTimesAverage <= 1.2)
-                return "enjoy";
+                return "nice";
+            if (ratingTimesAverage <= 1.3)
+                return "good";
+            if (ratingTimesAverage <= 1.4)
+                return "great";
             if (ratingTimesAverage <= 1.5)
-                return "love";
-            return "be overjoyed with";
+                return "awesome";
+            if (ratingTimesAverage <= 1.6)
+                return "incredible";
+            return "spectacular";
+        }
+
+        private string decapitalize(string text)
+        {
+            return text.Substring(0, 1).ToLower() + text.Substring(1);
         }
 
         private string summarize(ActivitySuggestion suggestion, bool repeatingDeclinedSuggestion)
         {
             // Summarize participation probability and predicted score
-            string text = "You";
-            string longTimeFormat = "HH:mm:ss";
+            string text;
             string shortTimeFormat = "HH:mm";
+            string longTimeFormat = "HH:mm:ss";
+
+            string probabilityPhrase = "";
+            string ratingAdjective = "";
+            // How we expect the user to feel about this
+            if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
+            {
+                probabilityPhrase = this.getProbabilityAdjective(suggestion.ParticipationProbability.Value);
+                ratingAdjective = this.getRatingAdjective(suggestion.PredictedScoreDividedByAverage.Value);
+            }
             if (!suggestion.Skippable)
             {
                 // If this is an unskippable experiment, then remind the user that they promised to do it
-                text += " promised to do " + suggestion.ActivityDescriptor.ActivityName + " at " + suggestion.StartDate.ToString(shortTimeFormat) + ".";
+                text = "You promised to do " + suggestion.ActivityDescriptor.ActivityName + " at " + suggestion.StartDate.ToString(shortTimeFormat) + ".";
                 if (suggestion.PredictedScoreDividedByAverage != null)
                 {
                     // Also tell the user how we think they'll feel about it
-                    text += " I think you will " + this.getRatingVerb(suggestion.PredictedScoreDividedByAverage.Value) + " it.";
+                    text += "I think it will be " + ratingAdjective + ".";
                 }
                 text += " Get started!";
             }
@@ -150,22 +168,16 @@ namespace ActivityRecommendation
             {
                 // For a normal suggestion, we tell them how likely we think it is that they will do it, and
                 // how we think they will feel about it
-                if (repeatingDeclinedSuggestion)
-                    text = "No, really: you";
-                if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
-                {
-                    text += " " + this.getProbabilityAdjective(suggestion.ParticipationProbability.Value);
-                    text += " " + this.getRatingVerb(suggestion.PredictedScoreDividedByAverage.Value);
-                }
-                else
-                {
-                    // No data at the moment
-                    text += " may do";
-                }
-                text += " " + suggestion.ActivityDescriptor.ActivityName;
 
-                // Also tell the user when we think they'll start and how long we think they'll do it
-                // Include the seconds field only for participations shorter than 1 minute
+                // Optional emphasis
+                if (repeatingDeclinedSuggestion)
+                    text = "No, really: I think ";
+                else
+                    text = "";
+                // activity name
+                text += suggestion.ActivityDescriptor.ActivityName;
+
+                // Start and end times
                 string timeFormat;
                 if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMinutes(1)) >= 0)
                     timeFormat = shortTimeFormat;
@@ -174,8 +186,20 @@ namespace ActivityRecommendation
                 string whenText = suggestion.StartDate.ToString(timeFormat);
                 if (suggestion.EndDate.HasValue)
                     whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
+                text += " " + whenText;
 
-                text += " " + whenText + ".";
+                // How we expect the user to feel about this
+                if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
+                {
+                    text += "\n" + probabilityPhrase;
+                    text += " " + ratingAdjective;
+                    text += " because of " + this.decapitalize(suggestion.MostSignificantJustification.Label) + ".";
+                }
+                else
+                {
+                    // No data at the moment
+                    text += " could be nice.";
+                }
             }
             return text;
         }

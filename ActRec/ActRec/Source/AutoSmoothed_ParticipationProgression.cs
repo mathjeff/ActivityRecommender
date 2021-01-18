@@ -305,7 +305,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return "How much you've done this Doable recently";
+                return "How much you've done this Activity recently";
             }
         }
 

@@ -549,7 +549,7 @@ updated results on 2020-07-11 with more data:
 NaN    equivalentWeightedProbability
 3.6981 typicalEfficiencyError
 1.7382 typical longtermEfficiencyIfParticipated error
-EngineTester completed in 00:02:07.1717935 // when running in the debugger on a desktop
+EngineTester completed in 00:02:07.1717935 // when running in the debugger on a laptop
 
 updated results after predicting longterm happiness from longterm efficiency
 0.0886 typical longtermPredictionIfSuggested error
@@ -558,7 +558,7 @@ updated results after predicting longterm happiness from longterm efficiency
 NaN    equivalentWeightedProbability
 3.6981 typicalEfficiencyError
 1.7414 typical longtermEfficiencyIfParticipated error
-EngineTester completed in 00:02:07.8680408 // when running in the debugger on a desktop
+EngineTester completed in 00:02:07.8680408 // when running in the debugger on a laptop
 
 updated results after fixing some incorrect participation intensities
 0.0901 typical longtermPredictionIfSuggested error
@@ -568,6 +568,25 @@ updated results after fixing some incorrect participation intensities
 3.6981 typicalEfficiencyError
 1.7414 typical longtermEfficiencyIfParticipated error
 EngineTester completed in 00:02:07.7771503
+
+updated results on 2021-01-18 after getting new data, plus adjusting some weights to make the engine less likely to repeat itself
+0.0551 typical longtermPredictionIfSuggested error
+0.0242 typical longtermPredictionIfParticipated error
+0.1403 typicalScoreError
+0.9609 equivalentWeightedProbability
+3.6219 typicalEfficiencyError
+1.7385 typical longtermEfficiencyIfParticipated error
+EngineTester completed in 00:02:09.1026894 // when running in the debugger on a laptop
+
+updated results after changing the format and also calculating the average of the errors of the standard deviations estimated for the predictions
+Means.MeanErr: 0.0551, StdDevs.MeanErr: 0.2218, longtermHappinessIfSuggested
+Means.MeanErr: 0.0242, StdDevs.MeanErr: 0.1717, longtermHappinessIfParticipated
+Means.MeanErr: 0.1403, StdDevs.MeanErr: 0.1315, score
+0.9609,                                         equivalentWeightedProbability
+Means.MeanErr: 3.6219, StdDevs.MeanErr: 3.4153, efficiency
+Means.MeanErr: 1.7385, StdDevs.MeanErr: 1.5702, longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:09.9540600
+
 */
 
 namespace ActivityRecommendation
@@ -660,7 +679,7 @@ namespace ActivityRecommendation
 
             // compute error
             double error = correctScore - expectedRating;
-            this.Update_ShortTerm_ScoreError(error);
+            this.Update_ShortTerm_ScoreError(correctScore, prediction.Distribution);
 
             // update most surprising participation
             double numSecondsSinceFirstRating = when.Subtract(this.EarliestRatingDate.Value).TotalSeconds;
@@ -677,13 +696,9 @@ namespace ActivityRecommendation
                 this.mostSurprisingParticipation = newSurprise;
             }
         }
-        public void Update_ShortTerm_ScoreError(double error)
+        public void Update_ShortTerm_ScoreError(double correctValue, Distribution prediction)
         {
-            if (Math.Abs(error) > 1)
-                System.Diagnostics.Debug.WriteLine("error");
-
-            Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
-            this.squared_shortTermScore_error = this.squared_shortTermScore_error.Plus(errorDistribution);
+            this.shortTermScore_error.Add(correctValue, prediction);
         }
         public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
         {
@@ -760,45 +775,35 @@ namespace ActivityRecommendation
         {
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             Distribution prediction = this.engine.PredictEfficiency(activity, when);
-            this.Update_ShortTermEfficiency_Error(actualEfficiency - prediction.Mean);
-        }
-        public void Update_ShortTermEfficiency_Error(double error)
-        {
-            Distribution errorDistribution = Distribution.MakeDistribution(error * error, 0, 1);
-            this.squared_shortTermEfficiency_error = this.squared_shortTermEfficiency_error.Plus(errorDistribution);
+            this.shortTermEfficiency_error.Add(actualEfficiency, prediction);
         }
 
-        private double Compute_FutureEstimateIfSuggested_Errors()
+        private PredictionErrors Compute_FutureEstimateIfSuggested_Errors()
         {
             return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer);
         }
-        private double  Compute_FutureEstimateIfParticipated_Errors()
+        private PredictionErrors Compute_FutureEstimateIfParticipated_Errors()
         {
             return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer);
         }
-        private double Compute_FutureEfficiencyIfParticipated_Errors()
+        private PredictionErrors Compute_FutureEfficiencyIfParticipated_Errors()
         {
             return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer);
         }
 
-        private double Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ScoreSummarizer ratingSummarizer)
+        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ScoreSummarizer ratingSummarizer)
         {
-            Distribution errorsSquared = new Distribution();
+            PredictionErrors result = new PredictionErrors();
             foreach (Prediction prediction in predictions.Keys)
             {
                 ScoreSummary summary = predictions[prediction];
                 summary.Update(ratingSummarizer);
                 if (summary.Item.Weight > 0)
                 {
-                    double predictedScore = prediction.Distribution.Mean;
-                    double actualScore = summary.Item.Mean;
-                    double error = actualScore - predictedScore;
-                    errorsSquared = errorsSquared.Plus(Distribution.MakeDistribution(error * error, 0, 1));
+                    result.Add(summary.Item.Mean, prediction.Distribution);
                 }
             }
-            double errorSquared = errorsSquared.Mean;
-            double typicalPredictionError = Math.Sqrt(errorSquared);
-            return typicalPredictionError;
+            return result;
         }
 
         public EngineTesterResults Results
@@ -809,10 +814,10 @@ namespace ActivityRecommendation
                 results.Longterm_PredictionIfSuggested_Error = this.Compute_FutureEstimateIfSuggested_Errors();
                 results.Longterm_PredictionIfParticipated_Error = this.Compute_FutureEstimateIfParticipated_Errors();
                 results.Longterm_EfficiencyIfPredicted_Error = this.Compute_FutureEfficiencyIfParticipated_Errors();
-                results.TypicalEfficiencyError = Math.Sqrt(this.squared_shortTermEfficiency_error.Mean);
+                results.TypicalEfficiencyError = this.shortTermEfficiency_error;
                 
                 // how well the score prediction does
-                results.TypicalScoreError = Math.Sqrt(this.squared_shortTermScore_error.Mean);
+                results.TypicalScoreError = this.shortTermScore_error;
 
                 // Compute how well the probability prediction does (weighting smaller probabilities more heavily)
                 // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
@@ -832,12 +837,13 @@ namespace ActivityRecommendation
         {
             EngineTesterResults results = this.Results;
 
-            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfSuggested error = " + results.Longterm_PredictionIfSuggested_Error);
-            System.Diagnostics.Debug.WriteLine("typical longtermPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error);
-            System.Diagnostics.Debug.WriteLine("typicalScoreError = " + results.TypicalScoreError);
-            System.Diagnostics.Debug.WriteLine("equivalentWeightedProbability = " + results.TypicalProbability);
-            System.Diagnostics.Debug.WriteLine("typicalEfficiencyError = " + results.TypicalEfficiencyError);
-            System.Diagnostics.Debug.WriteLine("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error);
+            System.Diagnostics.Debug.WriteLine("");
+            System.Diagnostics.Debug.WriteLine(results.Longterm_PredictionIfSuggested_Error + ", longtermHappinessIfSuggested");
+            System.Diagnostics.Debug.WriteLine(results.Longterm_PredictionIfParticipated_Error + ", longtermHappinessIfParticipated");
+            System.Diagnostics.Debug.WriteLine(results.TypicalScoreError + ", score");
+            System.Diagnostics.Debug.WriteLine(Math.Round(results.TypicalProbability, 4) + ",                                         equivalentWeightedProbability");
+            System.Diagnostics.Debug.WriteLine(results.TypicalEfficiencyError + ", efficiency");
+            System.Diagnostics.Debug.WriteLine(results.Longterm_EfficiencyIfPredicted_Error + ", longtermEfficiencyIfParticipated");
         }
 
         private void PrintFinalResults()
@@ -846,6 +852,7 @@ namespace ActivityRecommendation
             DateTime executionEnd = DateTime.Now;
             TimeSpan duration = executionEnd.Subtract(this.executionStart);
             System.Diagnostics.Debug.WriteLine("EngineTester completed in " + duration);
+            System.Diagnostics.Debug.WriteLine("");
         }
         public override Engine Finish()
         {
@@ -853,14 +860,6 @@ namespace ActivityRecommendation
             return null;
         }
 
-        // a measure of how far off the engine's predicted scores are from the scores the user actually provides
-        public Distribution SquaredScoreError
-        {
-            get
-            {
-                return this.squared_shortTermScore_error;
-            }
-        }
         public Distribution SquaredParticipationProbabilityError
         {
             get
@@ -870,11 +869,11 @@ namespace ActivityRecommendation
         }
         public DateTime? EarliestRatingDate { get; set; }
 
-        private Distribution squared_shortTermScore_error = new Distribution();
+        private PredictionErrors shortTermScore_error = new PredictionErrors();
         private Distribution squared_longTermValue_error = new Distribution();
         private Distribution squaredParticipationProbabilityError = new Distribution();
         private Distribution participationPrediction_score = new Distribution();
-        private Distribution squared_shortTermEfficiency_error = new Distribution();
+        private PredictionErrors shortTermEfficiency_error = new PredictionErrors();
         private ParticipationSurprise mostSurprisingParticipation;
         private ScoreSummarizer ratingSummarizer;
         private ScoreSummarizer efficiencySummarizer;
@@ -891,21 +890,56 @@ namespace ActivityRecommendation
     public class EngineTesterResults
     {
         // overall error in (the estimated and actual (longterm happiness prediction if (the given activity is suggested)))
-        public double Longterm_PredictionIfSuggested_Error;
+        public PredictionErrors Longterm_PredictionIfSuggested_Error;
         // overall error in (the estimated and actual (longterm happiness prediction if (the given activity is participated in)))
-        public double Longterm_PredictionIfParticipated_Error;
+        public PredictionErrors Longterm_PredictionIfParticipated_Error;
         // typical error in the score prediction
-        public double TypicalScoreError;
+        public PredictionErrors TypicalScoreError;
         // An estimate of the accuracy of the estimates of participation probability.
         // This is the probability such that if the true probability were this value, and if all estimates were perfect, the overall error would be what was observed
         public double TypicalProbability;
 
         // typical error in the efficiency prediction
-        public double TypicalEfficiencyError;
+        public PredictionErrors TypicalEfficiencyError;
         // overall error in (the estimated and actual (longterm efficiency prediction if (the given activity is participated in)))
-        public double Longterm_EfficiencyIfPredicted_Error;
+        public PredictionErrors Longterm_EfficiencyIfPredicted_Error;
 
         public ParticipationSurprise ParticipationHavingMostSurprisingScore;
+    }
+
+    // A PredictionErrors records errors in Predictions
+    // Each Prediction contains a Mean and a StdDev, and a PredictionErrors records the errors in each
+    public class PredictionErrors
+    {
+        public void Add(double correctValue, Distribution prediction)
+        {
+            double errorOfMean = correctValue - prediction.Mean;
+            this.errorsOfMeansSquared = this.errorsOfMeansSquared.Plus(Distribution.MakeDistribution(errorOfMean * errorOfMean, 0, 1));
+
+            double predictedStddev = prediction.StdDev;
+            double errorOfStdDev = Math.Abs(errorOfMean) - predictedStddev;
+            this.errorsOfStdDevsSquared = this.errorsOfStdDevsSquared.Plus(Distribution.MakeDistribution(errorOfStdDev * errorOfStdDev, 0, 1));
+        }
+        public override string ToString()
+        {
+            return "Means.MeanErr: " + Math.Round(this.meanErrorsOfMeans, 4).ToString() + ", StdDevs.MeanErr: " + Math.Round(this.meanErrorOfStdDevs, 4).ToString();
+        }
+        private double meanErrorsOfMeans
+        {
+            get
+            {
+                return Math.Sqrt(this.errorsOfMeansSquared.Mean);
+            }
+        }
+        private double meanErrorOfStdDevs
+        {
+            get
+            {
+                return Math.Sqrt(this.errorsOfStdDevsSquared.Mean);
+            }
+        }
+        private Distribution errorsOfMeansSquared = new Distribution();
+        private Distribution errorsOfStdDevsSquared = new Distribution();
     }
 
     public class ParticipationSurprise

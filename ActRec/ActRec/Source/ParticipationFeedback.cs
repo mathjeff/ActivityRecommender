@@ -32,8 +32,9 @@ namespace ActivityRecommendation
 
     class ParticipationNumericFeedback : ValueProvider<LayoutChoice_Set>
     {
-        public ParticipationNumericFeedback()
+        public ParticipationNumericFeedback(LayoutStack layoutStack)
         {
+            this.layoutStack = layoutStack;
         }
         public LayoutChoice_Set Get()
         {
@@ -44,51 +45,55 @@ namespace ActivityRecommendation
 
         public LayoutChoice_Set MakeLayout()
         {
-            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
+            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
             builder.AddLayout(new TextblockLayout(ChosenActivity.Name));
             builder.AddLayout(new TextblockLayout("From " + this.StartDate + " to " + this.EndDate + ", " + ParticipationDurationDividedByAverage + " as long as average. I predict:"));
 
-            string funLabel = "* avg fun while doing it";
-            builder.AddLayout(
-                new Horizontal_GridLayout_Builder().Uniform()
-                .AddLayout(coloredRatio(PredictedValue, ComparisonPredictedValue, PredictedCurrentValueStddev))
-                .AddLayout(new TextblockLayout(funLabel))
-                .BuildAnyLayout()
+            Horizontal_GridLayout_Builder nowBuilder = new Horizontal_GridLayout_Builder().Uniform();
+
+            nowBuilder.AddLayout(
+                new Vertical_GridLayout_Builder().Uniform()
+                    .AddLayout(
+                        new HelpButtonLayout("Fun:",
+                            new TextblockLayout("This column shows the amount of happiness you are expected to have while doing this activity at this time, divided by the average amount of happiness you usually have doing other things"),
+                            this.layoutStack)
+                        )
+                    .AddLayout(coloredRatio(PredictedValue, ComparisonPredictedValue, PredictedCurrentValueStddev))
+                    .Build()
             );
-            string longtermFunLabel = "days future fun (over next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) + " days)";
-            builder.AddLayout(
-                new Horizontal_GridLayout_Builder().Uniform()
-                .AddLayout(signedColoredValue(ExpectedFutureFun, ComparisonExpectedFutureFun, ExpectedFutureFunStddev))
-                .AddLayout(new TextblockLayout(longtermFunLabel))
-                .BuildAnyLayout()
+            nowBuilder.AddLayout(
+                new Vertical_GridLayout_Builder().Uniform()
+                    .AddLayout(
+                        new HelpButtonLayout("Future Fun:",
+                            new TextblockLayout("This column shows an estimate of the net present value of your happiness at this time after doing this activity, compared to what it usually is. " +
+                                "This is very similar to computing how much happiness you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) +
+                                " days after doing this."),
+                            this.layoutStack)
+                        )
+                    .AddLayout(signedColoredValue(ExpectedFutureFun, ComparisonExpectedFutureFun, ExpectedFutureFunStddev))
+                    .Build()
             );
-            string efficiencyLabel = "hours future efficiency (over next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) + " days)";
-            builder.AddLayout(
-                new Horizontal_GridLayout_Builder().Uniform()
-                .AddLayout(signedColoredValue(ExpectedEfficiency, ComparisonExpectedEfficiency, ExpectedEfficiencyStddev))
-                .AddLayout(new TextblockLayout(efficiencyLabel))
-                .BuildAnyLayout()
+            nowBuilder.AddLayout(
+                new Vertical_GridLayout_Builder().Uniform()
+                    .AddLayout(
+                        new HelpButtonLayout("Future Efficiency:",
+                            new TextblockLayout("This column shows an estimate of the net present value of your efficiency at this time after doing this activity, compared to what it usually is. " +
+                                "This is very similar to computing how much efficiency you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) +
+                                " days after doing this."),
+                            this.layoutStack)
+                        )
+                    .AddLayout(signedColoredValue(ExpectedEfficiency, ComparisonExpectedEfficiency, ExpectedEfficiencyStddev))
+                    .Build()
             );
+            builder.AddLayout(nowBuilder.Build());
 
             builder.AddLayout(new TextblockLayout("If you had done this at " + this.ComparisonDate + ":"));
-            builder.AddLayout(
-                new Horizontal_GridLayout_Builder().Uniform()
-                .AddLayout(coloredRatio(ComparisonPredictedValue, 1, 0))
-                .AddLayout(new TextblockLayout(funLabel))
-                .BuildAnyLayout()
-            );
-            builder.AddLayout(
-                new Horizontal_GridLayout_Builder().Uniform()
-                .AddLayout(signedColoredValue(ComparisonExpectedFutureFun, 1, 0))
-                .AddLayout(new TextblockLayout(longtermFunLabel))
-                .BuildAnyLayout()
-            );
-            builder.AddLayout(
-                new Horizontal_GridLayout_Builder().Uniform()
-                .AddLayout(signedColoredValue(ComparisonExpectedEfficiency, 0, 0))
-                .AddLayout(new TextblockLayout(efficiencyLabel))
-                .BuildAnyLayout()
-            );
+
+            Horizontal_GridLayout_Builder laterBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            laterBuilder.AddLayout(coloredRatio(ComparisonPredictedValue, 1, 0));
+            laterBuilder.AddLayout(signedColoredValue(ComparisonExpectedFutureFun, 1, 0));
+            laterBuilder.AddLayout(signedColoredValue(ComparisonExpectedEfficiency, 0, 0));
+            builder.AddLayout(laterBuilder.Build());
 
             ActivityRequest request = new ActivityRequest();
             request.ActivityToBeat = this.ChosenActivity.MakeDescriptor();
@@ -221,5 +226,6 @@ namespace ActivityRecommendation
         public ActivityDatabase ActivityDatabase;
 
         private LayoutChoice_Set layout;
+        private LayoutStack layoutStack;
     }
 }

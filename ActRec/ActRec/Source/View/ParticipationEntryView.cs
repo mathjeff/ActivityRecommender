@@ -1392,7 +1392,7 @@ namespace ActivityRecommendation
                 }
             }
 
-            ParticipationNumericFeedback detailsProvider = new ParticipationNumericFeedback();
+            ParticipationNumericFeedback detailsProvider = new ParticipationNumericFeedback(this.layoutStack);
             detailsProvider.engine = this.engine;
             detailsProvider.ActivityDatabase = this.activityDatabase;
             detailsProvider.StartDate = startDate;

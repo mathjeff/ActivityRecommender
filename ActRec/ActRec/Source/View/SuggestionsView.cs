@@ -27,7 +27,7 @@ namespace ActivityRecommendation.View
         public event VisitActivitiesScreenHandler VisitActivitiesScreen;
         public delegate void VisitActivitiesScreenHandler();
 
-        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine)
+        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine) : base("Get Suggestions")
         {
             this.activityDatabase = activityDatabase;
             this.engine = engine;
@@ -35,7 +35,7 @@ namespace ActivityRecommendation.View
 
             this.layoutStack = layoutStack;
 
-            this.messageLayout = new TextblockLayout("What kind of suggestion would you like?");
+            this.messageLayout = new TextblockLayout("What kind of suggestion would you like?").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
 
             this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
@@ -121,8 +121,39 @@ namespace ActivityRecommendation.View
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
 
+            this.make_makeNewActivities_layout();
+
             this.UpdateSuggestions();
         }
+
+        private void make_makeNewActivities_layout()
+        {
+            Button createNewActivity_button = new Button();
+            createNewActivity_button.Clicked += CreateNewActivity_button_Clicked;
+            Button brainstormNewActivities_button = new Button();
+            brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
+
+            Horizontal_GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
+            builder.AddLayout(this.numCandidates_layout);
+            // Because numCandidates_layout shows the number of candidate activities, we can use extra-short descriptions on the create-new buttons
+            builder.AddLayout(new ButtonLayout(createNewActivity_button, "New Activity"));
+            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "Brainstorm"));
+
+            this.newActivities_layout = builder.Build();
+        }
+
+        private void CreateNewActivity_button_Clicked(object sender, EventArgs e)
+        {
+            ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
+            this.layoutStack.AddLayout(creationLayout, "New Activity", this);
+        }
+
+        private void BrainstormNewActivities_button_Clicked(object sender, EventArgs e)
+        {
+            if (this.VisitActivitiesScreen != null)
+                this.VisitActivitiesScreen.Invoke();
+        }
+
 
         private void VisitActivities_button_Clicked(object sender, EventArgs e)
         {
@@ -156,9 +187,8 @@ namespace ActivityRecommendation.View
         {
             if (this.numCandidates < 0)
             {
-                int count = this.engine.GetActivitiesToConsider(new ActivityRequest()).Count;
-                this.SetTitle("Get Suggestions (" + count + " candidates)");
-                this.numCandidates = count;
+                this.numCandidates = this.engine.GetActivitiesToConsider(new ActivityRequest()).Count;
+                this.numCandidates_layout.setText("" + this.numCandidates + " candidates");
             }
         }
         public void OnBack(LayoutChoice_Set layout)
@@ -213,7 +243,7 @@ namespace ActivityRecommendation.View
         }
         public void SetErrorMessage(string errorMessage)
         {
-            this.messageLayout = new TextblockLayout(errorMessage);
+            this.messageLayout.setText(errorMessage);
             this.UpdateLayout_From_Suggestions();
         }
         public Participation LatestParticipation
@@ -237,7 +267,7 @@ namespace ActivityRecommendation.View
         
         private void UpdateSuggestionsAndMessage()
         {
-            this.messageLayout = null;
+            this.messageLayout.setText("");
             this.UpdateSuggestions();
         }
         private void UpdateSuggestions()
@@ -260,12 +290,15 @@ namespace ActivityRecommendation.View
         private void UpdateLayout_From_Suggestions()
         {
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
-            // show help and experiments if there are no suggestions visible
-            if (this.suggestions.Count == 0)
-                layouts.Add(this.topLayout);
+            // if the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
+            if (this.suggestions.Count < 1)
+                layouts.Add(this.newActivities_layout);
             // show feedback if there is any
-            if (this.messageLayout != null)
-                layouts.Insert(0, messageLayout);
+            if (this.messageLayout.ModelledText != "")
+                layouts.Add(messageLayout);
+            // show help and experiments if there are no suggestions visible
+            if (this.suggestions.Count < 1)
+                layouts.Add(this.topLayout);
             // show suggestions if there are any
             bool addDoNowButton = true;
             foreach (ActivitySuggestion suggestion in this.suggestions)
@@ -284,7 +317,7 @@ namespace ActivityRecommendation.View
             {
                 if (this.suggestions.Count > 0)
                 {
-                    // make sure that the user realizes that asking for another suggestiib
+                    // make sure that the user realizes that asking for another suggestion
                     this.askWhatIsNext_layout.setText("What's after that?");
                     layouts.Insert(layouts.Count - 1, this.askWhatIsNext_layout);
                 }
@@ -329,7 +362,7 @@ namespace ActivityRecommendation.View
             this.suggestions.Remove(suggestion);
             ActivitySkip skip = this.recommender.DeclineSuggestion(suggestion);
             double numSecondsThinking = skip.ThinkingTime.TotalSeconds;
-            this.messageLayout = new TextblockLayout("Recorded " + (int)numSecondsThinking + " seconds (wasted) considering " + suggestion.ActivityDescriptor.ActivityName);
+            this.SetErrorMessage("Recorded " + (int)numSecondsThinking + " seconds (wasted) considering " + suggestion.ActivityDescriptor.ActivityName);
             this.Update_Suggestion_StartTimes();
             this.UpdateLayout_From_Suggestions();
         }
@@ -346,11 +379,14 @@ namespace ActivityRecommendation.View
         int maxNumSuggestions = 4;
         Engine engine;
         ActivityRecommender recommender;
-        LayoutChoice_Set messageLayout;
+        TextblockLayout messageLayout;
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
         ActivitySuggestion previousDeclinedSuggestion;
         int numCandidates = -1;
+
+        TextblockLayout numCandidates_layout = new TextblockLayout().AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
+        LayoutChoice_Set newActivities_layout;
     }
 
     class RequestSuggestion_Feature : AppFeature

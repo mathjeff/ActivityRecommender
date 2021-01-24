@@ -60,6 +60,8 @@ namespace ActivityRecommendation.Effectiveness
         // an estimate of Metric.getScore(participation) / participation.Duration.TotalSeconds, using information about the activity and also consulting the user
         public double EstimatedSuccessesPerSecond { get; set; }
 
+        public double EstimatedRelativeSuccessRate_FromUser { get; set; }
+
         // the number of activities that the user said were harder than this one, from among the list of other activities being considered at the same time
         public int NumHarders { get; set; }
         // the number of activities that the user said were easier than this one, from among the list of other activities being considered at the same time

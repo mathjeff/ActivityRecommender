@@ -12,7 +12,7 @@ namespace ActivityRecommendation.View
     // An ExperimentationDifficultySelectionLayout asks the user for some information about the relative difficulties of several activities.
     // This is supposed to happen after the user has identified several plausible activities to include in an experiment but before one specific activity has been chosen to do now.
     // The user may also specify which specific metrics they want to use to measure their participations.
-    class ExperimentationDifficultySelectionLayout : ContainerLayout, LayoutProvider<ExperimentDifficulty_ListItem>
+    class ExperimentationDifficultySelectionLayout : ContainerLayout
     {
         public event RequestedExperimentHandler Done;
         public delegate void RequestedExperimentHandler(List<SuggestedMetric> choices);
@@ -23,95 +23,85 @@ namespace ActivityRecommendation.View
             if (suggestions.Count != requiredNumChoices)
                 throw new ArgumentException("ExperimentationDifficultySelectionLayout unsupported number of choices: got " + suggestions.Count + ", expected " + requiredNumChoices);
 
-            List<ExperimentDifficulty_ListItem> difficultyOptions = new List<ExperimentDifficulty_ListItem>();
-            this.aPlusB_listItem = new ExperimentDifficulty_TextItem("Two times the difficulty of the easiest activity listed above");
+            this.difficultyOptions = new List<ExperimentDifficultyEstimateLayout>();
 
-            difficultyOptions.Add(this.newItem(suggestions[0], activityDatabase));
-            difficultyOptions.Add(this.newItem(suggestions[1], activityDatabase));
-            difficultyOptions.Add(this.aPlusB_listItem);
-            difficultyOptions.Add(this.newItem(suggestions[2], activityDatabase));
+            for (int i = 0; i < 3; i++)
+            {
+                this.difficultyOptions.Add(this.newItem(suggestions[i], activityDatabase));
+            }
 
-            string instructions = "Rearrange these tasks so they appear in order by increasing difficulty. Also, you may change which metric you would like to use to measure your efficiency.";
+            string instructions = "Estimate the relative difficulty for each of these tasks. Also, you may change which metric you would like to use to measure your efficiency.";
 
             Button okButton = new Button();
             okButton.Clicked += OkButton_Clicked;
             this.okButtonLayout = new ButtonLayout(okButton, "Accept");
-            this.invalidOrder_layout = new TextblockLayout("Illegal ordering! Two times the difficulty of the easiest activity must be more than its difficulty!");
+            this.invalidOrder_layout = new TextblockLayout("Illegal ordering! Each difficulty must be a positive number!");
             this.okButtonHolder = new ContainerLayout();
 
-            this.choicesLayout = new ReorderableList<ExperimentDifficulty_ListItem>(difficultyOptions, this);
-            this.choicesLayout.Reordered += ChoicesLayout_Reordered;
 
+            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
 
-            BoundProperty_List rowHeights = new BoundProperty_List(5);
-            rowHeights.BindIndices(1, 3); // Make the size of the Easiest text block match the size of the Hardest text block
-            GridLayout gridLayout = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
+            builder.AddLayout(new TextblockLayout(instructions));
+            foreach (ExperimentDifficultyEstimateLayout option in this.difficultyOptions)
+            {
+                builder.AddLayout(option);
+            }
+            builder.AddLayout(this.okButtonHolder);
 
-            gridLayout.AddLayout(new TextblockLayout(instructions));
-            gridLayout.AddLayout(new TextblockLayout("Easiest", 16).AlignHorizontally(TextAlignment.Center));
-            gridLayout.AddLayout(this.choicesLayout);
-            gridLayout.AddLayout(new TextblockLayout("Hardest", 16).AlignHorizontally(TextAlignment.Center));
-            gridLayout.AddLayout(this.okButtonHolder);
+            this.updateValidity();
 
-            this.updateValidity(this.choicesLayout.Items);
-
-            this.SubLayout = gridLayout;
+            this.SubLayout = builder.Build();
         }
 
-        private ExperimentDifficulty_SuggestedMetric newItem(SuggestedMetric metric, ActivityDatabase activityDatabase)
+        private ExperimentDifficultyEstimateLayout newItem(SuggestedMetric metric, ActivityDatabase activityDatabase)
         {
             Activity activity = activityDatabase.ResolveDescriptor(metric.ActivityDescriptor);
-            return new ExperimentDifficulty_SuggestedMetric(metric, activity);
+            ExperimentDifficultyEstimateLayout item = new ExperimentDifficultyEstimateLayout(metric, activity);
+            item.DifficultyText_Changed += Item_DifficultyText_Changed;
+            return item;
         }
 
-        private void ChoicesLayout_Reordered(List<ExperimentDifficulty_ListItem> choices)
+        private void Item_DifficultyText_Changed()
         {
-            this.updateValidity(choices);
+            this.updateValidity();
         }
-        private void updateValidity(List<ExperimentDifficulty_ListItem> choices)
+
+        private void updateValidity()
         {
-            if (this.isValidOrder(choices))
+            if (this.isValidOrder(this.difficultyOptions))
             {
-                this.aPlusB_listItem.TextblockLayout.setBackgroundColor(Color.Black);
                 this.okButtonHolder.SubLayout = this.okButtonLayout;
             }
             else
             {
-                this.aPlusB_listItem.TextblockLayout.setBackgroundColor(Color.Red);
                 this.okButtonHolder.SubLayout = this.invalidOrder_layout;
             }
 
         }
-        private bool isValidOrder(List<ExperimentDifficulty_ListItem> choices)
+        private bool isValidOrder(List<ExperimentDifficultyEstimateLayout> choices)
         {
-            if (choices[0] == this.aPlusB_listItem)
-                return false;
+            foreach (ExperimentDifficultyEstimateLayout choice in choices)
+            {
+                if (choice == null)
+                    return false;
+            }
             return true;
         }
 
         private void OkButton_Clicked(object sender, EventArgs e)
         {
-            this.submit(this.choicesLayout.Items);
+            this.submit(this.difficultyOptions);
         }
 
-        private void submit(List<ExperimentDifficulty_ListItem> reorderedItems)
+        private void submit(List<ExperimentDifficultyEstimateLayout> reorderedItems)
         {
             if (!this.isValidOrder(reorderedItems))
                 return;
             List<SuggestedMetric> results = new List<SuggestedMetric>();
             for (int i = 0; i < reorderedItems.Count; i++)
             {
-                ExperimentDifficulty_ListItem item = reorderedItems[i];
-                ExperimentDifficulty_SuggestedMetric suggestionItem = item as ExperimentDifficulty_SuggestedMetric;
-                if (suggestionItem != null)
-                {
-                    SuggestedMetric suggestedMetric = suggestionItem.SuggestedMetric;
-                    suggestedMetric.PlannedMetric.DifficultyEstimate.NumEasiers = i;
-                    suggestedMetric.PlannedMetric.DifficultyEstimate.NumHarders = reorderedItems.Count - 1 - i;
-                    suggestedMetric.PlannedMetric.MetricName = suggestionItem.MetricChooser.Metric.Name;
-
-                    results.Add(suggestedMetric);
-                }
+                ExperimentDifficultyEstimateLayout item = reorderedItems[i];
+                results.Add(item.SuggestedMetric);
             }
             int requiredNumChoices = 3;
             if (results.Count != requiredNumChoices)
@@ -119,61 +109,98 @@ namespace ActivityRecommendation.View
             this.Done.Invoke(results);
         }
 
-
-        public LayoutChoice_Set GetLayout(ExperimentDifficulty_ListItem item)
-        {
-            ExperimentDifficulty_TextItem textItem = item as ExperimentDifficulty_TextItem;
-            if (textItem != null)
-                return textItem;
-
-            ExperimentDifficulty_SuggestedMetric metricItem = item as ExperimentDifficulty_SuggestedMetric;
-
-            BoundProperty_List columnWidths = new BoundProperty_List(2);
-            columnWidths.BindIndices(0, 1);
-            columnWidths.SetPropertyScale(0, 5);
-            columnWidths.SetPropertyScale(1, 2);
-            GridLayout gridLayout = GridLayout.New(new BoundProperty_List(1), columnWidths, LayoutScore.Zero);
-            gridLayout.AddLayout(new TextblockLayout(metricItem.SuggestedMetric.ActivityDescriptor.ActivityName));
-            ChooseMetric_View chooser = metricItem.MetricChooser;
-
-            gridLayout.AddLayout(chooser);
-            return gridLayout;
-
-        }
-
-        private ReorderableList<ExperimentDifficulty_ListItem> choicesLayout;
-        private ExperimentDifficulty_TextItem aPlusB_listItem;
+        private List<ExperimentDifficultyEstimateLayout> difficultyOptions;
         private ButtonLayout okButtonLayout;
         private TextblockLayout invalidOrder_layout;
         private ContainerLayout okButtonHolder;
 
     }
 
-    interface ExperimentDifficulty_ListItem
+    class ExperimentDifficultyEstimateLayout : ContainerLayout
     {
-    }
-
-    class ExperimentDifficulty_SuggestedMetric : ExperimentDifficulty_ListItem
-    {
-        public ExperimentDifficulty_SuggestedMetric(SuggestedMetric suggestedMetric, Activity activity)
+        public event DifficultyTextChanged_Handler DifficultyText_Changed;
+        public delegate void DifficultyTextChanged_Handler();
+        public ExperimentDifficultyEstimateLayout(SuggestedMetric suggestedMetric, Activity activity)
         {
-            this.SuggestedMetric = suggestedMetric;
-            this.MetricChooser = new ChooseMetric_View(false);
-            this.MetricChooser.SetActivity(activity);
-            this.MetricChooser.Choose(suggestedMetric.PlannedMetric.MetricName);
-        }
-        public SuggestedMetric SuggestedMetric { get; set; }
-        public ChooseMetric_View MetricChooser { get; set; }
-    }
+            this.suggestedMetric = suggestedMetric;
 
-    class ExperimentDifficulty_TextItem : ContainerLayout, ExperimentDifficulty_ListItem
-    {
-        public ExperimentDifficulty_TextItem(string text)
-        {
-            this.TextblockLayout = new TextblockLayout(text);
-            this.SubLayout = this.TextblockLayout;
+            this.metricChooser = new ChooseMetric_View(false);
+            this.metricChooser.SetActivity(activity);
+            this.metricChooser.Choose(suggestedMetric.PlannedMetric.MetricName);
+
+            this.difficultyBox = new Editor();
+            this.difficultyBox.Keyboard = Keyboard.Numeric;
+            this.difficultyBox.Placeholder = this.defaultDifficulty.ToString();
+            this.difficultyLayout = new TitledControl("Difficulty:", new TextboxLayout(difficultyBox));
+            this.difficultyBox.TextChanged += DifficultyBox_TextChanged;
+
+            TextblockLayout nameLayout = new TextblockLayout(activity.Name);
+
+            GridLayout evenGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(3), LayoutScore.Zero);
+            GridLayout unevenGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(3), LayoutScore.Get_UnCentered_LayoutScore(1));
+
+            evenGrid.AddLayout(this.metricChooser);
+            unevenGrid.AddLayout(this.metricChooser);
+
+            evenGrid.AddLayout(nameLayout);
+            unevenGrid.AddLayout(nameLayout);
+
+            evenGrid.AddLayout(this.difficultyLayout);
+            unevenGrid.AddLayout(this.difficultyLayout);
+
+
+            this.SubLayout = new LayoutUnion(evenGrid, unevenGrid);
         }
-        public TextblockLayout TextblockLayout;
+        private double defaultDifficulty = 1;
+
+        private void DifficultyBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (this.DifficultyText_Changed != null)
+                this.DifficultyText_Changed.Invoke();
+        }
+
+        public SuggestedMetric SuggestedMetric
+        {
+            get
+            {
+                double difficulty = this.Difficulty;
+                if (difficulty < 0)
+                {
+                    // illegal difficulty
+                    return null;
+                }
+
+                this.suggestedMetric.PlannedMetric.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser = 1.0 / difficulty;
+                return this.suggestedMetric;
+            }
+        }
+
+        private double Difficulty
+        {
+            get
+            {
+                // if the box is empty, use the placeholder
+                if (this.difficultyBox.Text == null || this.difficultyBox.Text == "")
+                    return this.defaultDifficulty;
+
+                double difficulty;
+                if (!double.TryParse(this.difficultyBox.Text, out difficulty))
+                {
+                    // invalid relative difficulty
+                    return -1;
+                }
+                if (difficulty <= 0)
+                {
+                    // another invalid difficulty
+                    return -1;
+                }
+                return difficulty;
+            }
+        }
+        SuggestedMetric suggestedMetric;
+        Editor difficultyBox;
+        LayoutChoice_Set difficultyLayout;
+        ChooseMetric_View metricChooser;
     }
 
 }

@@ -287,9 +287,15 @@ namespace ActivityRecommendation
             if (activity.DefaultMetric == null || experiment.MetricName != activity.DefaultMetric.Name)
                 properties[this.MetricTag] = this.XmlEscape(experiment.MetricName);
 
+            // difficulty estimate from user in the form of <NumEasiers> and <NumHarders>
+            if (experiment.DifficultyEstimate.NumEasiers > 0)
+                properties[this.NumEasierParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumEasiers);
+            if (experiment.DifficultyEstimate.NumHarders > 0)
+                properties[this.NumHarderParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumHarders);
+            // difficulty estimate from the user as a ratio
+            properties[this.UserEstimated_SuccessRate_Tag] = this.ConvertToStringBody(experiment.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser);
+            // calculated difficulty estimate
             properties[this.SuccessRateTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.EstimatedSuccessesPerSecond);
-            properties[this.NumEasierParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumEasiers);
-            properties[this.NumHarderParticipationsTag] = this.ConvertToStringBody(experiment.DifficultyEstimate.NumHarders);
 
             return this.ConvertToStringBody(properties);
         }
@@ -1160,6 +1166,11 @@ namespace ActivityRecommendation
                     metric.DifficultyEstimate.EstimatedSuccessesPerSecond = this.ReadDouble(currentChild);
                     continue;
                 }
+                if (currentChild.Name == this.UserEstimated_SuccessRate_Tag)
+                {
+                    metric.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser = this.ReadDouble(currentChild);
+                    continue;
+                }
                 if (currentChild.Name == this.NumEasierParticipationsTag)
                 {
                     metric.DifficultyEstimate.NumEasiers = this.ReadInt(currentChild);
@@ -1857,6 +1868,13 @@ namespace ActivityRecommendation
             get
             {
                 return "SuccessRate";
+            }
+        }
+        private string UserEstimated_SuccessRate_Tag
+        {
+            get
+            {
+                return "UserSuccessRate";
             }
         }
         private string NumEasierParticipationsTag

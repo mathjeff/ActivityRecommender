@@ -2018,44 +2018,21 @@ namespace ActivityRecommendation
         // computes estimated number of successes per second based on both past history and user's estimates
         public void incorporateUserDifficultyEstimates(PlannedMetric a, PlannedMetric b)
         {
-            // estimate overall expected difficulty
-            double totalEstimatedNumSuccessesPerSecond = a.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser +
+            // We don't rely on the user to estimate the absolute success rate of the two tasks, because it's expected that the user will tend to forget requirements or be unaware of requirements,
+            // and therefore underestimate task difficulties.
+            double ourTotalEstimatedSuccessRate = a.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser +
                 b.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser;
-            int difficultyDifference = b.DifficultyEstimate.NumHarders - a.DifficultyEstimate.NumHarders;
-            int absDifficultyDifference = Math.Abs(difficultyDifference);
-            double maxDiffIndices = 3;
-            double easierWeight, harderWeight;
-            if (absDifficultyDifference == 0)
-            {
-                easierWeight = harderWeight = 0.5;
-            }
-            else
-            {
-                if (absDifficultyDifference > maxDiffIndices)
-                {
-                    throw new InvalidOperationException("Unsupported difference (" + difficultyDifference + ") , must be from -" + maxDiffIndices + " to " + maxDiffIndices + " (inclusive)");
-                }
-                double maxMultiplier = 4;
-                double minEasierWeight = Math.Pow(maxMultiplier, (double)(absDifficultyDifference - 1) / maxDiffIndices);
-                double maxEasierWeight = Math.Pow(maxMultiplier, (double)absDifficultyDifference / maxDiffIndices);
-                easierWeight = (minEasierWeight + maxEasierWeight) / 2;
-                harderWeight = 1;
 
-                // renormalize
-                easierWeight = easierWeight / (easierWeight + harderWeight);
-                harderWeight = 1 - easierWeight;
-            }
+            // However, we do rely on the user to estimate the relative success rate of two tasks, because we don't really have much information about the difficulty of the tasks
+            double userTotalEstimatedSuccessRate = a.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser + b.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser;
 
-            // swap if backwards
-            if (a.DifficultyEstimate.NumHarders < b.DifficultyEstimate.NumHarders)
-            {
-                PlannedMetric temp = a;
-                a = b;
-                b = temp;
-            }
-            // compute updated difficulty 
-            a.DifficultyEstimate.EstimatedSuccessesPerSecond = totalEstimatedNumSuccessesPerSecond * easierWeight;
-            b.DifficultyEstimate.EstimatedSuccessesPerSecond = totalEstimatedNumSuccessesPerSecond * harderWeight;
+            // Renormalize user estimates so they total 1
+            double aWeight = a.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser / userTotalEstimatedSuccessRate;
+            double bWeight = b.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser / userTotalEstimatedSuccessRate;
+
+            // allocate our estimated success rate according to the user ratios
+            a.DifficultyEstimate.EstimatedSuccessesPerSecond = ourTotalEstimatedSuccessRate * aWeight;
+            b.DifficultyEstimate.EstimatedSuccessesPerSecond = ourTotalEstimatedSuccessRate * bWeight;
         }
         public ExperimentSuggestion Experiment(List<SuggestedMetric> choices, DateTime when)
         {
@@ -2125,18 +2102,7 @@ namespace ActivityRecommendation
             experiment.Earlier.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = this.EstimateDifficulty_WithoutUser(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor));
             experiment.Later.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = this.EstimateDifficulty_WithoutUser(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
 
-            if (this.activityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor).NumParticipations <= 2 &&
-                this.activityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor).NumParticipations <= 2 &&
-                (experiment.Earlier.DifficultyEstimate.NumEasiers > 0 || experiment.Earlier.DifficultyEstimate.NumHarders > 0))
-            {
-                // If neither activity has been done many times before, then make the difficulty estimates be close to each other but slightly offset based on what the user guesses
-                this.incorporateUserDifficultyEstimates(experiment.Earlier, experiment.Later);
-            }
-            else
-            {
-                // If either activity has been done often, then just estimate the difficulty directly based on what has historically been observed
-                this.ignoreUserDifficultyEstimates(experiment.Earlier, experiment.Later);
-            }
+            this.incorporateUserDifficultyEstimates(experiment.Earlier, experiment.Later);
         }
 
         // for a given Activity, returns the Experiment that will need updating if the user participates in Activity

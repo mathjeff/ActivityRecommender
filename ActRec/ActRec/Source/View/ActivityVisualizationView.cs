@@ -37,7 +37,10 @@ namespace ActivityRecommendation
             //flexibleGrid.AddLayout(graphGrid);
             fixedGrid.AddLayout(graphGrid);
 
-            fixedGrid.AddLayout(this.Make_StatsView());
+            this.statsLayoutHolder = new ContainerLayout();
+            this.statsLayoutHolder.SubLayout = this.Make_StatsView();
+
+            fixedGrid.AddLayout(this.statsLayoutHolder);
 
             this.UpdateDrawing();
         }
@@ -84,53 +87,45 @@ namespace ActivityRecommendation
 
         private LayoutChoice_Set make_helpLayout()
         {
-            LayoutChoice_Set ratingsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("The Ratings graph shows four values over time.")
-                .AddMessage("The green plot indicates how you have rated this activity during this time.")
-                .AddMessage("The red plot is a straight line showing the trend of the green plot.")
-                .AddMessage("The blue plot essentially estimates how happy you have been overall"
-                +" (technically, for each point in time, the blue plot shows the net present value (an economics term) of all ratings after that point).")
-                .AddMessage("Similarly, the yellow plot estimates approximately how efficient you have been overall (there will only be efficiency data if you have been using the experimentation feature)")
-                .Build();
-            LayoutChoice_Set participationsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("The Participations graph shows four values over time.")
-                .AddMessage("The green plot shows the cumulative amount of time you've spent on this particular activity during this time.")
-                .AddMessage("The red plot is a straight line showing the trend of the green plot.")
-                .AddMessage("The blue plot shows the cumulative number of times that ActivityRecommender has recommended this activity to you.")
-                .AddMessage("The yellow plot estimates your cumulative effectiveness in doing this activity over time. This plot will only be different from the green plot requires if you have been using the experimentation feature. ")
-                .AddMessage("You'll also notice some short vertical lines near the bottom, denoting days or months based on how much time the graph encompasses.")
-                .Build();
-            LayoutChoice_Set dateHelpLayout = new HelpWindowBuilder()
-                .AddMessage("Notice the two date boxes in the top-right corner of the screen.")
-                .AddMessage("If you enter new dates into them, then the rest of the screen will update accordingly.")
-                .AddMessage("By default, the start-date box will be set to the earliest date for which there is any data for this activity.")
-                .AddMessage("By default, the end-date box will be set to tomorrow at midnight (the beginning of the day).")
-                .Build();
-            LayoutChoice_Set statsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("The Stats description will show assorted statistics about these activities.")
-                .AddMessage("The statistics will only refer to data that falls within the duration specified by the date boxes above.")
-                .Build();
 
-            LayoutChoice_Set creditsLayout = new CreditsButtonBuilder(this.layoutStack)
-                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 28), "Pointed out that the top of the app was occluded on iOS")
-                .Build();
-
-            GridLayout helpGrid = GridLayout.New(BoundProperty_List.Uniform(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-            helpGrid.AddLayout(new HelpButtonLayout("Ratings graph", ratingsHelpLayout, this.layoutStack));
-            helpGrid.AddLayout(new HelpButtonLayout("Date selection", dateHelpLayout, this.layoutStack));
-            helpGrid.AddLayout(new HelpButtonLayout("Participations graph", participationsHelpLayout, this.layoutStack));
-            helpGrid.AddLayout(new HelpButtonLayout("Text stats", statsHelpLayout, this.layoutStack));
-
-            LayoutChoice_Set detailLayout = new Vertical_GridLayout_Builder()
-                .AddLayout(helpGrid)
-                .AddLayout(creditsLayout)
-                .Build();
-
-            LayoutChoice_Set helpButton = new HelpButtonLayout("Explain",
-                new TitledControl("Choose a View to Explain", detailLayout), this.layoutStack);
-            return helpButton;
+            Button helpButton = new Button();
+            helpButton.Clicked += HelpButton_Clicked;
+            return new ButtonLayout(helpButton, "Explain");
         }
 
+        private void HelpButton_Clicked(object sender, EventArgs e)
+        {
+            this.statsLayoutHolder.SubLayout = new TextblockLayout("");
+
+            LayoutChoice_Set ratingsHelpLayout = new HelpWindowBuilder()
+                .AddMessage("Green: ratings")
+                .AddMessage("Red: trend of green")
+                .AddMessage("Blue: overall happiness (all activities)")
+                .AddMessage("Yellow: efficiency (all activities)")
+                .AddMessage("Tick marks: months, days or years")
+                .Build();
+            LayoutChoice_Set creditsLayout = new CreditsButtonBuilder(this.layoutStack)
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 28), "Pointed out that the top of the app was occluded on iOS")
+                .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 1, 24), "Asked for the graph legends to appear at the same time as the graphs")
+                .Build();
+            LayoutChoice_Set participationsHelpLayout = new HelpWindowBuilder()
+                .AddMessage("Green: cumulative time spent")
+                .AddMessage("Red: trend of green")
+                .AddMessage("Blue: cumulative # suggestions")
+                .AddMessage("Yellow: cumulative effectiveness (efficiency * time)")
+                .AddMessage("Tick marks: months, days or years")
+                .Build();
+
+            BoundProperty_List rowHeights = new BoundProperty_List(3);
+            rowHeights.BindIndices(0, 2);
+            GridLayout helpGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
+
+            helpGrid.AddLayout(ratingsHelpLayout);
+            helpGrid.AddLayout(creditsLayout);
+            helpGrid.AddLayout(participationsHelpLayout);
+
+            this.statsLayoutHolder.SubLayout = helpGrid;
+        }
 
         public void CalculateExtraStats()
         {
@@ -586,5 +581,7 @@ namespace ActivityRecommendation
         TitledTextblock ratingWhenSuggested_Display;
         TitledTextblock ratingWhenNotSuggested_Display;
         LayoutStack layoutStack;
+
+        ContainerLayout statsLayoutHolder;
     }
 }

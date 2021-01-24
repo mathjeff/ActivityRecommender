@@ -160,7 +160,7 @@ namespace ActivityRecommendation
                 if (suggestion.PredictedScoreDividedByAverage != null)
                 {
                     // Also tell the user how we think they'll feel about it
-                    text += "I think it will be " + ratingAdjective + ".";
+                    text += " I think it will be " + ratingAdjective + ".";
                 }
                 text += " Get started!";
             }

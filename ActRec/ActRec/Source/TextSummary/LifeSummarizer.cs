@@ -19,7 +19,6 @@ namespace ActivityRecommendation.TextSummary
         {
             // add an overall summary
             List<LifeSummaryItem> components = new List<LifeSummaryItem>();
-            components.Add(this.EvaluateQualityOfLife(engine, startDate, endDate));
             List<Participation> containedParticipations = this.engine.ActivityDatabase.RootActivity.getParticipationsSince(startDate);
 
             // summarize some individual participations
@@ -37,11 +36,15 @@ namespace ActivityRecommendation.TextSummary
             // reorder the summaries based on the order we want to display them
             components.Sort(new LifeSummaryItem_DateComparer());
 
-            // join with newlines
+            // compute very brief summary
             List<string> texts = new List<string>();
+            texts.Add(this.EvaluateQualityOfLife(engine, startDate, endDate).text);
+            // join all the summaries with newlines
+            LifeSummaryItem previousItem = null;
             foreach (LifeSummaryItem item in components)
             {
-                texts.Add(item.text);
+                texts.Add(this.summaryWithConnector(item, previousItem));
+                previousItem = item;
             }
             texts.Add("Sincerely, " + persona.Name);
             return string.Join("\n\n", texts);
@@ -56,7 +59,7 @@ namespace ActivityRecommendation.TextSummary
             string obj = this.summarizeQuality(thisQuality.Mean, this.ActivityDatabase.RootActivity.Ratings);
 
             string text = during + " " + subject + " " + obj;
-            return new LifeSummaryItem(text, double.PositiveInfinity, startDate);
+            return new LifeSummaryItem(text, thisQuality.Mean, double.PositiveInfinity, startDate, endDate);
         }
 
         private string summarizeQuality(double participationScore, Distribution usualActivityScore)
@@ -177,24 +180,7 @@ namespace ActivityRecommendation.TextSummary
                 summary += " " + participation.Comment;
                 interest *= 2;
             }
-            return new LifeSummaryItem(summary, interest, participation.StartDate);
-        }
-
-        // chooses a DateTime to use for comparison
-        private DateTime computeBaselineStartDate(DateTime dataStartDate, DateTime summaryStartDate, DateTime summaryEndDate)
-        {
-            DateTime firstExistentDate = dataStartDate;
-            double existenceDurationDays = summaryEndDate.Subtract(firstExistentDate).TotalDays;
-            double includedDurationDays = summaryEndDate.Subtract(summaryEndDate).TotalDays;
-
-            double includedFraction = includedDurationDays / existenceDurationDays;
-            double relevanceFraction = Math.Sqrt(includedFraction);
-
-            double comparisonDurationDays = existenceDurationDays * relevanceFraction;
-            TimeSpan comparisonDuration = TimeSpan.FromDays(comparisonDurationDays);
-            DateTime firstRelevantDate = summaryStartDate.Subtract(comparisonDuration);
-            return firstRelevantDate;
-
+            return new LifeSummaryItem(summary, participationScore, interest, participation.StartDate, participation.EndDate);
         }
 
         private string randomString(List<string> choices)
@@ -236,6 +222,91 @@ namespace ActivityRecommendation.TextSummary
             return participations;
         }
 
+        private string summaryWithConnector(LifeSummaryItem item, LifeSummaryItem prev)
+        {
+            if (prev == null)
+                return item.text;
+
+            List<String> happinessConnectors = new List<string>();
+
+            double baseline = 0.5;
+            bool prevGood = prev.happiness >= baseline;
+            bool currentGood = item.happiness >= baseline;
+
+            // If the user did something sad followed by something happy, we can say "X was mediocre. However, Y was great!"
+            if (prevGood != currentGood)
+                happinessConnectors.Add("However");
+
+            List<String> temporalConnectors = new List<string>();
+            TimeSpan timeBetween = item.startDate.Subtract(prev.endDate);
+            // both events occurred on the same day
+            bool overlapping = prev.endDate.CompareTo(item.startDate) > 0;
+            int numDaysLater = (int)(item.startDate.Date.Subtract(prev.endDate.Date).TotalDays + 0.5);
+            if (overlapping)
+            {
+                temporalConnectors.Add("Meanwhile");
+                temporalConnectors.Add("At the same time");
+            }
+            else
+            {
+                if (timeBetween.CompareTo(TimeSpan.FromMinutes(5)) < 0)
+                {
+                    temporalConnectors.Add("Then");
+                    temporalConnectors.Add("Next");
+                    temporalConnectors.Add("After that");
+                }
+                else
+                {
+                    if (timeBetween.CompareTo(TimeSpan.FromHours(1)) < 0)
+                    {
+                        temporalConnectors.Add("A little while later");
+                        temporalConnectors.Add("Not long after that");
+                        if (numDaysLater == 0)
+                            temporalConnectors.Add("Later that day");
+                        else
+                            temporalConnectors.Add("Then, a little bit after midnight");
+                    }
+                    else
+                    {
+                        if (numDaysLater == 0)
+                            temporalConnectors.Add("Later that day");
+                        else if (numDaysLater == 1)
+                            temporalConnectors.Add("The next day");
+                        else if (numDaysLater == 2)
+                            temporalConnectors.Add("A couple days later");
+                        else if (numDaysLater < 5)
+                            temporalConnectors.Add("A few days later");
+                        else if (numDaysLater < 10)
+                            temporalConnectors.Add("About a week later");
+                        else if (numDaysLater < 18)
+                            temporalConnectors.Add("A couple weeks later");
+                        else if (numDaysLater < 40)
+                            temporalConnectors.Add("About a month later");
+                        else if (numDaysLater < 80)
+                            temporalConnectors.Add("A couple months later");
+                        else if (numDaysLater < 120)
+                            temporalConnectors.Add("A few months later");
+                    }
+                }
+            }
+
+            string connector = "";
+            if (happinessConnectors.Count > 0 && this.generator.NextDouble() < 0.33)
+            {
+                connector = this.randomString(happinessConnectors) + ", ";
+            }
+            else
+            {
+                if (temporalConnectors.Count > 0 && this.generator.NextDouble() < 0.33)
+                    connector += this.randomString(temporalConnectors) + ", ";
+            }
+
+            string summary = connector + item.text;
+            return summary;
+        }
+
+
+
         private ActivityDatabase ActivityDatabase
         {
             get
@@ -251,16 +322,20 @@ namespace ActivityRecommendation.TextSummary
 
     class LifeSummaryItem
     {
-        public LifeSummaryItem(string text, double interest, DateTime applicableDate)
+        public LifeSummaryItem(string text, double happiness, double interest, DateTime startDate, DateTime endDate)
         {
             this.text = text;
+            this.happiness = happiness;
             this.interest = interest;
-            this.applicableDate = applicableDate;
+            this.startDate = startDate;
+            this.endDate = endDate;
         }
+        public double happiness;
         // how interesting it is to include this item
         public double interest;
         // where in the summary we want this item to go
-        public DateTime applicableDate;
+        public DateTime startDate;
+        public DateTime endDate;
         public string text;
     }
 
@@ -268,7 +343,7 @@ namespace ActivityRecommendation.TextSummary
     {
         public int Compare(LifeSummaryItem a, LifeSummaryItem b)
         {
-            return a.applicableDate.CompareTo(b.applicableDate);
+            return a.startDate.CompareTo(b.startDate);
         }
 
     }

@@ -73,7 +73,7 @@ namespace ActivityRecommendation.View
 
             this.helpButton_layout = new HelpButtonLayout(helpWindow, this.layoutStack);
             this.experimentButton = new Button();
-            this.startExperiment_layout = new ButtonLayout(this.experimentButton, "New Experiment (Advanced!)");
+            this.startExperiment_layout = new ButtonLayout(this.experimentButton, "Experiment (Advanced!)");
             this.experimentButton.Clicked += ExperimentButton_Clicked;
             this.topLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
 
@@ -289,47 +289,62 @@ namespace ActivityRecommendation.View
         }
         private void UpdateLayout_From_Suggestions()
         {
-            List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
+            int numLayouts = 0;
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             // if the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
             if (this.suggestions.Count < 1)
-                layouts.Add(this.newActivities_layout);
+            {
+                gridBuilder.AddLayout(this.newActivities_layout);
+                numLayouts++;
+            }
             // show feedback if there is any
             if (this.messageLayout.ModelledText != "")
-                layouts.Add(messageLayout);
+            {
+                gridBuilder.AddLayout(messageLayout);
+                numLayouts++;
+            }
             // show help and experiments if there are no suggestions visible
             if (this.suggestions.Count < 1)
-                layouts.Add(this.topLayout);
+            {
+                gridBuilder.AddLayout(this.topLayout);
+                numLayouts++;
+            }
             // show suggestions if there are any
             bool addDoNowButton = true;
-            foreach (ActivitySuggestion suggestion in this.suggestions)
+            if (this.suggestions.Count > 0)
             {
-                bool repeatingDeclinedSuggestion = false;
-                if (this.previousDeclinedSuggestion != null && suggestion.ActivityDescriptor.CanMatch(previousDeclinedSuggestion.ActivityDescriptor))
-                    repeatingDeclinedSuggestion = true;
-                layouts.Add(this.makeLayout(suggestion, addDoNowButton, repeatingDeclinedSuggestion));
-                addDoNowButton = false;
+                Vertical_GridLayout_Builder suggestionsBuilder = new Vertical_GridLayout_Builder().Uniform();
+                foreach (ActivitySuggestion suggestion in this.suggestions)
+                {
+                    bool repeatingDeclinedSuggestion = false;
+                    if (this.previousDeclinedSuggestion != null && suggestion.ActivityDescriptor.CanMatch(previousDeclinedSuggestion.ActivityDescriptor))
+                        repeatingDeclinedSuggestion = true;
+                    suggestionsBuilder.AddLayout(this.makeLayout(suggestion, addDoNowButton, repeatingDeclinedSuggestion));
+                    numLayouts++;
+                    addDoNowButton = false;
+                }
+                gridBuilder.AddLayout(suggestionsBuilder.BuildAnyLayout());
             }
-            // show the button for getting more suggestions if there's room
-            if (this.suggestions.Count < this.maxNumSuggestions)
-                layouts.Add(this.requestSuggestion_layout);
-            // show an explanation about how multiple suggestions work (they're in chronological order) if there's room
-            if (layouts.Count < this.maxNumSuggestions)
+            // Show an explanation about how multiple suggestions work (they're in chronological order) if there's room
+            // Also be sure to save room for the suggestion buttons
+            if (numLayouts < this.maxNumSuggestions - 1)
             {
                 if (this.suggestions.Count > 0)
                 {
-                    // make sure that the user realizes that asking for another suggestion
                     this.askWhatIsNext_layout.setText("What's after that?");
-                    layouts.Insert(layouts.Count - 1, this.askWhatIsNext_layout);
+                    gridBuilder.AddLayout(this.askWhatIsNext_layout);
+                    numLayouts++;
                 }
             }
 
-            GridLayout grid = GridLayout.New(BoundProperty_List.Uniform(layouts.Count), new BoundProperty_List(1), LayoutScore.Zero);
-            foreach (LayoutChoice_Set layout in layouts)
+            // show the button for getting more suggestions if there's room
+            if (this.suggestions.Count < this.maxNumSuggestions)
             {
-                grid.AddLayout(layout);
+                gridBuilder.AddLayout(this.requestSuggestion_layout);
+                numLayouts++;
             }
 
-            this.SetContent(grid);
+            this.SetContent(gridBuilder.BuildAnyLayout());
         }
 
         private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool doNowButton, bool repeatingDeclinedSuggestion)

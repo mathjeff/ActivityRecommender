@@ -524,6 +524,12 @@ namespace ActivityRecommendation
             if (average == 0)
                 average = 0.5;
             suggestion.PredictedScoreDividedByAverage = this.EstimateRating(activity, when).Distribution.Mean / average;
+            Distribution thisHappiness = this.Get_OverallHappiness_ParticipationEstimate(activity, request).Distribution;
+            Distribution averageHappiness = this.GetAverageLongtermValueWhenParticipated(this.activityDatabase.RootActivity);
+            if (averageHappiness.Weight > 0 && thisHappiness.Weight > 0)
+                suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage = thisHappiness.Mean / averageHappiness.Mean;
+            else
+                suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage = 1;
             suggestion.MostSignificantJustification = this.getMostSignificantJustification(activity, request);
             return suggestion;
         }

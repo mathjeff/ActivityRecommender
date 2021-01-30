@@ -69,7 +69,7 @@ namespace ActivityRecommendation
             Vertical_GridLayout_Builder sideBuilder = new Vertical_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(cancelLayout);
-            if (this.suggestion.PredictedScoreDividedByAverage != null)
+            if (this.suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage != null)
                 sideBuilder.AddLayout(new ButtonLayout(this.justifyButton, "?"));
             mainGrid.PutLayout(sideBuilder.Build(), 2, 0);
             this.SubLayout = mainGrid;
@@ -101,8 +101,8 @@ namespace ActivityRecommendation
             return "will certainly be";
         }
 
-        // given a rating (relative to the average rating), returns a verb to describe it
-        private string getRatingAdjective(double ratingTimesAverage)
+        // given an amount of future happiness (relative to), returns a verb to describe it
+        private string getFutureRatingAdjective(double ratingTimesAverage)
         {
             if (ratingTimesAverage <= 0.3)
                 return "miserable";
@@ -112,20 +112,88 @@ namespace ActivityRecommendation
                 return "poor";
             if (ratingTimesAverage <= 0.7)
                 return "bad";
-            if (ratingTimesAverage <= 0.8)
+            if (ratingTimesAverage <= 0.75)
                 return "annoying";
-            if (ratingTimesAverage <= 0.9)
+            if (ratingTimesAverage <= 0.85)
+                return "disappointing";
+            if (ratingTimesAverage <= 0.88)
+                return "regrettable";
+            if (ratingTimesAverage <= 0.91)
+                return "unfortunate";
+            if (ratingTimesAverage <= 0.92)
+                return "mediocre";
+            if (ratingTimesAverage <= 0.93)
+                return "so-so";
+            if (ratingTimesAverage <= 0.95)
                 return "decent";
+            if (ratingTimesAverage <= 0.96)
+                return "acceptable";
+            if (ratingTimesAverage <= 0.97)
+                return "sufficient";
+            if (ratingTimesAverage <= 0.98)
+                return "adequate";
+            if (ratingTimesAverage <= 0.985)
+                return "justifiable";
+            if (ratingTimesAverage <= 0.99)
+                return "reasonable";
+            if (ratingTimesAverage <= 0.995)
+                return "fine";
             if (ratingTimesAverage <= 1)
-                return "worthwhile";
-            if (ratingTimesAverage <= 1.1)
+                return "satisfactory";
+            if (ratingTimesAverage <= 1.005)
+                return "better than average";
+            if (ratingTimesAverage <= 1.01)
+                return "above average";
+            if (ratingTimesAverage <= 1.015)
+                return "all right";
+            if (ratingTimesAverage <= 1.02)
                 return "ok";
-            if (ratingTimesAverage <= 1.2)
+            if (ratingTimesAverage <= 1.025)
+                return "an improvement";
+            if (ratingTimesAverage <= 1.03)
+                return "worthwhile";
+            if (ratingTimesAverage <= 1.035)
+                return "worth it";
+            if (ratingTimesAverage <= 1.04)
+                return "positive";
+            if (ratingTimesAverage <= 1.045)
+                return "constructive";
+            if (ratingTimesAverage <= 1.05)
+                return "useful";
+            if (ratingTimesAverage <= 1.055)
+                return "helpful";
+            if (ratingTimesAverage <= 1.06)
+                return "better";
+            if (ratingTimesAverage <= 1.065)
+                return "beneficial";
+            if (ratingTimesAverage <= 1.07)
+                return "advantageous";
+            if (ratingTimesAverage <= 1.075)
+                return "an upgrade";
+            if (ratingTimesAverage <= 1.08)
+                return "cool";
+            if (ratingTimesAverage <= 1.085)
+                return "a good idea";
+            if (ratingTimesAverage <= 1.09)
+                return "pretty good";
+            if (ratingTimesAverage <= 1.095)
+                return "high quality";
+            if (ratingTimesAverage <= 1.1)
                 return "nice";
-            if (ratingTimesAverage <= 1.3)
+            if (ratingTimesAverage <= 1.15)
                 return "good";
+            if (ratingTimesAverage <= 1.2)
+                return "rewarding";
+            if (ratingTimesAverage <= 1.25)
+                return "really nice";
+            if (ratingTimesAverage <= 1.3)
+                return "really good";
+            if (ratingTimesAverage <= 1.35)
+                return "valuable";
             if (ratingTimesAverage <= 1.4)
                 return "great";
+            if (ratingTimesAverage <= 1.45)
+                return "excellent";
             if (ratingTimesAverage <= 1.5)
                 return "awesome";
             if (ratingTimesAverage <= 1.6)
@@ -145,22 +213,20 @@ namespace ActivityRecommendation
             string shortTimeFormat = "HH:mm";
             string longTimeFormat = "HH:mm:ss";
 
-            string probabilityPhrase = "";
             string ratingAdjective = "";
             // How we expect the user to feel about this
-            if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
+            if (suggestion.ParticipationProbability != null && suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage != null)
             {
-                probabilityPhrase = this.getProbabilityAdjective(suggestion.ParticipationProbability.Value);
-                ratingAdjective = this.getRatingAdjective(suggestion.PredictedScoreDividedByAverage.Value);
+                ratingAdjective = this.getFutureRatingAdjective(suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage.Value);
             }
             if (!suggestion.Skippable)
             {
                 // If this is an unskippable experiment, then remind the user that they promised to do it
                 text = "You promised to do " + suggestion.ActivityDescriptor.ActivityName + " at " + suggestion.StartDate.ToString(shortTimeFormat) + ".";
-                if (suggestion.PredictedScoreDividedByAverage != null)
+                if (ratingAdjective != "")
                 {
                     // Also tell the user how we think they'll feel about it
-                    text += " I think it will be " + ratingAdjective + ".";
+                    text += " I think it will be " + ratingAdjective + " for you.";
                 }
                 text += " Get started!";
             }
@@ -189,10 +255,9 @@ namespace ActivityRecommendation
                 text += " " + whenText;
 
                 // How we expect the user to feel about this
-                if (suggestion.ParticipationProbability != null && suggestion.PredictedScoreDividedByAverage != null)
+                if (ratingAdjective != "")
                 {
-                    text += "\n" + probabilityPhrase;
-                    text += " " + ratingAdjective;
+                    text += "\ncould be " + ratingAdjective + " for you";
                     text += " because of " + this.decapitalize(suggestion.MostSignificantJustification.Label) + ".";
                 }
                 else

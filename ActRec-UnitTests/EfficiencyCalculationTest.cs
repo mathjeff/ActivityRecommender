@@ -23,7 +23,7 @@ namespace ActRec_UnitTests
             for (int i = 0; i < efficiencies.NumItems; i++)
             {
                 DateTime when = efficiencies.GetValueAtIndex(i).Key;
-                if (engine.Test_ChooseExperimentOption().Error != "")
+                if (engine.Test_ChooseExperimentOption().HasError)
                     break; // not enough data to run more experiments
                 // make a list of experiment options
                 List<SuggestedMetric> experimentOptions = engine.ChooseExperimentOptions(when);

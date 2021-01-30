@@ -107,6 +107,13 @@ namespace ActivityRecommendation.Effectiveness
         // The number of times that an experiment participation can happen before no longer having enough tasks (which is required for making comparisons that don't have too much error)
         public int NumExperimentParticipationsRemaining;
 
+        public bool HasError
+        {
+            get
+            {
+                return this.Error != "";
+            }
+        }
         public ActivitySuggestion ActivitySuggestion
         {
             get

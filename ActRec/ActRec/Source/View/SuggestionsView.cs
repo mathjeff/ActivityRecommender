@@ -303,12 +303,6 @@ namespace ActivityRecommendation.View
                 gridBuilder.AddLayout(messageLayout);
                 numLayouts++;
             }
-            // show help and experiments if there are no suggestions visible
-            if (this.suggestions.Count < 1)
-            {
-                gridBuilder.AddLayout(this.topLayout);
-                numLayouts++;
-            }
             // show suggestions if there are any
             bool addDoNowButton = true;
             if (this.suggestions.Count > 0)
@@ -343,6 +337,13 @@ namespace ActivityRecommendation.View
                 gridBuilder.AddLayout(this.requestSuggestion_layout);
                 numLayouts++;
             }
+            // show help and experiments if there are no suggestions visible
+            if (this.suggestions.Count < 1)
+            {
+                gridBuilder.AddLayout(this.topLayout);
+                numLayouts++;
+            }
+
 
             this.SetContent(gridBuilder.BuildAnyLayout());
         }
@@ -509,7 +510,7 @@ namespace ActivityRecommendation.View
         }
         public bool GetIsUsable()
         {
-            return this.engine.Test_ChooseExperimentOption().Error == "";
+            return !this.engine.Test_ChooseExperimentOption().HasError;
         }
         Engine engine;
     }

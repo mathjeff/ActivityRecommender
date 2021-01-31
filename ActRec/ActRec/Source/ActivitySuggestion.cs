@@ -30,6 +30,7 @@ namespace ActivityRecommendation
         public double? ParticipationProbability { get; set; }
         public double? PredictedScoreDividedByAverage { get; set; }
         public double? PredictedFutureHappinessIfParticipated_DividedByAverage { get; set; }
+        public bool WorseThanRootActivity { get; set; }
         public Justification MostSignificantJustification { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all
         // number of suggestions for which we don't have another suggestion to follow up with

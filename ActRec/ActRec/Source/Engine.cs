@@ -525,6 +525,46 @@ namespace ActivityRecommendation
                 average = 0.5;
             suggestion.PredictedScoreDividedByAverage = this.EstimateRating(activity, when).Distribution.Mean / average;
             Distribution thisHappiness = this.Get_OverallHappiness_ParticipationEstimate(activity, request).Distribution;
+            Distribution otherHappiness = this.Get_OverallHappiness_ParticipationEstimate(this.activityDatabase.RootActivity, request).Distribution;
+            if (thisHappiness.Mean < otherHappiness.Mean)
+            {
+                // The reason that we calculate whether we think the user's future happiness after doing this will be less than after simply doing something is:
+                // We want to be able to encourage the user to search for and discover new things when appropriate.
+
+                // If all of our specific suggestions are below average, then the user would probably be better off doing something random, because there's a decent chance that
+                // doing something random could be just as good.
+                // If we expect that doing something that is already known will be below average, then the user should choose something not already known.
+                // Choosing something not already known also has the advantage that if it ends up being good, then that could be very informative.
+
+                // What are the cases where it should be possible for us to expect this suggested activity to indicate lower future happiness than the root activity?
+
+                // Causes that we like:
+                // 1. Maybe we made a suggestion because making the suggestion is helpful even though doing the suggested activity is not
+                //    Recall that we model the future-happiness-if-suggested and future-happiness-if-done separately
+                //    If we make a suggestion and don't really intend for the user to do it, it's because we expect the user to interpret it as a suggestion to do something else
+                //    For example, maybe when the user is investigating doing activity X they notice something that reminds them about activity Y and they do that instead
+                // 2. Maybe the predictions for this activity are more sensitive to noise and/or to new data due to this activity being newer than the root activity
+                //    If a bunch of undesirable things happened very recently (for example, the user skipped a few suggestions), that might have more of an effect on predictions for newer activities
+                // 3. If this (suggesting trying something new) works well, perhaps child activities will be sensitive to skips and the root activity won't
+                //    Perhaps, if the user often tries new things, then it will often be the case that skipping a child activity doesn't have much impact on overall happiness,
+                //    because the user will just try something new later.
+                //    However, if skipping a child activity is a strong signal that the user is unwilling to do that activity, then it could mean that if the user were to actually do that
+                //    activity, that there would be some sort of problem and that the user might be less happy
+
+                // Causes that we don't really like:
+                // 3. Maybe we didn't consider all activities
+                // 3.1. Maybe we're still warming up the cache and didn't have time to consider all activities
+                // 3.2. Maybe we're doing an experiment. In that case it shouldn't matter, though
+                // 4. The root activity has a higher density of datapoints per unit time than any other activity, so each interpolator box will be a smaller fraction of the total
+                //    So, when predicting the future happiness based on the root activity, a smaller time window will be used
+
+                // It would be nice for us to simply compare the predicted-future-happiness-after-doing-this to the average happiness (because that would be a lagging indicator of happiness
+                // and could be used as a more stable baseline), but recent happiness scores are probably more relevant than very old happiness scores from years ago.
+                // It could be nice for us to use a slightly laggy happiness indicator as a baseline
+                //  Maybe we could make another interpolator for the root activity and ask that interpolator to use a larger window duration.
+                //  Maybe we could just compute the average happiness from the last ~1 month and use that as a baseline
+                suggestion.WorseThanRootActivity = true;
+            }
             Distribution averageHappiness = this.GetAverageLongtermValueWhenParticipated(this.activityDatabase.RootActivity);
             if (averageHappiness.Weight > 0 && thisHappiness.Weight > 0)
                 suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage = thisHappiness.Mean / averageHappiness.Mean;

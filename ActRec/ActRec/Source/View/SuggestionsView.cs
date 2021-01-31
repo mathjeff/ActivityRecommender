@@ -291,8 +291,9 @@ namespace ActivityRecommendation.View
         {
             int numLayouts = 0;
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
-            // if the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
-            if (this.suggestions.Count < 1)
+            // If the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
+            // Alternatively, if our suggestion isn't that good, be sure to show them those buttons for making more activities
+            if (this.suggestions.Count < 1 || (this.suggestions.Count == 1 && this.suggestions[0].WorseThanRootActivity))
             {
                 gridBuilder.AddLayout(this.newActivities_layout);
                 numLayouts++;

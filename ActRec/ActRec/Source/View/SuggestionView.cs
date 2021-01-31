@@ -235,11 +235,19 @@ namespace ActivityRecommendation
                 // For a normal suggestion, we tell them how likely we think it is that they will do it, and
                 // how we think they will feel about it
 
-                // Optional emphasis
-                if (repeatingDeclinedSuggestion)
-                    text = "No, really: I think ";
+                // if we don't like our best idea, mention that
+                if (suggestion.WorseThanRootActivity)
+                {
+                    text = "My best idea: ";
+                }
                 else
-                    text = "";
+                {
+                    // Optional emphasis if we're repating ourselves and we think it's a good idea
+                    if (repeatingDeclinedSuggestion)
+                        text = "No, really: I think ";
+                    else
+                        text = "";
+                }
                 // activity name
                 text += suggestion.ActivityDescriptor.ActivityName;
 
@@ -259,6 +267,8 @@ namespace ActivityRecommendation
                 {
                     text += "\ncould be " + ratingAdjective + " for you";
                     text += " because of " + this.decapitalize(suggestion.MostSignificantJustification.Label) + ".";
+                    if (suggestion.WorseThanRootActivity)
+                        text += "\nHow about trying something new?";
                 }
                 else
                 {

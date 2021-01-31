@@ -30,7 +30,7 @@ namespace ActivityRecommendation.View
             StackEntry activitiesEntry = new StackEntry(this.activitiesLayout, "Activities", null);
             StackEntry participationsEntry = new StackEntry(this.participationsLayout, "Record Participations", null);
             StackEntry suggestionsEntry = new StackEntry(this.suggestionsLayout, "Get Suggestions", this.suggestionsLayout);
-            StackEntry statisticsEntry = new StackEntry(this.statisticsLayout, "View Statistics", null);
+            StackEntry statisticsEntry = new StackEntry(this.statisticsLayout, "Analyze", null);
             StackEntry importExportEntry = new StackEntry(this.importExportLayout, "Import/Export", null);
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack);

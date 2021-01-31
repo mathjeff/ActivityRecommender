@@ -17,6 +17,9 @@ namespace ActivityRecommendation
         public event VisitActivitiesScreenHandler VisitSuggestionsScreen;
         public delegate void VisitSuggestionsScreenHandler();
 
+        public event VisitStatisticsScreenHandler VisitStatisticsScreen;
+        public delegate void VisitStatisticsScreenHandler();
+
         public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
@@ -42,11 +45,21 @@ namespace ActivityRecommendation
             this.nameBox.NameTextChanged += this.ActivityNameText_Changed;
             nameAndFeedback_builder.AddLayout(this.nameBox);
 
+            this.promptHolder = new ContainerLayout();
+            nameAndFeedback_builder.AddLayout(this.promptHolder);
+
             Button responseButton = new Button();
             responseButton.Clicked += ResponseButton_Clicked;
-            this.responseButtonLayout = new ButtonLayout(responseButton);
-            nameAndFeedback_builder.AddLayout(ButtonLayout.HideIfEmpty(this.responseButtonLayout));
+            this.participationFeedbackButtonLayout = new ButtonLayout(responseButton);
             contents.AddLayout(nameAndFeedback_builder.BuildAnyLayout());
+
+            this.navigationLayout = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
+            Button suggestionsButton = new Button();
+            suggestionsButton.Clicked += SuggestionsButton_Clicked;
+            this.navigationLayout.AddLayout(new ButtonLayout(suggestionsButton, "What's next?"));
+            Button analyzeButton = new Button();
+            analyzeButton.Clicked += AnalyzeButton_Clicked;
+            this.navigationLayout.AddLayout(new ButtonLayout(analyzeButton, "Analyze!"));
 
             Vertical_GridLayout_Builder detailsBuilder = new Vertical_GridLayout_Builder();
 
@@ -174,6 +187,19 @@ namespace ActivityRecommendation
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
         }
 
+        private void AnalyzeButton_Clicked(object sender, EventArgs e)
+        {
+            if (this.VisitStatisticsScreen != null)
+                this.VisitStatisticsScreen.Invoke();
+        }
+
+        private void SuggestionsButton_Clicked(object sender, EventArgs e)
+        {
+            // The response button suggested requesting another suggestion
+            if (this.VisitSuggestionsScreen != null)
+                this.VisitSuggestionsScreen.Invoke();
+        }
+
         public List<AppFeature> GetFeatures()
         {
             return new List<AppFeature>()
@@ -192,17 +218,8 @@ namespace ActivityRecommendation
 
         private void ResponseButton_Clicked(object sender, EventArgs e)
         {
-            if (this.participationFeedback != null)
-            {
-                // The response button had feedback about the most recent participation
-                this.layoutStack.AddLayout(this.participationFeedback.Details, "Feedback");
-            }
-            else
-            {
-                // The response button suggested requesting another suggestion
-                if (this.VisitSuggestionsScreen != null)
-                    this.VisitSuggestionsScreen.Invoke();
-            }
+            // The response button had feedback about the most recent participation
+            this.layoutStack.AddLayout(this.participationFeedback.Details, "Feedback");
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -551,14 +568,17 @@ namespace ActivityRecommendation
                 participationFeedback = this.computeFeedback(activity, startDate, endDate);
                 if (participationFeedback != null)
                 {
-                    this.responseButtonLayout.setText(participationFeedback.Summary);
+                    this.participationFeedbackButtonLayout.setText(participationFeedback.Summary);
                     if (participationFeedback.SummaryColor != null)
-                        this.responseButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
+                        this.participationFeedbackButtonLayout.setTextColor(participationFeedback.SummaryColor.Value);
                     else
-                        this.responseButtonLayout.resetTextColor();
+                        this.participationFeedbackButtonLayout.resetTextColor();
+                    this.promptHolder.SubLayout = this.participationFeedbackButtonLayout;
                 }
                 else
-                    this.responseButtonLayout.setText("");
+                {
+                    this.promptHolder.SubLayout = null;
+                }
             }
             else
             {
@@ -566,14 +586,13 @@ namespace ActivityRecommendation
                 {
                     // If we have no text in the activity name box, we can remind the user to get another suggestion,
                     // and we can give them a convenient button for going there
-                    this.responseButtonLayout.setText("What's next?");
-                    this.responseButtonLayout.resetTextColor();
+                    this.promptHolder.SubLayout = this.navigationLayout;
                 }
                 else
                 {
                     // If we have no valid activity name but we do have some text in the name box, then we don't need to say anything
                     // The name entry box will offer autocomplete suggestions and/or help
-                    this.responseButtonLayout.setText("");
+                    this.promptHolder.SubLayout = null;
                 }
             }
             // Note that this is the only method that modifies either participationFeedback or responseButtonLayout.text,
@@ -1553,7 +1572,9 @@ namespace ActivityRecommendation
         Button setStartdateButton;
         Button setEnddateButton;
         Button okButton;
-        ButtonLayout responseButtonLayout;
+        ButtonLayout participationFeedbackButtonLayout;
+        ContainerLayout promptHolder;
+        GridLayout navigationLayout;
         string feedback;
         Engine engine;
         ChooseMetric_View metricChooser;

@@ -384,6 +384,7 @@ namespace ActivityRecommendation
             }
             this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
+            this.participationEntryView.VisitStatisticsScreen += ParticipationEntryView_VisitStatisticsScreen;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);
@@ -396,9 +397,9 @@ namespace ActivityRecommendation
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
-            StatisticsMenu visualizationMenu = new StatisticsMenu(this.engine, this.layoutStack);
-            visualizationMenu.VisitActivitiesScreen += VisualizationMenu_VisitActivitiesScreen;
-            visualizationMenu.VisitParticipationsScreen += VisualizationMenu_VisitParticipationsScreen;
+            this.statisticsMenu = new StatisticsMenu(this.engine, this.layoutStack);
+            this.statisticsMenu.VisitActivitiesScreen += VisualizationMenu_VisitActivitiesScreen;
+            this.statisticsMenu.VisitParticipationsScreen += VisualizationMenu_VisitParticipationsScreen;
 
             this.dataImportView = new DataImportView(this.layoutStack);
             this.dataImportView.RequestImport += this.ImportData;
@@ -421,7 +422,7 @@ namespace ActivityRecommendation
                 this.activitiesMenuLayout,
                 this.participationEntryView,
                 this.suggestionsView,
-                visualizationMenu,
+                this.statisticsMenu,
                 importExportView,
                 this.layoutStack);
 
@@ -507,6 +508,12 @@ namespace ActivityRecommendation
             helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
+        }
+
+        private void ParticipationEntryView_VisitStatisticsScreen()
+        {
+            this.layoutStack.GoBack();
+            this.layoutStack.AddLayout(this.statisticsMenu, "Analyze");
         }
 
         private void ResetVersionNumberLayout_RequestChangeVersion(string version)
@@ -1213,7 +1220,7 @@ namespace ActivityRecommendation
         SuggestionsView suggestionsView;
         DataExportView dataExportView;
         DataImportView dataImportView;
-        ActivityVisualizationMenu statisticsMenu;
+        StatisticsMenu statisticsMenu;
         Engine engine;
         TextConverter textConverter;
         InternalFileIo internalFileIo = new InternalFileIo();

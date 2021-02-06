@@ -397,7 +397,7 @@ namespace ActivityRecommendation
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
-            this.statisticsMenu = new StatisticsMenu(this.engine, this.layoutStack);
+            this.statisticsMenu = new StatisticsMenu(this.engine, this.layoutStack, this.publicFileIo, this.persona);
             this.statisticsMenu.VisitActivitiesScreen += VisualizationMenu_VisitActivitiesScreen;
             this.statisticsMenu.VisitParticipationsScreen += VisualizationMenu_VisitParticipationsScreen;
 
@@ -410,11 +410,6 @@ namespace ActivityRecommendation
             LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Import", this.dataImportView)
                 .AddLayout("Export", this.dataExportView)
-                .AddLayout("Summarize",
-                    new MenuLayoutBuilder(this.layoutStack)
-                    .AddLayout("Summarize Preferences", new PreferenceSummaryLayout(engine, layoutStack, publicFileIo))
-                    .AddLayout("Summarize Participations", new ParticipationSummarizerLayout(engine, persona, layoutStack))
-                    .Build())
                 .Build();
 
 

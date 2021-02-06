@@ -14,15 +14,15 @@ namespace ActivityRecommendation.View
             this.lifeSummarizer = new LifeSummarizer(engine, persona, new Random());
             this.layoutStack = layoutStack;
 
-            this.sinceView = new DateEntryView("Since", layoutStack);
+            this.sinceView = new DateEntryView("since", layoutStack);
             this.sinceView.SetDay(DateTime.Now.Subtract(TimeSpan.FromDays(7)));
 
             Button button = new Button();
             button.Clicked += Button_Clicked;
-            ButtonLayout buttonLayout = new ButtonLayout(button, "Summarize!");
+            ButtonLayout buttonLayout = new ButtonLayout(button, "See my Story!");
 
             LayoutChoice_Set sublayout = new Vertical_GridLayout_Builder()
-                .AddLayout(new TextblockLayout("View Participation Summary"))
+                .AddLayout(new TextblockLayout("Summarize Recent Participations"))
                 .AddLayout(this.sinceView)
                 .AddLayout(buttonLayout)
                 .BuildAnyLayout();

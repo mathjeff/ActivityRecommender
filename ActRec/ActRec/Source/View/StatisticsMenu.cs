@@ -14,10 +14,12 @@ namespace ActivityRecommendation.View
 
         public event VisitParticipationScreenHandler VisitParticipationsScreen;
         public delegate void VisitParticipationScreenHandler();
-        public StatisticsMenu(Engine engine, LayoutStack layoutStack)
+        public StatisticsMenu(Engine engine, LayoutStack layoutStack, PublicFileIo publicFileIo, Persona persona)
         {
             this.engine = engine;
             this.layoutStack = layoutStack;
+            this.publicFileIo = publicFileIo;
+            this.persona = persona;
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -43,10 +45,14 @@ namespace ActivityRecommendation.View
                 if (this.normalContent == null)
                 {
                     MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
-                    visualizationBuilder.AddLayout("Recent Best/Worst Activities", new Browse_RecentSignificantActivities_Layout(this.engine, this.engine.RatingSummarizer, this.layoutStack));
+                    // Screens that will identify which activity is interesting for you
+                    visualizationBuilder.AddLayout("Significant Activities", new Browse_RecentSignificantActivities_Layout(this.engine, this.engine.RatingSummarizer, this.layoutStack));
+                    visualizationBuilder.AddLayout("Favorite Activities", new PreferenceSummaryLayout(this.engine, this.layoutStack, this.publicFileIo));
+                    visualizationBuilder.AddLayout("Life Story", new ParticipationSummarizerLayout(this.engine, this.persona, this.layoutStack));
+                    // Screens that require you to specify which activity you're interested in
                     visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
-                    visualizationBuilder.AddLayout("Browse Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.engine.RatingSummarizer, this.layoutStack));
-                    visualizationBuilder.AddLayout("Search for Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
+                    visualizationBuilder.AddLayout("Search Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.engine.RatingSummarizer, this.layoutStack));
+                    visualizationBuilder.AddLayout("Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
                     this.normalContent = visualizationBuilder.Build();
                 }
@@ -125,5 +131,7 @@ namespace ActivityRecommendation.View
         private LayoutChoice_Set normalContent;
         private LayoutChoice_Set noParticipations_layout;
         private LayoutChoice_Set noActivities_layout;
+        private PublicFileIo publicFileIo;
+        private Persona persona;
     }
 }

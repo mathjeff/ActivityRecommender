@@ -10,7 +10,7 @@ namespace ActivityRecommendation.View
     {
         public Browse_RecentSignificantActivities_Layout(Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
-            this.SetTitle("Find most significant recent activities");
+            this.SetTitle("Significant recent activities");
             this.engine = engine;
             this.scoreSummarizer = scoreSummarizer;
             this.layoutStack = layoutStack;
@@ -21,9 +21,8 @@ namespace ActivityRecommendation.View
             this.durationLayout = new DurationEntryView();
 
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
-            gridBuilder.AddLayout(new TextblockLayout("This screen allows you to identify the activities that contributed the most total increase or decrease to your " +
-                "happiness during the given time period."));
-            gridBuilder.AddLayout(new TitledControl("In the last:", durationLayout));
+            gridBuilder.AddLayout(new TextblockLayout("What changed your happiness most"));
+            gridBuilder.AddLayout(new TitledControl("in the last:", durationLayout));
             gridBuilder.AddLayout(new ButtonLayout(okButton, "OK"));
             this.SetContent(ScrollLayout.New(gridBuilder.Build()));
         }

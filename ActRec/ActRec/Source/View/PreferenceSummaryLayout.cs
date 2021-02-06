@@ -20,13 +20,9 @@ namespace ActivityRecommendation.View
 
             this.SubLayout = new Vertical_GridLayout_Builder()
                 .Uniform()
-                .AddLayout(new TextblockLayout("This screen analyzes your data and summarizes the results, for sharing with other people.\n" +
-                "Currently, that means it sorts the activities you've done by their average rating, and lists them all.\n" +
-                "This isn't intended for you to use to get a suggestion of what you should do now; for that, you should go to the Suggestions screen,\n" +
-                "which also takes into account how long it has been since you've done various things and how they appear to affect your longterm happiness.\n" +
-                "These results will be shown onscreen and saved in a file.\n" +
+                .AddLayout(new TextblockLayout("Your activities sorted by how much you have liked them.\n" +
                 "This may take some time."))
-                .AddLayout(new ButtonLayout(okButton, "Summarize!"))
+                .AddLayout(new ButtonLayout(okButton, "Sort!"))
                 .Build();
         }
 

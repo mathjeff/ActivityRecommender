@@ -289,64 +289,54 @@ namespace ActivityRecommendation.View
         }
         private void UpdateLayout_From_Suggestions()
         {
-            int numLayouts = 0;
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
+            List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
             // If the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
             // Alternatively, if our suggestion isn't that good, be sure to show them those buttons for making more activities
             if (this.suggestions.Count < 1 || (this.suggestions.Count == 1 && this.suggestions[0].WorseThanRootActivity))
             {
-                gridBuilder.AddLayout(this.newActivities_layout);
-                numLayouts++;
+                layouts.Add(this.newActivities_layout);
             }
             // show feedback if there is any
             if (this.messageLayout.ModelledText != "")
             {
-                gridBuilder.AddLayout(messageLayout);
-                numLayouts++;
+                layouts.Add(messageLayout);
             }
             // show suggestions if there are any
             bool addDoNowButton = true;
             if (this.suggestions.Count > 0)
             {
-                Vertical_GridLayout_Builder suggestionsBuilder = new Vertical_GridLayout_Builder().Uniform();
                 foreach (ActivitySuggestion suggestion in this.suggestions)
                 {
                     bool repeatingDeclinedSuggestion = false;
                     if (this.previousDeclinedSuggestion != null && suggestion.ActivityDescriptor.CanMatch(previousDeclinedSuggestion.ActivityDescriptor))
                         repeatingDeclinedSuggestion = true;
-                    suggestionsBuilder.AddLayout(this.makeLayout(suggestion, addDoNowButton, repeatingDeclinedSuggestion));
-                    numLayouts++;
+                    layouts.Add(this.makeLayout(suggestion, addDoNowButton, repeatingDeclinedSuggestion));
                     addDoNowButton = false;
                 }
-                gridBuilder.AddLayout(suggestionsBuilder.BuildAnyLayout());
             }
             // Show an explanation about how multiple suggestions work (they're in chronological order) if there's room
             // Also be sure to save room for the suggestion buttons
-            if (numLayouts < this.maxNumSuggestions - 1)
+            if (layouts.Count < this.maxNumSuggestions - 1)
             {
                 if (this.suggestions.Count > 0)
                 {
                     this.askWhatIsNext_layout.setText("What's after that?");
-                    gridBuilder.AddLayout(this.askWhatIsNext_layout);
-                    numLayouts++;
+                    layouts.Add(this.askWhatIsNext_layout);
                 }
             }
 
             // show the button for getting more suggestions if there's room
             if (this.suggestions.Count < this.maxNumSuggestions)
             {
-                gridBuilder.AddLayout(this.requestSuggestion_layout);
-                numLayouts++;
+                layouts.Add(this.requestSuggestion_layout);
             }
             // show help and experiments if there are no suggestions visible
             if (this.suggestions.Count < 1)
             {
-                gridBuilder.AddLayout(this.topLayout);
-                numLayouts++;
+                layouts.Add(this.topLayout);
             }
 
-
-            this.SetContent(gridBuilder.BuildAnyLayout());
+            this.SetContent(new Vertical_GridLayout_Builder().Uniform().AddLayouts(layouts).BuildAnyLayout());
         }
 
         private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool doNowButton, bool repeatingDeclinedSuggestion)

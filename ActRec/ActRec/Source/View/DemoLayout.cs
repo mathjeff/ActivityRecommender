@@ -74,7 +74,7 @@ namespace ActivityRecommendation.View
             steps.AddRange(this.clickButton("Welcome"));
             steps.AddRange(this.clickButton("Appearance"));
             steps.AddRange(this.clickButton("Color/Font"));
-            steps.AddRange(this.clickButton("Dreams"));
+            steps.AddRange(this.clickButton("Vampire"));
             steps.AddRange(this.clickButton("Appearance"));
             steps.AddRange(this.clickButton("Welcome"));
             steps.AddRange(this.clickButton("Start!"));

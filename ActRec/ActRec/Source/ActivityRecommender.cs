@@ -544,7 +544,7 @@ namespace ActivityRecommendation
         private void ParticipationEntryView_VisitSuggestionsScreen()
         {
             this.layoutStack.GoBack();
-            this.layoutStack.AddLayout(this.suggestionsView, "Get Suggestions", this.suggestionsView);
+            this.layoutStack.AddLayout(this.suggestionsView, "Suggest/Experiment", this.suggestionsView);
         }
 
         private void VisualizationMenu_VisitActivitiesScreen()

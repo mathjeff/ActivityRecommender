@@ -86,7 +86,7 @@ namespace ActivityRecommendation.View
             steps.AddRange(this.clickButton("Reading (Activity)"));
             steps.AddRange(this.clickButton("Activities"));
             steps.AddRange(this.clickButton("Home"));
-            steps.AddRange(this.clickButton("Get Suggestions"));
+            steps.AddRange(this.clickButton("Suggest/Experiment"));
             steps.AddRange(this.clickButton("Suggest Best"));
             steps.AddRange(this.clickButton("X"));
             steps.AddRange(this.clickButton("Suggest Best"));
@@ -95,7 +95,7 @@ namespace ActivityRecommendation.View
             steps.AddRange(this.clickButton("End = now"));
             steps.AddRange(this.clickButton("OK"));
             steps.AddRange(this.clickButton("Home"));
-            steps.AddRange(this.clickButton("Get Suggestions"));
+            steps.AddRange(this.clickButton("Suggest/Experiment"));
             steps.AddRange(this.clickButton("Suggest Best"));
             steps.AddRange(this.clickButton("Suggest Best"));
             steps.AddRange(this.clickButton("Doing it?"));

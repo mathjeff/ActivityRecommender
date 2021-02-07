@@ -40,7 +40,6 @@ namespace ActivityRecommendation
                 )
             );
 
-            this.SetContent(this.mainDisplayGrid);
             this.Placeholder("(Optional)");
         }
 

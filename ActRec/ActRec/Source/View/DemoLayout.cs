@@ -36,35 +36,69 @@ namespace ActivityRecommendation.View
         {
             this.steps = this.buildSteps();
             this.stepNumber = 0;
-            this.timer = new Timer();
-            this.timer.Interval = 1500;
-            this.timer.Elapsed += Timer_Elapsed;
-            this.timer.Start();
-        }
-
-        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            this.feedbackLabel.setText("See what it may look like to use ActivityRecommender!");
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                this.advance();
-            });
+            this.viewManager.LayoutCompleted += ViewManager_LayoutCompleted;
+            this.advance();
         }
 
         private void advance()
         {
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                this.advanceOnThisThread();
+            });
+        }
+
+        private void advanceOnThisThread()
+        {
+            this.feedbackLabel.setText("See what it may look like to use ActivityRecommender!");
+            this.timer = null;
             WorkflowNode node = null;
             try
             {
                 node = this.steps[stepNumber];
                 node.Process();
+                if (this.viewManager.NeedsRelayout)
+                {
+                    System.Diagnostics.Debug.WriteLine("DemoLayout waiting for ViewManager to complete layout");
+                }
+                else
+                {
+                    this.sleepAndStep();
+                }
                 this.stepNumber++;
             }
             catch (Exception ex)
             {
-                this.timer.Stop();
                 System.Diagnostics.Debug.WriteLine("DemoLayout error processing node " + node + ": " + ex);
+                this.viewManager.LayoutCompleted -= ViewManager_LayoutCompleted;
             }
+        }
+
+        private void ViewManager_LayoutCompleted(ViewManager_LayoutStats layoutStats)
+        {
+            System.Diagnostics.Debug.Write("DemoLayout sees ViewManager completed layout; waiting slightly before advancing");
+            this.sleepAndStep();
+        }
+
+        private void sleepAndStep()
+        {
+            System.Diagnostics.Debug.Write("DemoLayout sleepAndStep");
+            Timer timer = this.timer;
+            if (timer != null)
+            {
+                System.Diagnostics.Debug.WriteLine("DemoLayout cancelling existing timer");
+                timer.Stop();
+            }
+            timer = new Timer();
+            timer.AutoReset = false;
+            timer.Interval = 1000;
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            this.advance();
         }
 
         private List<WorkflowNode> buildSteps()

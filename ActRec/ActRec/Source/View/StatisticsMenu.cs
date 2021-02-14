@@ -49,6 +49,7 @@ namespace ActivityRecommendation.View
                     visualizationBuilder.AddLayout("Significant Activities", new Browse_RecentSignificantActivities_Layout(this.engine, this.engine.RatingSummarizer, this.layoutStack));
                     visualizationBuilder.AddLayout("Favorite Activities", new PreferenceSummaryLayout(this.engine, this.layoutStack, this.publicFileIo));
                     visualizationBuilder.AddLayout("Life Story", new ParticipationSummarizerLayout(this.engine, this.persona, this.layoutStack));
+                    visualizationBuilder.AddLayout("Efficiency Growth", new EfficiencyTrendLayout(this.engine.EfficiencyCorrelator));
                     // Screens that require you to specify which activity you're interested in
                     visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
                     visualizationBuilder.AddLayout("Search Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.engine.RatingSummarizer, this.layoutStack));

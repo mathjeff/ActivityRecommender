@@ -39,6 +39,20 @@ namespace ActivityRecommendation
             this.Add(datapoint.Input, datapoint.Output, datapoint.Weight);
         }
 
+        public bool HasCorrelation
+        {
+            get
+            {
+                if (this.count <= 0)
+                    return false;
+                if (this.xs.StdDev <= 0)
+                    return false;
+                if (this.ys.StdDev <= 0)
+                    return false;
+                return true;
+            }
+        }
+
         public double Correlation
         {
             get
@@ -97,6 +111,13 @@ namespace ActivityRecommendation
             double deltaY = deltaX * this.Slope;
             double y = this.ys.Mean + deltaY;
             return y;
+        }
+        public double Weight
+        {
+            get
+            {
+                return this.xs.Weight;
+            }
         }
 
         public Correlator Plus(Correlator other)

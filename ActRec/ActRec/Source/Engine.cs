@@ -12,6 +12,7 @@ namespace ActivityRecommendation
         {
             this.weightedRatingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
             this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
+            this.efficiencyCorrelator = new EfficiencyCorrelator();
             this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer, this.efficiencySummarizer);
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             foreach (Activity activity in this.activityDatabase.AllActivities)
@@ -167,6 +168,7 @@ namespace ActivityRecommendation
                 return;
             this.addEfficiencyMeasurement(measurement.Earlier);
             this.efficiencySummarizer.AddRating(measurement.StartDate, measurement.EndDate, measurement.RecomputedEfficiency.Mean);
+            this.efficiencyCorrelator.Add(measurement.StartDate, measurement.EndDate, measurement.RecomputedEfficiency.Mean);
             Activity activity = this.ActivityDatabase.ResolveDescriptor(measurement.ActivityDescriptor);
             foreach (Activity parent in this.FindAllSupercategoriesOf(activity))
             {
@@ -2247,6 +2249,13 @@ namespace ActivityRecommendation
                 return this.efficiencySummarizer;
             }
         }
+        public EfficiencyCorrelator EfficiencyCorrelator
+        {
+            get
+            {
+                return this.efficiencyCorrelator;
+            }
+        }
         private UserPreferences Get_UserPreferences()
         {
             return UserPreferences.DefaultPreferences;
@@ -2304,6 +2313,7 @@ namespace ActivityRecommendation
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
         ScoreSummarizer weightedRatingSummarizer;
         ScoreSummarizer efficiencySummarizer;
+        EfficiencyCorrelator efficiencyCorrelator;
         
         
         Distribution ratingsOfUnpromptedActivities;

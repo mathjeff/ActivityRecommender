@@ -6,6 +6,9 @@ namespace ActivityRecommendation
 {
     public class EfficiencyCorrelator
     {
+        public delegate void CorrelatorUpdatedHandler();
+        public event CorrelatorUpdatedHandler CorrelatorUpdated;
+
         public EfficiencyCorrelator()
         {
         }
@@ -18,6 +21,8 @@ namespace ActivityRecommendation
             {
                 double logEfficiency = Math.Log(efficiency, 2);
                 this.correlator.Add(start.Subtract(this.firstDate.Value).TotalDays / 365, logEfficiency, weight);
+                if (this.CorrelatorUpdated != null)
+                    this.CorrelatorUpdated.Invoke();
             }
         }
         public Correlator Correlator

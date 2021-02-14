@@ -11,11 +11,17 @@ namespace ActivityRecommendation.View
         public EfficiencyTrendLayout(EfficiencyCorrelator correlator)
         {
             this.efficiencyCorrelator = correlator;
+            this.efficiencyCorrelator.CorrelatorUpdated += EfficiencyCorrelator_CorrelatorUpdated;
         }
+
+        private void EfficiencyCorrelator_CorrelatorUpdated()
+        {
+            this.AnnounceChange(true);
+        }
+
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
             this.SubLayout = this.makeSublayout();
-            this.AnnounceChange(false);
             return base.GetBestLayout(query);
         }
 
@@ -34,6 +40,9 @@ namespace ActivityRecommendation.View
                         result = "Your data indicates that your efficiency doubles every " + roundedNumYears + " years. Nice!";
                     else
                         result = "Your data indicates that your efficiency halves every " + roundedNumYears + " years. Keep trying anyway!";
+                    result += "\n";
+                    result += "\nTo see a graph of your efficiency over time, go back to Visualize one Activity.";
+                    result += "\nTo find your most and least efficient participations, go back to Search Participations.";
                     return new TextblockLayout(result);
                 }
                 else

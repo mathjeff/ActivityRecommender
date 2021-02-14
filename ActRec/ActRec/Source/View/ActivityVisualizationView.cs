@@ -102,6 +102,7 @@ namespace ActivityRecommendation
                 .AddMessage("Red: trend of green")
                 .AddMessage("Blue: overall happiness (all activities)")
                 .AddMessage("Yellow: efficiency (all activities)")
+                .AddMessage("White: trend of yellow")
                 .AddMessage("Tick marks: months, days or years")
                 .Build();
             LayoutChoice_Set creditsLayout = new CreditsButtonBuilder(this.layoutStack)
@@ -226,8 +227,8 @@ namespace ActivityRecommendation
                         datapoint.Output = datapoint.Output / maxY;
                     }
                 }
-                newPlot.AddSeries(smoothedRatings, false);
-
+                bool showTrend = (ratingSummarizer == this.overallEfficiency_summarizer);
+                newPlot.AddSeries(smoothedRatings, showTrend);
             }
 
             DateTime end = DateTime.Now;

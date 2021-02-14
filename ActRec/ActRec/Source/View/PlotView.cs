@@ -86,6 +86,8 @@ namespace ActivityRecommendation
                 case 4:
                     return SKColors.Yellow;
                 case 5:
+                    return SKColors.White;
+                case 6:
                     return SKColors.DarkCyan;
             }
             throw new InvalidOperationException("Not enough colors configured to add another series to this PlotView");

@@ -249,10 +249,50 @@ namespace ActivityRecommendation
         {
             VisualDefaults defaults = this.VisualDefaults;
             this.parentView.BackgroundColor = defaults.ViewDefaults.ApplicationBackground;
-            TextblockLayout layout = new TextblockLayout("I'm loading your data! Sincerely, " + this.persona.Name);
-            layout.AlignHorizontally(TextAlignment.Center);
-            layout.AlignVertically(TextAlignment.Center);
-            ViewManager viewManager = new ViewManager(this.parentView, layout, this.VisualDefaults);
+            TextblockLayout welcome = new TextblockLayout("I'm loading your data! Sincerely, " + this.persona.Name);
+            welcome.AlignHorizontally(TextAlignment.Center);
+            welcome.AlignVertically(TextAlignment.Center);
+            TextblockLayout tip = new TextblockLayout(this.choose_usageTip());
+            tip.AlignHorizontally(TextAlignment.Center);
+            tip.AlignVertically(TextAlignment.Center);
+
+            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
+            gridBuilder.AddLayout(tip);
+            gridBuilder.AddLayout(welcome);
+            ViewManager viewManager = new ViewManager(this.parentView, gridBuilder.Build(), this.VisualDefaults);
+        }
+
+        // returns a tip/suggestion to show to the user
+        private string choose_usageTip()
+        {
+            List<String> choices = new List<string>()
+            {
+                // miscellaneous facts
+                "ActivityRecommender becomes more knowledgeable and more helpful as you record more data.",
+                "Try making a backup of your data in the Export screen and opening the file to see what it looks like.",
+                "All of the help screens in ActivityRecommender are useful and organized. If you like these tips, you should check them out!",
+                "ActivityRecommender is open source. That means you can check out how it works and even make changes.",
+                "Feedback is welcome! If you find a bug or want a new feature, please say so. Your name may even appear in the credits!",
+                "ActivityRecommender was created in 2011.",
+                "ActivityRecommender runs on Android, iOS, and Windows.",
+                // mapping specific use cases to features
+                "If you have lots of interesting ideas that you want to save for later, you can make them into ProtoActivities and prioritize them as you need to.",
+                "If you want to measure your efficiency, you can start an experiment.",
+                "If you want to update a friend on how your life is going, you can go to Analyze -> Life Summary to jog your memory.",
+                "If you want to appreciate things you've done in the past, you can go to Analyze -> Search Participations and look for random good ones.",
+                "If you want to find something about your life to change, you can go to Analyze -> Significant Activities and see what has affected your happiness the most recently.",
+                "If you want to tell a friend what kinds of things you like to do, you can go to Analyze -> Favorite Activities and share its sorted list.",
+                "If you want to see a graph of the time you spent on a certain activity over time, you can go to Analyze -> Visualize one Activity",
+                // Some descriptions of how the algorithms work
+                "Assigning the same parent activity to two child activities allows ActivityRecommender to know that they are similar and to use that in its predictions.",
+                "ActivityRecommender models both your current happiness and your future happiness and attempts to maximize your future happiness.",
+                "If you are happy now then it increases the probability that you will be happy in the future.",
+                "ActivityRecommender separately keeps track of what you like to do and what kinds of suggestions you like to hear. They are probably the same but not necessarily!",
+                "The concept of Net Present Value is a way to compare value tomorrow with value today. It suggests that value today is worth as much as slightly more value tomorrow.",
+                "'Machine Learning' just refers to a computer algorithm that incorporates data to make predictions. Even fitting a line to a 2d scatter plot is a machine learning algorithm!",
+                "ActivityRecommender saves some calculations in memory. Whenever it is restarted, some actions might take longer the next time." // StatList and AdaptiveInterpolator
+            };
+            return choices[this.randomGenerator.Next(choices.Count)];
         }
 
         public void Initialize()
@@ -1235,7 +1275,8 @@ namespace ActivityRecommendation
         string welcomeMessage = "";
         ProtoActivity_Database protoActivities_database;
         Persona persona;
-        private List<VisualDefaults> allLayoutDefaults;
+        List<VisualDefaults> allLayoutDefaults;
+        Random randomGenerator = new Random();
 
     }
 

@@ -738,7 +738,7 @@ namespace ActivityRecommendation
             // If we get here then we run a special HistoryReplayer before startup
             // This is extra slow and extra confusing so to enable it you have to change the source code
             HistoryReplayer historyReplayer = new RatingRenormalizer(false, true);
-            this.LoadFilesInto(historyReplayer);
+            this.loadDataFilesInto(historyReplayer);
             engine = historyReplayer.Finish();
 #endif
             this.engine = engine;

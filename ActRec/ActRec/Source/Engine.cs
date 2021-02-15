@@ -2089,8 +2089,16 @@ namespace ActivityRecommendation
             double userTotalEstimatedSuccessRate = a.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser + b.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser;
 
             // Renormalize user estimates so they total 1
-            double aWeight = a.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser / userTotalEstimatedSuccessRate;
-            double bWeight = b.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser / userTotalEstimatedSuccessRate;
+            double aWeight, bWeight;
+            if (userTotalEstimatedSuccessRate > 0)
+            {
+                aWeight = a.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser / userTotalEstimatedSuccessRate;
+                bWeight = b.DifficultyEstimate.EstimatedRelativeSuccessRate_FromUser / userTotalEstimatedSuccessRate;
+            }
+            else
+            {
+                aWeight = bWeight = 0.5;
+            }
 
             // allocate our estimated success rate according to the user ratios
             a.DifficultyEstimate.EstimatedSuccessesPerSecond = ourTotalEstimatedSuccessRate * aWeight;
@@ -2161,6 +2169,11 @@ namespace ActivityRecommendation
         // Recomputes estimated difficulties for the given experiment
         public void ReplanExperiment(PlannedExperiment experiment)
         {
+            if (experiment.Earlier.DifficultyEstimate.NumHarders > 0 || experiment.Earlier.DifficultyEstimate.NumEasiers > 0)
+            {
+                // old format; can't recompute difficulty
+                return;
+            }
             experiment.Earlier.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = this.EstimateDifficulty_WithoutUser(this.ActivityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor));
             experiment.Later.DifficultyEstimate.EstimatedSuccessesPerSecond_WithoutUser = this.EstimateDifficulty_WithoutUser(this.ActivityDatabase.ResolveDescriptor(experiment.Later.ActivityDescriptor));
 

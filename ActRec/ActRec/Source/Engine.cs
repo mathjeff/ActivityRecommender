@@ -1673,32 +1673,46 @@ namespace ActivityRecommendation
 
             // now calculate efficiency
             System.Diagnostics.Debug.WriteLine("Duration1 = " + duration1);
-            double weight1 = duration1 / predictedDifficulty1;
             System.Diagnostics.Debug.WriteLine("Duration2 = " + duration2);
-            double weight2 = duration2 / predictedDifficulty2;
-            double totalEffectiveness = weight1 * predictedEfficiency1 + weight2 * predictedEfficiency2;
+            double totalEffectiveness = duration1 * predictedEfficiency1 + duration2 * predictedEfficiency2;
             System.Diagnostics.Debug.WriteLine("NumSuccess1 = " + numSuccesses1);
             double successFraction1 = numSuccesses1 / (numSuccesses1 + numSuccesses2);
             System.Diagnostics.Debug.WriteLine("NumSuccess2 = " + numSuccesses2);
             double successFraction2 = numSuccesses2 / (numSuccesses1 + numSuccesses2);
-            double updatedEfficiency1 = totalEffectiveness * successFraction1 / weight1;
-            double updatedEfficiency2 = totalEffectiveness * successFraction2 / weight2;
+
+            double weight1 = successFraction1 * predictedDifficulty1;
+            System.Diagnostics.Debug.WriteLine("weight1 = " + weight1);
+            double weight2 = successFraction2 * predictedDifficulty2;
+            System.Diagnostics.Debug.WriteLine("weight2 = " + weight2);
+            double totalWeight = weight1 + weight2;
+
+            double updatedEffectiveness1 = totalEffectiveness * weight1 / totalWeight;
+            System.Diagnostics.Debug.WriteLine("updatedEffectiveness1 = " + updatedEffectiveness1);
+            double updatedEffectiveness2 = totalEffectiveness * weight2 / totalWeight;
+            System.Diagnostics.Debug.WriteLine("updatedEffectiveness2 = " + updatedEffectiveness2);
+
+            double updatedEfficiency1 = updatedEffectiveness1 / duration1;
             System.Diagnostics.Debug.WriteLine("updatedEfficiency1 = " + updatedEfficiency1);
-            double updatedWeight1 = numSuccesses1 + numSuccesses2;
+            double updatedEfficiency2 = updatedEffectiveness2 / duration2;
             System.Diagnostics.Debug.WriteLine("updatedEfficiency2 = " + updatedEfficiency2);
+
+            double updatedWeight1 = numSuccesses1 + numSuccesses2;
             double updatedWeight2 = updatedWeight1;
             // Why the efficiencies are computed this way:
-            // Note that weight1*updatedEfficiency1+weight2*updatedEfficiency2=totalProductivity=weight1*predictedEfficiency1+weight2*predictedEfficiency2, so (weighted) average estimated efficiency is conserved
+            // Note that duration1*updatedEfficiency1+duration2*updatedEfficiency2=totalEffectiveness=duration1*predictedEfficiency1+duration2*predictedEfficiency2, so (weighted) average estimated efficiency is conserved
             //  Note that numSuccesses1 is 0 or 1, and numSucesses2 is 0 or 1
             // Note that doubling predictedDifficulty[[1,2]] doesn't change updatedEfficiency[[1,2]]
             //  In other words, having poor difficulty estimates doesn't bias the efficiency measurements (although using poor difficulty estimates does add variance to the efficiency measurements)
-            // Note that spending longer on duration1 than on duration2 makes weight1 larger than weight2, which makes updatedEfficiency2 larger than updatedEfficiency1
-            // Note that doubling duration[i] and predictedDifficulty[i] leaves the efficiency estimates unchanged
-            // Note that if numSuccesses1 == 0, then updatedEfficiency2 = totalProductivity/weight2 = predictedEfficiency1*weight1/weight2 + predictedEfficiency2, which is more than predictedEfficiency2
+            // Note that spending longer on duration1 than on duration2 makes weight1 smaller than weight2, which makes updatedEfficiency2 larger than updatedEfficiency1
+            // Note that doubling duration[i] and predictedDifficulty[i] leaves the weights (and the ratios of the updated efficiencies) unchanged
+            // Note that if numSuccesses1 == 0, then updatedEfficiency2 = totalEffectiveness/duration2 = predictedEfficiency1*duration1/duration2 + predictedEfficiency2, which is more than predictedEfficiency2
             // Note that if this process is run twice, once with two successes and once with numSuccesses1=0,numSuccesses2=1, then assuming everything else is identical:
             //  The first time, updatedEfficiency1=updatedEfficiency2=1, updatedWeight1=updatedWeight2=2
             //  The second time, updatedEfficiency1=0, updatedEfficiency2=2, updatedWeight1=updatedWeight2=1
             //  average(updatedEfficiency1)=2/3, average(updatedEfficiency2)=4/3 = 2*average(updatedEfficiency1) as desired
+            // Note that if predictedDifficulty1 = 1000, duration1 = predictedDifficulty1/2, predictedDifficulty2 = 1, duration2 = 1, then
+            //  the total effectiveness is dominated by predictedDifficulty1 and duration1; predictedDifficulty2 and duration2 are so small as to be almost negligible
+            //  Also note that in this case, updatedEfficency1 is almost predictedDifficulty1 / duration1, so almost 2
 
             // lastly, assemble the results
             RelativeEfficiencyMeasurement measurement1 = new RelativeEfficiencyMeasurement(participation1, Distribution.MakeDistribution(updatedEfficiency1, 0, updatedWeight1));

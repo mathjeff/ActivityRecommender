@@ -80,6 +80,16 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(recentUserData);
             this.addText(text);
         }
+        public override void Preview_ProtoActivity(ProtoActivity protoActivity)
+        {
+            string text = this.textConverter.ConvertToString(protoActivity);
+            this.addText(text);
+        }
+        public override void SetPersona(Persona persona)
+        {
+            string text = this.textConverter.ConvertToString(persona);
+            this.addText(text);
+        }
 
         private void addText(string text)
         {

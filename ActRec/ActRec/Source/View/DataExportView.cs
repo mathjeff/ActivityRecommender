@@ -63,17 +63,22 @@ namespace ActivityRecommendation
         LayoutStack layoutStack;
     }
 
-    class ExportSuccessLayout : TitledControl
+    class ExportSuccessLayout : ContainerLayout
     {
-        public ExportSuccessLayout(string filename, PublicFileIo fileIo)
+        public ExportSuccessLayout(string filePath, PublicFileIo fileIo)
         {
             this.fileIo = fileIo;
 
-            this.SetTitle("Saved " + filename);
+            GridLayout grid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
+            TextblockLayout title = new TextblockLayout("Saved " + filePath, 16, false, true);
+            grid.AddLayout(title);
+
             Button viewButton = new Button();
             ButtonLayout viewButtonLayout = new ButtonLayout(viewButton, "View files");
-            this.SetContent(viewButtonLayout);
+            grid.AddLayout(viewButtonLayout);
             viewButton.Clicked += ViewButton_Clicked;
+
+            this.SubLayout = grid;
         }
 
         private async void ViewButton_Clicked(object sender, EventArgs e)

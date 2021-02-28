@@ -727,15 +727,15 @@ namespace ActivityRecommendation
             string fileName = "ActivityData-" + nowText + ".txt";
 
             // TODO make it possible for the user to control the file path
-            bool successful = await this.publicFileIo.ExportFile(fileName, content);
+            FileExportResult result = await this.publicFileIo.ExportFile(fileName, content);
 
-            if (successful)
+            if (result.Successful)
             {
-                this.layoutStack.AddLayout(new ExportSuccessLayout(fileName, this.publicFileIo), "Success");
+                this.layoutStack.AddLayout(new ExportSuccessLayout(result.Path, this.publicFileIo), "Success");
             }
             else
             {
-                this.layoutStack.AddLayout(new TextblockLayout("Failed to save " + fileName), "Error");
+                this.layoutStack.AddLayout(new TextblockLayout("Failed to save " + result.Path), "Error");
             }
         }
 

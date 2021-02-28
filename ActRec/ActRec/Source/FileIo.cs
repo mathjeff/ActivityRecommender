@@ -129,7 +129,7 @@ namespace ActivityRecommendation
             basedir = dir;
         }
         // saves text to a file where the user can do something with it
-        public async Task<bool> ExportFile(string fileName, string content)
+        public async Task<FileExportResult> ExportFile(string fileName, string content)
         {
             await this.requestPermission();
             string destDir = RootDir;
@@ -137,7 +137,7 @@ namespace ActivityRecommendation
                 Directory.CreateDirectory(destDir);
             string path = Path.Combine(destDir, fileName);
             File.WriteAllText(path, content);
-            return true;
+            return new FileExportResult(path, true);
         }
 
         private string RootDir
@@ -172,5 +172,16 @@ namespace ActivityRecommendation
 
 
         }
+    }
+
+    public class FileExportResult
+    {
+        public FileExportResult(string path, bool successful)
+        {
+            this.Path = path;
+            this.Successful = successful;
+        }
+        public string Path;
+        public bool Successful;
     }
 }

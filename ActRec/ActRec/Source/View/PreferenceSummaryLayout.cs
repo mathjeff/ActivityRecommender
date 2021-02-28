@@ -47,12 +47,12 @@ namespace ActivityRecommendation.View
             string nowText = now.ToString("yyyy-MM-dd-HH-mm-ss");
             string fileName = "ActivityPrefSummary-" + nowText + ".txt";
 
-            Task<bool> export = this.fileIo.ExportFile(fileName, fileText);
+            Task<FileExportResult> result = this.fileIo.ExportFile(fileName, fileText);
 
-            export.ContinueWith(task =>
+            result.ContinueWith(task =>
             {
                 string title;
-                if (task.Result)
+                if (result.Result.Successful)
                     title = "Exported " + fileName + " successfully";
                 else
                     title = "Failed to export " + fileName;

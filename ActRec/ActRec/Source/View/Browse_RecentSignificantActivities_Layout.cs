@@ -38,7 +38,7 @@ namespace ActivityRecommendation.View
             TimeSpan windowSize = this.durationLayout.GetDuration();
             DateTime windowEnd = DateTime.Now;
             DateTime windowStart = windowEnd.Subtract(windowSize);
-            Activities_HappinessContributions activities = this.engine.GetMostSignificantRecentActivities(windowStart, 10);
+            Activities_HappinessContributions activities = this.engine.GetMostSignificantRecentActivities(windowStart, 6);
             this.showResults(activities, windowStart, windowEnd);
         }
         private void showResults(Activities_HappinessContributions contributions, DateTime start, DateTime end)

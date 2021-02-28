@@ -180,7 +180,7 @@ namespace ActivityRecommendation.View
                 List<ProtoActivity_EstimatedInterest> top_protoActivities = this.protoActivity_database.GetMostInteresting(2);
                 this.SubLayout = this.multiActivitiesLayout;
                 double numProtos = this.protoActivity_database.Count;
-                this.titleLayout.setText("Browse Best Protoactivities (2/" + numProtos + ")");
+                this.titleLayout.setText("Protoactivity Tournament: compare 2");
 
                 int numBrowses = this.computeNumBrowses();
                 double numBrowsesPerProto = numBrowses / numProtos;

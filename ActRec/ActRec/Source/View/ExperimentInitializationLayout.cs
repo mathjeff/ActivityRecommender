@@ -12,7 +12,7 @@ namespace ActivityRecommendation.View
 
         public ExperimentInitializationLayout(LayoutStack layoutStack, ActivityRecommender activityRecommender, ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, Engine engine, int numActivitiesThatMayBeRequestedDirectly)
         {
-            this.SetTitle("Experiment");
+            this.SetTitle("Efficiency Experiment");
             this.activityRecommender = activityRecommender;
 
             Button okbutton = new Button();

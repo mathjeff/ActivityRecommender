@@ -16,9 +16,7 @@ namespace ActivityRecommendation.View
             DateTime now = DateTime.Now;
             engine.EnsureRatingsAreAssociated();
 
-            activityToPredict.ApplyPendingData();
-            AutoSmoothed_ParticipationProgression participationProgression = activityToPredict.ParticipationProgression;
-            LinearProgression progressionToPredict = participationProgression.Smoothed(windowSize);
+            LinearProgression progressionToPredict = activityToPredict.ParticipationsSmoothed(windowSize);
 
             StatList<double, Activity> results = new StatList<double, Activity>(new DoubleComparer(), new NoopCombiner<Activity>());
 

@@ -132,7 +132,7 @@ namespace ActivityRecommendation
         {
             // Sunday = index 0, Saturday = index 6
             TimeSpan[] timePerDay = new TimeSpan[7];
-            foreach (Participation participation in this.yAxisActivity.ParticipationProgression.Participations)
+            foreach (Participation participation in this.yAxisActivity.Participations)
             {
                 DateTime start = participation.StartDate;
                 int index = (int)start.DayOfWeek;
@@ -257,8 +257,7 @@ namespace ActivityRecommendation
             if (!this.queryStartDateDisplay.IsDateValid() || !this.queryEndDateDisplay.IsDateValid())
                 return;
             // draw the ParticipationProgression
-            AutoSmoothed_ParticipationProgression participationProgression = this.yAxisActivity.ParticipationProgression;
-            List<Participation> participations = participationProgression.Participations;
+            List<Participation> participations = this.yAxisActivity.Participations;
             DateTime firstDate = this.queryStartDateDisplay.GetDate();
             DateTime lastDate = this.queryEndDateDisplay.GetDate();
             //double firstCoordinate = this.GetXCoordinate(firstDate);
@@ -550,21 +549,6 @@ namespace ActivityRecommendation
                     x = 0;
             }
             return x;
-        }
-        private double GetMin_ParticipationXCoordinate(DateTime firstDate, DateTime lastDate)
-        {
-            AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
-            if (inputRange == null)
-                inputRange = new AdaptiveLinearInterpolation.FloatRange(this.xAxisProgression.GetValueAt(firstDate, false).Value.Mean, true, this.xAxisProgression.GetValueAt(lastDate, false).Value.Mean, true);
-            return inputRange.LowCoordinate;
-        }
-        private double GetParticipationYCoordinate(DateTime when)
-        {
-            DateTime startDate = this.queryStartDateDisplay.GetDate();
-            ParticipationsSummary yParticipation = this.yAxisActivity.SummarizeParticipationsBetween(startDate, when);
-            double y = yParticipation.CumulativeIntensity.TotalSeconds;
-
-            return y;
         }
 
         Activity yAxisActivity;

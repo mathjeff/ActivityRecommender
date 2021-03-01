@@ -55,7 +55,7 @@ namespace ActivityRecommendation
         public WillingnessSummary()
         {
         }
-        public WillingnessSummary(double unpromptedParticipationCount, double promptedParticipationCount, double skipCount)
+        public WillingnessSummary(int unpromptedParticipationCount, int promptedParticipationCount, int skipCount)
         {
             this.numUnpromptedParticipations = unpromptedParticipationCount;
             this.numPromptedParticipations = promptedParticipationCount;
@@ -80,7 +80,7 @@ namespace ActivityRecommendation
             return difference;
         }
 
-        public double NumUnpromptedParticipations
+        public int NumUnpromptedParticipations
         {
             get
             {
@@ -91,7 +91,7 @@ namespace ActivityRecommendation
                 this.numUnpromptedParticipations = value;
             }
         }
-        public double NumPromptedParticipations
+        public int NumPromptedParticipations
         {
             get
             {
@@ -102,7 +102,7 @@ namespace ActivityRecommendation
                 this.numPromptedParticipations = value;
             }
         }
-        public double NumSkips
+        public int NumSkips
         {
             get
             {
@@ -114,8 +114,8 @@ namespace ActivityRecommendation
             }
         }
 
-        private double numUnpromptedParticipations;
-        private double numPromptedParticipations;
-        private double numSkips;
+        private int numUnpromptedParticipations;
+        private int numPromptedParticipations;
+        private int numSkips;
     }
 }

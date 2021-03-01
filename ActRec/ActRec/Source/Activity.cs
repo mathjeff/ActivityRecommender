@@ -226,13 +226,10 @@ namespace ActivityRecommendation
                 return this.expectedRatingProgression;
             }
         }
-
-        public AutoSmoothed_ParticipationProgression ParticipationProgression
+        public LinearProgression ParticipationsSmoothed(TimeSpan windowSize)
         {
-            get
-            {
-                return this.participationProgression;
-            }
+            this.ApplyPendingData();
+            return this.participationProgression.Smoothed(windowSize);
         }
         public ParticipationsSummary SummarizeParticipationsBetween(DateTime startDate, DateTime endDate)
         {
@@ -1169,7 +1166,7 @@ namespace ActivityRecommendation
             if (willingness.NumUnpromptedParticipations == 0)
                 bonus = 0;
             else
-                bonus = willingness.NumUnpromptedParticipations / (willingness.NumUnpromptedParticipations + willingness.NumSkips);
+                bonus = (double)willingness.NumUnpromptedParticipations / ((double)willingness.NumUnpromptedParticipations + (double)willingness.NumSkips);
             
             return willingness.NumPromptedParticipations + bonus;
         }
@@ -1229,12 +1226,10 @@ namespace ActivityRecommendation
         // The input coordinates are measured in seconds (spend on this activity during the window)
         public List<Datapoint> compareParticipations(TimeSpan smoothingWindowDuration, LinearProgression progressionToPredict, DateTime cutoffDate)
         {
-            this.ApplyPendingData();
-
             // smoothing with a short duration is a hacky way of getting a LinearProgression that models the instantaneous rate of participation
             // ideally we'll add support directly into the LinearProgression class itself
-            LinearProgression predictor = this.ParticipationProgression.Smoothed(smoothingWindowDuration);
-
+            LinearProgression predictor = this.ParticipationsSmoothed(smoothingWindowDuration);
+            
             StatList<DateTime, bool> union = new StatList<DateTime, bool>(new DateComparer(), new NoopCombiner<bool>());
 
             // find all the keys that either one contains
@@ -1309,7 +1304,7 @@ namespace ActivityRecommendation
         public List<Participation> getParticipationsSince(DateTime when)
         {
             this.ApplyPendingParticipations();
-            return this.ParticipationProgression.GetParticipationsSince(when);
+            return this.participationProgression.GetParticipationsSince(when);
         }
         #endregion
 

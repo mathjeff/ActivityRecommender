@@ -38,9 +38,11 @@ namespace ActRec_UnitTests
                 double efficiency = efficiencies.FindPreviousItem(when, false).Value;
                 double duration = 1.0 / efficiency;
                 ActivityDescriptor activityDescriptor = suggestion.ActivitySuggestion.ActivityDescriptor;
+                Activity activity = engine.ActivityDatabase.ResolveDescriptor(activityDescriptor);
+                Metric metric = activity.DefaultMetric;
                 Participation participation = new Participation(when, when.AddDays(duration), activityDescriptor);
 
-                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(null, true, 0);
+                participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, true, 0);
                 participation.EffectivenessMeasurement.DismissedActivity = true;
                 RelativeEfficiencyMeasurement measurement = engine.Make_CompletionEfficiencyMeasurement(participation);
                 participation.EffectivenessMeasurement.Computation = measurement;
@@ -49,12 +51,12 @@ namespace ActRec_UnitTests
             }
             engine.FullUpdate();
             DateTime lastDay = efficiencies.GetLastValue().Key;
-            for (int i = 0; i < efficiencies.NumItems; i++)
+            for (int i = 1; i < efficiencies.NumItems; i++)
             {
-                ListItemStats<DateTime, double> item = efficiencies.GetValueAtIndex(i);
-                double expectedEfficiency = item.Value;
-                Distribution estimatedEfficiency = engine.EfficiencySummarizer.GetValueDistributionForDates(item.Key, lastDay, true, true);
-                System.Diagnostics.Debug.WriteLine("True efficiency at " + item.Key + " = " + item.Value + ", estimated efficiency = " + estimatedEfficiency);
+                ListItemStats<DateTime, double> item = efficiencies.GetValueAtIndex(i - 1);
+                ListItemStats<DateTime, double> nextItem = efficiencies.GetValueAtIndex(i);
+                Distribution estimatedEfficiency = engine.EfficiencySummarizer.GetValueDistributionForDates(item.Key, nextItem.Key, true, false);
+                System.Diagnostics.Debug.WriteLine("True efficiency at " + item.Key + " = " + item.Value + ", estimated efficiency = " + estimatedEfficiency.Mean);
             }
             System.Diagnostics.Debug.WriteLine("Test done");
         }
@@ -65,7 +67,7 @@ namespace ActRec_UnitTests
             StatList<DateTime, double> efficiencies = new StatList<DateTime, double>(new DateComparer(), new FloatAdder());
             for (int i = 1; i < 365; i++)
             {
-                efficiencies.Add(new DateTime(2000, 1, 1).AddDays(i), Math.Pow(1.01, i));
+                efficiencies.Add(new DateTime(2000, 1, 1).AddDays(i), Math.Pow(1.001, i));
             }
             return efficiencies;
         }

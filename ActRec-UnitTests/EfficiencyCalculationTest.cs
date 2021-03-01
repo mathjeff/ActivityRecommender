@@ -67,7 +67,7 @@ namespace ActRec_UnitTests
             StatList<DateTime, double> efficiencies = new StatList<DateTime, double>(new DateComparer(), new FloatAdder());
             for (int i = 1; i < 365; i++)
             {
-                efficiencies.Add(new DateTime(2000, 1, 1).AddDays(i), Math.Pow(1.001, i));
+                efficiencies.Add(new DateTime(2000, 1, 1).AddDays(i), Math.Pow(1.01, i));
             }
             return efficiencies;
         }

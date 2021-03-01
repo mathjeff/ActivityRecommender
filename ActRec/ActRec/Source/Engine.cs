@@ -1695,6 +1695,21 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("updatedEfficiency1 = " + updatedEfficiency1);
             double updatedEfficiency2 = updatedEffectiveness2 / duration2;
             System.Diagnostics.Debug.WriteLine("updatedEfficiency2 = " + updatedEfficiency2);
+            // We want to be able to measure it accurately if the user becomes more efficient after one or more points in time.
+            // If the second participation is after the user's efficiency improvement and the first is before it, then only the second will be improved.
+            // This means that if the user took a different amount of time doing each of these participations, then we want to assign all of the difference to the second.
+            // If we split the difference among the two participations, then it will make the pre tasks completed right before the improvement look a little bit worse, and the
+            // post tasks completed right after the improvement look only a little bit better (about half as much as they should).
+            // We can only do this if the first participation was successful, though, to avoid division by zero.
+            if (updatedEfficiency1 > 0)
+            {
+                // both participations succeeded
+                double ratio = updatedEfficiency2 / updatedEfficiency1;
+                updatedEfficiency1 = predictedEfficiency1;
+                updatedEfficiency2 = updatedEfficiency1 * ratio;
+                System.Diagnostics.Debug.WriteLine("returned updatedEfficiency1 to " + updatedEfficiency1);
+                System.Diagnostics.Debug.WriteLine("rescaled updatedEfficiency2 to " + updatedEfficiency2);
+            }
 
             double updatedWeight1 = numSuccesses1 + numSuccesses2;
             double updatedWeight2 = updatedWeight1;

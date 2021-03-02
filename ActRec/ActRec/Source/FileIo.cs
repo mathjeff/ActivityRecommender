@@ -88,31 +88,28 @@ namespace ActivityRecommendation
             return new StreamReader(this.OpenFile(fileName, PCLStorage.FileAccess.Read));
         }
 
+        public void EraseFileAndWriteContent(string fileName, TextReader content)
+        {
+            this.EraseFileAndWriteContent(fileName, content.ReadToEnd());
+            content.Close();
+            content.Dispose();
+        }
+
         public void EraseFileAndWriteContent(string fileName, string content)
         {
             StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
             writer.Write(content);
             writer.Dispose();
-            if (this.ReadAllText(fileName) != content)
+            StreamReader reader = this.OpenFileForReading(fileName);
+            if (reader.ReadToEnd() != content)
             {
                 throw new Exception("Failed to write " + fileName);
             }
+            reader.Close();
+            reader.Dispose();
             int suffixLength = Math.Min(content.Length, 1000);
             string suffix = content.Substring(content.Length - suffixLength);
             System.Diagnostics.Debug.WriteLine("To file " + fileName + ", wrote " + content.Length + " characters ending with: " + suffix);
-        }
-
-        public string ReadAllText(string fileName)
-        {
-            // If the file exists, then we want to read all of its data
-            StreamReader reader = this.OpenFileForReading(fileName);
-            string content = reader.ReadToEnd();
-            reader.Dispose();
-
-            int suffixLength = Math.Min(content.Length, 1000);
-            string suffix = content.Substring(content.Length - suffixLength);
-            System.Diagnostics.Debug.WriteLine("From file " + fileName + ", read " + content.Length + " characters ending with: " + suffix);
-            return content;
         }
 
         #endregion

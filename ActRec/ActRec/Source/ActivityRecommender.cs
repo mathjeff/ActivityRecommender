@@ -53,8 +53,7 @@ namespace ActivityRecommendation
         private void loadPersona()
         {
             EngineLoader loader = new EngineLoader();
-            string personaText = this.internalFileIo.ReadAllText(this.personaFileName);
-            loader.ReadText(personaText);
+            loader.ReadText(this.internalFileIo.OpenFileForReading(this.personaFileName));
             this.persona = loader.Persona;
         }
 
@@ -331,7 +330,10 @@ namespace ActivityRecommendation
         {
             // parse an ApplicationExecution describing the previous version
             ApplicationExecution oldExecution = new ApplicationExecution();
-            oldExecution.version = this.internalFileIo.ReadAllText(this.versionFilename);
+            StreamReader reader = this.internalFileIo.OpenFileForReading(this.versionFilename);
+            oldExecution.version = reader.ReadToEnd();
+            reader.Close();
+            reader.Dispose();
             string debuggingMarker = "Debug-";
             if (oldExecution.version.StartsWith(debuggingMarker))
             {
@@ -683,20 +685,20 @@ namespace ActivityRecommendation
 
         public void ImportData(object sender, FileData fileData)
         {
-            string content = System.Text.Encoding.UTF8.GetString(fileData.DataArray, 0, fileData.DataArray.Length);
-            this.ImportData(fileData.FileName, content);
+            TextReader reader = new StreamReader(fileData.GetStream());
+            this.ImportData(fileData.FileName, reader);
         }
-        public void ImportData(string filename, string content)
+        public void ImportData(string filename, TextReader content)
         {
             try
             {
                 TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
                 PersistentUserData userData = importer.ParseForImport(content);
-                this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, userData.PersonaText);
-                this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesText);
-                this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryText);
-                this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataText);
-                this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, userData.ProtoActivityText);
+                this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, userData.PersonaReader);
+                this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesReader);
+                this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryReader);
+                this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataReader);
+                this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, userData.ProtoActivityReader);
             }
             catch (Exception e)
             {
@@ -710,11 +712,11 @@ namespace ActivityRecommendation
         private PersistentUserData getPersistentUserData()
         {
             PersistentUserData data = new PersistentUserData();
-            data.PersonaText = this.internalFileIo.ReadAllText(this.personaFileName);
-            data.InheritancesText = this.internalFileIo.ReadAllText(this.inheritancesFileName);
-            data.HistoryText = this.internalFileIo.ReadAllText(this.ratingsFileName);
-            data.RecentUserDataText = this.internalFileIo.ReadAllText(this.recentUserData_fileName);
-            data.ProtoActivityText = this.internalFileIo.ReadAllText(this.protoActivities_filename);
+            data.PersonaReader = this.internalFileIo.OpenFileForReading(this.personaFileName);
+            data.InheritancesReader = this.internalFileIo.OpenFileForReading(this.inheritancesFileName);
+            data.HistoryReader = this.internalFileIo.OpenFileForReading(this.ratingsFileName);
+            data.RecentUserDataReader = this.internalFileIo.OpenFileForReading(this.recentUserData_fileName);
+            data.ProtoActivityReader = this.internalFileIo.OpenFileForReading(this.protoActivities_filename);
             return data;
         }
 
@@ -830,10 +832,10 @@ namespace ActivityRecommendation
         private void loadDataFilesInto(HistoryReplayer historyReplayer)
         {
             PersistentUserData data = this.getPersistentUserData();
-            historyReplayer.ReadText(data.ProtoActivityText);
-            historyReplayer.ReadText(data.InheritancesText);
-            historyReplayer.ReadText(data.HistoryText);
-            historyReplayer.ReadText(data.RecentUserDataText);
+            historyReplayer.ReadText(data.ProtoActivityReader);
+            historyReplayer.ReadText(data.InheritancesReader);
+            historyReplayer.ReadText(data.HistoryReader);
+            historyReplayer.ReadText(data.RecentUserDataReader);
         }
 
         public ActivitySkip DeclineSuggestion(ActivitySuggestion suggestion)

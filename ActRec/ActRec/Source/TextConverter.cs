@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -350,41 +351,23 @@ namespace ActivityRecommendation
             return "<" + objectName + ">" + stringBody + "</" + objectName + ">";
         }
 
-        private IEnumerable<XmlNode> ParseToXmlNodes(string text)
+        private XmlDocument ParseToXmlNodes(TextReader text)
         {
-            if (text == null || text.Length <= 0)
-                return new List<XmlNode>(0);
-            text = "<root>" + text + "</root>";
-            XmlDocument document = new XmlDocument();
-            try
-            {
-                document.LoadXml(text);
-            }
-            catch (XmlException e)
-            {
-                int lineNumber = e.LineNumber - 1;
-                string[] lines = text.Split('\n');
-                if (lineNumber >= 0 && lineNumber < lines.Length)
-                {
-                    string line = lines[lineNumber];
-                    throw new XmlException("Failed to parse '" + lines[lineNumber] + "'", e);
-                }
-                throw e;
-            }
-            XmlNode root = document.FirstChild;
-            if (root == null)
-                return null;
-            return root.ChildNodes;
+            //text = "<root>" + text + "</root>";
+            XmlDocument document = new XmlDocument(text);
+            return document;
         }
 
         // converts the given text into a sequence of objects and sends them to the Engine
-        public void ProcessText(string text)
+        public void ProcessText(TextReader text)
         {
-            IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(text);
-            if (nodes == null)
-                return;
-            foreach (XmlNode node in nodes)
+            XmlDocument nodes = this.ParseToXmlNodes(text);
+            while (true)
             {
+                XmlNode node = nodes.Next();
+                if (node == null)
+                    break;
+
                 if (node.Name == this.CategoryTag)
                 {
                     this.ProcessCategory(node);
@@ -1291,19 +1274,21 @@ namespace ActivityRecommendation
             return Distribution.MakeDistribution(mean, stddev, weight);
         }
 
-        public PersistentUserData ParseForImport(string contents)
+        public PersistentUserData ParseForImport(TextReader contents)
         {
-            IEnumerable<XmlNode> nodes = this.ParseToXmlNodes(contents);
-
             string personaText = "";
             List<string> inheritanceTexts = new List<string>();
             List<string> historyTexts = new List<string>();
             string recentUserDataText = "";
             List<string> protoActivity_texts = new List<string>();
 
-
-            foreach (XmlNode node in nodes)
+            XmlDocument nodes = this.ParseToXmlNodes(contents);
+            while (true)
             {
+                XmlNode node = nodes.Next();
+                if (node == null)
+                    break;
+
                 if (node.Name == this.RecentUserDataTag)
                 {
                     RecentUserData recentUserData = this.ReadRecentUserData(node);
@@ -1392,11 +1377,11 @@ namespace ActivityRecommendation
             }
 
             PersistentUserData result = new PersistentUserData();
-            result.PersonaText = personaText;
-            result.InheritancesText = string.Join("\n", inheritanceTexts);
-            result.HistoryText = string.Join("\n", historyTexts);
-            result.RecentUserDataText = recentUserDataText;
-            result.ProtoActivityText = string.Join("\n", protoActivity_texts);
+            result.PersonaReader = new StringReader(personaText);
+            result.InheritancesReader = new StringReader(string.Join("\n", inheritanceTexts));
+            result.HistoryReader = new StringReader(string.Join("\n", historyTexts));
+            result.RecentUserDataReader = new StringReader(recentUserDataText);
+            result.ProtoActivityReader = new StringReader(string.Join("\n", protoActivity_texts));
 
             return result;
         }
@@ -2009,7 +1994,7 @@ namespace ActivityRecommendation
 
     class InheritancesParser
     {
-        public static List<Inheritance> Parse(string text)
+        public static List<Inheritance> Parse(TextReader text)
         {
             return new InheritancesParser().parse(text);
         }
@@ -2019,7 +2004,7 @@ namespace ActivityRecommendation
             this.inheritances.Add(inheritance);
         }
 
-        private List<Inheritance> parse(string text)
+        private List<Inheritance> parse(TextReader text)
         {
             ActivityDatabase activityDatabase = new ActivityDatabase(null, null);
             activityDatabase.InheritanceAdded += ActivityDatabase_InheritanceAdded;
@@ -2034,15 +2019,34 @@ namespace ActivityRecommendation
 
     public class PersistentUserData
     {
-        public string InheritancesText;
-        public string HistoryText;
-        public string RecentUserDataText;
-        public string ProtoActivityText;
-        public string PersonaText;
+        public TextReader InheritancesReader;
+        public TextReader HistoryReader;
+        public TextReader RecentUserDataReader;
+        public TextReader ProtoActivityReader;
+        public TextReader PersonaReader;
 
+        private List<TextReader> readers
+        {
+            get
+            {
+                return new List<TextReader>() { this.PersonaReader, this.RecentUserDataReader, this.ProtoActivityReader, this.InheritancesReader, this.HistoryReader };
+            }
+        }
         public string serialize()
         {
-            return this.PersonaText + "\n" + this.RecentUserDataText + "\n" + this.ProtoActivityText + "\n" + this.InheritancesText + "\n" + this.HistoryText;
+            StringBuilder builder = new StringBuilder();
+            foreach (TextReader reader in this.readers)
+            {
+                builder.Append(reader.ReadToEnd());
+                reader.Close();
+                reader.Dispose();
+            }
+            this.InheritancesReader = null;
+            this.HistoryReader = null;
+            this.RecentUserDataReader = null;
+            this.ProtoActivityReader = null;
+            this.PersonaReader = null;
+            return builder.ToString();
         }
     }
 }

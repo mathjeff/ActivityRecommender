@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -202,7 +203,7 @@ namespace ActivityRecommendation.View
             {
                 if (defaultInheritances == null)
                 {
-                    defaultInheritances = InheritancesParser.Parse(inheritancesText);
+                    defaultInheritances = InheritancesParser.Parse(new StringReader(inheritancesText));
                 }
                 return defaultInheritances;
             }

@@ -1,6 +1,7 @@
 ﻿using ActivityRecommendation.Effectiveness;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -15,7 +16,7 @@ namespace ActivityRecommendation
             this.textConverter = new TextConverter(this, this.engine.ActivityDatabase);
         }
 
-        public void ReadText(string text)
+        public void ReadText(TextReader text)
         {
             this.textConverter.ProcessText(text);
         }

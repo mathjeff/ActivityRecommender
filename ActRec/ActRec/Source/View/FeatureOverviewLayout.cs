@@ -11,14 +11,13 @@ namespace ActivityRecommendation.View
     {
         public static LayoutChoice_Set New(LayoutStack layoutStack)
         {
-            TitledControl mainLayout = new TitledControl("Highlights of ActivityRecommender:");
+            TitledControl mainLayout = new TitledControl("Get Excited");
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
 
-
-            menuBuilder.AddLayout("Makes life more fun, right away",
-                new TitledControl("ActivityRecommender will make life way more fun",
+            menuBuilder.AddLayout("Your life is about to be more fun",
+                new TitledControl("So much fun",
                     (new MenuLayoutBuilder(layoutStack))
-                    .AddLayout("Provides suggestions", (new HelpWindowBuilder())
+                    .AddLayout("Suggestions", (new HelpWindowBuilder())
                         .AddMessage("The feature that ActivityRecommender is named for, of course, is that you can ask it for suggestions of what to do.")
                         .AddMessage("Each suggestion comes with an estimate of how likely ActivityRecommender thinks that it is that you will actually do the activity, along with how much fun " +
                         "it thinks you will have doing it.")
@@ -31,7 +30,7 @@ namespace ActivityRecommendation.View
                         .AddMessage("ActivityRecommender also will never interrupt you; it only gives you a suggestion when you're in the mood for one and ask for it.")
                         .Build()
                     )
-                    .AddLayout("Fast interface with lots of autocomplete", (new HelpWindowBuilder())
+                    .AddLayout("Fast interface, lots of autocomplete", (new HelpWindowBuilder())
                         .AddMessage("ActivityRecommender has autocomplete in many places.")
                         .AddMessage("When entering an activity name, press Enter to accept the autocomplete suggestion.")
                         .AddMessage("It's common to be able to record a participation by pressing the screen only six times (One press to select the name box, two presses to type the first two letters, " +
@@ -48,7 +47,7 @@ namespace ActivityRecommendation.View
                         "happiness of several hundred days, because any time you exercise, it indicates that you may be happier for a whole year.")
                         .Build()
                     )
-                    .AddLayout("Graphs your life", (new HelpWindowBuilder())
+                    .AddLayout("Graph your life", (new HelpWindowBuilder())
                         .AddMessage("As soon as you record a participation or a rating, the time spent or rating assigned will immediately show up in the respective graph for that activity, " +
                         "acknowledging and visualizing the time that you spent or enjoyment you received.")
                         .AddMessage("You can inspect graphs to look for patterns.")
@@ -57,10 +56,10 @@ namespace ActivityRecommendation.View
                     .Build()
                 )
             );
-            menuBuilder.AddLayout("Helps make life more meaningful",
-                new TitledControl("ActivityRecommender will make life more meaningful",
+            menuBuilder.AddLayout("Make life more meaningful",
+                new TitledControl("Find more meaning",
                     new MenuLayoutBuilder(layoutStack)
-                    .AddLayout("Maximizes longterm happiness", (new HelpWindowBuilder())
+                    .AddLayout("Maximize longterm happiness", (new HelpWindowBuilder())
                         .AddMessage("Several aspects of ActivityRecommender are designed to maximize your longterm happiness.")
                         .AddMessage("Among other things, this means that it should encourage you towards entertainment that recharges rather than frustrates you.")
                         .AddMessage("The way that this works is you gradually enter more and more data about things you've done and how happy they have made you.")
@@ -72,7 +71,7 @@ namespace ActivityRecommendation.View
                         "things, it will recommend chores from time to time anyway.")
                         .Build()
                     )
-                    .AddLayout("Personalized", (new HelpWindowBuilder())
+                    .AddLayout("Personalize", (new HelpWindowBuilder())
                         .AddMessage("You decide which activities exist in your world and what their relationships are.")
                         .AddMessage("If your icecream store is far away and you want to declare that \"Buying Ice Cream\" is \"Exercise\", that's your prerogative.")
                         .Build()
@@ -98,7 +97,7 @@ namespace ActivityRecommendation.View
                         "times as much fun as doing chores would have been.")
                         .Build()
                     )
-                    .AddLayout("Measures your efficiency", (new HelpWindowBuilder())
+                    .AddLayout("Measure your efficiency", (new HelpWindowBuilder())
                         // Defining what to measure is hard,
                         .AddMessage("Imagine that you wanted to measure your efficiency without ActivityRecommender. How would you define the efficiency of your life? " +
                         "It's easy to measure your efficiency on one particular task, for example, by measuring how long it takes you to mow the lawn. " +
@@ -153,7 +152,7 @@ namespace ActivityRecommendation.View
                         .AddMessage("Are you excited to measure your efficiency!?")
                         .Build()
                     )
-                    .AddLayout("Save ideas and organize them later", (new HelpWindowBuilder())
+                    .AddLayout("Save ideas to organize later", (new HelpWindowBuilder())
                         .AddMessage("Have you ever had an idea for something cool you wanted to think about, but you didn't know where to write it down and then you forgot?")
                         .AddMessage("Have you ever made a list of interesting ideas, and then found that this list became hard to read because there were so many less-interesting " +
                         "ideas before the ones that you wanted? Has this ever caused you to completely give up on the less-interesting ideas and make a new list?")
@@ -175,7 +174,7 @@ namespace ActivityRecommendation.View
                     .Build()
                 )
             );
-            menuBuilder.AddLayout("All for free",
+            menuBuilder.AddLayout("All for free!",
                 new TitledControl("Free!",
                     (new MenuLayoutBuilder(layoutStack))
                     .AddLayout("No fees, no ads", (new HelpWindowBuilder())

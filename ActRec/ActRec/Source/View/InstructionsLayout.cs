@@ -11,15 +11,15 @@ namespace ActivityRecommendation.View
     {
         public static LayoutChoice_Set New(LayoutStack layoutStack)
         {
-            TitledControl mainLayout = new TitledControl("ActivityRecommender Intro:");
+            TitledControl mainLayout = new TitledControl("ActivityRecommender: Spend Your Time Better");
 
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
 
-            menuBuilder.AddLayout("What's awesome?", FeatureOverviewLayout.New(layoutStack));
+            menuBuilder.AddLayout("What makes this awesome", FeatureOverviewLayout.New(layoutStack));
 
-            menuBuilder.AddLayout("How do I navigate?", makeNavigationHelp_layout(layoutStack));
+            menuBuilder.AddLayout("How to navigate", makeNavigationHelp_layout(layoutStack));
 
-            menuBuilder.AddLayout("How do I use ActivityRecommender?", (new HelpWindowBuilder())
+            menuBuilder.AddLayout("How to use", (new HelpWindowBuilder())
                 .AddMessage("Step 1: Get excited. To see a list of key features of ActivityRecommender so you can decide whether they interest you, go back and choose \"Get Excited\". Everything " +
                 "else mentioned here is under the \"Start\" menu option.")
                 .AddMessage("Step 2: Add some activities. Everything that ActivityRecommender does is based on the activities that you tell it about. Think of some activities that you like to do, " +
@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
                 .AddMessage("Step 4c: Explore! ActivityRecommender has more features than are mentioned here :)")
                 .Build());
 
-            menuBuilder.AddLayout("Discoveries made with ActivityRecommender", DiscoveriesLayout.New(layoutStack));
+            menuBuilder.AddLayout("Discoveries made", DiscoveriesLayout.New(layoutStack));
 
             menuBuilder.AddLayout("Credits", new CreditsWindowBuilder(layoutStack)
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new System.DateTime(2019, 8, 18), "Discussed the organization of the introduction and get-excited screens")

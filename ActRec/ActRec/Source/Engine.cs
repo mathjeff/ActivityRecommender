@@ -2342,6 +2342,7 @@ namespace ActivityRecommendation
         }
         public ParticipationFeedback computeStandardParticipationFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
+            this.ApplyParticipationsAndRatings();
             DateTime comparisonDate = this.chooseRandomBelievableParticipationStart(chosenActivity, startDate);
             if (comparisonDate.CompareTo(startDate) == 0)
             {

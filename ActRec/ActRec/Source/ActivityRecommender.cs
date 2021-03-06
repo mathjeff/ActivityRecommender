@@ -791,9 +791,12 @@ namespace ActivityRecommendation
 #else
             // If we get here then we run a special HistoryReplayer before startup
             // This is extra slow and extra confusing so to enable it you have to change the source code
-            HistoryReplayer historyReplayer = new RatingRenormalizer(false, true);
+            //HistoryReplayer historyReplayer = new RatingRenormalizer(false, true);
+            HistoryReplayer historyReplayer = new FeedbackReplayer();
             this.loadDataFilesInto(historyReplayer);
             engine = historyReplayer.Finish();
+            if (engine == null)
+                engine = loader.Finish();
 #endif
             this.engine = engine;
             this.persona.NameChanged += Persona_NameChanged;

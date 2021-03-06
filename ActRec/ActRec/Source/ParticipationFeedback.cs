@@ -7,43 +7,47 @@ using Xamarin.Forms;
 
 namespace ActivityRecommendation
 {
-    class ParticipationFeedback
+    public class ParticipationFeedback
     {
-        public ParticipationFeedback(Activity activity, string summary, Color? summaryColor, ValueProvider<LayoutChoice_Set> detailsProvider)
+        public ParticipationFeedback(Activity activity, string summary, bool? happySummary, ParticipationNumericFeedback numericDetails)
         {
             this.Activity = activity;
             this.Summary = summary;
-            this.SummaryColor = summaryColor;
-            this.detailsProvider = detailsProvider;
+            this.happySummary = happySummary;
+            this.numericDetails = numericDetails;
         }
+        public ParticipationFeedback(Activity activity, string summary, bool? happySummary, LayoutChoice_Set details)
+        {
+            this.Activity = activity;
+            this.Summary = summary;
+            this.happySummary = happySummary;
+            this.details = details;
+        }
+
         public Activity Activity { get; set; }
 
         public string Summary { get; set; }
-        public Color? SummaryColor { get; set; }
-        private ValueProvider<LayoutChoice_Set> detailsProvider;
-        public LayoutChoice_Set Details
+        public bool? happySummary { get; set; }
+        public LayoutChoice_Set GetDetails(LayoutStack layoutStack)
         {
-            get
+            if (this.details == null)
             {
-                return this.detailsProvider.Get();
+                this.details = this.numericDetails.MakeLayout(layoutStack);
             }
+            return this.details;
         }
+
+        LayoutChoice_Set details;
+        ParticipationNumericFeedback numericDetails;
     }
 
-    class ParticipationNumericFeedback : ValueProvider<LayoutChoice_Set>
+    public class ParticipationNumericFeedback
     {
-        public ParticipationNumericFeedback(LayoutStack layoutStack)
+        public ParticipationNumericFeedback()
         {
-            this.layoutStack = layoutStack;
-        }
-        public LayoutChoice_Set Get()
-        {
-            if (this.layout == null)
-                this.layout = this.MakeLayout();
-            return this.layout;
         }
 
-        public LayoutChoice_Set MakeLayout()
+        public LayoutChoice_Set MakeLayout(LayoutStack layoutStack)
         {
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
             builder.AddLayout(new TextblockLayout(ChosenActivity.Name));
@@ -56,7 +60,7 @@ namespace ActivityRecommendation
                     .AddLayout(
                         new HelpButtonLayout("Fun:",
                             new TextblockLayout("This column shows the amount of happiness you are expected to have while doing this activity at this time, divided by the average amount of happiness you usually have doing other things"),
-                            this.layoutStack)
+                            layoutStack)
                         )
                     .AddLayout(coloredRatio(PredictedValue, ComparisonPredictedValue, PredictedCurrentValueStddev))
                     .Build()
@@ -68,7 +72,7 @@ namespace ActivityRecommendation
                             new TextblockLayout("This column shows an estimate of the net present value of your happiness at this time after doing this activity, compared to what it usually is. " +
                                 "This is very similar to computing how much happiness you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) +
                                 " days after doing this."),
-                            this.layoutStack)
+                            layoutStack)
                         )
                     .AddLayout(signedColoredValue(ExpectedFutureFun, ComparisonExpectedFutureFun, ExpectedFutureFunStddev))
                     .Build()
@@ -80,7 +84,7 @@ namespace ActivityRecommendation
                             new TextblockLayout("This column shows an estimate of the net present value of your efficiency at this time after doing this activity, compared to what it usually is. " +
                                 "This is very similar to computing how much efficiency you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) +
                                 " days after doing this."),
-                            this.layoutStack)
+                            layoutStack)
                         )
                     .AddLayout(signedColoredValue(ExpectedEfficiency, ComparisonExpectedEfficiency, ExpectedEfficiencyStddev))
                     .Build()
@@ -226,6 +230,5 @@ namespace ActivityRecommendation
         public ActivityDatabase ActivityDatabase;
 
         private LayoutChoice_Set layout;
-        private LayoutStack layoutStack;
     }
 }

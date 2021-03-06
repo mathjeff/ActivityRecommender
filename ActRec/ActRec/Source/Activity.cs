@@ -1360,6 +1360,18 @@ namespace ActivityRecommendation
             this.SetupInterpolators();
         }
 
+        public bool SuggestedMoreRecentlyThanSkipped
+        {
+            get
+            {
+                DateTime? when = this.considerationProgression.LastDatePresent;
+                if (when == null)
+                    return false;
+                ProgressionValue value = this.considerationProgression.GetValueAt(when.Value, false);
+                return value.Value.Mean > 0.5;
+            }
+        }
+
         public Engine engine
         {
             set

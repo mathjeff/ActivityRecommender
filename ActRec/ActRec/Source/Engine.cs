@@ -2263,6 +2263,22 @@ namespace ActivityRecommendation
             }
         }
 
+        public string ComputeBriefFeedback(DateTime when)
+        {
+            ScoreSummarizer ratingSummarizer = this.RatingSummarizer;
+            DateTime oneWeekAgo = when.AddDays(-7);
+            Distribution lastWeek = ratingSummarizer.GetValueDistributionForDates(oneWeekAgo, when, true, true);
+            DateTime start = this.ActivityDatabase.RootActivity.DiscoveryDate;
+            Distribution overall = ratingSummarizer.GetValueDistributionForDates(start, when, true, true);
+            if (lastWeek.Weight <= 0 || overall.Weight <= 0)
+                return "";
+            if (lastWeek.Mean >= overall.Mean)
+                return "Great!";
+            else
+                return "You can do it!";
+        }
+
+
         public DateTime LatestInteractionDate
         {
             get

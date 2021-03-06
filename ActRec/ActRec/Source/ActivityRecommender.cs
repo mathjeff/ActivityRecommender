@@ -517,13 +517,12 @@ namespace ActivityRecommendation
 
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 
-            List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>(1);
-            startLayouts.Add(helpOrStart_menu);
+            List<LayoutChoice_Set> startLayouts = new List<LayoutChoice_Set>();
 
             if (this.error != "")
             {
                 TextblockLayout textLayout = new TextblockLayout(this.error, true, true);
-                startLayouts.Insert(0, textLayout);
+                startLayouts.Add(textLayout);
                 startLayouts.Add(OpenIssue_Layout.New());
             }
 
@@ -538,11 +537,24 @@ namespace ActivityRecommendation
                     welcomeOptions.Add(new TextblockLayout(this.welcomeMessage, fontSize));
                 }
 
-                startLayouts.Insert(0, new LayoutUnion(welcomeOptions));
+                startLayouts.Add(new LayoutUnion(welcomeOptions));
                 this.welcomeMessage = "";
             }
 
-            helpOrStart_menu = new Vertical_GridLayout_Builder().Uniform().AddLayouts(startLayouts).BuildAnyLayout();
+            if (startLayouts.Count == 0)
+            {
+                if (this.startupFeedback != "")
+                {
+                    TextblockLayout feedback = new TextblockLayout(this.startupFeedback);
+                    feedback.AlignHorizontally(TextAlignment.Center);
+                    feedback.AlignVertically(TextAlignment.Center);
+                    startLayouts.Add(feedback);
+                }
+            }
+
+            startLayouts.Add(helpOrStart_menu);
+
+            helpOrStart_menu = new Vertical_GridLayout_Builder().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
@@ -809,8 +821,13 @@ namespace ActivityRecommendation
 
 
             engine.FullUpdate();
+            this.computeStartupFeedback();
         }
 
+        private void computeStartupFeedback()
+        {
+            this.startupFeedback = this.engine.ComputeBriefFeedback(DateTime.Now);
+        }
         private void Persona_NameChanged(string newName)
         {
             this.savePersona();
@@ -1275,6 +1292,7 @@ namespace ActivityRecommendation
         TimeSpan suggestionProcessingDuration = TimeSpan.FromSeconds(2);
         string error = "";
         string welcomeMessage = "";
+        string startupFeedback = "";
         ProtoActivity_Database protoActivities_database;
         Persona persona;
         List<VisualDefaults> allLayoutDefaults;

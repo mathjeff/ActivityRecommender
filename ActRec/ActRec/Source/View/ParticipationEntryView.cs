@@ -498,13 +498,13 @@ namespace ActivityRecommendation
             if (this.EnteringActivityWithMetric)
             {
                 SingleSelect singleSelect;
-                SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
                 SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Color.Green);
+                SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
                 SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
                 if (this.EnteringToDo)
-                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { incomplete, complete, obsolete });
+                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete, obsolete });
                 else
-                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { incomplete, complete });
+                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
                 this.todoCompletionStatusPicker = singleSelect;
                 this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
             }

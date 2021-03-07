@@ -38,6 +38,10 @@ namespace ActivityRecommendation.View
             promoteButton.Text = "Promote to Activity";
             promoteButton.Clicked += PromoteButton_Clicked;
 
+            Button splitButton = new Button();
+            splitButton.Text = "Split";
+            splitButton.Clicked += SplitButton_Clicked;
+
             HelpButtonLayout helpButtonLayout = new HelpButtonLayout(new HelpWindowBuilder()
                 .AddMessage("This screen allows you to edit " + titleText + ".")
                 .AddMessage("Enter as much text as you like.")
@@ -55,11 +59,26 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set buttonsLayout = new Horizontal_GridLayout_Builder()
                 .AddLayout(new ButtonLayout(saveButton))
                 .AddLayout(new ButtonLayout(promoteButton))
+                .AddLayout(new ButtonLayout(splitButton))
                 .AddLayout(helpButtonLayout)
                 .BuildAnyLayout();
             gridBuilder.AddLayout(buttonsLayout);
 
             this.SubLayout = gridBuilder.Build();
+        }
+
+        private void SplitButton_Clicked(object sender, EventArgs e)
+        {
+            DateTime now = DateTime.Now;
+            ProtoActivity child1 = new ProtoActivity(this.textBox.Text, now, this.protoActivity.Ratings);
+            ProtoActivity child2 = new ProtoActivity(this.textBox.Text, now, this.protoActivity.Ratings);
+            this.textBox.Text = null;
+            this.skipWhenGoingBack = true;
+
+            ProtoActivity_Splitting_Layout splitter = new ProtoActivity_Splitting_Layout(child1, child2, this.database, this.layoutStack);
+            StackEntry entry = new StackEntry(splitter, "Split", splitter);
+            entry.Listeners.Add(this);
+            this.layoutStack.AddLayout(entry);
         }
 
         private void SaveButton_Clicked(object sender, EventArgs e)

@@ -94,6 +94,7 @@ namespace ActivityRecommendation
                         LayoutScore.Get_UnCentered_LayoutScore(1)
                     )
                 );
+            this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
             detailsBuilder.AddLayout(metricStatusLayout);
             contents.AddLayout(detailsBuilder.BuildAnyLayout());
 
@@ -137,6 +138,7 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 30), "Pointed out that participation feedback was missing more often than it should have been.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 30), "Pointed out that the text in the starttime box had stopped fitting properly.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 10, 3), "Pointed out that it was possible record participations in the future.")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 9), "Suggested making different metrics appear more distinct.")
                     .Build()
                 )
                 .Build();
@@ -442,8 +444,8 @@ namespace ActivityRecommendation
             {
                 // Record the success/failure status of the participation
                 string status = this.todoCompletionStatusPicker.SelectedItem.ToString();
-                bool successful = (status == this.TaskCompleted_Text);
-                bool closed = (status != this.TaskIncomplete_Text);
+                bool successful = (status == this.TaskCompleted_Text || status == this.ProblemComplete_Text);
+                bool closed = (status != this.TaskIncomplete_Text && status != this.ProblemIncomplete_Text);
                 double helpFraction = this.helpStatusPicker.GetHelpFraction(participation.Duration);
                 participation.EffectivenessMeasurement = new CompletionEfficiencyMeasurement(metric, successful, helpFraction);
                 participation.EffectivenessMeasurement.DismissedActivity = closed;
@@ -494,20 +496,6 @@ namespace ActivityRecommendation
         private void updateMetricSelectorVisibility()
         {
             this.metricChooser.SetActivity(this.nameBox.Activity);
-
-            if (this.EnteringActivityWithMetric)
-            {
-                SingleSelect singleSelect;
-                SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Color.Green);
-                SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
-                SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
-                if (this.EnteringToDo)
-                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete, obsolete });
-                else
-                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
-                this.todoCompletionStatusPicker = singleSelect;
-                this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
-            }
             this.updateCompletionStatusVisibility();
         }
 
@@ -520,13 +508,32 @@ namespace ActivityRecommendation
             Metric metric = this.Metric;
             if (metric != null)
             {
+                SingleSelect singleSelect;
+                if (!(metric is ProblemMetric))
+                {
+                    SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Color.Green);
+                    SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
+                    SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
+                    if (this.EnteringToDo)
+                        singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete, obsolete });
+                    else
+                        singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
+                }
+                else
+                {
+                    SingleSelect_Choice complete = new SingleSelect_Choice(this.ProblemComplete_Text, Color.LightBlue);
+                    SingleSelect_Choice incomplete = new SingleSelect_Choice(this.ProblemIncomplete_Text, Color.Orange);
+                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
+                }
+                this.todoCompletionStatusPicker = singleSelect;
+
                 this.helpStatusHolder.SubLayout = this.helpStatusPicker;
-                if (this.todoCompletionStatusHolder.SubLayout == null)
-                    this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
+                this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
             }
             else
             {
                 this.helpStatusHolder.SubLayout = null;
+                this.todoCompletionStatusPicker = null;
                 this.todoCompletionStatusHolder.SubLayout = null;
             }
         }
@@ -665,6 +672,20 @@ namespace ActivityRecommendation
             get
             {
                 return "Obsolete";
+            }
+        }
+        private string ProblemComplete_Text
+        {
+            get
+            {
+                return "Fixed!";
+            }
+        }
+        private string ProblemIncomplete_Text
+        {
+            get
+            {
+                return "Not fixed";
             }
         }
 

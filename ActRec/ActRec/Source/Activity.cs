@@ -1090,6 +1090,18 @@ namespace ActivityRecommendation
 
         public Metric MetricForName(string name)
         {
+            Metric intrinsic = this.FindIntrinsicMetric(name);
+            if (intrinsic != null)
+                return intrinsic;
+            foreach (Metric metric in this.InheritedMetrics)
+            {
+                if (metric.Name == name)
+                    return metric;
+            }
+            return null;
+        }
+        public Metric FindIntrinsicMetric(string name)
+        {
             if (this.intrinsicMetrics != null)
             {
                 foreach (Metric metric in this.intrinsicMetrics)
@@ -1097,11 +1109,6 @@ namespace ActivityRecommendation
                     if (metric.Name == name)
                         return metric;
                 }
-            }
-            foreach (Metric metric in this.InheritedMetrics)
-            {
-                if (metric.Name == name)
-                    return metric;
             }
             return null;
         }

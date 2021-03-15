@@ -40,7 +40,7 @@ namespace ActivityRecommendation.View
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout(new BrowseActivitiesMenu_Namer(this.activityDatabase), browseEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("New Activity (Category/ToDo/Problem/Solution)", this.activityCreationLayout.GetFeatures()), addEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("New Activity (Category, ToDo, Problem, Solution)", this.activityCreationLayout.GetFeatures()), addEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Edit Activities", this.activityEditingLayout.GetFeatures()), editEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Brainstorm Protoactivities", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry);
             this.SetContent(fullBuilder.Build());

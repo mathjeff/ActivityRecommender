@@ -11,8 +11,9 @@ namespace ActivityRecommendation
         {
         }
 
-        public override Engine Finish()
+        public Engine GetEngine()
         {
+            base.Finish();
             return this.engine;
         }
         public override void PreviewParticipation(Participation newParticipation)

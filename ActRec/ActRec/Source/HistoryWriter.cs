@@ -96,18 +96,14 @@ namespace ActivityRecommendation
             this.fileContentComponents.Add(text);
         }
 
-        public override Engine Finish()
+        public override string Serialize()
         {
             // TODO: figure out how to delete a file
-            string nowText = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
-            string fileName = "ActivityData-reformatted-" + nowText + ".txt";
 
             // add a new empty line so a newline appears after the last tline
             this.fileContentComponents.Add("");
 
-            Task.Run(async () => await this.publicFileIo.ExportFile(fileName, String.Join(Environment.NewLine, this.fileContentComponents)));
-
-            return null;
+            return String.Join(Environment.NewLine, this.fileContentComponents);
         }
 
         private List<string> fileContentComponents = new List<string>();

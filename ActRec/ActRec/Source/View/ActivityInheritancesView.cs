@@ -8,14 +8,18 @@ namespace ActivityRecommendation.View
 {
     class ActivityInheritancesView : TitledControl
     {
-        public ActivityInheritancesView(Activity activity, ActivityDatabase activityDatabase)
+        public event RequestDeletion_Handler RequestDeletion;
+        public delegate void RequestDeletion_Handler(Activity activity);
+        public ActivityInheritancesView(Activity activity, ActivityDatabase activityDatabase, bool allowDeletion = false)
         {
             this.activityDatabase = activityDatabase;
+            this.supportDeletion = allowDeletion;
             this.setup(activity);
         }
 
         public void setup(Activity activity)
         {
+            this.activity = activity;
             List<Activity> children = activity.GetChildren();
             List<Activity> parents = activity.Parents;
             string title;
@@ -126,7 +130,23 @@ namespace ActivityRecommendation.View
 
             gridBuilder.AddLayout(new TextblockLayout("You've done this " + activity.NumParticipations + " times since " + activity.DiscoveryDate.ToString("yyyy-MM-dd")));
 
+            // If this activity has never been used, then it should be safe to delete it
+            if (this.supportDeletion)
+            {
+                if (activity.GetChildren().Count < 1 && activity.NumParticipations < 1 && activity.NumConsiderations < 1 && !activity.HasAMetric)
+                {
+                    Button deleteButton = new Button();
+                    deleteButton.Clicked += DeleteButton_Clicked;
+                    gridBuilder.AddLayout(new ButtonLayout(deleteButton, "Delete"));
+                }
+            }
+
             this.SetContent(gridBuilder.Build());
+        }
+
+        private void DeleteButton_Clicked(object sender, EventArgs e)
+        {
+            this.RequestDeletion.Invoke(this.activity);
         }
 
         private LayoutChoice_Set newListView(string title, List<Activity> activities)
@@ -153,6 +173,8 @@ namespace ActivityRecommendation.View
         }
 
         ActivityDatabase activityDatabase;
+        Activity activity;
+        bool supportDeletion = false;
     }
 
     class ActivityListView : TitledControl

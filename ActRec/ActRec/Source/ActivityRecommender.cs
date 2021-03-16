@@ -405,8 +405,11 @@ namespace ActivityRecommendation
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
             ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
 
+            ActivitySearchView searchView = new ActivitySearchView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack, true);
+            searchView.RequestDeletion += SearchView_RequestStartDeletion;
+
             this.activitiesMenuLayout = new ActivitiesMenuLayout(
-                new ActivitySearchView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack),
+                searchView,
                 activityImportLayout,
                 new ActivityCreationLayout(this.ActivityDatabase, this.layoutStack),
                 new ActivityEditingLayout(this.ActivityDatabase, this.layoutStack),
@@ -559,6 +562,42 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
 
+        private void SearchView_RequestStartDeletion(Activity activity)
+        {
+            Confirm_BackupBeforeDeleteActivity_Layout confirmLayout = new Confirm_BackupBeforeDeleteActivity_Layout(activity, this.layoutStack);
+            confirmLayout.Confirmed_BackupBeforeDelete_Activity += ConfirmLayout_Confirmed_ExportBeforeDelete;
+            this.layoutStack.AddLayout(confirmLayout, "Confirm");
+        }
+
+        private void ConfirmLayout_Confirmed_ExportBeforeDelete(Activity activity)
+        {
+            this.ExportBeforeDeletion(activity);
+        }
+
+        public async void ExportBeforeDeletion(Activity activity)
+        {
+            DeleteActivity_Button deleter = new DeleteActivity_Button(activity);
+            deleter.RequestDeletion += DeleteButton_RequestDeleteActivityNow;
+            FileExportResult exportResult = await this.ExportData(deleter);
+            deleter.BackupFilepath = exportResult.Content;
+        }
+
+        private void DeleteButton_RequestDeleteActivityNow(Activity activity, string backupContent)
+        {
+            this.DeleteActivity(activity, backupContent);
+        }
+
+        private void DeleteActivity(Activity activity, string backupContent)
+        {
+            TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
+            PersistentUserData userData = importer.ParseForImport(new StringReader(backupContent));
+
+            ActivityDeleter historyReplayer = new ActivityDeleter(activity);
+            this.loadDataFilesInto(userData, historyReplayer);
+            string serialized = historyReplayer.Serialize();
+            this.ImportData("Exported data without " + activity.Name, new StringReader(serialized));
+        }
+
         private void ParticipationEntryView_VisitStatisticsScreen()
         {
             this.layoutStack.GoBack();
@@ -700,23 +739,34 @@ namespace ActivityRecommendation
             TextReader reader = new StreamReader(fileData.GetStream());
             this.ImportData(fileData.FileName, reader);
         }
+        private void doImport(TextReader content)
+        {
+            TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
+            PersistentUserData userData = importer.ParseForImport(content);
+            this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, userData.PersonaReader);
+            this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesReader);
+            this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryReader);
+            this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataReader);
+            this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, userData.ProtoActivityReader);
+        }
         public void ImportData(string filename, TextReader content)
         {
-            try
+            if (System.Diagnostics.Debugger.IsAttached)
             {
-                TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
-                PersistentUserData userData = importer.ParseForImport(content);
-                this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, userData.PersonaReader);
-                this.internalFileIo.EraseFileAndWriteContent(this.inheritancesFileName, userData.InheritancesReader);
-                this.internalFileIo.EraseFileAndWriteContent(this.ratingsFileName, userData.HistoryReader);
-                this.internalFileIo.EraseFileAndWriteContent(this.recentUserData_fileName, userData.RecentUserDataReader);
-                this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, userData.ProtoActivityReader);
+                this.doImport(content);
             }
-            catch (Exception e)
+            else
             {
-                TextblockLayout textLayout = new TextblockLayout("Could not import " + filename + " :\n" + e.ToString(), true, true);
-                this.layoutStack.AddLayout(textLayout, "Import Error");
-                return;
+                try
+                {
+                    this.doImport(content);
+                }
+                catch (Exception e)
+                {
+                    TextblockLayout textLayout = new TextblockLayout("Could not import " + filename + " :\n" + e.ToString(), true, true);
+                    this.layoutStack.AddLayout(textLayout, "Import Error");
+                    return;
+                }
             }
             this.Reload();
         }
@@ -732,7 +782,7 @@ namespace ActivityRecommendation
             return data;
         }
 
-        public async Task ExportData()
+        public async Task<FileExportResult> ExportData(LayoutChoice_Set successFooter = null)
         {
             string content = this.getPersistentUserData().serialize();
 
@@ -745,12 +795,17 @@ namespace ActivityRecommendation
 
             if (result.Successful)
             {
-                this.layoutStack.AddLayout(new ExportSuccessLayout(result.Path, this.publicFileIo), "Success");
+                Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder()
+                    .AddLayout(new ExportSuccessLayout(result.Path, this.publicFileIo));
+                if (successFooter != null)
+                    builder.AddLayout(successFooter);
+                this.layoutStack.AddLayout(builder.BuildAnyLayout(), "Export Success");
             }
             else
             {
-                this.layoutStack.AddLayout(new TextblockLayout("Failed to save " + result.Path), "Error");
+                this.layoutStack.AddLayout(new TextblockLayout("Failed to save " + result.Path), "Export Failure");
             }
+            return result;
         }
 
         public bool GoBack()
@@ -787,16 +842,15 @@ namespace ActivityRecommendation
 #if true
             // If we get here then we just set an Engine up as normal
             // This is the typical case
-            engine = loader.Finish();
+            engine = loader.GetEngine();
 #else
             // If we get here then we run a special HistoryReplayer before startup
             // This is extra slow and extra confusing so to enable it you have to change the source code
             //HistoryReplayer historyReplayer = new RatingRenormalizer(false, true);
             HistoryReplayer historyReplayer = new FeedbackReplayer();
             this.loadDataFilesInto(historyReplayer);
-            engine = historyReplayer.Finish();
-            if (engine == null)
-                engine = loader.Finish();
+            engine = historyReplayer.GetEngine();
+            throw new NotImplementedException();
 #endif
             this.engine = engine;
             this.persona.NameChanged += Persona_NameChanged;
@@ -852,12 +906,15 @@ namespace ActivityRecommendation
         private void loadDataFilesInto(HistoryReplayer historyReplayer)
         {
             PersistentUserData data = this.getPersistentUserData();
+            this.loadDataFilesInto(data, historyReplayer);
+        }
+        private void loadDataFilesInto(PersistentUserData data, HistoryReplayer historyReplayer)
+        {
             historyReplayer.ReadText(data.ProtoActivityReader);
             historyReplayer.ReadText(data.InheritancesReader);
             historyReplayer.ReadText(data.HistoryReader);
             historyReplayer.ReadText(data.RecentUserDataReader);
         }
-
         public ActivitySkip DeclineSuggestion(ActivitySuggestion suggestion)
         {
             // make a Skip object holding the needed data

@@ -121,8 +121,9 @@ namespace ActivityRecommendation
         public virtual void SetLatestDate(DateTime when) { }
 
         // Does cleanup
-        // Also can return a new Engine for ActivityRecommender to use
-        public virtual Engine Finish() { return null; }
+        // Also can return a string containing the relevant data ActivityRecommender to use
+        public virtual void Finish() { }
+        public virtual string Serialize() { return null; }
 
 
         protected Engine engine;

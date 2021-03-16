@@ -7,7 +7,10 @@ namespace ActivityRecommendation.View
 {
     class ActivitySearchView : ContainerLayout
     {
-        public ActivitySearchView(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack)
+        public event RequestDeletion_Handler RequestDeletion;
+        public delegate void RequestDeletion_Handler(Activity activity);
+
+        public ActivitySearchView(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database, LayoutStack layoutStack, bool allowDeletion = false)
         {
             this.layoutStack = layoutStack;
             this.activityDatabase = activityDatabase;
@@ -16,6 +19,7 @@ namespace ActivityRecommendation.View
             this.textBox.TextChanged += TextBox_TextChanged;
             this.largeFont_autocomplete_gridLayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
             this.smallFont_autocomplete_gridLayout = GridLayout.New(new BoundProperty_List(this.maxNumResults), new BoundProperty_List(1), LayoutScore.Zero);
+            this.allowDeletion = allowDeletion;
 
             Button rootActivity_button = new Button();
             rootActivity_button.Clicked += RootActivity_button_Clicked;
@@ -177,7 +181,17 @@ namespace ActivityRecommendation.View
         }
         private void choseActivity(Activity activity)
         {
-            this.layoutStack.AddLayout(new ActivityInheritancesView(activity, this.activityDatabase), "Activity");
+            ActivityInheritancesView view = new ActivityInheritancesView(activity, this.activityDatabase, this.allowDeletion);
+            view.RequestDeletion += ChildView_RequestDeletion;
+            this.layoutStack.AddLayout(view, "Activity");
+        }
+
+        private void ChildView_RequestDeletion(Activity activity)
+        {
+            if (this.RequestDeletion != null)
+            {
+                this.RequestDeletion.Invoke(activity);
+            }
         }
 
         Editor textBox;
@@ -198,5 +212,6 @@ namespace ActivityRecommendation.View
         ButtonLayout rootActivity_buttonLayout;
         ContainerLayout footer;
         int maxNumResults = 6;
+        bool allowDeletion;
     }
 }

@@ -134,7 +134,7 @@ namespace ActivityRecommendation
                 Directory.CreateDirectory(destDir);
             string path = Path.Combine(destDir, fileName);
             File.WriteAllText(path, content);
-            return new FileExportResult(path, true);
+            return new FileExportResult(path, content, true);
         }
 
         private string RootDir
@@ -173,12 +173,14 @@ namespace ActivityRecommendation
 
     public class FileExportResult
     {
-        public FileExportResult(string path, bool successful)
+        public FileExportResult(string path, string content, bool successful)
         {
             this.Path = path;
+            this.Content = content;
             this.Successful = successful;
         }
         public string Path;
+        public string Content;
         public bool Successful;
     }
 }

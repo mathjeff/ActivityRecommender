@@ -863,10 +863,9 @@ namespace ActivityRecommendation
             System.Diagnostics.Debug.WriteLine("EngineTester completed in " + duration);
             System.Diagnostics.Debug.WriteLine("");
         }
-        public override Engine Finish()
+        public override void Finish()
         {
             this.PrintFinalResults();
-            return null;
         }
 
         public Distribution SquaredParticipationProbabilityError

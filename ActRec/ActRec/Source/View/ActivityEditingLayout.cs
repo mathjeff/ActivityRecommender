@@ -56,5 +56,6 @@ namespace ActivityRecommendation.View
         ActivityCreationLayout activityCreationLayout;
         NewInheritanceLayout inheritanceCreationLayout;
         MetricEditingLayout metricEditingLayout;
+        LayoutChoice_Set activityDeletionLayout;
     }
 }

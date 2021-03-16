@@ -37,7 +37,7 @@ namespace ActivityRecommendation
             base.PreviewParticipation(newParticipation);
         }
 
-        public override Engine Finish()
+        public override void Finish()
         {
             this.log("Grouping participations by category");
             foreach (KeyValuePair<String, Dictionary<Activity, int>> entry in this.feedbacks)
@@ -71,7 +71,7 @@ namespace ActivityRecommendation
                     this.log(stats.Value + " : " + stats.Key + " times");
                 }
             }
-            return base.Finish();
+            base.Finish();
         }
         private string stripLeadingNumbers(string message)
         {

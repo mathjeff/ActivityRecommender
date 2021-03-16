@@ -103,11 +103,6 @@ namespace ActivityRecommendation
             this.engine.ReplanExperiment(experiment);
             base.PreviewExperiment(experiment);
         }
-        public override Engine Finish()
-        {
-            base.Finish();
-            return this.engine;
-        }
         private bool recomputeRatings;
         private bool recomputeEfficiencies;
     }

@@ -53,6 +53,5 @@ namespace ActivityRecommendation.View
         public string BackupFilepath;
 
         private Activity activity;
-
     }
 }

@@ -477,6 +477,9 @@ namespace ActivityRecommendation
             ResetVersionNumberLayout resetVersionNumberLayout = new ResetVersionNumberLayout();
             resetVersionNumberLayout.RequestChangeVersion += ResetVersionNumberLayout_RequestChangeVersion;
             debuggingBuilder.AddLayout("Reset Version Number", resetVersionNumberLayout);
+            Confirm_BackupBeforeRecalculateEfficiency_Layout recalculateEfficiency_layout = new Confirm_BackupBeforeRecalculateEfficiency_Layout();
+            recalculateEfficiency_layout.Confirmed_BackupBefore_RecalculateEfficiency += RecalculateEfficiency_layout_Confirmed_BackupBefore_RecalculateEfficiency;
+            debuggingBuilder.AddLayout("Recalculate Efficiency", recalculateEfficiency_layout);
             debuggingBuilder.AddLayout("View Demo", new DemoLayout(this.viewManager, this.ActivityDatabase));
 
             PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.persona);
@@ -562,6 +565,11 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
         }
 
+        private void RecalculateEfficiency_layout_Confirmed_BackupBefore_RecalculateEfficiency()
+        {
+            this.ExportBeforeEfficiencyRecalculation();
+        }
+
         private void SearchView_RequestStartDeletion(Activity activity)
         {
             Confirm_BackupBeforeDeleteActivity_Layout confirmLayout = new Confirm_BackupBeforeDeleteActivity_Layout(activity, this.layoutStack);
@@ -589,13 +597,33 @@ namespace ActivityRecommendation
 
         private void DeleteActivity(Activity activity, string backupContent)
         {
-            TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
-            PersistentUserData userData = importer.ParseForImport(new StringReader(backupContent));
-
             ActivityDeleter historyReplayer = new ActivityDeleter(activity);
-            this.loadDataFilesInto(userData, historyReplayer);
-            string serialized = historyReplayer.Serialize();
-            this.ImportData("Exported data without " + activity.Name, new StringReader(serialized));
+            this.runHistoryRewriter(backupContent, historyReplayer);
+        }
+
+        public async void ExportBeforeEfficiencyRecalculation()
+        {
+            RenormalizeEfficiency_Button renormalizer = new RenormalizeEfficiency_Button();
+            renormalizer.RequestRecalculation += RenormalizeEfficiencyButton_Clicked;
+            FileExportResult exportResult = await this.ExportData(renormalizer);
+            renormalizer.BackupFilepath = exportResult.Content;
+        }
+
+        private void RenormalizeEfficiencyButton_Clicked(string backupContent)
+        {
+            HistoryWriter rewriter = new RatingRenormalizer(false, true);
+            this.runHistoryRewriter(backupContent, rewriter);
+        }
+
+        // runs the given HistoryRewriter against the given data and imports the result
+        private void runHistoryRewriter(string data, HistoryWriter rewriter)
+        {
+            TextConverter importer = new TextConverter(null, new ActivityDatabase(null, null));
+            PersistentUserData userData = importer.ParseForImport(new StringReader(data));
+
+            this.loadDataFilesInto(userData, rewriter);
+            string serialized = rewriter.Serialize();
+            this.ImportData("modified data", new StringReader(serialized));
         }
 
         private void ParticipationEntryView_VisitStatisticsScreen()

@@ -18,9 +18,15 @@ namespace ActivityRecommendation.View
                 "this activity. Would you like to continue?");
             Button okButton = new Button();
             okButton.Clicked += ConfirmDeletion;
+
+            LayoutChoice_Set credits = new CreditsButtonBuilder(layoutStack)
+                .AddContribution(ActRecContributor.TOBY_HUANG, new DateTime(2021, 02, 23), "Suggested supporting deletion of created activities that have never been used, in case of mistakes in creating them")
+                .Build();
+
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder()
                 .AddLayout(warning)
-                .AddLayout(new ButtonLayout(okButton, "Back up your data"));
+                .AddLayout(new ButtonLayout(okButton, "Back up your data"))
+                .AddLayout(credits);
             this.SubLayout = builder.BuildAnyLayout();
         }
 

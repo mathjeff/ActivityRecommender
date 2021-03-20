@@ -40,6 +40,7 @@ namespace ActivityRecommendation.View
 
             menuBuilder.AddLayout("Credits", new CreditsWindowBuilder(layoutStack)
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new System.DateTime(2019, 8, 18), "Discussed the organization of the introduction and get-excited screens")
+                .AddContribution(ActRecContributor.TOBY_HUANG, new System.DateTime(2021, 2, 16), "Suggested describing ActivityRecommender's purpose more clearly")
                 .Build());
 
 

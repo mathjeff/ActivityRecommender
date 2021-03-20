@@ -43,6 +43,7 @@ namespace ActivityRecommendation
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
             LayoutChoice_Set credits = new CreditsButtonBuilder(this.layoutStack)
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 04, 05), "Pointed out that exported data files could not be seen by users on iOS")
+                .AddContribution(ActRecContributor.TOBY_HUANG, new DateTime(2021, 02, 16), "Pointed out that it was hard to find the exported files on ChromeOS")
                 .Build();
 
             this.SetContent(new Vertical_GridLayout_Builder().Uniform()

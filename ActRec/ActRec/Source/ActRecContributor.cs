@@ -12,6 +12,7 @@ namespace ActivityRecommendation
         public static AppContributor CORY_JALBERT = new AppContributor("Cory Jalbert");
         public static AppContributor DAD = new AppContributor("Dad");
         public static AppContributor JEFFRY_GASTON = new AppContributor("Jeff Gaston", null, "github.com/mathjeff");
+        public static AppContributor TOBY_HUANG = new AppContributor("Toby Huang", "tobyqrhuang93@gmail.com");
         public static AppContributor TONY_FISCHETTI = new AppContributor("Tony Fischetti", null, "tonyfischettiart.com");
     }
 }

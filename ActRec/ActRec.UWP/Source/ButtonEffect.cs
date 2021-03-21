@@ -14,6 +14,10 @@ namespace ActRec.UWP
     {
         protected override void OnAttached()
         {
+            Button button = this.Element as Button;
+            button.BorderWidth = 0;
+            button.Padding = 0;
+            button.Margin = 0;
             //System.Diagnostics.Debug.WriteLine("Attaching " + this + " to element " + this.Element + " and control " + this.Control);
         }
         protected override void OnDetached()

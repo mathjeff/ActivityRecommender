@@ -2338,7 +2338,17 @@ namespace ActivityRecommendation
         private bool get_wasSuggested(ActivityDescriptor activityDescriptor)
         {
             Activity activity = this.activityDatabase.ResolveDescriptor(activityDescriptor);
-            return activity.SuggestedMoreRecentlyThanSkipped;
+            DateTime? lastSuggested = activity.LatestSuggestionDate;
+            if (lastSuggested == null)
+                return false;
+            DateTime latestInteraction = this.LatestInteractionDate;
+            if (lastSuggested.Value.CompareTo(latestInteraction) < 0)
+            {
+                // Something happened more recently than our suggestion
+                return false;
+            }
+            // the last thing we did was suggest this activity
+            return true;
         }
         public ParticipationFeedback computeStandardParticipationFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {

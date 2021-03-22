@@ -449,7 +449,6 @@ namespace ActivityRecommendation
                 this.ApplyKnownInteractionDate((DateTime)newRating.Date);
             this.PendingRatings.Add(newRating);
 
-
             // keep track of the ratings when suggested
             bool suggested = false;
             AbsoluteRating rating = newRating as AbsoluteRating;
@@ -659,6 +658,17 @@ namespace ActivityRecommendation
         {
             this.numSuggestions++;
             this.PendingSuggestions.Add(newSuggestion);
+            if (this.latestSuggestionDate.CompareTo(newSuggestion.CreatedDate) < 0)
+                this.latestSuggestionDate = newSuggestion.CreatedDate;
+        }
+        public DateTime? LatestSuggestionDate
+        {
+            get
+            {
+                if (this.numSuggestions < 1)
+                    return null;
+                return this.latestSuggestionDate;
+            }
         }
         private void ApplyPendingSuggestions()
         {
@@ -1367,18 +1377,6 @@ namespace ActivityRecommendation
             this.SetupInterpolators();
         }
 
-        public bool SuggestedMoreRecentlyThanSkipped
-        {
-            get
-            {
-                DateTime? when = this.considerationProgression.LastDatePresent;
-                if (when == null)
-                    return false;
-                ProgressionValue value = this.considerationProgression.GetValueAt(when.Value, false);
-                return value.Value.Mean > 0.5;
-            }
-        }
-
         public Engine engine
         {
             set
@@ -1498,6 +1496,7 @@ namespace ActivityRecommendation
 
         private DateTime? earliestInheritenceDate;
         private DateTime? latestInheritanceDate;
+        private DateTime latestSuggestionDate = new DateTime(0);
 
         private DateTime defaultDiscoveryDate;
         private Distribution participationDurations;

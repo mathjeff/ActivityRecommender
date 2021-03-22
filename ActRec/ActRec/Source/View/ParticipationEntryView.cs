@@ -139,6 +139,7 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 8, 30), "Pointed out that the text in the starttime box had stopped fitting properly.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 10, 3), "Pointed out that it was possible record participations in the future.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 9), "Suggested making different metrics appear more distinct.")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 21), "Pointed out that the participation feedback had stopped finding a better activity")
                     .Build()
                 )
                 .Build();

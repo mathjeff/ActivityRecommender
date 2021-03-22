@@ -374,7 +374,7 @@ namespace ActivityRecommendation
                 // Use its short-term value as a minimum when considering other activities
                 this.EnsureCalculatedSuggestionValue(activityToBeat, request);
                 ratingsCache.futureEfficiencies[activityToBeat] = this.Get_OverallEfficiency_ParticipationEstimate(activityToBeat, when);
-                utilitiesCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, 1), when, "you asked for an activity at least as fun as this one");
+                utilitiesCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, double.MaxValue), when, "you asked for an activity at least as fun as this one");
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);

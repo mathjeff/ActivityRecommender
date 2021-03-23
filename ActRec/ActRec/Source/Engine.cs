@@ -1363,6 +1363,11 @@ namespace ActivityRecommendation
                             Activity earlierActivity = this.activityDatabase.ResolveDescriptor(experiment.Earlier.ActivityDescriptor);
                             Metric earlierMetric = earlierActivity.MetricForName(experiment.Earlier.MetricName);
                             experiment.FirstParticipation.setRelativeEfficiencyMeasurement(newParticipation.RelativeEfficiencyMeasurement.Earlier, earlierMetric);
+
+                            newParticipation.RelativeEfficiencyMeasurement.Experiment = experiment;
+                            experiment.FirstParticipation.RelativeEfficiencyMeasurement.Experiment = experiment;
+
+                            experiment.FirstParticipation.RelativeEfficiencyMeasurement.Later = newParticipation.RelativeEfficiencyMeasurement;
                         }
                     }
                     else

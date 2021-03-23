@@ -61,6 +61,10 @@ namespace ActivityRecommendation
             analyzeButton.Clicked += AnalyzeButton_Clicked;
             this.navigationLayout.AddLayout(new ButtonLayout(analyzeButton, "Analyze!"));
 
+            Button experimentFeedbackButton = new Button();
+            experimentFeedbackButton.Clicked += ExperimentFeedbackButton_Clicked;
+            this.experimentFeedbackLayout = new ButtonLayout(experimentFeedbackButton, "Experiment Complete!");
+
             Vertical_GridLayout_Builder detailsBuilder = new Vertical_GridLayout_Builder();
 
             GridLayout commentAndRating_grid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
@@ -188,6 +192,16 @@ namespace ActivityRecommendation
             noActivities_help_builder.AddLayout(new ButtonLayout(activitiesButton));
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
+        }
+
+        private void ExperimentFeedbackButton_Clicked(object sender, EventArgs e)
+        {
+            this.showExperimentFeedback();
+        }
+
+        private void showExperimentFeedback()
+        {
+            this.layoutStack.AddLayout(new ExperimentResultsView(this.LatestParticipation), "Experiment Results");
         }
 
         private void AnalyzeButton_Clicked(object sender, EventArgs e)
@@ -602,9 +616,18 @@ namespace ActivityRecommendation
             {
                 if (this.nameBox.NameText == null || this.nameBox.NameText == "")
                 {
-                    // If we have no text in the activity name box, we can remind the user to get another suggestion,
-                    // and we can give them a convenient button for going there
-                    this.promptHolder.SubLayout = this.navigationLayout;
+                    // If we have no text in the activity name box, then we do have space for a response and there isn't a current activity to give feedback on
+                    Participation latestParticipation = this.LatestParticipation;
+                    if (latestParticipation.RelativeEfficiencyMeasurement != null)
+                    {
+                        this.promptHolder.SubLayout = this.experimentFeedbackLayout;
+                    }
+                    else
+                    {
+                        // We can remind the user to get another suggestion,
+                        // and we can give them a convenient button for going there
+                        this.promptHolder.SubLayout = this.navigationLayout;
+                    }
                 }
                 else
                 {
@@ -706,6 +729,7 @@ namespace ActivityRecommendation
         ButtonLayout participationFeedbackButtonLayout;
         ContainerLayout promptHolder;
         GridLayout navigationLayout;
+        LayoutChoice_Set experimentFeedbackLayout;
         string feedback;
         Engine engine;
         ChooseMetric_View metricChooser;

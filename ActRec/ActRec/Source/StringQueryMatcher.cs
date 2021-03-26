@@ -47,9 +47,13 @@ namespace ActivityRecommendation
                         numCaseMatches++;
                     if (matchScore > 0)
                     {
-                        // more points for matching the first unmatched word
+                        // more points for matching earlier available words
+                        if (i < 20)
+                            matchScore += 1;
+                        if (i < 10)
+                            matchScore += 1;
                         if (i == 0)
-                            matchScore += 3;
+                            matchScore += 1;
                         // more points for longer queries
                         numSimilarities += matchScore + queryWord.Length;
                         itemWords.RemoveRange(0, i + 1);

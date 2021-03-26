@@ -122,9 +122,13 @@ namespace ActivityRecommendation
             StatList<double, ProtoActivity> sortedItems = new StatList<double, ProtoActivity>(new ReverseDoubleComparer(), new NoopCombiner<ProtoActivity>());
             foreach (ProtoActivity protoActivity in this.ProtoActivities)
             {
-                double quality = this.stringQueryMatcher.StringScore(protoActivity.Text, query);
-                if (quality > 0)
-                    sortedItems.Add(quality, protoActivity);
+                double textQuality = this.stringQueryMatcher.StringScore(protoActivity.Text, query);
+                if (textQuality > 0)
+                {
+                    double matchQuality = textQuality + protoActivity.IntrinsicInterest;
+
+                    sortedItems.Add(matchQuality, protoActivity);
+                }
             }
             count = Math.Min(count, sortedItems.NumItems);
             List<ProtoActivity> top = new List<ProtoActivity>(count);
@@ -160,21 +164,12 @@ namespace ActivityRecommendation
 
         // Gives a score telling how soon we want to show the given ProtoActivity next
         // Higher scores indicate to show the given ProtoActivity sooner
-        public ProtoActivity_EstimatedInterest computeInterest(ProtoActivity activity)
+        public ProtoActivity_EstimatedInterest computeInterest(ProtoActivity protoactivity)
         {
             ProtoActivity_EstimatedInterest interest = new ProtoActivity_EstimatedInterest();
-            interest.ProtoActivity = activity;
-
-
-            // We want to estimate the relative probability that this protoactivity will be the next one to be promoted to a protoactivity.
-            // We're not doing any fancy machine-learning at the moment, just some simple guesses based on how many times it has been marked better or worse.
-            BinomialDistribution distribution = new BinomialDistribution(activity.Ratings);
-            // Being marked better indicates a higher probability, and being marked worse indicates a lower probability
-            // Being marked better and then being marked worse overall indicates a lower probability, because it means the user is interacting with this protoactivity and not promoting it
-            // So, we use the number of worses to first compute a ceiling on the score, and then we incorporate the number of betters to decide where in that zone the score will be
-            // For example, if (numZeros,numOnes)=(0,0) then intrinsicInterest = 1*1/2=1/2 whereas for (1,1) intrinisicInterest = 1/2*2/3 = 1/3
-            interest.IntrinsicInterest = (1.0 / (distribution.NumZeros + 1)) * (1.0 - 1.0 / (distribution.NumOnes + 2));
-            interest.NumIdleSeconds = this.when.Subtract(activity.LastInteractedWith).TotalSeconds;
+            interest.ProtoActivity = protoactivity;
+            interest.IntrinsicInterest = protoactivity.IntrinsicInterest;
+            interest.NumIdleSeconds = this.when.Subtract(protoactivity.LastInteractedWith).TotalSeconds;
             interest.CurrentInterest = interest.IntrinsicInterest * interest.NumIdleSeconds;
 
             return interest;

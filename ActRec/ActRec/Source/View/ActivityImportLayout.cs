@@ -209,10 +209,33 @@ namespace ActivityRecommendation.View
             }
         }
 
+        private Dictionary<string, List<Inheritance>> InheritancesByParent
+        {
+            get
+            {
+                if (this.inheritancesByParent == null)
+                {
+                    Dictionary<string, List<Inheritance>> inheritancesByParent = new Dictionary<string, List<Inheritance>>();
+                    foreach (Inheritance inheritance in this.DefaultInheritances)
+                    {
+                        string parent = inheritance.ParentDescriptor.ActivityName;
+                        if (!inheritancesByParent.ContainsKey(parent))
+                        {
+                            inheritancesByParent.Add(parent, new List<Inheritance>());
+                        }
+                        inheritancesByParent[parent].Add(inheritance);
+                    }
+                    this.inheritancesByParent = inheritancesByParent;
+                }
+                return this.inheritancesByParent;
+            }
+        }
+
         public ActivityImportLayout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
+            this.dismissedInheritances = new HashSet<Inheritance>();
             this.regenerateEntries();
         }
 
@@ -224,48 +247,99 @@ namespace ActivityRecommendation.View
         {
             List<Inheritance> unchosenInheritances = this.findUnchosenInheritances();
             List<Inheritance> immediatelyUsableInheritances = this.selectUsableInheritances(unchosenInheritances);
-            this.entries = new Dictionary<Button, Inheritance>();
             if (immediatelyUsableInheritances.Count < 1)
             {
-                this.SubLayout = new TextblockLayout("You have already accepted all of the built-in activity inheritances. There are none left to add!");
+                if (this.dismissedInheritances.Count > 0)
+                    this.SubLayout = new TextblockLayout("You have already accepted or dismissed all of the built-in activity inheritances. Go back to the Add Activities screen to enter your own!");
+                else
+                    this.SubLayout = new TextblockLayout("You have already accepted all of the built-in activity inheritances. Go back to the Add Activities screen to enter your own!");
             }
             else
             {
                 Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
                 LayoutChoice_Set helpLayout = new HelpWindowBuilder()
-                    .AddMessage("Before ActivityRecommender can give you any suggestions or can record your progress, it needs to know what kinds of things you like to do.")
-                    .AddMessage("This screen helps you to get started in entering new activities you may want to do.")
-                    .AddMessage("If you don't want to think of and type every activity and instead want to start with a bunch of pre-made activities, you can accept the ideas on this screen.")
-                    .AddMessage("When you see an entry on this screen of the form 'child (parent)', then pressing that entry is the same as " +
-                    "declaring that you believe that the parent activity encompasses the child activity and that the child activity is relevant to you.")
-                    .AddMessage("For example, pressing an entry that says 'Board/Card Game (Game)' means that you think that board and card games are games, and it also means " +
-                    "that you think board and card games are relevant to you.")
+                    .AddMessage("ActivityRecommender needs to know what you like to do, for providing suggestions, autocomplete, and more.")
+                    .AddMessage("Do you like any of the activites here?")
+                    .AddMessage("Selecting 'I like this' on an item of the form 'child (parent)' indicates two things: A: that you believe that the child is encompassed by the parent, and B: that the child is relevant to you.")
+                    .AddMessage("Pushing the 'I like all kinds' button is equivalent to pushing the 'I like this' button on the given activity and all of its descendants.")
+                    .AddMessage("Pushing the 'Not Interested' button will simply hide the given activity in this screen")
                     .Build();
 
-                gridBuilder.AddLayout(new TextblockLayout("Press everything you like to do! Then go back.").AlignHorizontally(TextAlignment.Center));
-                gridBuilder.AddLayout(new HelpButtonLayout(helpLayout, this.layoutStack));
-                gridBuilder.AddLayout(new TextblockLayout("" + unchosenInheritances.Count + " remaining, built-in activity ideas:"));
+                gridBuilder.AddLayout(new TextblockLayout("Press everything you like to do! Then go back.\n" +
+                    "" + unchosenInheritances.Count + " remaining, built-in activity ideas:", 30).AlignHorizontally(TextAlignment.Center));
 
+                int count = 0;
                 foreach (Inheritance inheritance in immediatelyUsableInheritances)
                 {
-                    Button button = new Button();
-                    this.entries[button] = inheritance;
-                    button.Clicked += Button_Clicked;
-                    string text = inheritance.ChildDescriptor.ActivityName + " (" + inheritance.ParentDescriptor.ActivityName + ")";
-                    ButtonLayout bigLayout = new ButtonLayout(button, text, 30);
-                    ButtonLayout smallLayout = new ButtonLayout(button, text, 24);
-                    gridBuilder.AddLayout(new LayoutUnion(bigLayout, smallLayout));
+                    int numDescendants = this.FindDescendants(inheritance).Count;
+                    Import_SpecificActivities_Layout specific = new Import_SpecificActivities_Layout(inheritance, numDescendants);
+                    specific.Dismissed += DismissedInheritance;
+                    specific.AcceptedSingle += AcceptedSingleInheritance;
+                    specific.AcceptedAll += AcceptedInheritanceRecursive;
+                    gridBuilder.AddLayout(specific);
+                    // Don't display too many results at once to avoid taking to long to update the screen.
+                    // The user should dismiss the ones they're not interested in, anyway
+                    count++;
+                    if (count >= 10)
+                    {
+                        gridBuilder.AddLayout(new TextblockLayout("Dismiss or accept an idea to see more!"));
+                        break;
+                    }
                 }
+                gridBuilder.AddLayout(new HelpButtonLayout(helpLayout, this.layoutStack, 30));
+
                 this.SubLayout = ScrollLayout.New(gridBuilder.Build());
             }
         }
 
-        private void Button_Clicked(object sender, EventArgs e)
+        // returns a list containing this inheritance plus all other inheritances having this one as an ancestor
+        private List<Inheritance> FindDescendants(Inheritance parent)
         {
-            Button button = sender as Button;
-            Inheritance inheritance = this.entries[button];
-            inheritance.DiscoveryDate = DateTime.Now;
-            this.activityDatabase.AddInheritance(inheritance);
+            List<Inheritance> results = new List<Inheritance>();
+            HashSet<Inheritance> resultSet = new HashSet<Inheritance>();
+            results.Add(parent);
+            resultSet.Add(parent);
+            for (int i = 0; i < results.Count; i++)
+            {
+                Inheritance child = results[i];
+                string parentName = child.ChildDescriptor.ActivityName;
+                if (this.InheritancesByParent.ContainsKey(parentName))
+                {
+                    foreach (Inheritance descendant in this.InheritancesByParent[parentName])
+                    {
+                        if (!resultSet.Contains(descendant))
+                        {
+                            resultSet.Add(descendant);
+                            results.Add(descendant);
+                        }
+                    }
+                }
+            }
+            return results;
+        }
+        private void AcceptedInheritanceRecursive(Inheritance inheritance)
+        {
+            this.accept(this.FindDescendants(inheritance));
+        }
+
+        private void AcceptedSingleInheritance(Inheritance inheritance)
+        {
+            this.accept(new List<Inheritance>() { inheritance });
+        }
+        private void DismissedInheritance(Inheritance inheritance)
+        {
+            this.dismissedInheritances.Add(inheritance);
+            this.regenerateEntries();
+        }
+
+        private void accept(List<Inheritance> inheritances)
+        {
+            DateTime now = DateTime.Now;
+            foreach (Inheritance descendant in inheritances)
+            {
+                descendant.DiscoveryDate = now;
+                this.activityDatabase.AddInheritance(descendant);
+            }
             this.regenerateEntries();
         }
 
@@ -286,17 +360,88 @@ namespace ActivityRecommendation.View
             List<Inheritance> result = new List<Inheritance>();
             foreach (Inheritance inheritance in candidates)
             {
-                if (activityDatabase.HasActivity(inheritance.ParentDescriptor))
+                if (!activityDatabase.HasActivity(inheritance.ParentDescriptor))
                 {
-                    result.Add(inheritance);
+                    // parent must exist before child can be added
+                    continue;
                 }
+                if (this.dismissedInheritances.Contains(inheritance))
+                {
+                    // skip displaying any that the user has asked to hide
+                    continue;
+                }
+                result.Add(inheritance);
             }
             return result;
         }
 
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
-        private Dictionary<Button, Inheritance> entries;
+        private HashSet<Inheritance> dismissedInheritances;
+        private Dictionary<string, List<Inheritance>> inheritancesByParent;
+    }
+
+    class Import_SpecificActivities_Layout : ContainerLayout
+    {
+        public event Request_DismissInheritance Dismissed;
+        public delegate void Request_DismissInheritance(Inheritance inheritance);
+
+        public event Request_AcceptSingleInheritance AcceptedSingle;
+        public delegate void Request_AcceptSingleInheritance(Inheritance inheritance);
+
+        public event Request_AcceptAllInheritances AcceptedAll;
+        public delegate void Request_AcceptAllInheritances(Inheritance inheritance);
+        public Import_SpecificActivities_Layout(Inheritance inheritance, int numDescendants)
+        {
+            this.inheritance = inheritance;
+
+            TextblockLayout title = new TextblockLayout(inheritance.ChildDescriptor.ActivityName + " (" + inheritance.ParentDescriptor.ActivityName + ")", 30);
+            title.AlignVertically(TextAlignment.Center);
+
+            Button selectAll_button = new Button();
+            selectAll_button.Clicked += SelectAll_button_Clicked;
+            Button customizeButton = new Button();
+            customizeButton.Clicked += CustomizeButton_Clicked;
+            Button dismissButton = new Button();
+            dismissButton.Clicked += DismissButton_Clicked;
+            Horizontal_GridLayout_Builder buttonsBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            if (numDescendants > 1)
+            {
+                buttonsBuilder.AddLayout(new ButtonLayout(selectAll_button, "I like all kinds! (" + numDescendants + " ideas)", 16));
+                buttonsBuilder.AddLayout(new ButtonLayout(customizeButton, "I like this. Show me more!", 16));
+            }
+            else
+            {
+                buttonsBuilder.AddLayout(new ButtonLayout(customizeButton, "I like this!", 16));
+            }
+
+            buttonsBuilder.AddLayout(new ButtonLayout(dismissButton, "Not interested", 16));
+
+            this.SubLayout = new Vertical_GridLayout_Builder()
+                .AddLayout(title)
+                .AddLayout(buttonsBuilder.Build())
+                .Build();
+        }
+
+        private void DismissButton_Clicked(object sender, EventArgs e)
+        {
+            if (this.Dismissed != null)
+                this.Dismissed.Invoke(this.inheritance);
+        }
+
+        private void CustomizeButton_Clicked(object sender, EventArgs e)
+        {
+            if (this.AcceptedSingle != null)
+                this.AcceptedSingle.Invoke(this.inheritance);
+        }
+
+        private void SelectAll_button_Clicked(object sender, EventArgs e)
+        {
+            if (this.AcceptedAll != null)
+                this.AcceptedAll.Invoke(this.inheritance);
+        }
+
+        Inheritance inheritance;
     }
 
     class ImportPremadeActivity_Feature : AppFeature

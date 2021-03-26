@@ -22,8 +22,8 @@ namespace ActivityRecommendation.View
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Reading</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Activity</Name></Parent><Child><Name>Useful</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Cleaning</Name></Child></Inheritance>
-<Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Buying Food</Name></Child></Inheritance>
-<Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Visiting a Restaurant</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Shopping</Name></Parent><Child><Name>Buying Food</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Shopping</Name></Parent><Child><Name>Visiting a Restaurant</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Visiting a Restaurant</Name></Parent><Child><Name>Visiting a Greek Restaurant</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Visiting a Restaurant</Name></Parent><Child><Name>Visiting a Italian Restaurant</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Visiting a Restaurant</Name></Parent><Child><Name>Visiting a Chinese Restaurant</Name></Child></Inheritance>
@@ -37,7 +37,7 @@ namespace ActivityRecommendation.View
 <Inheritance><Parent><Name>Visiting a Restaurant</Name></Parent><Child><Name>Visiting a Greek Restaurant</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Visiting a Restaurant</Name></Parent><Child><Name>Visiting a Burger Restaurant</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Visiting a Restaurant</Name></Parent><Child><Name>Visiting a Pizza Restaurant</Name></Child></Inheritance>
-<Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Buying Sneakers</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Shopping</Name></Parent><Child><Name>Buying Sneakers</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Chores</Name></Parent><Child><Name>Getting my Hair Cut</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Cleaning</Name></Parent><Child><Name>Hygiene</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Cleaning</Name></Parent><Child><Name>Cleaning my Room</Name></Child></Inheritance>
@@ -79,6 +79,7 @@ namespace ActivityRecommendation.View
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Watching Television</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Thinking of a Joke</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Paper Airplanes</Name></Child></Inheritance>
+<Inheritance><Parent><Name>Fun</Name></Parent><Child><Name>Visiting an Amusement Park</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Watching Television</Name></Parent><Child><Name>Watching an Action Show</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Watching Television</Name></Parent><Child><Name>Watching a Drama Show</Name></Child></Inheritance>
 <Inheritance><Parent><Name>Watching Television</Name></Parent><Child><Name>Watching Cartoons</Name></Child></Inheritance>

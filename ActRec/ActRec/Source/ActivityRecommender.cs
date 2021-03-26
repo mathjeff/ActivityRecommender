@@ -743,7 +743,7 @@ namespace ActivityRecommendation
         private void ExperimentDifficultySelectionLayout_Done(List<SuggestedMetric> choices)
         {
             DateTime when = DateTime.Now;
-            this.SuspectLatestActionDate(when);
+            this.SuspectLatestActionDate(when, true);
             this.update_numRecent_userChosenExperimentSuggestions(choices);
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
             ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
@@ -885,7 +885,7 @@ namespace ActivityRecommendation
             this.protoActivities_database = loader.ProtoActivity_Database;
             this.latestParticipation = loader.LatestParticipation;
             this.recentUserData = loader.RecentUserData;
-            this.SuspectLatestActionDate(loader.LatestDate);
+            this.SuspectLatestActionDate(loader.LatestDate, false);
             if (!this.engine.ActivityDatabase.ContainsCustomActivity())
             {
                 // If the user hasn't entered any data yet, then starting ActivityRecommender counts as taking an action
@@ -1006,7 +1006,7 @@ namespace ActivityRecommendation
         private ActivitySuggestion MakeRecommendation(ActivityRequest request, IEnumerable<ActivitySuggestion> existingSuggestions)
         {
             DateTime now = request.Date;
-            this.SuspectLatestActionDate(now);
+            this.SuspectLatestActionDate(now, true);
             
             if (request.FromCategory != null || request.ActivityToBeat != null)
             {
@@ -1127,7 +1127,7 @@ namespace ActivityRecommendation
             }
             this.engine.PutParticipationInMemory(newParticipation);
 
-            this.SuspectLatestActionDate(newParticipation.EndDate);
+            this.SuspectLatestActionDate(newParticipation.EndDate, false);
 
             this.WriteParticipation(newParticipation);
         }
@@ -1139,7 +1139,7 @@ namespace ActivityRecommendation
         // declares that the user didn't want to do something that was suggested
         private void AddSkip(ActivitySkip newSkip)
         {
-            this.SuspectLatestActionDate(newSkip.CreationDate);
+            this.SuspectLatestActionDate(newSkip.CreationDate, false);
             this.engine.ApplySkip(newSkip);
             this.WriteSkip(newSkip);
         }
@@ -1232,18 +1232,20 @@ namespace ActivityRecommendation
         public void MakeStartNow(object sender, EventArgs e)
         {
             DateTime now = DateTime.Now;
-            this.SuspectLatestActionDate(now);
+            this.SuspectLatestActionDate(now, true);
         }
 
 #region Functions to be called by the TextConverter
         // updates the ParticipationEntryView so that the start date is 'when'
-        public void SuspectLatestActionDate(DateTime when)
+        public void SuspectLatestActionDate(DateTime when, bool save)
         {
             if (when.CompareTo(DateTime.Now) <= 0 && when.CompareTo(this.LatestActionDate) > 0)
             {
                 this.LatestActionDate = when;
                 //this.WriteInteractionDate(when);
                 this.UpdateDefaultParticipationData(when);
+                if (save)
+                    this.writeRecentUserData_if_needed();
             }
         }
 #endregion

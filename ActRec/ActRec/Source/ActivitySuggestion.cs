@@ -32,6 +32,8 @@ namespace ActivityRecommendation
         public double? PredictedFutureHappinessIfParticipated_DividedByAverage { get; set; }
         public bool WorseThanRootActivity { get; set; }
         public Justification MostSignificantJustification { get; set; }
+        // what we expect the engine's reaction to be if the user does this
+        public string ExpectedReaction { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all
         // number of suggestions for which we don't have another suggestion to follow up with
         public virtual int CountNumLeaves()

@@ -201,33 +201,23 @@ namespace ActivityRecommendation
             return "spectacular";
         }
 
-        private string decapitalize(string text)
-        {
-            return text.Substring(0, 1).ToLower() + text.Substring(1);
-        }
-
         private string summarize(ActivitySuggestion suggestion, bool repeatingDeclinedSuggestion)
         {
             // Summarize participation probability and predicted score
             string text;
             string shortTimeFormat = "HH:mm";
             string longTimeFormat = "HH:mm:ss";
+            string expectedReaction = suggestion.ExpectedReaction;
+            if (expectedReaction == null)
+                expectedReaction = "";
+            else
+                expectedReaction = " (" + expectedReaction + ")";
 
-            string ratingAdjective = "";
-            // How we expect the user to feel about this
-            if (suggestion.ParticipationProbability != null && suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage != null)
-            {
-                ratingAdjective = this.getFutureRatingAdjective(suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage.Value);
-            }
             if (!suggestion.Skippable)
             {
                 // If this is an unskippable experiment, then remind the user that they promised to do it
                 text = "You promised to do " + suggestion.ActivityDescriptor.ActivityName + " at " + suggestion.StartDate.ToString(shortTimeFormat) + ".";
-                if (ratingAdjective != "")
-                {
-                    // Also tell the user how we think they'll feel about it
-                    text += " I think it will be " + ratingAdjective + " for you.";
-                }
+                text += expectedReaction;
                 text += " Get started!";
             }
             else
@@ -244,9 +234,9 @@ namespace ActivityRecommendation
                 {
                     // Optional emphasis if we're repating ourselves and we think it's a good idea
                     if (repeatingDeclinedSuggestion)
-                        text = "No, really: I think ";
+                        text = "No, really: I recommend ";
                     else
-                        text = "";
+                        text = "I suggest ";
                 }
                 // activity name
                 text += suggestion.ActivityDescriptor.ActivityName;
@@ -260,21 +250,10 @@ namespace ActivityRecommendation
                 string whenText = suggestion.StartDate.ToString(timeFormat);
                 if (suggestion.EndDate.HasValue)
                     whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
-                text += " " + whenText;
-
-                // How we expect the user to feel about this
-                if (ratingAdjective != "")
-                {
-                    text += "\ncould be " + ratingAdjective + " for you";
-                    text += " because of " + this.decapitalize(suggestion.MostSignificantJustification.Label) + ".";
-                    if (suggestion.WorseThanRootActivity)
-                        text += "\nHow about trying something new?";
-                }
-                else
-                {
-                    // No data at the moment
-                    text += " could be nice.";
-                }
+                text += " " + whenText + ".";
+                text += expectedReaction;
+                if (suggestion.WorseThanRootActivity)
+                    text += "\nHow about trying something new?";
             }
             return text;
         }

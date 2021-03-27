@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using VisiPlacement;
 using Xamarin.Forms;
 
@@ -50,7 +51,13 @@ namespace ActivityRecommendation
             }
 
             // add content
-            mainGrid.PutLayout(new TextblockLayout(this.summarize(suggestion, repeatingDeclinedSuggestion)), 1, 0);
+            string summary = this.summarize(suggestion, repeatingDeclinedSuggestion);
+            List<LayoutChoice_Set> contentChoices = new List<LayoutChoice_Set>();
+            for (int i = 12; i <= 32; i+= 4)
+            {
+                contentChoices.Add(new TextblockLayout(summary, i));
+            }
+            mainGrid.PutLayout(new LayoutUnion(contentChoices), 1, 0);
 
             // Add buttons on the right
             this.cancelButton = new Button();

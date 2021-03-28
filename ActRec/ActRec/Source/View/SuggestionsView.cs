@@ -74,7 +74,7 @@ namespace ActivityRecommendation.View
 
             this.helpButton_layout = new HelpButtonLayout(helpWindow, this.layoutStack);
             this.experimentButton = new Button();
-            this.startExperiment_layout = new ButtonLayout(this.experimentButton, "EFficiency Experiment");
+            this.startExperiment_layout = new ButtonLayout(this.experimentButton, "Efficiency Experiment");
             this.experimentButton.Clicked += ExperimentButton_Clicked;
             this.topLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
 

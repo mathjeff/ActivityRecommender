@@ -11,170 +11,104 @@ namespace ActivityRecommendation.View
     {
         public static LayoutChoice_Set New(LayoutStack layoutStack)
         {
-            TitledControl mainLayout = new TitledControl("Get Excited");
+            TitledControl mainLayout = new TitledControl("I want...");
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
 
-            menuBuilder.AddLayout("Your life is about to be more fun",
-                new TitledControl("So much fun",
+            menuBuilder.AddLayout("To be happy now",
+                new TitledControl("Happiness at any time!",
                     (new MenuLayoutBuilder(layoutStack))
-                    .AddLayout("Suggestions", (new HelpWindowBuilder())
-                        .AddMessage("The feature that ActivityRecommender is named for, of course, is that you can ask it for suggestions of what to do.")
-                        .AddMessage("Each suggestion comes with an estimate of how likely ActivityRecommender thinks that it is that you will actually do the activity, along with how much fun " +
-                        "it thinks you will have doing it.")
-                        .AddMessage("As ActivityRecommender starts to know you better, it may become slightly more assertive with its suggestions. For example, suppose you really enjoy being " +
-                        "creative but you often find it difficult to start. Even if you dismiss the first suggestion, ActivityRecommender may give the same suggestion a few times until either " +
-                        "it's decided that you're truly unwilling to do it, or you realize that ActivityRecommender has a good point and you do the activity anyway.")
-                        .AddMessage("ActivityRecommender doesn't make any hard promises regarding its suggestions; it doesn't guarantee that it will remind you to do your chores every day or to " +
-                        "finish a certain task by a certain date. This keeps things exciting! In fact, in a few places it uses randomness if it doesn't have enough time to " +
-                        "consider all options in a short time.")
-                        .AddMessage("ActivityRecommender also will never interrupt you; it only gives you a suggestion when you're in the mood for one and ask for it.")
+                    .AddLayout("So many activity ideas", (new HelpWindowBuilder())
+                        .AddMessage("To help you effortlessly get started, there are hundreds of wonderful, categorized activity ideas under Start -> Activities -> Import Some Premade Activities.")
+                        .AddMessage("These ideas can supplement your own ideas that you can add under Start -> Activities -> New Activity.")
                         .Build()
                     )
-                    .AddLayout("Fast interface, lots of autocomplete", (new HelpWindowBuilder())
-                        .AddMessage("ActivityRecommender has autocomplete in many places.")
-                        .AddMessage("When entering an activity name, press Enter to accept the autocomplete suggestion.")
-                        .AddMessage("It's common to be able to record a participation by pressing the screen only six times (One press to select the name box, two presses to type the first two letters, " +
-                        "one press of Enter to select the autocomplete suggestion, one press of \"End = Now\" to select and end time, and one press of OK to record it).")
+                    .AddLayout("Awesome suggestions", (new HelpWindowBuilder())
+                        .AddMessage("Go to Start -> Suggestions/Experiment for endless, personalized ideas!")
+                        .AddMessage("If you like an idea, press the 'Doing it!' button which will take you straight to the Record Participations screen.")
+                        .AddMessage("ActivityRecommender learns based on how you rate what you do, so be sure to enter a rating often.")
+                        .AddMessage("If you press the X button on an idea, it will go away and will appear less often. If it's a very good idea, though, it might be back quite soon!")
                         .Build()
                     )
-                    .AddLayout("Fast feedback", (new HelpWindowBuilder())
-                        .AddMessage("Every time you record having done an activity, ActivityRecommender gives you feedback even before you press OK.")
-                        .AddMessage("It builds a model of your longterm happiness and how it is expected to be affected by having done various activities.")
-                        .AddMessage("As soon as you enter an activity name on the Record Participations screen, you will see an estimate of the difference between your expected longterm happiness " +
-                        "with that participation vs without that participation.")
-                        .AddMessage("For example, suppose that you exercised every week last year and recorded that you were twice as happy as the year before in which you did no exercising. " +
-                        "If you then record another participation of exercise, ActivityRecommender may tell you that your participation in exercise is correlated with an increase in " +
-                        "happiness of several hundred days, because any time you exercise, it indicates that you may be happier for a whole year.")
-                        .Build()
-                    )
-                    .AddLayout("Graph your life", (new HelpWindowBuilder())
-                        .AddMessage("As soon as you record a participation or a rating, the time spent or rating assigned will immediately show up in the respective graph for that activity, " +
-                        "acknowledging and visualizing the time that you spent or enjoyment you received.")
-                        .AddMessage("You can inspect graphs to look for patterns.")
+                    .AddLayout("Advanced: Efficiency Experiment", (new HelpWindowBuilder())
+                        .AddMessage("Imagine you have some tasks you need to do, and you want to estimate how efficient you are at various times of day.")
+                        .AddMessage("If you are willing to work on these tasks in a random order, then you can measure your efficiency! Doing them in a random order allows us to correct for the fact that some tasks " +
+                        "may be harder than expected.")
+                        .AddMessage("ActivityRecommender offers this feature under Start -> Suggest/Experiment -> Efficiency Experiment.")
+                        .AddMessage("These efficiency measurements will show up in various places in the application, including in graphs!")
                         .Build()
                     )
                     .Build()
                 )
             );
-            menuBuilder.AddLayout("Make life more meaningful",
-                new TitledControl("Find more meaning",
+            menuBuilder.AddLayout("To be happy later",
+                new TitledControl("Live a happy life!",
                     new MenuLayoutBuilder(layoutStack)
-                    .AddLayout("Maximize longterm happiness", (new HelpWindowBuilder())
-                        .AddMessage("Several aspects of ActivityRecommender are designed to maximize your longterm happiness.")
-                        .AddMessage("Among other things, this means that it should encourage you towards entertainment that recharges rather than frustrates you.")
-                        .AddMessage("The way that this works is you gradually enter more and more data about things you've done and how happy they have made you.")
-                        .AddMessage("In the meanwhile, ActivityRecommender builds an increasingly accurate model of your happiness.")
-                        .AddMessage("At any given time, it uses this model to predict and attempt to maximize the net present value (an economics term) of how much happiness you'll experience " +
-                        "in the future. This is approximately equivalent to maximizing the amount of happiness that you'll experience over the next " +
-                        (UserPreferences.DefaultPreferences.HalfLife.TotalDays / 365) + " years.")
-                        .AddMessage("So even if you don't like doing chores, if ActivityRecommender notices that doing chores from time to time enables you to have more time to do other fun " +
-                        "things, it will recommend chores from time to time anyway.")
+                    .AddLayout("Fulfilling suggestions", (new HelpWindowBuilder())
+                        .AddMessage("ActivityRecommender's suggestions are optimized to make you happy for long periods of time. If something you do tends to make you slightly happy now and very unhappy later, such " +
+                        "as staying up late, then as ActivityRecommender gets to know you better, it will suggest this less and less. Of course, if something makes you very happy now and slightly unhappy later, then " +
+                        "you can expect ActivityRecommender to keep suggesting it.")
+                        .AddMessage("You don't have to do anything special to enable this! Just keep recording ratings for the things that you do.")
                         .Build()
                     )
-                    .AddLayout("Personalize", (new HelpWindowBuilder())
-                        .AddMessage("You decide which activities exist in your world and what their relationships are.")
-                        .AddMessage("If your icecream store is far away and you want to declare that \"Buying Ice Cream\" is \"Exercise\", that's your prerogative.")
+                    .AddLayout("Validating feedback: way to go!", (new HelpWindowBuilder())
+                        .AddMessage("Even something as simple as recording your time here is really fun. ActivityRecommender can understand what makes you happy and when, and chooses accordingly from hundreds " +
+                        "of possible responses!")
+                        .AddMessage("Go to Start -> Record Participations to record what you're up to, and be sure to enter lots of ratings.")
                         .Build()
                     )
-                    .AddLayout("You define what to optimize", (new HelpWindowBuilder())
-                        .AddMessage("Throughout ActivityRecommender, the word \"happiness\" is used to refer to the value being optimized. The expectation is that happiness is what you'll choose to " +
-                        "optimize, but from ActivityRecommender's perspective, they're just numbers that you're reporting, so the exact meaning is up to you.")
-                        .AddMessage("The important part is that ActivityRecommender interprets these as values per unit time.")
-                        .AddMessage("For example, if you want to maximize your total distance traveled, then you should record that 1 mile in 8 minutes is just as good as 2 miles in 16 minutes. " +
-                        "ActivityRecommender will know that the activity with longer duration had larger absolute impact.")
-                        .AddMessage("ActivityRecommender doesn't support negative values at the moment.")
-                        .AddMessage("Additionally, although the ratios between individual ratings can be unbounded, ActivityRecommender assumes that the ratings themselves (which you as a user " +
-                        "don't directly enter) are numbers from 0 to 1.")
+                    .AddLayout("Analysis: what makes you least happy?", (new HelpWindowBuilder())
+                        .AddMessage("To see what has had the largest postive or negative impact on your happiness recently, go to Start -> Analyze -> Significant Activities.")
+                        .AddMessage("This analysis will be weighted by the amount of time you spent on various things, so even a small problem that lasts for a long time can be considered significant!")
                         .Build()
                     )
-                    .AddLayout("Meaningful relative ratings", (new HelpWindowBuilder())
-                        .AddMessage("It can be hard to admit that a single activity was boring, a mistake, inefficient, or otherwise regrettable, let alone say it on a daily basis.")
-                        .AddMessage("So, ActivityRecommender doesn't ever ask you to say that. ActivityRecommender never asks you to enter precisely how much fun you had doing a certain activity.")
-                        .AddMessage("ActivityRecommender only ever asks you to compare two different participations.")
-                        .AddMessage("Comparing two participations is pretty noncommital but still gives ActivityRecommender plenty of information to extract meaningful relationships.")
-                        .AddMessage("For example, if you repeatedly report that listening to music is 1.5 times as enjoyable doing chores, then if you discover a new TV show and report that " +
-                        "watching the first episode was 1.1 times as much fun as listening to music, then ActivityRecommender may estimate that watching that episode may have been 1.1*1.5=1.65 " +
-                        "times as much fun as doing chores would have been.")
+                    .AddLayout("Analysis: reminisice", (new HelpWindowBuilder())
+                        .AddMessage("If you want to browse happy things you have done in the past, you can go to Start -> Analyze -> Search Participations and request a 'random, probably good one'.")
+                        .AddMessage("Of course, this will be more interesting after you've recorded more comments under Start -> Record Participations.")
                         .Build()
                     )
-                    .AddLayout("Measure your efficiency", (new HelpWindowBuilder())
-                        // Defining what to measure is hard,
-                        .AddMessage("Imagine that you wanted to measure your efficiency without ActivityRecommender. How would you define the efficiency of your life? " +
-                        "It's easy to measure your efficiency on one particular task, for example, by measuring how long it takes you to mow the lawn. " +
-                        "However, it's hard to compare that measurement against any other measurement of efficiency. " +
-                        "Is mowing your lawn in 30 minutes better or worse than responding to your mail in 25 minutes?")
-                        // but if you enter measurable tasks,
-                        .AddMessage("ActivityRecommender starts its efficiency measurement process by requiring you to enter some activities you want to do. " +
-                        "Each one can either be a ToDo (which gets done once), or can be a Category (which can be done several times) that you've added a Metric to " +
-                        "(a Metric signifies that you know how to measure participations in the associated Category).")
-                        // then we may be able to measure your efficiency on each individual task and take the average.
-                        .AddMessage("ActivityRecommender doesn't expect you to specify everything in your life that you want to get done, because that would take too long. " +
-                        "As a result, notice that what ActivityRecommender expects to measure is your efficiency on the tasks you've said you'd like to do, not your " +
-                        "productivity over all things you might want to do (because there may also be lots of little things you want to get done that are too much effort " +
-                        "to tell to ActivityRecommender).")
-                        // We can't just directly compare tasks completed per unit time, though.
-                        .AddMessage("This still leaves the question of how to compare tasks having vastly different difficulties. Suppose there are two things you'd like to do: " +
-                        "1: Fly from Earth to Mars, and 2: Brush your teeth. One of these things is much more difficult than the other. If we were to directly count the number " +
-                        "of tasks you completed every day and count that as your efficiency, then you would get just as many points for flying to the Mars as for brushing your teeth, " +
-                        "and it would be tempting to spend more time brushing your teeth and less time flying to Mars.")
-                        // You could estimate difficulty ahead of time, but that's hard.
-                        .AddMessage("If you were to estimate the difficulty of each individual task, then theoretically you could divide the expected time required by the actual time time spent and treat that as " +
-                        "efficiency. However, do you know how much effort it requires to fly from Earth to Mars? 1 year? 10 years? 100 years? 1000 years? Do you feel confident in your estimate of the difficulty? " +
-                        "If there's enough error or uncertainty in your estimates of the difficulty, then measuring how long it takes would provide less information about your efficiency on the task and would provide " +
-                        "more information about what the proper difficulty estimate should have been to begin with.")
-                        // You could have ActivityRecommender estimate difficulty ahead of time, but that still has the problem where when you do smaller tasks you get more points
-                        .AddMessage("If you were to have ActivityRecommender estimate the difficulty of each individual task right before you did it, then that would prevent you from having to estimate difficulty " +
-                        "and to subsequently doubt your estimation abilities. However, if you have a new task that you've never done before and whose difficulty is unknown to ActivityRecommender, then if it's an " +
-                        "easier task, you complete it more quickly and your computed efficiency is higher. This could make it tempting to complete lots of small tasks!")
-                        // ActivityRecommender measures efficiency by running experiments!
-                        .AddMessage("How can ActivityRecommender compare tasks of unknown difficulties without asking the user to estimate their difficulties? ActivityRecommender compares tasks by experimenting! " +
-                        "When you want to measure your efficiency, you ask ActivityRecommender to start an experiment. You and ActivityRecommender then decide together on the exact set of candidate tasks that might " +
-                        "take part in the experiment. After you find a set of tasks that you approve of, you consent to the experiment, and ActivityRecommender randomly selects two tasks for you to do and randomly " +
-                        "selects which one of the two you will do first. Because the first task to do is chosen randomly, there is a 50% chance that the easier task will be chosen to go first and a 50% chance that the " +
-                        "harder task will be chosen to go first. In mathematical terms, we can now compute an unbiased estimate of your efficiency at these two times by imagining that the two tasks are of equal difficulty.")
-                        // Now ActivityRecommender just needs some machine learning and a huge number of experiments in order to compute trends
-                        .AddMessage("You may notice that these unbiased experiments can still have large variance, though: if you get lucky and are assigned Brushing your Teeth as a task, then that will presumably " +
-                        "give you a much larger efficiency measurement than if you had tried to Fly to Mars. However, knowing the exact efficiency of an individual participation isn't what ActivityRecommender is " +
-                        "trying to compute. Really what ActivityRecommender is looking for is overall patterns, like maybe you tend to be more efficient when you don't stay up late, regardless of whether you're " +
-                        "brushing your teeth or preparing for a flight. As you run more and more experiments, ActivityRecommender will have more and more data to analyze for trends.")
-                        // ActivityRecommender also lowers variance via some difficulty estimates
-                        .AddMessage("In this example with Flying to Mars and Brushing your Teeth, the first time you run this experiment there is a huge uncertainty, and if everything in your life highly " +
-                        "uncertain (for example if you write computer software), " +
-                        "then ActivityRecommender will need a large number of experiments before it can notice meaningful trends. However, if you Fly to Mars often and Brush your Teeth often, then after a couple of times, " +
-                        "ActivityRecommender will notice that one of these things is difficult and the other is easy, and will adjust its difficulty estimates accordingly. This won't introduce bias into the efficiency " +
-                        "measurements of individual times because the question of which task is chosen is still random. However, it should lower the variance because ActivityRecommender stops being surprised when it " +
-                        "turns out that Flying to Mars takes a long time.")
-                        // You get feedback, too
-                        .AddMessage("These efficiency measurements and trends that ActivityRecommender finds will appear to you in a few places in the application. When you record a participation, ActivityRecommender " +
-                        "will evaluate whether it thinks this participation will help or hurt your future efficiency, and give you feedback accordingly. Additionally, you can view your efficiency in the " +
-                        "Visualize one Activity graph screen.")
-                        // Go!
-                        .AddMessage("Are you excited to measure your efficiency!?")
+                    .AddLayout("Analysis: graphs", (new HelpWindowBuilder())
+                        .AddMessage("Obviously, ActivityRecommender also provides interesting graphs of what you've been doing.")
+                        .AddMessage("Go to Start -> Analyze -> Visualize one Activity to see!")
                         .Build()
                     )
-                    .AddLayout("Save ideas to organize later", (new HelpWindowBuilder())
-                        .AddMessage("Have you ever had an idea for something cool you wanted to think about, but you didn't know where to write it down and then you forgot?")
-                        .AddMessage("Have you ever made a list of interesting ideas, and then found that this list became hard to read because there were so many less-interesting " +
-                        "ideas before the ones that you wanted? Has this ever caused you to completely give up on the less-interesting ideas and make a new list?")
-                        .AddMessage("ActivityRecommender can help you with this idea-sorting problem too!")
-                        .AddMessage("If you have an idea that's interesting to think about and that might be interesting to act on in the future, you can create a ProtoActivity. " +
-                        "Creating a ProtoActivity only requires typing a brief description of what the idea is.")
-                        .AddMessage("Later, when you would like to be reminded about the interesting ideas that you've previously entered, " +
-                        "you can browse them in several ways. The most interesting way to browse ProtoActivities is to look at the ones that you have declared as being most " +
-                        "interesting in the past. You will see two ProtoActivities onscren  at one time, and have the opportunity to edit one, or to declare one of them as " +
-                        "being more interesting than the other. When you compare them, both will be dismissed, but the one you liked more will return sooner and the one you " +
-                        "liked less will return later. This allows you to enter lots of ideas whenever you think of them, and to later decide how interesting they are, " +
-                        "based on comparing them to your other ideas and making edits to them over time.")
-                        .AddMessage("After you've thought enough about a ProtoActivity and you're satisfied with it, you can either delete it if you don't need it anymore, " +
-                        "or you can promote it into a ToDo if you plan to do it eventually. This ToDo can then be suggested by ActivityRecommender in the Suggestions " +
-                        "screen, and it can also take part in experiments, too.")
-                        .AddMessage("In summary, a ProtoActivity is great for a partially formed idea that you want to revisit later.")
+                    .AddLayout("Summaries to share with friends", (new HelpWindowBuilder())
+                        .AddMessage("ActivityRecommender even offers multiple types of summaries you can share with friends.")
+                        .AddMessage("For a summary of what you've been up to lately, to share with old friends, see Start -> Analyze -> Life Story.")
+                        .AddMessage("For a summary of what kinds of things you like to do, to share with new friends, see Start -> Analyze Favorite Activities.")
                         .Build()
                     )
                     .Build()
                 )
             );
-            menuBuilder.AddLayout("All for free!",
+            menuBuilder.AddLayout("To be motivated and impactful",
+                new TitledControl("Be powerful",
+                    (new MenuLayoutBuilder(layoutStack))
+                    .AddLayout("Great suggestions", (new HelpWindowBuilder())
+                        .AddMessage("Go to Start -> Suggestions/Experiment for endless suggestions!")
+                        .AddMessage("If a suggestion sounds like a difficult thing to do at first, try thinking about it for a few minutes. You might find that you would like it anyway!")
+                        .Build()
+                    )
+                    .AddLayout("Measure and optimize your efficiency", (new HelpWindowBuilder())
+                        .AddMessage("Imagine you have some tasks you need to do, and you want to estimate how efficient you are at various times of day.")
+                        .AddMessage("If you are willing to work on these tasks in a random order, then you can measure your efficiency! Doing them in a random order allows us to correct for the fact that some tasks " +
+                        "may be harder than expected.")
+                        .AddMessage("ActivityRecommender offers this feature under Start -> Suggest/Experiment -> Efficiency Experiment.")
+                        .AddMessage("These efficiency measurements will show up in various places in the application, including in suggestions and feedback.")
+                        .Build()
+                    )
+                    .AddLayout("Save partial ideas to improve later", (new HelpWindowBuilder())
+                        .AddMessage("Have you ever had an idea that you thought was really cool but not quite complete? Can you immediately recall all of the ideas you've ever had?")
+                        .AddMessage("Have you ever tried writing your ideas down so you can remember them later? Have you ever found that your list quickly became too long and disorganized?")
+                        .AddMessage("ActivityRecommender solves this problem by allowing you to save your ideas, compare them, edit them, browse your top ideas, promote them into Activities, and delete them.")
+                        .AddMessage("These ideas are called ProtoActivities (because they turn into Activities) and can be found at Start -> Activities -> Brainstorm Protoactivities")
+                        .AddMessage("If you ever have an idea you want to remember later, just make a ProtoActivity. If you ever need inspiration, just browse your best protoactivities.")
+                        .Build()
+                    )
+                    .Build()
+                )
+            );
+
+            menuBuilder.AddLayout("Something free and convenient",
                 new TitledControl("Free!",
                     (new MenuLayoutBuilder(layoutStack))
                     .AddLayout("No fees, no ads", (new HelpWindowBuilder())
@@ -185,6 +119,13 @@ namespace ActivityRecommendation.View
                         .AddMessage("2. I think it would be extremely cool if you like and use ActivityRecommender. That means I've improved your life, right? I don't want to risk interfering with that by " +
                         "charging money for it or including any distractions in it.")
                         .AddMessage("3. ActivityRecommender doesn't require any money to keep a server running, because all the data and processing happen on your device.")
+                        .Build()
+                    )
+                    .AddLayout("Fast interface, lots of autocomplete", (new HelpWindowBuilder())
+                        .AddMessage("ActivityRecommender has autocomplete in many places.")
+                        .AddMessage("When entering an activity name, press Enter to accept the autocomplete suggestion.")
+                        .AddMessage("It's common to be able to record a participation by pressing the screen only six times (One press to select the name box, two presses to type the first two letters, " +
+                        "one press of Enter to select the autocomplete suggestion, one press of \"End = Now\" to select and end time, and one press of OK to record it).")
                         .Build()
                     )
                     .AddLayout("Not trying to make you use it more", (new HelpWindowBuilder())

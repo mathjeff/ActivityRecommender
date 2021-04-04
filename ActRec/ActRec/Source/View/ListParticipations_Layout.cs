@@ -10,17 +10,19 @@ namespace ActivityRecommendation.View
 {
     class ListParticipations_Layout : ContainerLayout
     {
-        public ListParticipations_Layout(List<Participation> participations, bool showRatings, ScoreSummarizer scoreSummarizer, Random randomGenerator)
+        public ListParticipations_Layout(List<Participation> participations, bool showRatings, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack, Random randomGenerator)
         {
             this.randomGenerator = randomGenerator;
             this.participations = participations;
             this.scoreSummarizer = scoreSummarizer;
+            this.layoutStack = layoutStack;
             this.initialize(showRatings);
         }
-        public ListParticipations_Layout(List<Participation> participations, ScoreSummarizer scoreSummarizer)
+        public ListParticipations_Layout(List<Participation> participations, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
             this.participations = participations;
             this.scoreSummarizer = scoreSummarizer;
+            this.layoutStack = layoutStack;
             this.initialize(true);
         }
         private void initialize(bool showRatings)
@@ -32,7 +34,7 @@ namespace ActivityRecommendation.View
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             foreach (Participation participation in participations)
             {
-                gridBuilder.AddLayout(new ParticipationView(participation, scoreSummarizer, showRatings));
+                gridBuilder.AddLayout(new ParticipationView(participation, this.scoreSummarizer, this.layoutStack, showRatings));
             }
             if (!showRatings)
             {
@@ -64,6 +66,7 @@ namespace ActivityRecommendation.View
         List<Participation> participations;
         Random randomGenerator;
         ScoreSummarizer scoreSummarizer;
+        LayoutStack layoutStack;
 
     }
 }

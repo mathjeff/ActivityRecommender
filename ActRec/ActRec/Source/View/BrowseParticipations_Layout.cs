@@ -297,7 +297,7 @@ namespace ActivityRecommendation.View
                 participations = participations.GetRange(0, this.maxNumTopParticipationsToShow);
 
             TitledControl mainView = new TitledControl("" + participations.Count + " matching participations with highest " + this.sortBy_box.SelectedItem + " (of " + availableCount + ") in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
             return mainView;
         }
 
@@ -323,7 +323,7 @@ namespace ActivityRecommendation.View
 
             // build layout
             TitledControl mainView = new TitledControl("" + chosenParticipations.Count + " matching participations with most extreme " + this.sortBy_box.SelectedItem.ToLower() + " (of " + availableCount + ") in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
             return mainView;
         }
 
@@ -335,7 +335,7 @@ namespace ActivityRecommendation.View
                 return this.Get_NoParticipations_Layout();
 
             TitledControl result = new TitledControl("Remember this?", 30);
-            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
+            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, this.ShowRatings, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
             return result;
         }
 
@@ -361,7 +361,7 @@ namespace ActivityRecommendation.View
                 participations = participations.GetRange(0, numParticipationsToShow);
 
             TitledControl mainView = new TitledControl("" + participations.Count + " random participations (of " + availableCount + " matches) in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.scoreSummarizer, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
             return mainView;
         }
 

@@ -18,12 +18,39 @@ namespace ActivityRecommendation.View
         public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowMultipleSuggestionTypes, bool vertical,
             Engine engine, LayoutStack layoutStack)
         {
-            this.suggestButton = new Button();
-            this.suggestButton.Clicked += SuggestBestActivity_Clicked;
+            Button suggestionButton = new Button();
+            suggestionButton.Clicked += SuggestBestActivity_Clicked;
+            ButtonLayout suggest_maxLongtermHappiness_button;
+            if (allowMultipleSuggestionTypes)
+                suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest Best");
+            else
+                suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest");
             LayoutChoice_Set suggestButton_layout;
+            if (allowRequestingActivitiesDirectly)
+            {
 
-            suggestButton_layout = new ButtonLayout(this.suggestButton);
+                Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform().AddLayout(suggest_maxLongtermHappiness_button);
+                if (allowMultipleSuggestionTypes)
+                {
+                    Button suggestionButton2 = new Button();
+                    suggestionButton2.Clicked += SuggestMostLikelyActivity_Clicked;
+                    ButtonLayout suggest_mostLikely_button = new ButtonLayout(suggestionButton2, "Suggest Most Likely");
+                    builder.AddLayout(suggest_mostLikely_button);
 
+                    Button suggestionButton3 = new Button();
+                    suggestionButton3.Clicked += SuggestMostEfficientActivity_Clicked;
+                    ButtonLayout suggest_mostEfficient_button = new ButtonLayout(suggestionButton3, "Suggest For Most Future Efficiency");
+                    builder.AddLayout(suggest_mostEfficient_button);
+                }
+                suggestButton_layout = builder.BuildAnyLayout();
+            }
+            else
+            {
+                suggestButton_layout = suggest_maxLongtermHappiness_button;
+            }
+
+            this.categoryBox = new ActivityNameEntryBox("Category:", activityDatabase, layoutStack);
+            this.categoryBox.Placeholder("(Optional)");
             this.activityDatabase = activityDatabase;
             this.engine = engine;
             this.layoutStack = layoutStack;
@@ -31,51 +58,51 @@ namespace ActivityRecommendation.View
 
             if (!allowRequestingActivitiesDirectly)
             {
-                this.SubLayout = suggestButton_layout;
+                this.SubLayout = suggest_maxLongtermHappiness_button;
             }
             else
             {
-                this.filterDetails_layout = new RequestSuggestion_Filter_Layout(activityDatabase, layoutStack);
-                this.filterButton = new Button();
-                this.filterButton.Clicked += FilterButton_Clicked;
-                ButtonLayout filterButton_layout = new ButtonLayout(this.filterButton, "Customize");
+                GridLayout configurationLayout = GridLayout.New(BoundProperty_List.Uniform(2), new BoundProperty_List(1), LayoutScore.Zero);
+                configurationLayout.AddLayout(this.categoryBox);
+
+
+                this.atLeastAsFunAs_button = new Button();
+                atLeastAsFunAs_button.Clicked += RequestAsFunAs_Button_Clicked;
+                configurationLayout.AddLayout(new TitledControl("As fun as:", new ButtonLayout(atLeastAsFunAs_button)));
 
                 if (vertical)
                 {
-                    GridLayout verticalContentLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(1));
+                    GridLayout verticalContentLayout = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Get_UnCentered_LayoutScore(2));
+                    verticalContentLayout.AddLayout(configurationLayout);
                     verticalContentLayout.AddLayout(suggestButton_layout);
-                    verticalContentLayout.AddLayout(filterButton_layout);
                     this.SubLayout = verticalContentLayout;
                 }
                 else
                 {
-                    GridLayout evenGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-                    GridLayout unevenGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
-                    
-                    evenGrid.AddLayout(suggestButton_layout);
-                    unevenGrid.AddLayout(suggestButton_layout);
-                    
-                    evenGrid.AddLayout(filterButton_layout);
-                    unevenGrid.AddLayout(filterButton_layout);
-                    
-                    this.SubLayout = new LayoutUnion(evenGrid, unevenGrid);
-                }
-            }
-            this.update_suggestButton_text();
-        }
+                    GridLayout horizontalContentLayout = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
+                    horizontalContentLayout.AddLayout(suggestButton_layout);
+                    horizontalContentLayout.AddLayout(configurationLayout);
 
-        private void FilterButton_Clicked(object sender, EventArgs e)
-        {
-            this.layoutStack.AddLayout(this.filterDetails_layout, "Details", this);
+                    this.SubLayout = horizontalContentLayout;
+                }
+                this.specify_AtLeastAsFunAs_Layout = new Specify_AtLeastAsFunAs_Layout(this.activityDatabase, this.layoutStack);
+                this.update_atLeastAsFunAs_activity();
+            }
+
         }
 
         public Participation LatestParticipation
         {
             set
             {
-                if (this.filterDetails_layout != null)
-                    this.filterDetails_layout.LatestParticipation = value;
+                if (this.specify_AtLeastAsFunAs_Layout != null)
+                    this.specify_AtLeastAsFunAs_Layout.LatestParticipation = value;
             }
+        }
+
+        private void RequestAsFunAs_Button_Clicked(object sender, EventArgs e)
+        {
+            this.layoutStack.AddLayout(new StackEntry(this.specify_AtLeastAsFunAs_Layout, ">Fun", this));
         }
 
         private void SuggestBestActivity_Clicked(object sender, EventArgs e)
@@ -95,15 +122,15 @@ namespace ActivityRecommendation.View
 
         private void Suggest(ActivityRequestOptimizationProperty optimizationProperty)
         {
-            ActivityRequest activityRequest = new ActivityRequest(this.category, this.activityToBeat, DateTime.Now, optimizationProperty);
-            if (activityToBeat != null)
+            ActivityRequest activityRequest = new ActivityRequest(this.categoryBox.Activity, this.atLeastAsFunAs_activity, DateTime.Now, optimizationProperty);
+            if (this.atLeastAsFunAs_activity != null)
             {
                 DateTime startDate = activityRequest.Date;
-                DateTime hypotheticalEndDate = this.engine.GuessParticipationEndDate(activityToBeat, startDate);
+                DateTime hypotheticalEndDate = this.engine.GuessParticipationEndDate(this.atLeastAsFunAs_activity, startDate);
                 Participation hypotheticalParticipation = new Participation(startDate, hypotheticalEndDate, activityRequest.ActivityToBeat);
                 hypotheticalParticipation.Hypothetical = true;
 
-                Rating userPredictedRating = this.filterDetails_layout.EstimatedRating_Box.GetRating(this.engine, hypotheticalParticipation);
+                Rating userPredictedRating = this.specify_AtLeastAsFunAs_Layout.EstimatedRating_Box.GetRating(this.engine, hypotheticalParticipation);
                 activityRequest.UserPredictedRating = userPredictedRating;
             }
             this.RequestSuggestion.Invoke(activityRequest);
@@ -111,74 +138,43 @@ namespace ActivityRecommendation.View
 
         public void OnBack(LayoutChoice_Set layout)
         {
-            this.category = this.filterDetails_layout.Category;
-            this.activityToBeat = this.filterDetails_layout.ActivityToBeat;
-            this.optimizationProperty = this.filterDetails_layout.OptimizationProperty;
-            this.update_suggestButton_text();
+            this.update_atLeastAsFunAs_activity();
         }
 
-        private void update_suggestButton_text()
+        private void update_atLeastAsFunAs_activity()
         {
-            string text = "";
-            switch(this.optimizationProperty)
+            this.atLeastAsFunAs_activity = this.specify_AtLeastAsFunAs_Layout.Activity;
+            if (this.atLeastAsFunAs_activity == null)
             {
-                case ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS:
-                    text = "Suggest Best";
-                    break;
-                case ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY:
-                    text = "Suggest Most Likely";
-                    break;
-                case ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY:
-                    text = "Suggest Max Efficiency";
-                    break;
+                this.atLeastAsFunAs_button.Text = "(Optional)";
             }
-            if (this.category != null)
+            else
             {
-                text += " " + this.category.Name;
-            }
-            if (this.activityToBeat != null)
-            {
-                text += ", as fun as " + this.activityToBeat.Name;
-                double? ratio = this.filterDetails_layout.Ratio;
+                string text = this.atLeastAsFunAs_activity.Name;
+                double? ratio = this.specify_AtLeastAsFunAs_Layout.Ratio;
                 if (ratio != null)
                 {
                     text += " (" + ratio + "x prev)";
                 }
+                this.atLeastAsFunAs_button.Text = text;
             }
-            this.suggestButton.Text = text;
         }
 
+        private ActivityNameEntryBox categoryBox;
+        private Specify_AtLeastAsFunAs_Layout specify_AtLeastAsFunAs_Layout;
         private LayoutStack layoutStack;
+        private Button atLeastAsFunAs_button;
+        private Activity atLeastAsFunAs_activity;
         private ActivityDatabase activityDatabase;
         private Engine engine;
-        private RequestSuggestion_Filter_Layout filterDetails_layout;
-        private Button filterButton;
-        private Button suggestButton;
-        private Activity category;
-        private Activity activityToBeat;
-        private ActivityRequestOptimizationProperty optimizationProperty = ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS;
     }
 
-    class RequestSuggestion_Filter_Layout : ContainerLayout
+    class Specify_AtLeastAsFunAs_Layout : ContainerLayout
     {
-        public RequestSuggestion_Filter_Layout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
+        public Specify_AtLeastAsFunAs_Layout(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
-            LayoutChoice_Set title = new TextblockLayout("I want:");
-
-            this.categoryBox = new ActivityNameEntryBox("from this Category:", activityDatabase, layoutStack);
-            this.categoryBox.Placeholder("(Optional)");
-
-            this.desiredActivity_box = new ActivityNameEntryBox("and I want it to be at least as fun as this one:", activityDatabase, layoutStack);
-            this.desiredActivity_box.Placeholder("(Optional)");
-            this.desiredActivity_box.PreferSuggestibleActivities = true;
-
-            this.estimatedRating_box = new RelativeRatingEntryView();
-            this.estimatedRating_box.SetTitle("which I think will be this much fun:");
-
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
-                .AddMessage("This screen allows you to specify more information about the activity you want suggested.")
-                .AddMessage("You may specify that the suggested activity must inherit from a certain category.")
-                .AddMessage("You may also specify that the suggested activity must be at least as fun as another activity.")
+                .AddMessage("As part of making an activity request, you may specify that you want the suggested activity to be at least as fun as another activity.")
                 .AddMessage("The reason you might do this is if you have an idea of what you might end up doing but you are hoping for ActivityRecommender to provide a better idea.")
                 .AddMessage("If you enter an activity name into the box on this screen, then the suggestion that ActivityRecommender makes on the next screen will be " +
                     "one such that ActivityRecommender thinks you will have at least as much fun doing the given suggestion as you would have had doing the activity you " +
@@ -188,63 +184,23 @@ namespace ActivityRecommendation.View
                  .AddMessage("The reason you might specify how much fun you think you would have doing the given activity is that if you do end up doing the activity " +
                     "that you were thinking about, then you can reflect on how much fun you actually had and whether it matches how much fun you expected")
                 .Build();
+            LayoutChoice_Set helpLayout = new HelpButtonLayout(helpWindow, layoutStack);
 
-            this.optimizationProperty_selector = new SingleSelect(new List<string>() { "the activity to maximize future happiness", "the most likely activity", "the activity to maximize future efficiency" });
+            this.desiredActivity_box = new ActivityNameEntryBox("I want an activity at least as fun as this one:", activityDatabase, layoutStack);
+            this.desiredActivity_box.Placeholder("(Optional)");
+            this.desiredActivity_box.PreferSuggestibleActivities = true;
 
-            this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
-                .AddLayout(title)
-                .AddLayout(new ButtonLayout(this.optimizationProperty_selector))
-                .AddLayout(this.categoryBox)
-                .AddLayout(this.desiredActivity_box)
-                .AddLayout(this.estimatedRating_box)
-                .AddLayout(new HelpButtonLayout(helpWindow, layoutStack))
-                .Build();
+            this.estimatedRating_box = new RelativeRatingEntryView();
+            this.estimatedRating_box.SetTitle("which I think will be this much fun:");
+
+            this.SubLayout = new Vertical_GridLayout_Builder().AddLayout(helpLayout).AddLayout(this.desiredActivity_box).AddLayout(this.EstimatedRating_Box).BuildAnyLayout();
         }
 
-        public Activity Category
-        {
-            get
-            {
-                return this.categoryBox.Activity;
-            }
-        }
-        public Activity ActivityToBeat
+        public Activity Activity
         {
             get
             {
                 return this.desiredActivity_box.Activity;
-            }
-        }
-        public ActivityRequestOptimizationProperty OptimizationProperty
-        {
-            get
-            {
-                switch (this.optimizationProperty_selector.SelectedIndex)
-                {
-                    case 0:
-                        return ActivityRequestOptimizationProperty.LONGTERM_HAPPINESS;
-                    case 1:
-                        return ActivityRequestOptimizationProperty.PARTICIPATION_PROBABILITY;
-                    case 2:
-                        return ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY;
-                    default:
-                        throw new Exception("Invalid index " + this.optimizationProperty_selector.SelectedIndex + " for optimization property");
-                }
-
-            }
-        }
-        public Participation LatestParticipation
-        {
-            set
-            {
-                this.estimatedRating_box.LatestParticipation = value;
-            }
-        }
-        public double? Ratio
-        {
-            get
-            {
-                return this.estimatedRating_box.GetRatio();
             }
         }
 
@@ -256,9 +212,28 @@ namespace ActivityRecommendation.View
             }
         }
 
-        ActivityNameEntryBox categoryBox;
-        ActivityNameEntryBox desiredActivity_box;
-        RelativeRatingEntryView estimatedRating_box;
-        SingleSelect optimizationProperty_selector;
+        public double? Ratio
+        {
+            get
+            {
+                if (this.desiredActivity_box.Activity != null)
+                {
+                    return this.estimatedRating_box.GetRatio();
+                }
+                return null;
+            }
+        }
+
+        public Participation LatestParticipation
+        {
+            set
+            {
+                this.estimatedRating_box.LatestParticipation = value;
+            }
+        }
+
+        private ActivityNameEntryBox desiredActivity_box;
+        private RelativeRatingEntryView estimatedRating_box;
     }
+
 }

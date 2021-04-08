@@ -10,12 +10,78 @@ using Xamarin.Forms;
 // It doesn't also show the suggestions themselves; that's done in a SuggestionsView or a SuggestionView
 namespace ActivityRecommendation.View
 {
-    public class RequestSuggestion_Layout: ContainerLayout, OnBack_Listener
+    // A RequestSuggestion_Layout shows a user interface where the user can request a simple suggestion, plus a Customize button that offers a fuller, more complicated user interface
+    public class RequestSuggestion_Layout : ContainerLayout
     {
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
 
         public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowMultipleSuggestionTypes, bool vertical,
+            Engine engine, LayoutStack layoutStack)
+        {
+            this.activityDatabase = activityDatabase;
+            this.allowRequestingActivitiesDirectly = allowRequestingActivitiesDirectly;
+            this.allowMultipleSuggestionTypes = allowMultipleSuggestionTypes;
+            this.vertical = vertical;
+            this.engine = engine;
+            this.layoutStack = layoutStack;
+
+            Horizontal_GridLayout_Builder gridBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, false, false, this.vertical, this.engine, this.layoutStack);
+            this.impl = child;
+            child.RequestSuggestion += Child_RequestSuggestion;
+            gridBuilder.AddLayout(this.impl);
+
+            bool expandable = allowRequestingActivitiesDirectly || allowMultipleSuggestionTypes;
+            if (expandable)
+            {
+                Button expandButton = new Button();
+                expandButton.Clicked += ExpandButton_Clicked;
+                gridBuilder.AddLayout(new ButtonLayout(expandButton, "Customize"));
+            }
+
+            this.SubLayout = gridBuilder.BuildAnyLayout();
+        }
+
+        private void Child_RequestSuggestion(ActivityRequest activityRequest)
+        {
+            this.RequestSuggestion.Invoke(activityRequest);
+        }
+
+        public Participation LatestParticipation
+        {
+            set
+            {
+                this.latestParticipation = value;
+                this.impl.LatestParticipation = this.latestParticipation;
+            }
+        }
+        private void ExpandButton_Clicked(object sender, EventArgs e)
+        {
+            Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, this.allowRequestingActivitiesDirectly, this.allowMultipleSuggestionTypes, this.vertical, this.engine, this.layoutStack);
+            child.LatestParticipation = this.latestParticipation;
+            child.RequestSuggestion += Child_RequestSuggestion;
+            this.impl = child;
+            this.SubLayout = impl;
+        }
+
+        private ActivityDatabase activityDatabase;
+        private bool allowRequestingActivitiesDirectly;
+        private bool allowMultipleSuggestionTypes;
+        private bool vertical;
+        private Engine engine;
+        private LayoutStack layoutStack;
+        private Full_RequestSuggestion_Layout impl;
+        private Participation latestParticipation;
+    }
+
+    // A Full_RequestSuggestion_Layout allows the user to request suggestions, and also may give the user some options for customizing their request
+    public class Full_RequestSuggestion_Layout : ContainerLayout, OnBack_Listener
+    {
+        public event RequestSuggestion_Handler RequestSuggestion;
+        public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
+
+        public Full_RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowMultipleSuggestionTypes, bool vertical,
             Engine engine, LayoutStack layoutStack)
         {
             Button suggestionButton = new Button();
@@ -28,7 +94,6 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set suggestButton_layout;
             if (allowRequestingActivitiesDirectly)
             {
-
                 Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform().AddLayout(suggest_maxLongtermHappiness_button);
                 if (allowMultipleSuggestionTypes)
                 {

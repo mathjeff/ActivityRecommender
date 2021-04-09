@@ -58,7 +58,7 @@ namespace ActivityRecommendation
             nowBuilder.AddLayout(
                 new Vertical_GridLayout_Builder().Uniform()
                     .AddLayout(
-                        new HelpButtonLayout("Fun:",
+                        new HelpButtonLayout("Fun (vs average):",
                             new TextblockLayout("This column shows the amount of happiness you are expected to have while doing this activity at this time, divided by the average amount of happiness you usually have doing other things"),
                             layoutStack)
                         )
@@ -68,9 +68,9 @@ namespace ActivityRecommendation
             nowBuilder.AddLayout(
                 new Vertical_GridLayout_Builder().Uniform()
                     .AddLayout(
-                        new HelpButtonLayout("Future Fun:",
+                        new HelpButtonLayout("Future Fun (days):",
                             new TextblockLayout("This column shows an estimate of the net present value of your happiness at this time after doing this activity, compared to what it usually is. " +
-                                "This is very similar to computing how much happiness you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) +
+                                "This is very similar to computing how many days of happiness you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.HalfLife.TotalDays / Math.Log(2), 0) +
                                 " days after doing this."),
                             layoutStack)
                         )
@@ -80,9 +80,9 @@ namespace ActivityRecommendation
             nowBuilder.AddLayout(
                 new Vertical_GridLayout_Builder().Uniform()
                     .AddLayout(
-                        new HelpButtonLayout("Future Efficiency:",
+                        new HelpButtonLayout("Future Efficiency (hours):",
                             new TextblockLayout("This column shows an estimate of the net present value of your efficiency at this time after doing this activity, compared to what it usually is. " +
-                                "This is very similar to computing how much efficiency you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) +
+                                "This is very similar to computing how many hours of efficiency you will gain or lose over the next " + Math.Round(UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalDays / Math.Log(2), 0) +
                                 " days after doing this."),
                             layoutStack)
                         )

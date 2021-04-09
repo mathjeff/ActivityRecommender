@@ -151,7 +151,7 @@ namespace ActivityRecommendation.View
 
         private LayoutChoice_Set newListView(string title, List<Activity> activities)
         {
-            ActivityListView listView = new ActivityListView(title, activities);
+            ActivityListView listView = new ActivityListView(title, activities, false);
             listView.SelectedActivity += ListView_SelectedActivity;
 
             Shrunken_ActivityListView shrunkenListView = new Shrunken_ActivityListView(title, activities);
@@ -162,7 +162,7 @@ namespace ActivityRecommendation.View
 
         private void ShrunkenListView_SelectedActivities(string name, List<Activity> activities)
         {
-            ActivityListView fullListView = new ActivityListView(name, activities);
+            ActivityListView fullListView = new ActivityListView(name, activities, true);
             fullListView.SelectedActivity += ListView_SelectedActivity;
             this.SetContent(ScrollLayout.New(fullListView));
         }
@@ -182,22 +182,53 @@ namespace ActivityRecommendation.View
         public event SelectedActivityHandler SelectedActivity;
         public delegate void SelectedActivityHandler(Activity activity);
 
-        public ActivityListView(string name, List<Activity> activities)
+        public ActivityListView(string name, List<Activity> activities, bool showSectionTitles)
         {
-            double fontSize = 16;
+            this.showSectionTitles = showSectionTitles;
 
-            // inline layout
-            GridLayout_Builder inlineBuilder = new Vertical_GridLayout_Builder().Uniform();
+            List<Activity> openTodos = new List<Activity>();
+            List<Activity> completedTodos = new List<Activity>();
+            List<Activity> nonTodos = new List<Activity>();
             foreach (Activity activity in activities)
             {
-                Button otherActivityButton = new Button();
-                otherActivityButton.Clicked += OtherActivityButton_Clicked;
-                this.activitiesByButton[otherActivityButton] = activity;
-                inlineBuilder.AddLayout(new ButtonLayout(otherActivityButton, activity.Name, fontSize));
+                ToDo todo = activity as ToDo;
+                if (todo != null)
+                {
+                    if (todo.IsCompleted())
+                        completedTodos.Add(todo);
+                    else
+                        openTodos.Add(todo);
+                }
+                else
+                    nonTodos.Add(activity);
             }
+
+
+            GridLayout_Builder inlineBuilder = new Vertical_GridLayout_Builder().Uniform();
+            this.addSection(inlineBuilder, nonTodos, "Non-ToDos:");
+            this.addSection(inlineBuilder, openTodos, "Open ToDos:");
+            this.addSection(inlineBuilder, completedTodos, "Completed ToDos:");
+
             this.SetContent(inlineBuilder.BuildAnyLayout());
 
             this.SetTitle(name);
+        }
+
+        private void addSection(GridLayout_Builder builder, List<Activity> activities, string title)
+        {
+            if (this.showSectionTitles && activities.Count > 0)
+                builder.AddLayout(new TextblockLayout(title, fontSize));
+            foreach (Activity activity in activities)
+            {
+                this.addActivity(builder, activity);
+            }
+        }
+        private void addActivity(GridLayout_Builder builder, Activity activity)
+        {
+            Button otherActivityButton = new Button();
+            otherActivityButton.Clicked += OtherActivityButton_Clicked;
+            this.activitiesByButton[otherActivityButton] = activity;
+            builder.AddLayout(new ButtonLayout(otherActivityButton, activity.Name, this.fontSize));
         }
 
         private void OtherActivityButton_Clicked(object sender, EventArgs e)
@@ -206,7 +237,12 @@ namespace ActivityRecommendation.View
             Activity activity = this.activitiesByButton[button];
             this.SelectedActivity.Invoke(activity);
         }
+
         Dictionary<Button, Activity> activitiesByButton = new Dictionary<Button, Activity>();
+        private double fontSize = 16;
+        private bool showSectionTitles;
+
+
     }
     class Shrunken_ActivityListView : TitledControl
     {

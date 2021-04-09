@@ -134,7 +134,7 @@ namespace ActivityRecommendation.View
             Button brainstormNewActivities_button = new Button();
             brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
 
-            Horizontal_GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
             builder.AddLayout(this.numCandidates_layout);
             // Because numCandidates_layout shows the number of candidate activities, we can use extra-short descriptions on the create-new buttons
             builder.AddLayout(new ButtonLayout(createNewActivity_button, "New Activity"));

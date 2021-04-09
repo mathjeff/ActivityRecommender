@@ -26,7 +26,13 @@ namespace ActivityRecommendation.View
             this.engine = engine;
             this.layoutStack = layoutStack;
 
-            Horizontal_GridLayout_Builder gridBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder gridBuilder;
+            if (vertical)
+                gridBuilder = new Vertical_GridLayout_Builder();
+            else
+                gridBuilder = new Horizontal_GridLayout_Builder();
+            gridBuilder.Uniform();
+
             Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, false, false, this.vertical, this.engine, this.layoutStack);
             this.impl = child;
             child.RequestSuggestion += Child_RequestSuggestion;
@@ -94,7 +100,7 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set suggestButton_layout;
             if (allowRequestingActivitiesDirectly)
             {
-                Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform().AddLayout(suggest_maxLongtermHappiness_button);
+                GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform().AddLayout(suggest_maxLongtermHappiness_button);
                 if (allowMultipleSuggestionTypes)
                 {
                     Button suggestionButton2 = new Button();

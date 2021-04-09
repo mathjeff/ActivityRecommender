@@ -74,7 +74,7 @@ namespace ActivityRecommendation.View
             else
             {
                 int numWindowDays = (int)windowSize.TotalDays;
-                Vertical_GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
+                GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
                 if (resultList.Count() > 1)
                 {
                     string title = "Activities that when done most strongly predict future participations in " + activityToPredict.Name;

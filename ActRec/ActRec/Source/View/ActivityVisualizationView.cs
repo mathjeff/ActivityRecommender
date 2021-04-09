@@ -49,7 +49,7 @@ namespace ActivityRecommendation
             // many of the entries in this function are disabled because they're probably not that useful but might be worth re-adding somehow
 
             // setup a display for some statistics
-            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
 
             // display an editable date range
             this.participationDataDisplay = new TitledControl("Stats:");

@@ -823,7 +823,7 @@ namespace ActivityRecommendation
 
             if (result.Successful)
             {
-                Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder()
+                GridLayout_Builder builder = new Vertical_GridLayout_Builder()
                     .AddLayout(new ExportSuccessLayout(result.Path, this.publicFileIo));
                 if (successFooter != null)
                     builder.AddLayout(successFooter);

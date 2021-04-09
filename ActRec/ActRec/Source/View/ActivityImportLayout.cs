@@ -257,7 +257,7 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+                GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
                 LayoutChoice_Set helpLayout = new HelpWindowBuilder()
                     .AddMessage("ActivityRecommender needs to know what you like to do, for providing suggestions, autocomplete, and more.")
                     .AddMessage("Do you like any of the activites here?")
@@ -405,7 +405,7 @@ namespace ActivityRecommendation.View
             customizeButton.Clicked += CustomizeButton_Clicked;
             Button dismissButton = new Button();
             dismissButton.Clicked += DismissButton_Clicked;
-            Horizontal_GridLayout_Builder buttonsBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder buttonsBuilder = new Horizontal_GridLayout_Builder().Uniform();
             if (numDescendants > 1)
             {
                 buttonsBuilder.AddLayout(new ButtonLayout(selectAll_button, "I like all kinds! (" + numDescendants + " ideas)", 16));

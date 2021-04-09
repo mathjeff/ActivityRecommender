@@ -17,7 +17,7 @@ namespace ActivityRecommendation.View
                 "make a backup of your data, and then reload from that backup and recalculate efficiency. Would you like to continue?");
             Button okButton = new Button();
             okButton.Clicked += Confirm;
-            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder()
+            GridLayout_Builder builder = new Vertical_GridLayout_Builder()
                 .AddLayout(warning)
                 .AddLayout(new ButtonLayout(okButton, "Back up your data"));
             this.SubLayout = builder.BuildAnyLayout();

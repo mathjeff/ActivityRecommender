@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
             List<Activity> activities = this.engine.ActivitiesSortedByAverageRating;
             List<string> texts = new List<string>();
 
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             foreach (Activity activity in activities)
             {
                 string text = "" + activity.Ratings.Mean + " (" + activity.Ratings.Weight + ") : " + activity.Name;

@@ -23,7 +23,7 @@ namespace ActivityRecommendation.View
                 .AddContribution(ActRecContributor.TOBY_HUANG, new DateTime(2021, 02, 23), "Suggested supporting deletion of created activities that have never been used, in case of mistakes in creating them")
                 .Build();
 
-            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder()
+            GridLayout_Builder builder = new Vertical_GridLayout_Builder()
                 .AddLayout(warning)
                 .AddLayout(new ButtonLayout(okButton, "Back up your data"))
                 .AddLayout(credits);

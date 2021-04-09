@@ -20,7 +20,7 @@ namespace ActivityRecommendation.View
 
             this.durationLayout = new DurationEntryView();
 
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             gridBuilder.AddLayout(new TextblockLayout("What changed your happiness most"));
             gridBuilder.AddLayout(new TitledControl("in the last:", durationLayout));
             gridBuilder.AddLayout(new ButtonLayout(okButton, "OK"));
@@ -43,7 +43,7 @@ namespace ActivityRecommendation.View
         }
         private void showResults(Activities_HappinessContributions contributions, DateTime start, DateTime end)
         {
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             // title
             string title = "Activities adding or subtracting the most happiness from " + start + " to " + end;
             gridBuilder.AddLayout(new TextblockLayout(title));

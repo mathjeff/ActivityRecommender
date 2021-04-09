@@ -84,10 +84,10 @@ namespace ActivityRecommendation
                     .AddLayout(this.todoCompletionStatusHolder)
                     .Build();
             this.helpStatusHolder = new ContainerLayout();
-            Horizontal_GridLayout_Builder centered_todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder centered_todoInfo_builder = new Horizontal_GridLayout_Builder().Uniform();
             centered_todoInfo_builder.AddLayout(metricLayout);
             centered_todoInfo_builder.AddLayout(this.helpStatusHolder);
-            Horizontal_GridLayout_Builder offset_todoInfo_builder = new Horizontal_GridLayout_Builder();
+            GridLayout_Builder offset_todoInfo_builder = new Horizontal_GridLayout_Builder();
             offset_todoInfo_builder.AddLayout(metricLayout);
             offset_todoInfo_builder.AddLayout(this.helpStatusHolder);
 

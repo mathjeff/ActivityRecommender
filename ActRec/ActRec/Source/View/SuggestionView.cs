@@ -73,7 +73,7 @@ namespace ActivityRecommendation
                 cancelLayout = new ButtonLayout(this.cancelButton, "X");
             else
                 cancelLayout = new ButtonLayout(this.explainWhyYouCantSkipButton, "!");
-            Vertical_GridLayout_Builder sideBuilder = new Vertical_GridLayout_Builder()
+            GridLayout_Builder sideBuilder = new Vertical_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(cancelLayout);
             if (this.suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage != null)

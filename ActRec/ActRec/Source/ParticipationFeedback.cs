@@ -53,7 +53,7 @@ namespace ActivityRecommendation
             builder.AddLayout(new TextblockLayout(ChosenActivity.Name));
             builder.AddLayout(new TextblockLayout("From " + this.StartDate + " to " + this.EndDate + ", " + ParticipationDurationDividedByAverage + " as long as average. I predict:"));
 
-            Horizontal_GridLayout_Builder nowBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder nowBuilder = new Horizontal_GridLayout_Builder().Uniform();
 
             nowBuilder.AddLayout(
                 new Vertical_GridLayout_Builder().Uniform()
@@ -93,7 +93,7 @@ namespace ActivityRecommendation
 
             builder.AddLayout(new TextblockLayout("If you had done this at " + this.ComparisonDate + ":"));
 
-            Horizontal_GridLayout_Builder laterBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder laterBuilder = new Horizontal_GridLayout_Builder().Uniform();
             laterBuilder.AddLayout(coloredRatio(ComparisonPredictedValue, 1, 0));
             laterBuilder.AddLayout(signedColoredValue(ComparisonExpectedFutureFun, 1, 0));
             laterBuilder.AddLayout(signedColoredValue(ComparisonExpectedEfficiency, 0, 0));

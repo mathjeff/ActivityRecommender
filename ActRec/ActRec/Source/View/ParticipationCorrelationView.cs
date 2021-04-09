@@ -42,7 +42,7 @@ namespace ActivityRecommendation.View
 
             IEnumerable<ListItemStats<double, Activity>> resultList = results.AllItems;
 
-            Vertical_GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder layoutBuilder = new Vertical_GridLayout_Builder().Uniform();
             List<ListItemStats<double, Activity>> mostPositivelyCorrelated = new List<ListItemStats<double, Activity>>();
             List<ListItemStats<double, Activity>> mostNegativelyCorrelated = new List<ListItemStats<double, Activity>>();
             int i = 0;

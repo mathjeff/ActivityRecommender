@@ -39,7 +39,7 @@ namespace ActivityRecommendation.View
             this.okButtonHolder = new ContainerLayout();
 
 
-            Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
 
             builder.AddLayout(new TextblockLayout(instructions));
             foreach (ExperimentDifficultyEstimateLayout option in this.difficultyOptions)

@@ -35,7 +35,7 @@ namespace ActivityRecommendation.View
                 .Uniform()
                 .Build();
 
-            Horizontal_GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
+            GridLayout_Builder childrenBuilder = new Horizontal_GridLayout_Builder().Uniform();
             for (int i = 0; i < this.numChoices; i++)
             {
                 bool allowRequestingActivityDirectly = (i < numActivitiesThatMayBeRequestedDirectly);

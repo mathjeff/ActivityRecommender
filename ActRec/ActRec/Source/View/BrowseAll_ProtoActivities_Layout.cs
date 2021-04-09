@@ -41,7 +41,7 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
+                GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
                 foreach (ProtoActivity protoActivity in protoActivity_database.ProtoActivities)
                 {
                     builder.AddLayout(this.summarize(protoActivity));

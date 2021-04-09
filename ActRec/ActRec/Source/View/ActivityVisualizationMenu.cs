@@ -15,7 +15,7 @@ namespace ActivityRecommendation
             this.engine = engine;
             this.layoutStack = layoutStack;
 
-            Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
 
             this.yAxisNameBox = new ActivityNameEntryBox("Activity", engine.ActivityDatabase, layoutStack);
             gridBuilder.AddLayout(this.yAxisNameBox);

@@ -187,7 +187,7 @@ namespace ActivityRecommendation.View
             double fontSize = 16;
 
             // inline layout
-            Vertical_GridLayout_Builder inlineBuilder = new Vertical_GridLayout_Builder().Uniform();
+            GridLayout_Builder inlineBuilder = new Vertical_GridLayout_Builder().Uniform();
             foreach (Activity activity in activities)
             {
                 Button otherActivityButton = new Button();

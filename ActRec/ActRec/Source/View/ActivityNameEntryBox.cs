@@ -375,6 +375,7 @@ namespace ActivityRecommendation.View
                 descriptor.ActivityName = text;
                 descriptor.PreferMorePopular = true;
                 descriptor.RequiresPerfectMatch = this.createNewActivity;
+                descriptor.PreferAvoidCompletedToDos = true;
                 if (this.PreferSuggestibleActivities && !descriptor.RequiresPerfectMatch)
                     descriptor.Suggestible = true;
                 return descriptor;

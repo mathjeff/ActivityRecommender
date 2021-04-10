@@ -5,12 +5,12 @@ using VisiPlacement;
 using ActivityRecommendation.View;
 using Xamarin.Forms;
 
-using Plugin.FilePicker.Abstractions;
 using System.IO;
 using ActivityRecommendation.Effectiveness;
 using System.Threading.Tasks;
 using System.Reflection;
 using StatLists;
+using Xamarin.Essentials;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation

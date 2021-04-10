@@ -1,10 +1,9 @@
-﻿using Plugin.FilePicker;
-using Plugin.FilePicker.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using VisiPlacement;
+using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace ActivityRecommendation
@@ -129,7 +128,7 @@ namespace ActivityRecommendation
 
             Button button = new Button();
             string fileName = Path.GetFileName(fileData.Path);
-            button.Text = "Import " + fileName + " (" + fileData.Content.Length + " bytes)  and overwrite ALL existing data.";
+            button.Text = "Import " + fileName + " and overwrite ALL existing data.";
             button.Clicked += Button_Clicked;
 
             this.SetTitle("Confirm Import");

@@ -1,11 +1,10 @@
 ﻿using PCLStorage;
-using Plugin.FilePicker;
-using Plugin.FilePicker.Abstractions;
 using Plugin.Permissions.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Xamarin.Essentials;
 
 namespace ActivityRecommendation
 {
@@ -41,7 +40,7 @@ namespace ActivityRecommendation
         }
         private IFile GetFile(string fileName, bool createIfMissing)
         {
-            IFileSystem fs = FileSystem.Current;
+            IFileSystem fs = PCLStorage.FileSystem.Current;
             IFile file = null;
             // TODO: instead of ConfigureAwait here, should we make everything function async?
             Task<ExistenceCheckResult> existenceTask = Task.Run(async () => await fs.LocalStorage.CheckExistsAsync(fileName));
@@ -151,11 +150,11 @@ namespace ActivityRecommendation
         public async Task<OpenedFile> PromptUserForFile()
         {
             await this.requestPermission();
-            IFilePicker filePicker = CrossFilePicker.Current;
-            FileData fileData = await filePicker.PickFile();
+            ;
+            FileResult fileData = await FilePicker.PickAsync();
             if (fileData == null)
                 return null;
-            return new OpenedFile(fileData.FilePath, fileData.GetStream());
+            return new OpenedFile(fileData.FullPath, await fileData.OpenReadAsync());
         }
         public async Task<OpenedFile> Open(string path)
         {
@@ -173,7 +172,7 @@ namespace ActivityRecommendation
         private async Task requestPermission()
         {
             Permission[] permissions = new Permission[] { Permission.Storage };
-            Dictionary<Permission, PermissionStatus> status = await Plugin.Permissions.CrossPermissions.Current.RequestPermissionsAsync(permissions);
+            Dictionary<Permission, Plugin.Permissions.Abstractions.PermissionStatus> status = await Plugin.Permissions.CrossPermissions.Current.RequestPermissionsAsync(permissions);
 
             // print statuses for debugging
             System.Diagnostics.Debug.WriteLine("Got status for " + status.Count + " statuses ");

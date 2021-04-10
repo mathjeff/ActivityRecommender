@@ -36,7 +36,7 @@ namespace ActRec.Droid
 
             LoadApplication(new App(parameters));
 
-            Plugin.CurrentActivity.CrossCurrentActivity.Current.Init(this, bundle);
+            Xamarin.Essentials.Platform.Init(this, bundle);
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)

@@ -37,7 +37,6 @@ namespace ActivityRecommendation.View
                 .BuildAnyLayout();
 
             this.titleLayout = new TextblockLayout("Activity name (and/or ProtoActivity name):");
-            this.updateAutocomplete();
         }
 
         private void RootActivity_button_Clicked(object sender, EventArgs e)
@@ -47,10 +46,18 @@ namespace ActivityRecommendation.View
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            this.updateAutocomplete();
+            this.autocompleteUpdated = false;
+            this.AnnounceChange(true);
         }
-        private void updateAutocomplete()
+        public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
+            this.ensureAutocompleteUpdated();
+            return base.GetBestLayout(query);
+        }
+        private void ensureAutocompleteUpdated()
+        {
+            if (this.autocompleteUpdated)
+                return;
             string query = this.textBox.Text;
             List<ProtoActivity> protoActivities = new List<ProtoActivity>();
             List<Activity> activities = new List<Activity>();
@@ -80,6 +87,7 @@ namespace ActivityRecommendation.View
                 // If there are matches, don't need to show the button for jumping to the root
                 this.footer.SubLayout = null;
             }
+            this.autocompleteUpdated = true;
         }
         private void putAutocomplete(List<Activity> activities, List<ProtoActivity> protoActivities)
         {
@@ -213,5 +221,6 @@ namespace ActivityRecommendation.View
         ContainerLayout footer;
         int maxNumResults = 6;
         bool allowDeletion;
+        bool autocompleteUpdated = false;
     }
 }

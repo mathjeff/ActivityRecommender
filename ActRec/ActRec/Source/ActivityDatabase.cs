@@ -342,16 +342,27 @@ namespace ActivityRecommendation
                 }
             }
 
-            double finalScore = 0;
+            double isACompletedToDoScore = 1;
+            if (descriptor.PreferAvoidCompletedToDos)
+            {
+                ToDo toDo = activity as ToDo;
+                if (toDo != null)
+                {
+                    if (toDo.IsCompleted())
+                        isACompletedToDoScore = 0;
+                }
+            }
 
             // Now we add up the score
             // We give lower priority to the factors at the top of this calculation and higher priority to the lower factors
-
+            
+            double finalScore = 0;
             // points for non-name properties
             finalScore += participationScore;
             finalScore += suggestibleScore;
             finalScore += completedTodoScore;
-            finalScore /= 3;
+            finalScore += isACompletedToDoScore;
+            finalScore /= 4;
             // more points for a more closely matching name
             finalScore += stringScore;
 

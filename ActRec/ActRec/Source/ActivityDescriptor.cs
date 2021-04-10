@@ -27,6 +27,7 @@ namespace ActivityRecommendation
         public bool? Suggestible = null; // Whether this activity is allowed to be suggested
         public bool PreferMorePopular = false;   // tells whether this descriptor wants to match the Activity with the best rating
         public bool RequiresPerfectMatch = true;
+        public bool PreferAvoidCompletedToDos = false; // if true, we prefer to avoid completed ToDos
         public bool CanMatch(ActivityDescriptor other)
         {
             if (other == null)

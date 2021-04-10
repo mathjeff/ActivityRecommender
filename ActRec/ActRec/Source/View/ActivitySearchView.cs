@@ -64,6 +64,7 @@ namespace ActivityRecommendation.View
             if (query != null && query != "")
             {
                 ActivityDescriptor activityDescriptor = new ActivityDescriptor(query);
+                activityDescriptor.PreferAvoidCompletedToDos = true;
                 activityDescriptor.RequiresPerfectMatch = false;
                 // search for some protoactivities
                 protoActivities = this.protoActivity_database.TextSearch(query, this.maxNumResults / 2);

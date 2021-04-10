@@ -618,7 +618,7 @@ namespace ActivityRecommendation
                 {
                     // If we have no text in the activity name box, then we do have space for a response and there isn't a current activity to give feedback on
                     Participation latestParticipation = this.LatestParticipation;
-                    if (latestParticipation.RelativeEfficiencyMeasurement != null)
+                    if (latestParticipation != null && latestParticipation.RelativeEfficiencyMeasurement != null)
                     {
                         this.promptHolder.SubLayout = this.experimentFeedbackLayout;
                     }

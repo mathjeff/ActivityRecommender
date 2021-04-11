@@ -23,6 +23,7 @@ namespace ActivityRecommendation
         public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
+            activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.layoutStack = layoutStack;
 
             BoundProperty_List rowHeights = new BoundProperty_List(6);
@@ -241,15 +242,26 @@ namespace ActivityRecommendation
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
-            if (this.hasActivities)
-                this.SubLayout = this.mainLayout;
-            else
-                this.SubLayout = this.noActivities_explanationLayout;
+            this.updateLayout();
 
             if (!this.feedbackIsUpToDate)
                 this.Update_FeedbackBlock_Text();
             return base.GetBestLayout(query);
         }
+
+        private void updateLayout()
+        {
+            if (this.hasActivities)
+                this.SubLayout = this.mainLayout;
+            else
+                this.SubLayout = this.noActivities_explanationLayout;
+        }
+
+        private void ActivityDatabase_ActivityAdded(Activity activity)
+        {
+            this.updateLayout();
+        }
+
 
         private bool hasActivities
         {

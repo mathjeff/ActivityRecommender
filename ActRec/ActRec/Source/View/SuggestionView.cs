@@ -218,7 +218,7 @@ namespace ActivityRecommendation
             if (expectedReaction == null)
                 expectedReaction = "";
             else
-                expectedReaction = " (" + expectedReaction + ")";
+                expectedReaction = " Feedback: \"" + expectedReaction + "\"";
 
             if (!suggestion.Skippable)
             {
@@ -243,7 +243,7 @@ namespace ActivityRecommendation
                     if (repeatingDeclinedSuggestion)
                         text = "No, really: I recommend ";
                     else
-                        text = "I suggest ";
+                        text = "";
                 }
                 // activity name
                 text += suggestion.ActivityDescriptor.ActivityName;
@@ -260,7 +260,7 @@ namespace ActivityRecommendation
                 text += " " + whenText + ".";
                 text += expectedReaction;
                 if (suggestion.WorseThanRootActivity)
-                    text += "\nHow about trying something new?";
+                    text += "\nHow about adding a new activity?";
             }
             return text;
         }

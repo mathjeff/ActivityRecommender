@@ -35,7 +35,7 @@ namespace ActivityRecommendation.View
 
             this.layoutStack = layoutStack;
 
-            this.messageLayout = new TextblockLayout("What kind of suggestion would you like?").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
+            this.messageLayout = new TextblockLayout("Ask for a suggestion!").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
 
             this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
@@ -137,8 +137,8 @@ namespace ActivityRecommendation.View
             GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
             builder.AddLayout(this.numCandidates_layout);
             // Because numCandidates_layout shows the number of candidate activities, we can use extra-short descriptions on the create-new buttons
-            builder.AddLayout(new ButtonLayout(createNewActivity_button, "New Activity"));
-            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "Brainstorm"));
+            builder.AddLayout(new ButtonLayout(createNewActivity_button, "Add New Activity"));
+            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "Brainstorm New Activities"));
 
             this.newActivities_layout = builder.Build();
         }

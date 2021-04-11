@@ -29,9 +29,20 @@ namespace ActivityRecommendation.View
 
         private void OkButton_Clicked(object sender, EventArgs e)
         {
-            this.startDemo();
+            this.requestStartDemo();
         }
 
+        private void requestStartDemo()
+        {
+            if (this.activityDatabase.ContainsCustomActivity())
+            {
+                this.feedbackLabel.setText("Running the demo requires having no activities, to ensure that all of the expected buttons exist. Sorry!");
+            }
+            else
+            {
+                this.startDemo();
+            }
+        }
         private void startDemo()
         {
             this.steps = this.buildSteps();

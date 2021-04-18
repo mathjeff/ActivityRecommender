@@ -16,8 +16,9 @@ namespace ActivityRecommendation.View
             this.explanation = explanation;
             ActivitySuggestion suggestion = explanation.Suggestion;
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
-            builder.AddLayout(this.newTextBlock("Suggesting " + suggestion.ActivityDescriptor.ActivityName + " at " +
+            builder.AddLayout(this.newTextBlock("Why I suggested " + suggestion.ActivityDescriptor.ActivityName + " at " +
                 explanation.Suggestion.StartDate.ToString("HH:mm") + "\n"));
+            builder.AddLayout(this.newTextBlock("I had time to consider " + suggestion.NumActivitiesConsidered + " activities"));
             if (suggestion.ParticipationProbability != null)
                 builder.AddLayout(this.newTextBlock("Participation probability: " + Math.Round(suggestion.ParticipationProbability.Value, 3) + "\n"));
             if (suggestion.PredictedScoreDividedByAverage != null)

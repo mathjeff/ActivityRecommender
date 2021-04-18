@@ -957,7 +957,7 @@ namespace ActivityRecommendation
         }
         public void JustifySuggestion(ActivitySuggestion suggestion)
         {
-            ActivitySuggestion_Explanation justification = this.engine.ExplainSuggestion(suggestion);
+            ActivitySuggestion_Explanation justification = this.engine.JustifySuggestion(suggestion);
             this.layoutStack.AddLayout(new ActivitySuggestion_Explanation_Layout(justification), "Why");
         }
 

@@ -35,6 +35,7 @@ namespace ActivityRecommendation
         // what we expect the engine's reaction to be if the user does this
         public string ExpectedReaction { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all
+        public int NumActivitiesConsidered { get; set; }
         // number of suggestions for which we don't have another suggestion to follow up with
         public virtual int CountNumLeaves()
         {

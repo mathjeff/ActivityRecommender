@@ -487,7 +487,7 @@ namespace ActivityRecommendation
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
             // If there was no such pair, then we just want to choose the best activity because no others could help
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
-            return this.SuggestActivity(bestActivityToPairWith, bestActivity, request, true);
+            return this.SuggestActivity(bestActivityToPairWith, bestActivity, request, consideredCandidates.Count, true);
         }
         // identifies the Justification that had the largest positive impact on the suggestion value for this activity at this time
         private Justification getMostSignificantJustification(Activity activity, ActivityRequest request)
@@ -512,7 +512,7 @@ namespace ActivityRecommendation
             return bestReason;
         }
 
-        private ActivitySuggestion SuggestActivity(Activity activity, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, bool tryComputeExpectedFeedback)
+        private ActivitySuggestion SuggestActivity(Activity activity, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
         {
             DateTime when = request.Date;
             DateTime now = DateTime.Now;
@@ -520,6 +520,7 @@ namespace ActivityRecommendation
             suggestion.BestActivityIfWeCanNoLongerLearn = bestActivityIfWeCanNoLongerLearn.MakeDescriptor();
             suggestion.CreatedDate = now;
             suggestion.StartDate = when;
+            suggestion.NumActivitiesConsidered = numActivitiesConsidered;
             suggestion.EndDate = this.GuessParticipationEndDate(activity, when);
             suggestion.ParticipationProbability = this.EstimateParticipationProbability(activity, request.Date).Distribution.Mean;
             if (tryComputeExpectedFeedback)
@@ -990,7 +991,7 @@ namespace ActivityRecommendation
             return new Distribution(prediction);
         }
         // returns a bunch of thoughts telling why <activity> was last rated as it was
-        public ActivitySuggestion_Explanation ExplainSuggestion(ActivitySuggestion activitySuggestion)
+        public ActivitySuggestion_Explanation JustifySuggestion(ActivitySuggestion activitySuggestion)
         {
             // get the happiness values computed for the suggested activity
             // which activity we suggested
@@ -2067,7 +2068,7 @@ namespace ActivityRecommendation
             plannedMetric.MetricName = metric.Name;
 
             bool userGuidedThisSuggestion = fromCategory != null;
-            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, bestActivityIfNoLearning,  request, false), userGuidedThisSuggestion), -1);
+            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, bestActivityIfNoLearning,  request, numActivitiesToChooseFromNow, false), userGuidedThisSuggestion), -1);
         }
 
         // Generates a set of experiment options that together form a possible experiment

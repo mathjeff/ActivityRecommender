@@ -112,14 +112,14 @@ namespace ActivityRecommendation
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFun, 1);
             if (improvementInDays <= 0)
             {
+                int numOthersConsidered = suggestion.NumActivitiesConsidered - 1;
+                string othersConsidered = "I considered " + numOthersConsidered + " other idea";
+                if (numOthersConsidered != 1)
+                    othersConsidered += "s";
                 if (ExpectedFutureFun >= 0)
-                {
-                    redirectionText = "Nice! I don't have any better ideas for things to do at this time.";
-                }
+                    redirectionText = "Nice! " + othersConsidered + " and don't have any better suggestions for things to do at this time.";
                 else
-                {
-                    redirectionText = "Not bad. I don't have any better ideas for things to do at this time.";
-                }
+                    redirectionText = "Not bad. " + numOthersConsidered + " and don't have any better suggestions for things to do at this time.";
                 redirectionColor = Color.Green;
             }
             else

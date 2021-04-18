@@ -896,20 +896,23 @@ namespace ActivityRecommendation
 
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateUtility(activity, request);
+
             Prediction probabilityPrediction = this.EstimateParticipationProbability(activity, request.Date);
+            double participationProbability = probabilityPrediction.Distribution.Mean;
 
             // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
             // When there is a huge amount of data, we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
 
-            double participationProbability = probabilityPrediction.Distribution.Mean;
+            Prediction ratingPrediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
+            ratingPrediction.Justification.Label = "How much you should enjoy doing  " + activity.Name;
 
-            Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            shortTerm_prediction.Justification.Label = "How much you should enjoy doing this";
-            shortTerm_prediction.Distribution = this.RatingAndProbability_Into_Value(shortTerm_prediction.Distribution, participationProbability, activity.MeanParticipationDuration, request.NumAcceptancesPerParticipation);
+            Distribution shortTerm_distribution = this.RatingAndProbability_Into_Value(ratingPrediction.Distribution, participationProbability, activity.MeanParticipationDuration, request.NumAcceptancesPerParticipation);
+            Justification shortTermJustification = new Composite_SuggestionJustification(shortTerm_distribution, ratingPrediction.Justification, probabilityPrediction.Justification);
+            Prediction shortTerm_prediction = new Prediction(activity, shortTerm_distribution, when, shortTermJustification);
+
             double shortWeight = shortTerm_prediction.Distribution.Weight;
-            Justification shortTermJustification = new Composite_SuggestionJustification(shortTerm_prediction.Distribution, shortTerm_prediction.Justification, probabilityPrediction.Justification);
-            shortTermJustification.Label = shortTerm_prediction.Justification.Label;
+            shortTermJustification.Label = "Your short-term happiness from " + activity.Name;
             shortTerm_prediction.Justification = shortTermJustification;
             distributions.Add(shortTerm_prediction);
 
@@ -925,30 +928,33 @@ namespace ActivityRecommendation
             double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
 
-            double mediumWeight = shortWeight * activity.NumConsiderations * participationProbability * activityExistenceWeightMultiplier * 160;
+            double mediumWeight = shortWeight * Math.Min(activity.NumConsiderations * participationProbability, activity.NumParticipations) * activityExistenceWeightMultiplier * 160;
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
-            double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 6;
+            double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 3;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
                 activity, mediumTerm_distribution, activity.GetAverageLongtermValueWhenParticipated(), null);
-            mediumJustification.Label = "How happy you are after doing this";
-            distributions.Add(new Prediction(activity, mediumTerm_distribution, when, mediumJustification));
+            mediumJustification.Label = "How happy you have been after doing " + activity.Name;
+            if (mediumWeight > 0)
+                distributions.Add(new Prediction(activity, mediumTerm_distribution, when, mediumJustification));
 
             InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
                 activity, longTerm_distribution, activity.GetAverageLongtermValueWhenSuggested(), null);
-            longtermJustification.Label = "How happy you are after this is suggested";
-            distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
+            longtermJustification.Label = "How happy you have been after " + activity.Name + " is suggested";
+            if (longWeight > 0)
+                distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
 
             // also include parent activities in the prediction if this activity is one that the user hasn't done often
-            if (activity.NumConsiderations < 40)
+            if (activity.NumConsiderations < 80)
             {
+                double parentRelativeWeight = 80 - activity.NumConsiderations;
                 foreach (Activity parent in activity.Parents)
                 {
                     Distribution parentDistribution = parent.Predict_LongtermValue_If_Participated(when);
-                    double parentWeight = shortWeight * Math.Min(parent.NumParticipations + 1, 40);
+                    double parentWeight = shortWeight * parentRelativeWeight;
                     parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
                     distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
                 }
@@ -1014,24 +1020,37 @@ namespace ActivityRecommendation
             }
             // build a justification for the value of the suggested activity
             Composite_SuggestionJustification ourExplanation = new Composite_SuggestionJustification(ourValue, clauses);
-            ourExplanation.Label = "How much you are expected to like " + activity.Name + " (suggested, checking whether this activity could be better)";
-
-            // get the happiness values computed for the other activity, the best activity if we were no longer able to learn
-            Distribution theirValue = this.EstimateSuggestionValue(bestActivityIfWeCanNoLongerLearn, request).Distribution;
-            LabeledDistributionJustification theirExplanation = new LabeledDistributionJustification(theirValue, "How much you are expected to like " +
-                bestActivityIfWeCanNoLongerLearn.Name + " (currently expected best activity)");
-
-            // get the happiness value for the result of the two activities, taking into account the opportunity to learn
-            Distribution combinedValue = this.GetCombinedValue(activity, bestActivityIfWeCanNoLongerLearn, this.utilitiesCacheFor(request));
-
-            // combine all of the above into an ActivitySuggestion_Explanation
             ActivitySuggestion_Explanation combinedExplanation = new ActivitySuggestion_Explanation();
-            combinedExplanation.Suggestion = activitySuggestion;
-            combinedExplanation.Reasons = new List<Justification>() { theirExplanation, ourExplanation, };
             combinedExplanation.Score = this.currentRatingsCache.ratings[activity].Distribution.Mean;
-            combinedExplanation.SuggestionValue = combinedValue.Mean;
+            combinedExplanation.Suggestion = activitySuggestion;
+            if (bestActivityIfWeCanNoLongerLearn != activity)
+            {
+                // get the happiness values computed for the other activity, the best activity if we were no longer able to learn
+                Distribution theirValue = this.EstimateSuggestionValue(bestActivityIfWeCanNoLongerLearn, request).Distribution;
+                LabeledDistributionJustification theirExplanation = new LabeledDistributionJustification(theirValue, "How happy I expect you to be after I suggest " +
+                    bestActivityIfWeCanNoLongerLearn.Name + " (currently expected best activity)");
 
-            return combinedExplanation;
+                // The reason we suggested this activity was not because we have evidence that suggesting it will make the user happy, but rather:
+                // we don't have much information about this activity and we think it could be valuable to learn about it.
+                ourExplanation.Label = "How happy I expect you to be after I suggest " + activity.Name + " (checking whether it could be better)";
+
+                // get the happiness value for the result of the two activities, taking into account the opportunity to learn
+                Distribution combinedValue = this.GetCombinedValue(activity, bestActivityIfWeCanNoLongerLearn, this.utilitiesCacheFor(request));
+
+                // combine all of the above into an ActivitySuggestion_Explanation
+                combinedExplanation.Reasons = new List<Justification>() { theirExplanation, ourExplanation };
+                combinedExplanation.SuggestionValue = combinedValue.Mean;
+
+                return combinedExplanation;
+            }
+            else
+            {
+                // The reason we suggested this activity was because our data indicates it was the most appropriate to suggest.
+                ourExplanation.Label = "How happy I expect you to be after I suggest " + activity.Name;
+                combinedExplanation.Reasons = new List<Justification>() { ourExplanation, };
+                combinedExplanation.SuggestionValue = ourValue.Mean;
+                return combinedExplanation;
+            }
 
         }
         public Prediction CombineRatingPredictions(IEnumerable<Prediction> predictions)

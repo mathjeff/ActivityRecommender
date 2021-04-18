@@ -232,19 +232,11 @@ namespace ActivityRecommendation
                 // For a normal suggestion, we tell them how likely we think it is that they will do it, and
                 // how we think they will feel about it
 
-                // if we don't like our best idea, mention that
-                if (suggestion.WorseThanRootActivity)
-                {
-                    text = "My best idea: ";
-                }
+                // Optional emphasis if we're repating ourselves and we think it's a good idea
+                if (repeatingDeclinedSuggestion && !suggestion.WorseThanRootActivity)
+                    text = "No, really: I recommend ";
                 else
-                {
-                    // Optional emphasis if we're repating ourselves and we think it's a good idea
-                    if (repeatingDeclinedSuggestion)
-                        text = "No, really: I recommend ";
-                    else
-                        text = "";
-                }
+                    text = "";
                 // activity name
                 text += suggestion.ActivityDescriptor.ActivityName;
 
@@ -259,8 +251,9 @@ namespace ActivityRecommendation
                     whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
                 text += " " + whenText + ".";
                 text += expectedReaction;
+                // If we don't like our best idea, then also suggest trying something new
                 if (suggestion.WorseThanRootActivity)
-                    text += "\nHow about adding a new activity?";
+                    text += "\nMaybe a new activity could be better?";
             }
             return text;
         }

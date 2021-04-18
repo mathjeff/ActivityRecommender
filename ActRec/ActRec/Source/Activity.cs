@@ -840,11 +840,21 @@ namespace ActivityRecommendation
 
             // also figure out what is a normal result
             Distribution typicalAverage = new Distribution(this.shortTerm_ratingInterpolator.GetAverage()).Plus(extraError);
+            InterpolatorSuggestion_Justification interpolatorJustification = new InterpolatorSuggestion_Justification(this, estimate, typicalAverage, coordinates);
+            Distribution finalEstimate = scaledEstimate.Plus(extraError);
 
-            InterpolatorSuggestion_Justification justification = new InterpolatorSuggestion_Justification(this, estimate, typicalAverage, coordinates);
-            Prediction prediction = new Prediction(this, scaledEstimate.Plus(extraError), when, justification);
+            // explanations of the interpolator results
+            List<Justification> justifications;
+            if (estimate.Weight > 0)
+                justifications = new List<Justification>() { interpolatorJustification, new LabeledDistributionJustification(extraError, "extra uncertainty") };
+            else
+                justifications = new List<Justification>() { new LabeledDistributionJustification(extraError, "no history") };
+            Composite_SuggestionJustification justification = new Composite_SuggestionJustification(finalEstimate, justifications);
+            justification.Label = "Adjusted interpolator result";
+
+            // final results
+            Prediction prediction = new Prediction(this, finalEstimate, when, justification);
             results.Add(prediction);
-
             foreach (IPredictionLink link in this.extraRatingPredictionLinks)
             {
                 Prediction otherPrediction = link.Guess(when);
@@ -887,7 +897,7 @@ namespace ActivityRecommendation
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
             Distribution typicalParticipationProbability = new Distribution(this.participationInterpolator.GetAverage());
             Justification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, typicalParticipationProbability, null);
-            Prediction prediction = new Prediction(this, finalEstimate, when, "Participation probability");
+            Prediction prediction = new Prediction(this, finalEstimate, when, "Participation probability from interpolator");
             results.Add(prediction);
 
             // add the results from any extra PredictionLinks

@@ -1357,7 +1357,7 @@ namespace ActivityRecommendation
                 if (experimentsForThisActivity.ContainsKey(metricName))
                 {
                     PlannedExperiment experiment = experimentsForThisActivity[metricName];
-                    if (experiment.InProgress)
+                    if (experiment.Started)
                     {
                         // Found the second participation in the experiment, so mark the experiment as complete
                         this.numCompletedExperiments++;
@@ -1373,8 +1373,8 @@ namespace ActivityRecommendation
 
                             newParticipation.RelativeEfficiencyMeasurement.Experiment = experiment;
                             experiment.FirstParticipation.RelativeEfficiencyMeasurement.Experiment = experiment;
-
-                            experiment.FirstParticipation.RelativeEfficiencyMeasurement.Later = newParticipation.RelativeEfficiencyMeasurement;
+                            experiment.SecondParticipation = newParticipation;
+                            experiment.SecondParticipation.RelativeEfficiencyMeasurement.Experiment = experiment;
                         }
                     }
                     else
@@ -1638,7 +1638,7 @@ namespace ActivityRecommendation
                 // can't estimate effectiveness without an experiment
                 return null;
             }
-            if (!experiment.InProgress)
+            if (!experiment.Started)
             {
                 // can't estimate effectiveness if the experiment isn't in progress
                 return null;
@@ -1744,7 +1744,6 @@ namespace ActivityRecommendation
             // lastly, assemble the results
             RelativeEfficiencyMeasurement measurement1 = new RelativeEfficiencyMeasurement(participation1, Distribution.MakeDistribution(updatedEfficiency1, 0, updatedWeight1));
             RelativeEfficiencyMeasurement measurement2 = new RelativeEfficiencyMeasurement(participation2, Distribution.MakeDistribution(updatedEfficiency2, 0, updatedWeight2));
-            measurement1.Later = measurement2;
             measurement2.Earlier = measurement1;
 
             return measurement2;

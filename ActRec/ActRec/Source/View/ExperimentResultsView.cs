@@ -14,7 +14,7 @@ namespace ActivityRecommendation.View
 
             PlannedExperiment experiment = participation.RelativeEfficiencyMeasurement.Experiment;
             RelativeEfficiencyMeasurement earlier = experiment.FirstParticipation.RelativeEfficiencyMeasurement;
-            RelativeEfficiencyMeasurement later = earlier.Later;
+            RelativeEfficiencyMeasurement later = experiment.SecondParticipation.RelativeEfficiencyMeasurement;
             string earlierName = earlier.ActivityDescriptor.ActivityName;
             string laterName = later.ActivityDescriptor.ActivityName;
 
@@ -30,21 +30,36 @@ namespace ActivityRecommendation.View
             TimeSpan laterDuration = later.EndDate.Subtract(later.StartDate);
             double laterMinutes = laterDuration.TotalMinutes;
 
-            builder.AddMessage("Then, you spent " + this.round(earlierDuration.TotalMinutes) + "m on A");
-            builder.AddMessage("Later, you spent " + this.round(laterDuration.TotalMinutes) + "m on B at " + later.StartDate);
+            double earlierHelpFraction = experiment.FirstParticipation.HelpFraction;
+            string earlierHelpDescription = "";
+            if (earlierHelpFraction > 0)
+                earlierHelpDescription = " with help, and you personally completed " + this.round(1 - earlierHelpFraction) + " of it";
+            builder.AddMessage("Then, you spent " + this.round(earlierDuration.TotalMinutes) + "m on A" + earlierHelpDescription);
 
-            double earlierEffectiveness = earlier.RecomputedEfficiency.Mean * earlierMinutes;
-            double laterEffectiveness = later.RecomputedEfficiency.Mean * laterMinutes;
+            double laterHelpFraction = experiment.SecondParticipation.HelpFraction;
+            string laterHelpDescription = "";
+            if (laterHelpFraction > 0)
+                laterHelpDescription = " with help, and you personally completed " + this.round(1 - laterHelpFraction) + " of it";
+            builder.AddMessage("Later, you spent " + this.round(laterDuration.TotalMinutes) + "m on B at " + later.StartDate + laterHelpDescription);
 
-            // technically, the two efficiencies get estimated separately, but that's complicated to explain and we think it might confuse the user if we try to explain it
+            double earlierTotalEffectiveness = earlier.RecomputedEfficiency.Mean * earlierMinutes / (1 - earlierHelpFraction);
+            double laterTotalEffectiveness = later.RecomputedEfficiency.Mean * laterMinutes / (1 - laterHelpFraction);
+
+            string earlierHelpDivision = "";
+            if (earlierHelpFraction > 0)
+                earlierHelpDivision = " / " + this.round(1 - earlierHelpFraction);
             builder.AddMessage("I estimated that your efficiency on A would be about " + this.round(earlier.RecomputedEfficiency.Mean) +
-                ", making the difficulty of A be " + this.round(earlier.RecomputedEfficiency.Mean) + " * " + this.round(earlierMinutes) + "m = " + this.round(earlierEffectiveness) + "m");
+                ", making the difficulty of A be " + this.round(earlier.RecomputedEfficiency.Mean) + " * " + this.round(earlierMinutes) + "m" + earlierHelpDivision + " = " +
+                this.round(earlierTotalEffectiveness) + "m");
 
-            builder.AddMessage("So, the difficulty of B should be " + this.round(earlierEffectiveness) + "m * "
-                + this.round(difficultyRatio) + " = " + this.round(laterEffectiveness) + "m");
+            builder.AddMessage("So, the difficulty of B should be " + this.round(earlierTotalEffectiveness) + "m * "
+                + this.round(difficultyRatio) + " = " + this.round(laterTotalEffectiveness) + "m");
 
-            builder.AddMessage("And your efficiency on B should be " + this.round(laterEffectiveness) + "m / " +
-                this.round(laterMinutes) + "m = " + this.round(later.RecomputedEfficiency.Mean));
+            string laterHelpDivision = "";
+            if (laterHelpFraction > 0)
+                laterHelpDivision = " / " + this.round(1 - laterHelpFraction);
+            builder.AddMessage("And your efficiency on B should be " + this.round(laterTotalEffectiveness) + "m / " +
+                this.round(laterMinutes) + "m" + laterHelpDivision + " = " + this.round(later.RecomputedEfficiency.Mean));
 
             builder.AddMessage("Isn't that interesting?");
 

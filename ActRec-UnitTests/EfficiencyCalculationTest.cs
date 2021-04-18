@@ -32,7 +32,7 @@ namespace ActRec_UnitTests
                 //   experimentOptions[0].PlannedMetric.DifficultyEstimate.NumEasiers++;
                 // Make an experiment
                 ExperimentSuggestion suggestion = engine.Experiment(experimentOptions, when);
-                if (!suggestion.Experiment.InProgress)
+                if (!suggestion.Experiment.Started)
                     engine.PutExperimentInMemory(suggestion.Experiment);
                 // Do the suggestion
                 double efficiency = efficiencies.FindPreviousItem(when, false).Value;

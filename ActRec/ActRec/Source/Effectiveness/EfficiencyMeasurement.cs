@@ -63,7 +63,6 @@ namespace ActivityRecommendation.Effectiveness
         // the other RelativeEfficiencyMeasurement that was used to help compute this one, if the other one was earlier
         public RelativeEfficiencyMeasurement Earlier { get; set; }
         // the later RelativeEfficiencyMeasurement that was used to help compute this one, if the other one was later
-        public RelativeEfficiencyMeasurement Later { get; set; }
 
         public PlannedExperiment Experiment { get; set; }
     }

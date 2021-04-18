@@ -752,7 +752,7 @@ namespace ActivityRecommendation
 
             PlannedExperiment experiment = experimentSuggestion.Experiment;
 
-            if (!experiment.InProgress)
+            if (!experiment.Started)
             {
                 this.engine.PutExperimentInMemory(experiment);
                 this.WriteExperiment(experiment);

@@ -16,8 +16,9 @@ namespace ActivityRecommendation.Effectiveness
         public PlannedMetric Earlier { get; set; }
         public PlannedMetric Later { get; set; }
         public Participation FirstParticipation { get; set; }
+        public Participation SecondParticipation { get; set; }
 
-        public bool InProgress
+        public bool Started
         {
             get
             {
@@ -29,7 +30,7 @@ namespace ActivityRecommendation.Effectiveness
         {
             get
             {
-                if (this.InProgress)
+                if (this.Started)
                     return this.Later.MetricName;
                 else
                     return this.Earlier.MetricName;

@@ -3204,15 +3204,26 @@ namespace ActivityRecommendation
             bool happySummary = soothingActivity;
 
             int longtermBonus = (int)longtermBonusInDays.Mean;
+            int numExclamationPoints = (int)Math.Min((Math.Abs(longtermBonus) / 10), 10);
+            string exclamationPoints = ":";
+            if (numExclamationPoints > 0)
+            {
+                exclamationPoints = "";
+                for (int i = 0; i < numExclamationPoints; i++)
+                {
+                    exclamationPoints += "!";
+                }
+            }
+
             string longtermBonusText;
             if (longtermBonus > 0)
             {
-                longtermBonusText = "+" + longtermBonus + "! ";
+                longtermBonusText = "+" + longtermBonus + exclamationPoints + " ";
             }
             else
             {
                 if (longtermBonus < 0)
-                    longtermBonusText = "" + longtermBonus + ": ";
+                    longtermBonusText = "" + longtermBonus + exclamationPoints + " ";
                 else
                     longtermBonusText = "";
             }

@@ -916,22 +916,29 @@ namespace ActivityRecommendation
             shortTerm_prediction.Justification = shortTermJustification;
             distributions.Add(shortTerm_prediction);
 
-            // When predicting longterm happiness based on the DateTimes of suggestions of (or participations in) this Activity, there are two likely sources of error.
-            // One likely source of error is that suggesting this Activity isn't actually what's changing the user's net present happiness. To check the plausibility that
-            // suggesting this Activity is what's changing the net present happiness, we need to have lots of suggestions, and we increase the weight based on the number of suggestions.
+            // When predicting longterm happiness based on the DateTimes of participations, there are three likely sources of error.
+            // A: The user might not take our suggestion: our suggestion might not turn into a participation
+            // B: The user might not have done this activity very often, so we might not have high confidence about how happy the user is after doing it
+            // C: The times when the user did this activity might have been recently, so we might not have high confidence about how happy the user is after doing it
             //
-            // Another likely source of error is that the true net present happiness can't be perfectly computed until after we know how happy the user will be in the future
-            // (because net present happiness is defined as the (exponentially) weighted sum of all future happinesses (with larger weights given to sooner ratings).
-            // As more time elapses, we get an increasingly accurate estimate of the user's net present happiness at a given time. To account for this, we decrease the weight of
-            // the prediction for activities we haven't known about for long
-            TimeSpan existenceDuration = when.Subtract(activity.DiscoveryDate);
-            double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
-            double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
-
-            double mediumWeight = shortWeight * Math.Min(activity.NumConsiderations * participationProbability, activity.NumParticipations) * activityExistenceWeightMultiplier * 160;
+            // To turn these components into weights, we essentially turn them into error values and then compute their reciprocals to turn them back into weights
+            // For A: we can just directly use the probability that the user won't take our suggestion
+            // For B: we count the number of times that the user has done this activity, and then compute the reciprocal to turn it into an estimate of the error
+            // For C: we count the number of participations since the user did this activity
+            int participationsSince = this.activityDatabase.RootActivity.GetNumParticipationsSince(activity.DiscoveryDate);
+            double mediumWeight = shortWeight * 500.0 / ((1.0 - participationProbability) + (1.0 / (activity.NumParticipations + 1) + (1.0 / (participationsSince + 1))));
             Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
+            // When predicting longterm happiness based on the DateTimes of suggestions of this Activity, there are two likely sources of error.
+            // A: Suggesting this Activity isn't actually what's changing the user's net present happiness.
+            // B: The true net present happiness can't be perfectly computed until after we know how happy the user will be in the future.
+            //
+            // For A: we need to have lots of suggestions, and we increase the weight based on the number of suggestions.
+            // For B: we decrease the weight of the prediction for activities we haven't known about for long
+            TimeSpan existenceDuration = when.Subtract(activity.DiscoveryDate);
+            double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
+            double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
             double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 3;
             Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
 

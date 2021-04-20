@@ -660,6 +660,7 @@ namespace ActivityRecommendation
             this.PendingSuggestions.Add(newSuggestion);
             if (this.latestSuggestionDate.CompareTo(newSuggestion.CreatedDate) < 0)
                 this.latestSuggestionDate = newSuggestion.CreatedDate;
+            this.ApplyKnownInteractionDate(newSuggestion.CreatedDate);
         }
         public DateTime? LatestSuggestionDate
         {
@@ -1332,6 +1333,11 @@ namespace ActivityRecommendation
         {
             this.ApplyPendingParticipations();
             return this.participationProgression.GetParticipationsSince(when);
+        }
+        public int GetNumParticipationsSince(DateTime when)
+        {
+            this.ApplyPendingParticipations();
+            return this.participationProgression.GetNumParticipationsSince(when);
         }
         #endregion
 

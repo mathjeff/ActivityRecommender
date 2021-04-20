@@ -605,8 +605,17 @@ Means.MeanErr: 5.4510, StdDevs.MeanErr: 5.7184, efficiency
 Means.MeanErr: 0.3961, StdDevs.MeanErr: 0.7620, longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:04.1933960
 
-updated results on 2021-04-18 after 
+updated results on 2021-04-18 after making the happiness-if-suggested estimates ignore participation predictions for activities the user has never done
 Means.MeanErr: 0.0444, StdDevs.MeanErr: 0.0931, longtermHappinessIfSuggested
+Means.MeanErr: 0.0240, StdDevs.MeanErr: 0.0952, longtermHappinessIfParticipated
+Means.MeanErr: 0.1406, StdDevs.MeanErr: 0.1042, score
+0.9618,                                         equivalentWeightedProbability
+Means.MeanErr: 5.4510, StdDevs.MeanErr: 5.7184, efficiency
+Means.MeanErr: 0.3963, StdDevs.MeanErr: 0.7646, longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:04.1933960
+
+updated results on 2021-04-18 after fixing the happiness-if-suggested estimates to better combine the participation components of happiness suggestion estimates (like errors rather than like weights)
+Means.MeanErr: 0.0298, StdDevs.MeanErr: 0.095, longtermHappinessIfSuggested
 Means.MeanErr: 0.0240, StdDevs.MeanErr: 0.0952, longtermHappinessIfParticipated
 Means.MeanErr: 0.1406, StdDevs.MeanErr: 0.1042, score
 0.9618,                                         equivalentWeightedProbability

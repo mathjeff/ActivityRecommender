@@ -80,6 +80,10 @@ namespace ActivityRecommendation
             }
             return participations;
         }
+        public int GetNumParticipationsSince(DateTime when)
+        {
+            return this.searchHelper.CountAfterKey(when, true);
+        }
         public Participation LatestParticipation
         {
             get

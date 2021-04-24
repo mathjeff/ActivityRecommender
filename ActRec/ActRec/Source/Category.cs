@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // A category is an Activity that represents potentially a class of activities, for example, Fun, Exercise or Playing Frisbee
 namespace ActivityRecommendation

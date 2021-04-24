@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 namespace ActivityRecommendation
 {

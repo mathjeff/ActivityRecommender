@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // An IdlenessProgression simply calculates how long it has been since the user last did something
 // It should be able to help model many types of things:

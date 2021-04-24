@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // A SkipProgression keeps track of how long it has been since the user said that they did not want to do a particular Doable
 namespace ActivityRecommendation

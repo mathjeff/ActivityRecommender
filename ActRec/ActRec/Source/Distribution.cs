@@ -33,7 +33,7 @@ namespace ActivityRecommendation
             this.sumSquaredValue = (newMean * newMean + newStdDev * newStdDev) * newWeight;
             this.sumWeight = newWeight;
         }
-        public Distribution(AdaptiveLinearInterpolation.Distribution original)
+        public Distribution(AdaptiveInterpolation.Distribution original)
         {
             this.Set(original.Mean, original.StdDev, original.Weight);
         }

@@ -1,4 +1,4 @@
-﻿using AdaptiveLinearInterpolation;
+﻿using AdaptiveInterpolation;
 using StatLists;
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ namespace ActivityRecommendation.View
                 AdaptiveLinearInterpolator<Distribution> interpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(new FloatRange[] { inputRange }), new DistributionAdder());
                 foreach (Datapoint datapoint in datapoints)
                 {
-                    interpolator.AddDatapoint(new AdaptiveLinearInterpolation.Datapoint<Distribution>(datapoint.Input, Distribution.MakeDistribution(datapoint.Output, 0, datapoint.Weight)));
+                    interpolator.AddDatapoint(new AdaptiveInterpolation.Datapoint<Distribution>(datapoint.Input, Distribution.MakeDistribution(datapoint.Output, 0, datapoint.Weight)));
                 }
 
                 // ask the interpolator which input has the highest average output
@@ -38,10 +38,10 @@ namespace ActivityRecommendation.View
                 if (representativePoints.Count() > 0)
                 {
                     double[] bestInput = new double[1];
-                    AdaptiveLinearInterpolation.Distribution bestOutput = null;
+                    AdaptiveInterpolation.Distribution bestOutput = null;
                     foreach (double[] coordinates in representativePoints)
                     {
-                        AdaptiveLinearInterpolation.Distribution output = interpolator.Interpolate(coordinates);
+                        AdaptiveInterpolation.Distribution output = interpolator.Interpolate(coordinates);
                         if (bestOutput == null || output.Mean > bestOutput.Mean)
                         {
                             bestInput = coordinates;
@@ -126,13 +126,13 @@ namespace ActivityRecommendation.View
 
     class Interpolation
     {
-        public Interpolation(double input, AdaptiveLinearInterpolation.Distribution output)
+        public Interpolation(double input, AdaptiveInterpolation.Distribution output)
         {
             this.Input = input;
             this.Output = output;
         }
         public double Input;
-        public AdaptiveLinearInterpolation.Distribution Output;
+        public AdaptiveInterpolation.Distribution Output;
     
     }
 

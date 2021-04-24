@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // The DistributionAdder class adds and subtracts distributions, to allow for use in Generics
 namespace ActivityRecommendation
@@ -22,9 +22,9 @@ namespace ActivityRecommendation
         {
             return Distribution.Zero;
         }
-        public AdaptiveLinearInterpolation.Distribution ConvertToDistribution(Distribution distribution)
+        public AdaptiveInterpolation.Distribution ConvertToDistribution(Distribution distribution)
         {
-            AdaptiveLinearInterpolation.Distribution converted = new AdaptiveLinearInterpolation.Distribution(distribution.SumValue, distribution.SumSquaredValue, distribution.Weight);
+            AdaptiveInterpolation.Distribution converted = new AdaptiveInterpolation.Distribution(distribution.SumValue, distribution.SumSquaredValue, distribution.Weight);
             return converted;
         }
 

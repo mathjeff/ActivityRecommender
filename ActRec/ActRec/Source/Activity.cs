@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ActivityRecommendation.Effectiveness;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 using StatLists;
 
 // The Doable class represents a way for the user to spend his/her time
@@ -115,11 +115,13 @@ namespace ActivityRecommendation
 
         public List<AbsoluteRating> PendingRatings = new List<AbsoluteRating>();
         public List<Participation> PendingParticipationsForShorttermAnalysis = new List<Participation>();
-        public List<Participation> PendingParticipationsForLongtermAnalysis = new List<Participation>();
         public List<ActivitySkip> PendingSkips = new List<ActivitySkip>();
         public List<ActivitySuggestion> PendingSuggestions = new List<ActivitySuggestion>();
         public List<EfficiencyMeasurement> PendingEfficiencyMeasurements = new List<EfficiencyMeasurement>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
+        public IProgression IdlenessProgression { get { return this.idlenessProgression; } }
+        public IProgression ParticipationProgression { get { return this.participationProgression; } }
+
         public int NumParticipations
         {
             get
@@ -179,6 +181,10 @@ namespace ActivityRecommendation
                 }
                 return this.allAncestors;
             }
+        }
+        public bool HasAncestor(Activity other)
+        {
+            return this.SelfAndAncestors.Contains(other);
         }
         public void InvalidateAncestorList()
         {
@@ -435,10 +441,8 @@ namespace ActivityRecommendation
                 else
                     coordinates[i] = progressions[i].EstimateOutputRange().Middle;
             }
-            AdaptiveLinearInterpolation.Datapoint<WillingnessSummary> newDatapoint = new AdaptiveLinearInterpolation.Datapoint<WillingnessSummary>(coordinates, willingness);
+            AdaptiveInterpolation.Datapoint<WillingnessSummary> newDatapoint = new AdaptiveInterpolation.Datapoint<WillingnessSummary>(coordinates, willingness);
             this.participationInterpolator.AddDatapoint(newDatapoint);
-
-            this.UpdateNext_RatingSummaries(4);
         }
 
 
@@ -486,7 +490,7 @@ namespace ActivityRecommendation
                     double[] coordinates = this.Get_Rating_TrainingCoordinates((DateTime)newRating.Date);
 
                     Distribution score = Distribution.MakeDistribution(newRating.Score, 0, 1);
-                    AdaptiveLinearInterpolation.Datapoint<Distribution> ratingDatapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
+                    AdaptiveInterpolation.Datapoint<Distribution> ratingDatapoint = new AdaptiveInterpolation.Datapoint<Distribution>(coordinates, score);
                     this.shortTerm_ratingInterpolator.AddDatapoint(ratingDatapoint);
                 }
 
@@ -516,7 +520,6 @@ namespace ActivityRecommendation
                 this.participationDurations = this.participationDurations.Plus(Distribution.MakeDistribution(newParticipation.Duration.TotalSeconds, 0, 1));
             }
 
-            this.PendingParticipationsForLongtermAnalysis.Add(newParticipation);
             this.PendingParticipationsForShorttermAnalysis.Add(newParticipation);
         }
         public void AddEfficiencyMeasurement(EfficiencyMeasurement efficiencyMeasurement)
@@ -531,25 +534,14 @@ namespace ActivityRecommendation
                 double[] coordinates = this.Get_Rating_TrainingCoordinates((DateTime)measurement.StartDate);
 
                 Distribution score = Distribution.MakeDistribution(measurement.RecomputedEfficiency.Mean, 0, 1);
-                AdaptiveLinearInterpolation.Datapoint<Distribution> ratingDatapoint = new AdaptiveLinearInterpolation.Datapoint<Distribution>(coordinates, score);
+                AdaptiveInterpolation.Datapoint<Distribution> ratingDatapoint = new AdaptiveInterpolation.Datapoint<Distribution>(coordinates, score);
                 this.shortTerm_EfficiencyInterpolator.AddDatapoint(ratingDatapoint);
             }
             this.PendingEfficiencyMeasurements.Clear();
         }
         private void ApplyPendingParticipations()
         {
-            this.ApplyPendingParticipationsForLongtermAnalysis();
             this.ApplyPendingParticipationsForShorttermAnalysis();
-        }
-        private void ApplyPendingParticipationsForLongtermAnalysis()
-        {
-            foreach (Participation newParticipation in this.PendingParticipationsForLongtermAnalysis)
-            {
-                // make a note to use this date for predicting longterm happiness from participations
-                this.AddNew_LongTerm_Participation_Summary_At(newParticipation.StartDate);
-            }
-            this.UpdateNext_RatingSummaries(this.PendingParticipationsForLongtermAnalysis.Count);
-            this.PendingParticipationsForLongtermAnalysis.Clear();
         }
         private void ApplyPendingParticipationsForShorttermAnalysis()
         {
@@ -646,12 +638,8 @@ namespace ActivityRecommendation
                 // For now we approximate that by recording the date whenever it is executed or skipped, and recording the user's overall future happiness
                 //this.AddNew_RatingSummary(newSkip.Date, this.overallRatings_summarizer);
             }
-            // Also update an older datapoint so that no datapoint's value gets old
-            this.UpdateNext_RatingSummaries(this.PendingSkips.Count);
-
 
             this.PendingSkips.Clear();
-
         }
 
         public void AddSuggestion(ActivitySuggestion newSuggestion)
@@ -673,14 +661,6 @@ namespace ActivityRecommendation
         }
         private void ApplyPendingSuggestions()
         {
-            foreach (ActivitySuggestion newSuggestion in this.PendingSuggestions)
-            {
-                // We want to predict the user's overall happiness after this Doable gets suggested, so that we can detect if merely suggesting this Doable has a positive impact
-                this.AddNew_LongTerm_SuggestionValue_Summary_At(newSuggestion.CreatedDate);
-            }
-            // Also update an older datapoint so that no datapoint's value gets old
-            this.UpdateNext_RatingSummaries(this.PendingSuggestions.Count);
-
             this.PendingSuggestions.Clear();
         }
 
@@ -692,46 +672,9 @@ namespace ActivityRecommendation
             this.ApplyPendingSuggestions();
         }
 
-        // 
-        public Distribution Predict_LongtermValue_If_Suggested(DateTime when)
-        {
-            this.ApplyPendingSuggestions();
-            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution estimate = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(coordinates)).Plus(this.noiseForLongtermEstimates);
-            return estimate;
-        }
-        public Distribution GetAverageLongtermValueWhenSuggested()
-        {
-            this.ApplyPendingParticipationsForLongtermAnalysis();
-            Distribution average = new Distribution(this.longTerm_suggestionValue_interpolator.GetAverage());
-            return average;
-        }
-
-        public Distribution Predict_LongtermValue_If_Participated(DateTime when)
-        {
-            double[] coordinates = this.Get_Rating_PredictionCoordinates(when);
-            Distribution estimate = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates)).Plus(this.noiseForLongtermEstimates);
-            return estimate;
-        }
-
-        // We add some noise to any of our estimates, to prevent appearing to claim infinite accuracy.
-        // However, when we're predicting the value of longterm/future happinesses, we don't need to add much noise.
-        // Although it's technically possible for there to be large variance in future happinesses over very long periods of time,
-        // that requires that the user has multiple years of maximum happiness followed by multiple years of minimum happiness.
-        // We think it is much more likely that the user will have approximately consistent happiness over time.
-        // If all values of future happiness were equally likely, it would be a uniform distribution from 0 to 1 with stddev of about 0.25, so we decrease the stddev to 0.125
-        private Distribution noiseForLongtermEstimates
-        {
-            get
-            {
-                return Distribution.MakeDistribution(0.5, 0.125, 2);
-            }
-        }
         public Distribution GetAverageLongtermValueWhenParticipated()
         {
-            this.ApplyPendingParticipationsForLongtermAnalysis();
-            Distribution average = new Distribution(this.longTerm_participationValue_interpolator.GetAverage());
-            return average;
+            return new Distribution();
         }
         // Predicts the relative efficiency with which the user is expected to be able to progress on this Activity at the given time
         // Note that this isn't supposed to be a measure of the overall difficulty of the activity
@@ -750,22 +693,9 @@ namespace ActivityRecommendation
             return result;
         }
 
-        // Predicts the user's future overall efficiency after having done this at the given time
-        public Distribution Predict_LongtermEfficiency_If_Participated(DateTime when)
-        {
-            this.ApplyPendingParticipations();
-            double[] coordinates = this.Get_Efficiency_PredictionCoordinates(when);
-            Distribution estimate = new Distribution(this.longTerm_efficiency_interpolator.Interpolate(coordinates));
-            // add a little bit of extra error to move the estimate closer to 1
-            estimate = estimate.Plus(Distribution.MakeDistribution(1, 0, 2));
-            return estimate;
-        }
-
-
         public Distribution GetAverageEfficiencyWhenParticipated()
         {
-            Distribution average = new Distribution(this.longTerm_efficiency_interpolator.GetAverage());
-            return average;
+            return new Distribution();
         }
 
         // returns the coordinates from which a rating prediction is trained
@@ -840,8 +770,7 @@ namespace ActivityRecommendation
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.25, 2);
 
             // also figure out what is a normal result
-            Distribution typicalAverage = new Distribution(this.shortTerm_ratingInterpolator.GetAverage()).Plus(extraError);
-            InterpolatorSuggestion_Justification interpolatorJustification = new InterpolatorSuggestion_Justification(this, estimate, typicalAverage, coordinates);
+            InterpolatorSuggestion_Justification interpolatorJustification = new InterpolatorSuggestion_Justification(this, estimate, coordinates);
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
 
             // explanations of the interpolator results
@@ -897,7 +826,7 @@ namespace ActivityRecommendation
             Distribution extraError = Distribution.MakeDistribution(0.5, 0.25, 2);
             Distribution finalEstimate = scaledEstimate.Plus(extraError);
             Distribution typicalParticipationProbability = new Distribution(this.participationInterpolator.GetAverage());
-            Justification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, typicalParticipationProbability, null);
+            Justification justification = new InterpolatorSuggestion_Justification(this, finalEstimate, null);
             Prediction prediction = new Prediction(this, finalEstimate, when, "Participation probability from interpolator");
             results.Add(prediction);
 
@@ -1143,9 +1072,9 @@ namespace ActivityRecommendation
         {
             return a + b;
         }
-        public AdaptiveLinearInterpolation.Distribution ConvertToDistribution(double a)
+        public AdaptiveInterpolation.Distribution ConvertToDistribution(double a)
         {
-            AdaptiveLinearInterpolation.Distribution distribution = AdaptiveLinearInterpolation.Distribution.MakeDistribution(a, 0, 1);
+            AdaptiveInterpolation.Distribution distribution = AdaptiveInterpolation.Distribution.MakeDistribution(a, 0, 1);
             return distribution;
         }
 
@@ -1171,12 +1100,12 @@ namespace ActivityRecommendation
             return numParticipations / denominator;
         }
         */
-        public AdaptiveLinearInterpolation.Distribution ConvertToDistribution(WillingnessSummary willingness)
+        public AdaptiveInterpolation.Distribution ConvertToDistribution(WillingnessSummary willingness)
         {
             double numParticipations = this.GetNumParticipations(willingness);
             double numSkips = willingness.NumSkips;
 
-            AdaptiveLinearInterpolation.Distribution distribution = new AdaptiveLinearInterpolation.Distribution(numParticipations, numParticipations, numParticipations + numSkips);
+            AdaptiveInterpolation.Distribution distribution = new AdaptiveInterpolation.Distribution(numParticipations, numParticipations, numParticipations + numSkips);
             return distribution;
         }
 
@@ -1197,40 +1126,6 @@ namespace ActivityRecommendation
                 bonus = (double)willingness.NumUnpromptedParticipations / ((double)willingness.NumUnpromptedParticipations + (double)willingness.NumSkips);
             
             return willingness.NumPromptedParticipations + bonus;
-        }
-
-        // Adds the following date as one that we will track for the purpose of predicting rating based on coordinates
-        private void AddNew_LongTerm_SuggestionValue_Summary_At(DateTime when)
-        {
-            // compute the input coordinates
-            double[] inputCoordinates = this.Get_Rating_TrainingCoordinates(when);
-
-            // give it to the interpolator
-            this.longTerm_suggestionValue_interpolator.AddDatapoint(when, inputCoordinates);
-        }
-
-        private void AddNew_LongTerm_Participation_Summary_At(DateTime when)
-        {
-            // compute the input coordinates
-            double[] inputCoordinates = this.Get_Rating_TrainingCoordinates(when);
-
-            // give it to the interpolator
-            this.longTerm_participationValue_interpolator.AddDatapoint(when, inputCoordinates);
-            this.longTerm_efficiency_interpolator.AddDatapoint(when, inputCoordinates);
-        }
-        public void UpdateNext_RatingSummaries(int numRatingsToUpdate)
-        {
-            if (numRatingsToUpdate > 0)
-            {
-                // If the interpolators don't exist yet, then it means we don't need them yet
-                // Only do the update if the interpolators do exist already
-                if (this.longTerm_participationValue_interpolator != null)
-                {
-                    this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
-                    this.longTerm_suggestionValue_interpolator.UpdateMany(numRatingsToUpdate);
-                    this.longTerm_efficiency_interpolator.UpdateMany(numRatingsToUpdate);
-                }
-            }
         }
 
         public void SetupPredictorsIfNeeded()
@@ -1339,6 +1234,7 @@ namespace ActivityRecommendation
             this.ApplyPendingParticipations();
             return this.participationProgression.GetNumParticipationsSince(when);
         }
+
         #endregion
 
         #region Private Member Functions
@@ -1412,9 +1308,6 @@ namespace ActivityRecommendation
             }
             this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
             this.shortTerm_EfficiencyInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
-            this.longTerm_suggestionValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
-            this.longTerm_participationValue_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallRatings_summarizer);
-            this.longTerm_efficiency_interpolator = new LongtermValuePredictor(new HyperBox<Distribution>(coordinates), this.overallEfficiency_summarizer);
         }
         // initialize the PredictionLinks that estimate the probability that the user will do this Doable
         private void SetupParticipationProbabilityPredictors()
@@ -1478,10 +1371,8 @@ namespace ActivityRecommendation
 
         //private List<IPredictionLink> ratingPredictors;
         List<IProgression> ratingTrainingProgressions;
-        AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Doable
+        AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Activity
         AdaptiveLinearInterpolator<Distribution> shortTerm_EfficiencyInterpolator;
-        LongtermValuePredictor longTerm_participationValue_interpolator; // this interpolator is used to estimate what user's average happiness will if they do this Doable
-        LongtermValuePredictor longTerm_suggestionValue_interpolator;    // this interpolator is used to estimate what user's average happiness will if this Doable is suggested
         private List<IPredictionLink> extraRatingPredictionLinks;
 
 
@@ -1501,10 +1392,6 @@ namespace ActivityRecommendation
         private SkipProgression skipProgression;
         private ExpectedParticipationProbabilityProgression expectedParticipationProbabilityProgression;
 
-        private LongtermValuePredictor longTerm_efficiency_interpolator;
-
-
-        
         private int uniqueIdentifier;
         private DateTime? latestInteractionDate;
         private DateTime? earliestInteractionDate;

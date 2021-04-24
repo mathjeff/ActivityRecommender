@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // A ScoreSummary describes the (exponentially-weighted) average value of some progression after a certain point in time
 namespace ActivityRecommendation
 {
-    class ScoreSummary : IDatapoint<Distribution>
+    class ScoreSummary : LazyDimension_Datapoint<Distribution>
     {
         // If useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint is false, then this summary won't update if `when` is before the RatingSummarizer's first datapoint
         // The reason someone might want this would be if they want to make a bunch of ScoreSummary objects and don't want lots of repeats all saying the same thing
@@ -59,18 +59,6 @@ namespace ActivityRecommendation
         }
 
 
-        #region Required for IDatapoint
-
-        public double[] InputCoordinates { get; set; }
-        public int NumInputDimensions
-        {
-            get
-            {
-                if (this.InputCoordinates == null)
-                    return 0;
-                return this.InputCoordinates.Length;
-            }
-        }
         public Distribution Item
         {
             get
@@ -80,16 +68,22 @@ namespace ActivityRecommendation
                 return this.values.CopyAndReweightTo(1);
             }
         }
-        public double[] OutputCoordinates
+
+
+        #region Required for lazy datapoint
+
+        public LazyInputs Inputs { get; set; }
+        public LazyInputs GetInputs()
         {
-            get
-            {
-                return null;
-            }
+            return this.Inputs;
+        }
+        public Distribution GetOutput()
+        {
+            return this.Item;
         }
 
         #endregion
-        
+
         DateTime earliestKnownDate;  // the date that this RatingSummary describes
         DateTime latestKnownDate;   // the date of the latest rating known to this RatingSummary
         bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;

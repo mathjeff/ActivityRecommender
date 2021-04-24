@@ -623,7 +623,32 @@ Means.MeanErr: 5.4510, StdDevs.MeanErr: 5.7184, efficiency
 Means.MeanErr: 0.3963, StdDevs.MeanErr: 0.7646, longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:04.1933960
 
-*/
+updated results on 2021-04-24 after switching to LazyDimension_Interpolator but before adding more coordinates to it
+Means.MeanErr: 0.0313, StdDevs.MeanErr: 0.0951, longtermHappinessIfSuggested
+Means.MeanErr: 0.0244, StdDevs.MeanErr: 0.0949, longtermHappinessIfParticipated
+Means.MeanErr: 0.1406, StdDevs.MeanErr: 0.1042, score
+0.9619,                                         equivalentWeightedProbability
+Means.MeanErr: 5.451, StdDevs.MeanErr: 5.7184, efficiency
+Means.MeanErr: 0.3933, StdDevs.MeanErr: 0.8445, longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:09.7762550
+
+some test results on 2021-04-24 when trying out what happens if no input coordinates are passed to the longterm value interpolators
+Means.MeanErr: 0.034, StdDevs.MeanErr: 0.0791, longtermHappinessIfSuggested
+Means.MeanErr: 0.0261, StdDevs.MeanErr: 0.1044, longtermHappinessIfParticipated
+Means.MeanErr: 0.1406, StdDevs.MeanErr: 0.1042, score
+0.9635,                                         equivalentWeightedProbability
+Means.MeanErr: 5.451, StdDevs.MeanErr: 5.7184, efficiency
+Means.MeanErr: 1.142, StdDevs.MeanErr: 1.142, longtermEfficiencyIfParticipated
+
+updated results on 2021-04-24 after passing lots of coordinates to the LazyDimension_Interpolator
+Means.MeanErr: 0.0325, StdDevs.MeanErr: 0.0791, longtermHappinessIfSuggested
+Means.MeanErr: 0.0276, StdDevs.MeanErr: 0.0989, longtermHappinessIfParticipated
+Means.MeanErr: 0.1406, StdDevs.MeanErr: 0.1042, score
+0.9635,                                         equivalentWeightedProbability
+Means.MeanErr: 5.451, StdDevs.MeanErr: 5.7184, efficiency
+Means.MeanErr: 1.142, StdDevs.MeanErr: 1.142, longtermEfficiencyIfParticipated
+EngineTester completed in 00:01:13
+ */
 
 namespace ActivityRecommendation
 {

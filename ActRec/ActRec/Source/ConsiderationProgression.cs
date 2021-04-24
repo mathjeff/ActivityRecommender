@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
-// A ConsiderationProgression keeps track of times that the user was considering doing a particular Doable, and times that the user actually did it
-// It is intended to estimate the probability that the user will do the given Doable
+// A ConsiderationProgression keeps track of times that the user was considering doing a particular Activity, and times that the user actually did it
+// It is intended to estimate the probability that the user will do the given Activity
 namespace ActivityRecommendation
 {
     public class ConsiderationProgression :IProgression, IComparer<DateTime>, ICombiner<WillingnessSummary>

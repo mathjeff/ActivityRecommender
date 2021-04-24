@@ -154,7 +154,7 @@ namespace ActivityRecommendation
         // tells whether <ancestor> is either <descendant> or one of the ancestors of <descendant>
         public bool HasAncestor(Activity descendant, Activity ancestor)
         {
-            return this.GetAllSuperactivitiesOf(descendant).Contains(ancestor);
+            return descendant.HasAncestor(ancestor);
         }
 
         // Find the top few matching activities

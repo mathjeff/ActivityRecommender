@@ -104,19 +104,6 @@ namespace ActivityRecommendation.View
 
             // add additional information for some specific types of justifications
             InterpolatorSuggestion_Justification interpolatorJustification = justification as InterpolatorSuggestion_Justification;
-            if (interpolatorJustification != null && interpolatorJustification.PredictionWithoutCurrentCoordinates.Weight > 0)
-            {
-                double overallMean = Math.Round(interpolatorJustification.PredictionWithoutCurrentCoordinates.Mean, 3);
-                if (currentMean != overallMean)
-                {
-                    string c;
-                    if (currentMean > overallMean)
-                        c = " (up from average of " + overallMean + ")";
-                    else
-                        c = " (down from average of " + overallMean + ")";
-                    whatText += c;
-                }
-            }
             // determine the appropriate list index to show
             string indexString;
             if (indent % 2 == 0)

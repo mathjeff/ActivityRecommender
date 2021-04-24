@@ -1,4 +1,5 @@
 ﻿using ActivityRecommendation.Effectiveness;
+using AdaptiveInterpolation;
 using System;
 using System.Collections.Generic;
 
@@ -29,14 +30,9 @@ namespace ActivityRecommendation
             this.thinkingTime = Distribution.MakeDistribution(60, 0, 1);      // default amount of time thinking about a suggestion is 1 minute
             this.ratingsOfUnpromptedActivities = Distribution.Zero;
 
-            this.happinessFromEfficiency_predictor = new LongtermValuePredictor(
-                new AdaptiveLinearInterpolation.HyperBox<Distribution>(
-                    new AdaptiveLinearInterpolation.FloatRange[] {
-                        new AdaptiveLinearInterpolation.FloatRange(0, true, 1, true)
-                    }
-                ),
-                this.weightedRatingSummarizer
-            );
+            this.longTerm_suggestionValue_interpolator = new LongtermValuePredictor(this.weightedRatingSummarizer);
+            this.longTerm_participationValue_interpolator = new LongtermValuePredictor(this.weightedRatingSummarizer);
+            this.longTerm_efficiency_interpolator = new LongtermValuePredictor(this.efficiencySummarizer);
         }
 
         // gives to the necessary objects the data that we've read. Optimized for when there are large quantities of data to give to the different objects
@@ -62,7 +58,6 @@ namespace ActivityRecommendation
         public void ApplyParticipationsAndRatings()
         {
             DateTime nextDate;
-            int numRatingsNewlyApplied = this.unappliedRatings.Count;
             int ratingIndex = 0;
             int participationIndex = 0;
             int skipIndex = 0;
@@ -115,7 +110,7 @@ namespace ActivityRecommendation
             this.unappliedParticipations.Clear();
             this.unappliedSkips.Clear();
             this.unappliedSuggestions.Clear();
-            this.Update_RatingSummaries(numRatingsNewlyApplied);
+            this.Update_RatingSummaries((ratingIndex + participationIndex + skipIndex) * 4);
         }
 
 
@@ -161,6 +156,8 @@ namespace ActivityRecommendation
             }
             RelativeEfficiencyMeasurement efficiencyMeasurement = newParticipation.RelativeEfficiencyMeasurement;
             this.addEfficiencyMeasurement(efficiencyMeasurement);
+
+            this.longTerm_participationValue_interpolator.AddDatapoint(newParticipation.StartDate, this.getCoordinatesForParticipation(newParticipation.StartDate, activity));
         }
         private void addEfficiencyMeasurement(RelativeEfficiencyMeasurement measurement)
         {
@@ -174,7 +171,6 @@ namespace ActivityRecommendation
             {
                 parent.AddEfficiencyMeasurement(measurement);
             }
-            this.happinessFromEfficiency_predictor.AddDatapoint(measurement.StartDate, new double[] { measurement.RecomputedEfficiency.Mean });
         }
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
@@ -203,6 +199,7 @@ namespace ActivityRecommendation
                     parent.AddSuggestion(newSuggestion);
                 }
             }
+            this.longTerm_suggestionValue_interpolator.AddDatapoint(newSuggestion.CreatedDate, this.getCoordinatesForSuggestion(newSuggestion.CreatedDate, activity));
         }
         // performs Depth First Search to find all superCategories of the given Activity
         public List<Activity> FindAllSupercategoriesOf(Activity child)
@@ -808,6 +805,52 @@ namespace ActivityRecommendation
             return predictions;
         }
 
+        // gets the coordinates for predicting what the user's longterm happiness should be if the user does <participated> at <when>
+        private LazyInputs getCoordinatesForParticipation(DateTime when, Activity participated)
+        {
+            // get all activities
+            List<Activity> allActivities = this.getActivitiesForLongtermInterpolation();
+
+            // Collect all of the coordinates
+            // Note that even enumerating all of the coordinates takes too much memory, so we provide a few lazy getters that each know how to get lots of different coordinates
+            List<LazyCoordinate> coordinates = new List<LazyCoordinate>();
+            // How long it has been since a reference date
+            coordinates.Add(new LazyProgressionValue(when, TimeProgression.AbsoluteTime));
+            // How long it has been since the day started
+            coordinates.Add(new LazyProgressionValue(when, TimeProgression.DayCycle));
+            LazyInputs independentInputs = new LazyInputList(coordinates);
+            // How long it has been since the user did any particular activity
+            LazyInputs idlenessInputs = new IdlenessInputs(when, allActivities);
+            // How much the user has been doing each particular activity recently
+            LazyInputs participationInputs = new ParticipationInputs(when, allActivities);
+            // The relative frequencies of Participations and Skips in each particular activity
+            LazyInputs considerationInputs = new ConsiderationInputs(when, allActivities);
+            // The identities of the activity the user participated in
+            LazyInputs memberOf_inputs = new ActivityInList_Inputs(participated, allActivities);
+
+            // all of these coordinates, combined
+            return new ConcatInputs(new List<LazyInputs>() { independentInputs, memberOf_inputs, participationInputs, considerationInputs, idlenessInputs, });
+        }
+
+        // gets the coordinates for predicting what the user's longterm happiness should be if we suggest to the user to do <activity> at <when>
+        private LazyInputs getCoordinatesForSuggestion(DateTime when, Activity suggested)
+        {
+            return this.getCoordinatesForParticipation(when, suggested);
+        }
+
+        private List<Activity> getActivitiesForLongtermInterpolation()
+        {
+            if (activitiesForLongtermInterpolation == null)
+                activitiesForLongtermInterpolation = new List<Activity>(this.activityDatabase.AllActivities);
+            return activitiesForLongtermInterpolation;
+        }
+
+        private Distribution Interpolate_LongtermValue_If_Participatied(Activity activity, DateTime when)
+        {
+            LazyInputs coordinates = this.getCoordinatesForParticipation(when, activity);
+            return new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates));
+        }
+
         // returns a Prediction of what the user's longterm happiness will be after having participated in the given activity at the given time
         public Prediction Get_OverallHappiness_ParticipationEstimate(Activity activity, ActivityRequest request)
         {
@@ -826,7 +869,7 @@ namespace ActivityRecommendation
             distributions.Add(shortTerm_prediction.Distribution);
 
             double mediumWeight = activity.NumParticipations;
-            Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
+            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participatied(activity, when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
             distributions.Add(mediumTerm_distribution);
 
@@ -839,11 +882,6 @@ namespace ActivityRecommendation
                     distributions.Add(parentDistribution);
                 }
             }
-            // if this activity is correlated with efficiency, and if efficiency is correlated with happiness,
-            // then this activity is correlated with happiness too
-            Distribution efficiency = this.Get_OverallEfficiency_ParticipationEstimate(activity, when).Distribution;
-            Distribution happinessFromEfficiency_prediction = this.Predict_LongtermHappiness_From_LongtermEfficiency(efficiency).CopyAndReweightTo(8);
-            distributions.Add(happinessFromEfficiency_prediction);
 
             Distribution distribution = this.CombineRatingDistributions(distributions);
             Prediction prediction = shortTerm_prediction;
@@ -887,6 +925,19 @@ namespace ActivityRecommendation
             return bonusInDays;
         }
 
+        private Distribution interpolate_longtermValue_if_suggested(Activity activity, DateTime when)
+        {
+            LazyInputs inputs = this.getCoordinatesForSuggestion(when, activity);
+            Distribution result = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs));
+            System.Diagnostics.Debug.WriteLine("If suggesting " + activity + " at " + when + ", interpolate longterm happiness of " + result);
+            return result;
+        }
+
+        private Distribution get_averageValue_if_suggested(Activity activity, DateTime when)
+        {
+            LazyInputs inputs = this.getCoordinatesForSuggestion(when, activity);
+            return new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs));
+        }
 
         // returns a Prediction of the value of suggesting the given activity at the given time
         private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, ActivityRequest request)
@@ -927,7 +978,7 @@ namespace ActivityRecommendation
             // For C: we count the number of participations since the user did this activity
             int participationsSince = this.activityDatabase.RootActivity.GetNumParticipationsSince(activity.DiscoveryDate);
             double mediumWeight = shortWeight * 500.0 / ((1.0 - participationProbability) + (1.0 / (activity.NumParticipations + 1) + (1.0 / (participationsSince + 1))));
-            Distribution ratingDistribution = activity.Predict_LongtermValue_If_Participated(when);
+            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participatied(activity, when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
             // When predicting longterm happiness based on the DateTimes of suggestions of this Activity, there are two likely sources of error.
@@ -940,16 +991,16 @@ namespace ActivityRecommendation
             double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
             double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 3;
-            Distribution longTerm_distribution = activity.Predict_LongtermValue_If_Suggested(when).CopyAndReweightTo(longWeight);
+            Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when).CopyAndReweightTo(longWeight);
 
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
-                activity, mediumTerm_distribution, activity.GetAverageLongtermValueWhenParticipated(), null);
+                activity, mediumTerm_distribution, null);
             mediumJustification.Label = "How happy you have been after doing " + activity.Name;
             if (mediumWeight > 0)
                 distributions.Add(new Prediction(activity, mediumTerm_distribution, when, mediumJustification));
 
             InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
-                activity, longTerm_distribution, activity.GetAverageLongtermValueWhenSuggested(), null);
+                activity, longTerm_distribution, null);
             longtermJustification.Label = "How happy you have been after " + activity.Name + " is suggested";
             if (longWeight > 0)
                 distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
@@ -960,7 +1011,7 @@ namespace ActivityRecommendation
                 double parentRelativeWeight = 80 - activity.NumConsiderations;
                 foreach (Activity parent in activity.Parents)
                 {
-                    Distribution parentDistribution = parent.Predict_LongtermValue_If_Participated(when);
+                    Distribution parentDistribution = this.Interpolate_LongtermValue_If_Participatied(parent, when);
                     double parentWeight = shortWeight * parentRelativeWeight;
                     parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
                     distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
@@ -982,9 +1033,11 @@ namespace ActivityRecommendation
         // returns a Prediction of what the user's efficiency will be after having participated in the given activity at the given time
         public Prediction Get_OverallEfficiency_ParticipationEstimate(Activity activity, DateTime when)
         {
-            Distribution distribution = activity.Predict_LongtermEfficiency_If_Participated(when);
+            LazyInputs coordinates = this.getCoordinatesForParticipation(when, activity);
+            Distribution distribution = new Distribution(this.longTerm_efficiency_interpolator.Interpolate(coordinates));
             return new Prediction(activity, distribution, when, "How efficient you tend to be after doing " + activity.Name);
         }
+
 
         public Distribution Get_AverageEfficiency_WhenParticipated(Activity activity)
         {
@@ -998,11 +1051,6 @@ namespace ActivityRecommendation
             return activity.GetAverageEfficiencyWhenParticipated();
         }
 
-        public Distribution Predict_LongtermHappiness_From_LongtermEfficiency(Distribution efficiency)
-        {
-            AdaptiveLinearInterpolation.Distribution prediction = this.happinessFromEfficiency_predictor.Interpolate(new double[] { efficiency.Mean });
-            return new Distribution(prediction);
-        }
         // returns a bunch of thoughts telling why <activity> was last rated as it was
         public ActivitySuggestion_Explanation JustifySuggestion(ActivitySuggestion activitySuggestion)
         {
@@ -1298,11 +1346,9 @@ namespace ActivityRecommendation
         {
             if (numRatingsToUpdate > 0)
             {
-                foreach (Activity activity in this.ActivityDatabase.AllActivities)
-                {
-                    activity.UpdateNext_RatingSummaries(numRatingsToUpdate);
-                }
-                this.happinessFromEfficiency_predictor.UpdateMany(numRatingsToUpdate);
+                this.longTerm_suggestionValue_interpolator.UpdateMany(numRatingsToUpdate);
+                this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
+                this.longTerm_efficiency_interpolator.UpdateMany(numRatingsToUpdate);
             }
         }
         // gets called whenever any outside source provides a rating
@@ -3364,7 +3410,10 @@ namespace ActivityRecommendation
         RatingsAnalysis currentRatingsCache;
         UtilitiesAnalysis currentUtilitiesCache;
 
-        LongtermValuePredictor happinessFromEfficiency_predictor;
+        LongtermValuePredictor longTerm_suggestionValue_interpolator;
+        LongtermValuePredictor longTerm_participationValue_interpolator;
+        LongtermValuePredictor longTerm_efficiency_interpolator;
 
+        List<Activity> activitiesForLongtermInterpolation;
     }
 }

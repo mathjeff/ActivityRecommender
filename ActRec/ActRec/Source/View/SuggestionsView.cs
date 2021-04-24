@@ -68,6 +68,7 @@ namespace ActivityRecommendation.View
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 7, 18), "Pointed out that buttons on iOS weren't visually responding to touch")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 12, 17), "Mentioned that the suggestions were sometimes more repetitive than desired")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 26), "Suggested that the suggestions view could use the same descriptions as the participation entry view")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 4, 24), "Asked for the suggestions to be less repetitive again")
                     .Build()
                  )
                 .Build();

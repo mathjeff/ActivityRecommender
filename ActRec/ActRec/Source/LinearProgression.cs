@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // A LinearProgresion is a bunch of x,y points connected by straight lines
 namespace ActivityRecommendation

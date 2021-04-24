@@ -21,19 +21,16 @@ namespace ActivityRecommendation
     }
     public class InterpolatorSuggestion_Justification : Justification
     {
-        public InterpolatorSuggestion_Justification(Activity Activity, Distribution currentPrediction, Distribution averagePrediction, double[] coords)
+        public InterpolatorSuggestion_Justification(Activity Activity, Distribution currentPrediction, double[] coords)
         {
             this.Activity = Activity;
             this.Value = currentPrediction;
-            this.PredictionWithoutCurrentCoordinates = averagePrediction;
             this.Coordinates = coords;
             this.Label = "Current interpolator result";
         }
 
         // The activity being used to predict from
         public Activity Activity { get; set; }
-        // A prediction of the user's happiness based solely on the activity and not other factors that are time-dependent
-        public Distribution PredictionWithoutCurrentCoordinates { get; set; }
         // The individual coordinates like how long ago the user did this activity and what time of day it is now
         public double[] Coordinates { get; set; }
     }

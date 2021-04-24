@@ -1018,7 +1018,7 @@ namespace ActivityRecommendation
             IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
 
             // now we get a recommendation, from among all activities within this category
-            request.RequestedProcessingTime = this.suggestionProcessingDuration;
+            //request.RequestedProcessingTime = this.suggestionProcessingDuration;
             ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
 
             // if there are no matching activities, then give up

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatLists;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // A ParticipationProgression how much of an Doable the user has done recently
 // It is intended to model brain Doable and it uses exponential curves to do so

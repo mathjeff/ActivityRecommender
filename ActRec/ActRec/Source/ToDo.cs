@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ActivityRecommendation.Effectiveness;
-using AdaptiveLinearInterpolation;
+using AdaptiveInterpolation;
 
 // A ToDo is a specific thing (like a task but less specific) that can be attempted several times, and can be completed once, at which point it's no longer relevant to attempt.
 // If it's an important thing, then it can be considered a goal, like fixing a specific software bug.

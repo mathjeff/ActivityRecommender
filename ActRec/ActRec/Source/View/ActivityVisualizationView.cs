@@ -472,12 +472,12 @@ namespace ActivityRecommendation
         }
         private void configureXAxisSubdivisions(PlotView plotView)
         {
-            AdaptiveLinearInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
+            AdaptiveInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
             if (inputRange == null)
             {
                 DateTime firstDate = this.queryStartDateDisplay.GetDate();
                 DateTime lastDate = this.queryEndDateDisplay.GetDate();
-                inputRange = new AdaptiveLinearInterpolation.FloatRange(this.GetXCoordinate(firstDate), true, GetXCoordinate(lastDate), true);
+                inputRange = new AdaptiveInterpolation.FloatRange(this.GetXCoordinate(firstDate), true, GetXCoordinate(lastDate), true);
             }
 
             plotView.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);

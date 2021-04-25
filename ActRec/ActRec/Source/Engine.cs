@@ -890,12 +890,14 @@ namespace ActivityRecommendation
             return prediction;
         }
 
-        public Distribution compute_longtermValue_increase_in_days(Distribution chosenValue, ActivityRequest activityRequest)
+
+
+        public Distribution compute_longtermValue_increase_in_days(Distribution chosenValue)
         {
             if (chosenValue.Weight <= 0)
                 return new Distribution();
 
-            Distribution baseValue = this.Get_OverallHappiness_ParticipationEstimate(this.activityDatabase.RootActivity, activityRequest).Distribution;
+            Distribution baseValue = new Distribution(this.longTerm_participationValue_interpolator.GetAverage());
 
             Distribution bonusInDays = new Distribution();
             // relWeight(x) = 2^(-x/halflife)
@@ -2358,7 +2360,7 @@ namespace ActivityRecommendation
 
             Distribution thisValue = this.Get_OverallHappiness_ParticipationEstimate(chosenActivity, request).Distribution;
 
-            Distribution increase = this.compute_longtermValue_increase_in_days(thisValue, request);
+            Distribution increase = this.compute_longtermValue_increase_in_days(thisValue);
             return increase;
         }
 
@@ -2366,7 +2368,7 @@ namespace ActivityRecommendation
         private Distribution computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
         {
             Distribution previous = this.Get_OverallEfficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
-            Distribution baseValue = this.Get_OverallEfficiency_ParticipationEstimate(this.activityDatabase.RootActivity, startDate).Distribution;
+            Distribution baseValue = new Distribution(this.longTerm_efficiency_interpolator.GetAverage());
             Distribution increase = this.computeEfficiencyIncrease(baseValue, previous);
             return increase;
         }

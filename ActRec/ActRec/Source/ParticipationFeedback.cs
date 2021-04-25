@@ -108,18 +108,14 @@ namespace ActivityRecommendation
             Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, request);
             string redirectionText;
             Color redirectionColor;
-            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution, request);
+            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution);
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFun, 1);
             if (improvementInDays <= 0)
             {
-                int numOthersConsidered = suggestion.NumActivitiesConsidered - 1;
-                string othersConsidered = "I considered " + numOthersConsidered + " other idea";
-                if (numOthersConsidered != 1)
-                    othersConsidered += "s";
                 if (ExpectedFutureFun >= 0)
-                    redirectionText = "Nice! " + othersConsidered + " and don't have any better suggestions for things to do at this time.";
+                    redirectionText = "Nice! I don't have any better suggestions for things to do at this time.";
                 else
-                    redirectionText = "Not bad. " + othersConsidered + " and don't have any better suggestions for things to do at this time.";
+                    redirectionText = "Not bad. I don't have any better suggestions for things to do at this time.";
                 redirectionColor = Color.Green;
             }
             else

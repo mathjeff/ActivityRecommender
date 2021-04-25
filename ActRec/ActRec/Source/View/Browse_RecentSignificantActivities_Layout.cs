@@ -89,7 +89,7 @@ namespace ActivityRecommendation.View
                 bonusText = "" + roundedHours + " hours";
             }
             string text = contribution.Activity.Name + ": " + bonusText;
-            return new SignificantActivity_Layout(text, contribution.Activity, start, this.scoreSummarizer, this.layoutStack);
+            return new SignificantActivity_Layout(text, contribution.Activity, start, this.engine, this.scoreSummarizer, this.layoutStack);
         }
 
         private DurationEntryView durationLayout;
@@ -100,8 +100,9 @@ namespace ActivityRecommendation.View
 
     class SignificantActivity_Layout : ContainerLayout
     {
-        public SignificantActivity_Layout(string text, Activity activity, DateTime start, ScoreSummarizer scoreSummarizer,  LayoutStack layoutStack)
+        public SignificantActivity_Layout(string text, Activity activity, DateTime start, Engine engine, ScoreSummarizer scoreSummarizer,  LayoutStack layoutStack)
         {
+            this.engine = engine;
             this.activity = activity;
             this.start = start;
             this.scoreSummarizer = scoreSummarizer;
@@ -132,7 +133,7 @@ namespace ActivityRecommendation.View
             {
                 title = "Participations in " + this.activity.Name + " since " + this.start;
             }
-            ListParticipations_Layout content = new ListParticipations_Layout(participations, this.scoreSummarizer, this.layoutStack);
+            ListParticipations_Layout content = new ListParticipations_Layout(participations, this.engine, this.scoreSummarizer, this.layoutStack);
             TitledControl results = new TitledControl(title, content, 20);
             this.layoutStack.AddLayout(results, "Participations");
         }
@@ -140,5 +141,6 @@ namespace ActivityRecommendation.View
         DateTime start;
         LayoutStack layoutStack;
         ScoreSummarizer scoreSummarizer;
+        Engine engine;
     }
 }

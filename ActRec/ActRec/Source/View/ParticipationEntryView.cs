@@ -151,7 +151,7 @@ namespace ActivityRecommendation
 
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
             grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now", 16));
-            grid4.AddLayout(new ButtonLayout(this.okButton, "OK"));
+            grid4.AddLayout(new ButtonLayout(this.okButton));
             grid4.AddLayout(new HelpButtonLayout(helpWindow, this.layoutStack));
             grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now", 16));
             contents.AddLayout(grid4);
@@ -553,6 +553,7 @@ namespace ActivityRecommendation
                     singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
                 }
                 this.todoCompletionStatusPicker = singleSelect;
+                singleSelect.Updated += SingleSelect_Updated;
 
                 this.helpStatusHolder.SubLayout = this.helpStatusPicker;
                 this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
@@ -563,18 +564,23 @@ namespace ActivityRecommendation
                 this.todoCompletionStatusPicker = null;
                 this.todoCompletionStatusHolder.SubLayout = null;
             }
+            this.updateOkButtonText();
         }
 
-
-        private bool EnteringActivityWithMetric
+        private void SingleSelect_Updated(SingleSelect singleSelect)
         {
-            get
-            {
-                Activity activity = this.nameBox.Activity;
-                if (activity != null)
-                    return activity.HasAMetric;
-                return false;
-            }
+            this.updateOkButtonText();
+        }
+
+        private void updateOkButtonText()
+        {
+            Metric metric = this.Metric;
+            string text;
+            if (metric == null)
+                text = "OK";
+            else
+                text = this.todoCompletionStatusPicker.SelectedItem;
+            this.okButton.Text = text;
         }
 
         private bool EnteringToDo

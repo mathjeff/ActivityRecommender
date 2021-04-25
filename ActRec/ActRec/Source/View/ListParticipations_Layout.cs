@@ -10,17 +10,19 @@ namespace ActivityRecommendation.View
 {
     class ListParticipations_Layout : ContainerLayout
     {
-        public ListParticipations_Layout(List<Participation> participations, bool showRatings, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack, Random randomGenerator)
+        public ListParticipations_Layout(List<Participation> participations, bool showRatings, Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack, Random randomGenerator)
         {
-            this.randomGenerator = randomGenerator;
             this.participations = participations;
+            this.engine = engine;
             this.scoreSummarizer = scoreSummarizer;
             this.layoutStack = layoutStack;
+            this.randomGenerator = randomGenerator;
             this.initialize(showRatings);
         }
-        public ListParticipations_Layout(List<Participation> participations, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
+        public ListParticipations_Layout(List<Participation> participations, Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
             this.participations = participations;
+            this.engine = engine;
             this.scoreSummarizer = scoreSummarizer;
             this.layoutStack = layoutStack;
             this.initialize(true);
@@ -34,7 +36,7 @@ namespace ActivityRecommendation.View
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             foreach (Participation participation in participations)
             {
-                gridBuilder.AddLayout(new ParticipationView(participation, this.scoreSummarizer, this.layoutStack, showRatings));
+                gridBuilder.AddLayout(new ParticipationView(participation, this.scoreSummarizer, this.layoutStack, this.engine, showRatings));
             }
             if (!showRatings)
             {
@@ -67,6 +69,6 @@ namespace ActivityRecommendation.View
         Random randomGenerator;
         ScoreSummarizer scoreSummarizer;
         LayoutStack layoutStack;
-
+        Engine engine;
     }
 }

@@ -52,7 +52,7 @@ namespace ActivityRecommendation.View
                     visualizationBuilder.AddLayout("Efficiency Growth", new EfficiencyTrendLayout(this.engine.EfficiencyCorrelator));
                     // Screens that require you to specify which activity you're interested in
                     visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
-                    visualizationBuilder.AddLayout("Search Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.engine.RatingSummarizer, this.layoutStack));
+                    visualizationBuilder.AddLayout("Search Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.engine, this.engine.RatingSummarizer, this.layoutStack));
                     visualizationBuilder.AddLayout("Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
                     this.normalContent = visualizationBuilder.Build();

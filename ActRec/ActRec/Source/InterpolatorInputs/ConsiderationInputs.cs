@@ -23,6 +23,11 @@ namespace ActivityRecommendation
                 return value.Value.Mean;
             return 0;
         }
+        public string GetDescription(int index)
+        {
+            return "Consideration of " + this.activities[index] + " at " + when;
+        }
+
         DateTime when;
         List<Activity> activities;
     }

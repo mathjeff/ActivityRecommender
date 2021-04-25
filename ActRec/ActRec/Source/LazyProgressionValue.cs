@@ -17,6 +17,10 @@ namespace ActivityRecommendation
         {
             return this.progression.GetValueAt(when, false).Value.Mean;
         }
+        public string GetDescription()
+        {
+            return this.progression.Description + " at " + when;
+        }
         DateTime when;
         IProgression progression;
     }

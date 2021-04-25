@@ -641,13 +641,13 @@ Means.MeanErr: 5.451, StdDevs.MeanErr: 5.7184, efficiency
 Means.MeanErr: 1.142, StdDevs.MeanErr: 1.142, longtermEfficiencyIfParticipated
 
 updated results on 2021-04-24 after passing lots of coordinates to the LazyDimension_Interpolator
-Means.MeanErr: 0.0325, StdDevs.MeanErr: 0.0791, longtermHappinessIfSuggested
-Means.MeanErr: 0.0276, StdDevs.MeanErr: 0.0989, longtermHappinessIfParticipated
+Means.MeanErr: 0.0275, StdDevs.MeanErr: 0.0777, longtermHappinessIfSuggested
+Means.MeanErr: 0.0246, StdDevs.MeanErr: 0.0987, longtermHappinessIfParticipated
 Means.MeanErr: 0.1406, StdDevs.MeanErr: 0.1042, score
 0.9635,                                         equivalentWeightedProbability
 Means.MeanErr: 5.451, StdDevs.MeanErr: 5.7184, efficiency
 Means.MeanErr: 1.142, StdDevs.MeanErr: 1.142, longtermEfficiencyIfParticipated
-EngineTester completed in 00:01:13
+EngineTester completed in 00:01:51
  */
 
 namespace ActivityRecommendation

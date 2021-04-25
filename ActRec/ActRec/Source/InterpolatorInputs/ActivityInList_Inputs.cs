@@ -22,6 +22,10 @@ namespace ActivityRecommendation
                 return 1;
             return 0;
         }
+        public string GetDescription(int index)
+        {
+            return "Does " + activity.Name + " inherit from " + this.activities[index] + "?";
+        }
         Activity activity;
         List<Activity> activities;
     }

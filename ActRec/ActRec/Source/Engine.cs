@@ -481,6 +481,7 @@ namespace ActivityRecommendation
                     bestCombinedScore = currentScore;
                 }
             }
+            // System.Diagnostics.Debug.WriteLine("bestActivity = " + bestActivity + ", suggesting " + bestActivityToPairWith);
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
             // If there was no such pair, then we just want to choose the best activity because no others could help
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
@@ -848,7 +849,10 @@ namespace ActivityRecommendation
         private Distribution Interpolate_LongtermValue_If_Participatied(Activity activity, DateTime when)
         {
             LazyInputs coordinates = this.getCoordinatesForParticipation(when, activity);
-            return new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates));
+            Distribution noise = Distribution.MakeDistribution(0.5, 0.125, 2);
+            Distribution result = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates)).Plus(noise);
+            //System.Diagnostics.Debug.WriteLine("If doing " + activity + " at " + when + ", interpolate longterm happiness of " + result);
+            return result;
         }
 
         // returns a Prediction of what the user's longterm happiness will be after having participated in the given activity at the given time
@@ -928,8 +932,9 @@ namespace ActivityRecommendation
         private Distribution interpolate_longtermValue_if_suggested(Activity activity, DateTime when)
         {
             LazyInputs inputs = this.getCoordinatesForSuggestion(when, activity);
-            Distribution result = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs));
-            System.Diagnostics.Debug.WriteLine("If suggesting " + activity + " at " + when + ", interpolate longterm happiness of " + result);
+            Distribution noise = Distribution.MakeDistribution(0.5, 0.125, 2);
+            Distribution result = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs)).Plus(noise);
+            //System.Diagnostics.Debug.WriteLine("If suggesting " + activity + " at " + when + ", interpolate longterm happiness of " + result);
             return result;
         }
 
@@ -990,8 +995,8 @@ namespace ActivityRecommendation
             TimeSpan existenceDuration = when.Subtract(activity.DiscoveryDate);
             double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
             double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
-            double longWeight = shortWeight * activity.NumConsiderations * (1 - participationProbability) * activityExistenceWeightMultiplier * 3;
-            Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when).CopyAndReweightTo(longWeight);
+            //double longWeight = shortWeight * activity.NumConsiderations * activityExistenceWeightMultiplier * 3;
+            Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when); //.CopyAndReweightTo(longWeight);
 
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
                 activity, mediumTerm_distribution, null);
@@ -1002,11 +1007,11 @@ namespace ActivityRecommendation
             InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
                 activity, longTerm_distribution, null);
             longtermJustification.Label = "How happy you have been after " + activity.Name + " is suggested";
-            if (longWeight > 0)
+            if (longTerm_distribution.Weight > 0)
                 distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
 
             // also include parent activities in the prediction if this activity is one that the user hasn't done often
-            if (activity.NumConsiderations < 80)
+            /*if (activity.NumConsiderations < 80)
             {
                 double parentRelativeWeight = 80 - activity.NumConsiderations;
                 foreach (Activity parent in activity.Parents)
@@ -1016,7 +1021,7 @@ namespace ActivityRecommendation
                     parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
                     distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
                 }
-            }
+            }*/
 
             return distributions;
         }

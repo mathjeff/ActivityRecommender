@@ -65,7 +65,11 @@ namespace ActivityRecommendation
             {
                 if (this.values.Weight == 0)
                     return this.values;
-                return this.values.CopyAndReweightTo(1);
+                // this.values contains a summary of all of the future happinesses that happen after this.earliestKnownDate
+                // So, this.values might have a high stddev because it describes a population
+                // However, this.Item describes the net present value of the user's happiness now, which is an average
+                // So, we ignore the standard deviation here
+                return Distribution.MakeDistribution(this.values.Mean, 0, 1);
             }
         }
 

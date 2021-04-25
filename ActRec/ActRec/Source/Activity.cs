@@ -477,6 +477,7 @@ namespace ActivityRecommendation
             //    B. when the user offers more ratings, the user probably cares more about the outcome
             // For now we approximate that by recording the date whenever the Doable is both executed and given a rating
             //this.AddNew_RatingSummary(newParticipation.StartDate, this.overallRatings_summarizer);
+            this.ApplyPendingRatings();
         }
         private void ApplyPendingRatings()
         {
@@ -521,6 +522,7 @@ namespace ActivityRecommendation
             }
 
             this.PendingParticipationsForShorttermAnalysis.Add(newParticipation);
+            this.ApplyPendingParticipations();
         }
         public void AddEfficiencyMeasurement(EfficiencyMeasurement efficiencyMeasurement)
         {
@@ -610,6 +612,7 @@ namespace ActivityRecommendation
             this.ApplyKnownInteractionDate(newSkip.CreationDate);
 
             this.PendingSkips.Add(newSkip);
+            this.ApplyPendingSkips();
         }
 
         // Returns (the amount of time that the user spends doing this Doable) divided (by the amount of time that the user is either doing this Doable or considering doing it)
@@ -649,6 +652,7 @@ namespace ActivityRecommendation
             if (this.latestSuggestionDate.CompareTo(newSuggestion.CreatedDate) < 0)
                 this.latestSuggestionDate = newSuggestion.CreatedDate;
             this.ApplyKnownInteractionDate(newSuggestion.CreatedDate);
+            this.ApplyPendingSuggestions();
         }
         public DateTime? LatestSuggestionDate
         {
@@ -672,10 +676,6 @@ namespace ActivityRecommendation
             this.ApplyPendingSuggestions();
         }
 
-        public Distribution GetAverageLongtermValueWhenParticipated()
-        {
-            return new Distribution();
-        }
         // Predicts the relative efficiency with which the user is expected to be able to progress on this Activity at the given time
         // Note that this isn't supposed to be a measure of the overall difficulty of the activity
         // Because we don't have a way to separate the definitions of difficulty (1 / duration) and efficiency (effectiveness per unit time)
@@ -691,11 +691,6 @@ namespace ActivityRecommendation
             Distribution extraError = Distribution.MakeDistribution(1, 0, 1);
             Distribution result = estimate.Plus(extraError);
             return result;
-        }
-
-        public Distribution GetAverageEfficiencyWhenParticipated()
-        {
-            return new Distribution();
         }
 
         // returns the coordinates from which a rating prediction is trained

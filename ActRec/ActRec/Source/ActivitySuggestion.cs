@@ -29,7 +29,6 @@ namespace ActivityRecommendation
         }
         public double? ParticipationProbability { get; set; }
         public double? PredictedScoreDividedByAverage { get; set; }
-        public double? PredictedFutureHappinessIfParticipated_DividedByAverage { get; set; }
         public bool WorseThanRootActivity { get; set; }
         public Justification MostSignificantJustification { get; set; }
         // what we expect the engine's reaction to be if the user does this

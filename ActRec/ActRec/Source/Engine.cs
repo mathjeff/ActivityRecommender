@@ -171,6 +171,7 @@ namespace ActivityRecommendation
             {
                 parent.AddEfficiencyMeasurement(measurement);
             }
+            this.longTerm_efficiency_interpolator.AddDatapoint(measurement.StartDate, this.getCoordinatesForParticipation(measurement.StartDate, activity));
         }
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
@@ -572,11 +573,6 @@ namespace ActivityRecommendation
                 //  Maybe we could just compute the average happiness from the last ~1 month and use that as a baseline
                 suggestion.WorseThanRootActivity = true;
             }
-            Distribution averageHappiness = this.GetAverageLongtermValueWhenParticipated(this.activityDatabase.RootActivity);
-            if (averageHappiness.Weight > 0 && thisHappiness.Weight > 0)
-                suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage = thisHappiness.Mean / averageHappiness.Mean;
-            else
-                suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage = 1;
             suggestion.MostSignificantJustification = this.getMostSignificantJustification(activity, request);
             return suggestion;
         }
@@ -894,18 +890,12 @@ namespace ActivityRecommendation
             return prediction;
         }
 
-        public Distribution GetAverageLongtermValueWhenParticipated(Activity activity)
+        public Distribution compute_longtermValue_increase_in_days(Distribution chosenValue, ActivityRequest activityRequest)
         {
-            return activity.GetAverageLongtermValueWhenParticipated();
-        }
-
-        public Distribution compute_longtermValue_increase_in_days(Distribution averageHappinessValue)
-        {
-            Distribution chosenEstimatedDistribution = averageHappinessValue;
-            if (chosenEstimatedDistribution.Weight <= 0)
+            if (chosenValue.Weight <= 0)
                 return new Distribution();
-            Distribution baseValue = this.GetAverageLongtermValueWhenParticipated(this.activityDatabase.RootActivity);
-            Distribution chosenValue = chosenEstimatedDistribution.CopyAndReweightTo(1);
+
+            Distribution baseValue = this.Get_OverallHappiness_ParticipationEstimate(this.activityDatabase.RootActivity, activityRequest).Distribution;
 
             Distribution bonusInDays = new Distribution();
             // relWeight(x) = 2^(-x/halflife)
@@ -1043,18 +1033,6 @@ namespace ActivityRecommendation
             return new Prediction(activity, distribution, when, "How efficient you tend to be after doing " + activity.Name);
         }
 
-
-        public Distribution Get_AverageEfficiency_WhenParticipated(Activity activity)
-        {
-            return activity.GetAverageEfficiencyWhenParticipated();
-        }
-
-        // returns the average efficiency after having participated in <activity>
-        // The purpose is that this will be used as a reference to compare the result of Get_Efficiency_ParticipationEstimate to
-        public Distribution Get_AverageEfficiency_ParticipationEstimate(Activity activity)
-        {
-            return activity.GetAverageEfficiencyWhenParticipated();
-        }
 
         // returns a bunch of thoughts telling why <activity> was last rated as it was
         public ActivitySuggestion_Explanation JustifySuggestion(ActivitySuggestion activitySuggestion)
@@ -2377,8 +2355,10 @@ namespace ActivityRecommendation
         private Distribution compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
         {
             ActivityRequest request = new ActivityRequest(startDate);
-            Distribution previous = this.Get_OverallHappiness_ParticipationEstimate(chosenActivity, request).Distribution;
-            Distribution increase = this.compute_longtermValue_increase_in_days(previous);
+
+            Distribution thisValue = this.Get_OverallHappiness_ParticipationEstimate(chosenActivity, request).Distribution;
+
+            Distribution increase = this.compute_longtermValue_increase_in_days(thisValue, request);
             return increase;
         }
 
@@ -2386,19 +2366,14 @@ namespace ActivityRecommendation
         private Distribution computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
         {
             Distribution previous = this.Get_OverallEfficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
-            Distribution increase = this.computeEfficiencyIncrease(previous);
+            Distribution baseValue = this.Get_OverallEfficiency_ParticipationEstimate(this.activityDatabase.RootActivity, startDate).Distribution;
+            Distribution increase = this.computeEfficiencyIncrease(baseValue, previous);
             return increase;
         }
-        private Distribution computeEfficiencyIncrease(Activity chosenActivity)
-        {
-            Distribution endValue = this.Get_AverageEfficiency_WhenParticipated(chosenActivity);
-            return this.computeEfficiencyIncrease(endValue);
-        }
-        private Distribution computeEfficiencyIncrease(Distribution endValue)
+        private Distribution computeEfficiencyIncrease(Distribution baseValue, Distribution endValue)
         {
             if (endValue.Weight <= 0)
                 return Distribution.Zero;
-            Distribution baseValue = this.Get_AverageEfficiency_WhenParticipated(this.activityDatabase.RootActivity);
             Distribution chosenValue = endValue.CopyAndReweightTo(1);
 
             Distribution bonusInHours = Distribution.Zero;

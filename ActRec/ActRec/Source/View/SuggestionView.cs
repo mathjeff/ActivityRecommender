@@ -76,7 +76,7 @@ namespace ActivityRecommendation
             GridLayout_Builder sideBuilder = new Vertical_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(cancelLayout);
-            if (this.suggestion.PredictedFutureHappinessIfParticipated_DividedByAverage != null)
+            if (this.suggestion.ParticipationProbability != null)
                 sideBuilder.AddLayout(new ButtonLayout(this.justifyButton, "?"));
             mainGrid.PutLayout(sideBuilder.Build(), 2, 0);
             this.SubLayout = mainGrid;

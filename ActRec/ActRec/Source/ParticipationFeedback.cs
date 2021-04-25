@@ -102,13 +102,13 @@ namespace ActivityRecommendation
             ActivityRequest request = new ActivityRequest();
             request.ActivityToBeat = this.ChosenActivity.MakeDescriptor();
             request.Date = this.StartDate;
-            request.RequestedProcessingTime = TimeSpan.FromSeconds(0.5);
+            //request.RequestedProcessingTime = TimeSpan.FromSeconds(0.5);
             ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
             Activity betterActivity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, request);
             string redirectionText;
             Color redirectionColor;
-            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution);
+            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution, request);
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFun, 1);
             if (improvementInDays <= 0)
             {
@@ -119,7 +119,7 @@ namespace ActivityRecommendation
                 if (ExpectedFutureFun >= 0)
                     redirectionText = "Nice! " + othersConsidered + " and don't have any better suggestions for things to do at this time.";
                 else
-                    redirectionText = "Not bad. " + numOthersConsidered + " and don't have any better suggestions for things to do at this time.";
+                    redirectionText = "Not bad. " + othersConsidered + " and don't have any better suggestions for things to do at this time.";
                 redirectionColor = Color.Green;
             }
             else

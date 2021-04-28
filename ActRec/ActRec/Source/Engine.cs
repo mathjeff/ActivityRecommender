@@ -994,12 +994,7 @@ namespace ActivityRecommendation
             //
             // For A: we need to have lots of suggestions, and we increase the weight based on the number of suggestions.
             // For B: we decrease the weight of the prediction for activities we haven't known about for long
-            TimeSpan existenceDuration = when.Subtract(activity.DiscoveryDate);
-            double numCompletedHalfLives = existenceDuration.TotalSeconds / UserPreferences.DefaultPreferences.HalfLife.TotalSeconds;
-            double activityExistenceWeightMultiplier = 1.0 - Math.Pow(0.5, numCompletedHalfLives);
-            //double longWeight = shortWeight * activity.NumConsiderations * activityExistenceWeightMultiplier * 3;
-            Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when); //.CopyAndReweightTo(longWeight);
-
+            Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when);
             InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
                 activity, mediumTerm_distribution, null);
             mediumJustification.Label = "How happy you have been after doing " + activity.Name;
@@ -1033,7 +1028,7 @@ namespace ActivityRecommendation
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, request);
             Prediction prediction = this.CombineRatingPredictions(predictions);
             // We don't allow a weight of < 1 because in GetCombinedValue we will be adding a 0 or a 1 and checking the mean of the new distribution
-            prediction.Distribution.Weight += 1;
+            prediction.Distribution = prediction.Distribution.CopyAndReweightTo(prediction.Distribution.Weight + 1);
             return prediction;
         }
 

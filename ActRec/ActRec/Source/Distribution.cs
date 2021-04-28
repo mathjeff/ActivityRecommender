@@ -94,10 +94,6 @@ namespace ActivityRecommendation
             {
                 return this.sumWeight;
             }
-            set
-            {
-                this.sumWeight = value;
-            }
         }
         public double SumValue
         {

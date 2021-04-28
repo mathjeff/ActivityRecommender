@@ -888,7 +888,7 @@ namespace ActivityRecommendation
                 // predictedProbability * (1 - predictedProbability) = e ^ (-2 * this.participationPrediction_score.Mean - 2);
                 // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
                 // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
-                results.TypicalProbability = Math.Round((1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2);
+                results.TypicalProbability = Math.Round((1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2, 4);
                 results.ParticipationHavingMostSurprisingScore = this.mostSurprisingParticipation;
                 return results;
             }

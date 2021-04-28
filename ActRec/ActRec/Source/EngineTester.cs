@@ -841,20 +841,20 @@ namespace ActivityRecommendation
 
         private PredictionErrors Compute_FutureEstimateIfSuggested_Errors()
         {
-            return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer);
+            return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer, 1);
         }
         private PredictionErrors Compute_FutureEstimateIfParticipated_Errors()
         {
-            return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer);
+            return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer, 1);
         }
         private PredictionErrors Compute_FutureEfficiencyIfParticipated_Errors()
         {
-            return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer);
+            return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer, double.PositiveInfinity);
         }
 
-        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ScoreSummarizer ratingSummarizer)
+        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ScoreSummarizer ratingSummarizer, double maxAllowedError)
         {
-            PredictionErrors result = new PredictionErrors();
+            PredictionErrors result = new PredictionErrors(maxAllowedError);
             foreach (Prediction prediction in predictions.Keys)
             {
                 ScoreSummary summary = predictions[prediction];
@@ -888,7 +888,7 @@ namespace ActivityRecommendation
                 // predictedProbability * (1 - predictedProbability) = e ^ (-2 * this.participationPrediction_score.Mean - 2);
                 // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0
                 // X = (1 + sqrt(1 - 4 * e ^ (-2 * this.participationPrediction_score.Mean - 2))) / 2;
-                results.TypicalProbability = (1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2;
+                results.TypicalProbability = Math.Round((1 + Math.Sqrt(1 - 4 * Math.Exp(-2 * this.participationPrediction_score.Mean - 2))) / 2);
                 results.ParticipationHavingMostSurprisingScore = this.mostSurprisingParticipation;
                 return results;
             }
@@ -929,11 +929,11 @@ namespace ActivityRecommendation
         }
         public DateTime? EarliestRatingDate { get; set; }
 
-        private PredictionErrors shortTermScore_error = new PredictionErrors();
+        private PredictionErrors shortTermScore_error = new PredictionErrors(1);
         private Distribution squared_longTermValue_error = new Distribution();
         private Distribution squaredParticipationProbabilityError = new Distribution();
         private Distribution participationPrediction_score = new Distribution();
-        private PredictionErrors shortTermEfficiency_error = new PredictionErrors();
+        private PredictionErrors shortTermEfficiency_error = new PredictionErrors(double.PositiveInfinity);
         private ParticipationSurprise mostSurprisingParticipation;
         private ScoreSummarizer ratingSummarizer;
         private ScoreSummarizer efficiencySummarizer;
@@ -971,9 +971,17 @@ namespace ActivityRecommendation
     // Each Prediction contains a Mean and a StdDev, and a PredictionErrors records the errors in each
     public class PredictionErrors
     {
+        public PredictionErrors(double maxAllowedError)
+        {
+            this.maxAllowedError = maxAllowedError;
+        }
         public void Add(double correctValue, Distribution prediction)
         {
             double errorOfMean = correctValue - prediction.Mean;
+            if (Math.Abs(errorOfMean) > this.maxAllowedError)
+            {
+                throw new Exception("Error too large: " + errorOfMean);
+            }
             this.errorsOfMeansSquared = this.errorsOfMeansSquared.Plus(Distribution.MakeDistribution(errorOfMean * errorOfMean, 0, 1));
 
             double predictedStddev = prediction.StdDev;
@@ -1000,6 +1008,7 @@ namespace ActivityRecommendation
         }
         private Distribution errorsOfMeansSquared = new Distribution();
         private Distribution errorsOfStdDevsSquared = new Distribution();
+        private double maxAllowedError;
     }
 
     public class ParticipationSurprise

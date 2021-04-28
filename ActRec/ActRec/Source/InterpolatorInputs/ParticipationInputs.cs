@@ -7,10 +7,11 @@ namespace ActivityRecommendation
 {
     class ParticipationInputs : LazyInputs
     {
-        public ParticipationInputs(DateTime when, List<Activity> activities)
+        public ParticipationInputs(DateTime when, Activity participated, List<Activity> otherActivities)
         {
             this.when = when;
-            this.activities = activities;
+            this.participated = participated;
+            this.activities = otherActivities;
         }
         public int GetNumCoordinates()
         {
@@ -18,10 +19,19 @@ namespace ActivityRecommendation
         }
         public double GetInput(int index)
         {
+            Activity other = this.activities[index];
             ProgressionValue value = this.activities[index].ParticipationProgression.GetValueAt(this.when, false);
+            double result = 0;
             if (value != null)
-                return value.Value.Mean;
-            return 0;
+                result = value.Value.Mean;
+
+            if (this.participated != null && this.participated.HasAncestor(other))
+            {
+                // if we are doing an activity now then we will have done it in a moment
+                result *= 2;
+            }
+
+            return result;
         }
         public string GetDescription(int index)
         {
@@ -29,6 +39,7 @@ namespace ActivityRecommendation
         }
 
         DateTime when;
+        Activity participated;
         List<Activity> activities;
     }
 }

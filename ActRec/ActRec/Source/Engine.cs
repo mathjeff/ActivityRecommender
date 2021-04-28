@@ -805,6 +805,21 @@ namespace ActivityRecommendation
         // gets the coordinates for predicting what the user's longterm happiness should be if the user does <participated> at <when>
         private LazyInputs getCoordinatesForParticipation(DateTime when, Activity participated)
         {
+            return this.getCoordinatesForLongtermPrediction(when, participated, null);
+        }
+
+        // gets the coordinates for predicting what the user's longterm happiness should be if we suggest to the user to do <activity> at <when>
+        private LazyInputs getCoordinatesForSuggestion(DateTime when, Activity suggested)
+        {
+            return this.getCoordinatesForLongtermPrediction(when, null, suggested);
+        }
+
+        // helper function for getCoordinatesForParticipation and getCoordinatesForSuggestion
+        private LazyInputs getCoordinatesForLongtermPrediction(DateTime when, Activity participated, Activity suggested)
+        {
+            Activity considered = participated;
+            if (considered == null)
+                considered = suggested;
             // get all activities
             List<Activity> allActivities = this.getActivitiesForLongtermInterpolation();
 
@@ -817,23 +832,18 @@ namespace ActivityRecommendation
             coordinates.Add(new LazyProgressionValue(when, TimeProgression.DayCycle));
             LazyInputs independentInputs = new LazyInputList(coordinates);
             // How long it has been since the user did any particular activity
-            LazyInputs idlenessInputs = new IdlenessInputs(when, allActivities);
+            LazyInputs idlenessInputs = new IdlenessInputs(when, participated, allActivities);
             // How much the user has been doing each particular activity recently
-            LazyInputs participationInputs = new ParticipationInputs(when, allActivities);
+            LazyInputs participationInputs = new ParticipationInputs(when, participated, allActivities);
             // The relative frequencies of Participations and Skips in each particular activity
-            LazyInputs considerationInputs = new ConsiderationInputs(when, allActivities);
+            LazyInputs considerationInputs = new ConsiderationInputs(when, participated, null, allActivities);
             // The identities of the activity the user participated in
-            LazyInputs memberOf_inputs = new ActivityInList_Inputs(participated, allActivities);
+            LazyInputs memberOf_inputs = new ActivityInList_Inputs(considered, allActivities);
 
             // all of these coordinates, combined
             return new ConcatInputs(new List<LazyInputs>() { independentInputs, memberOf_inputs, participationInputs, considerationInputs, idlenessInputs, });
         }
 
-        // gets the coordinates for predicting what the user's longterm happiness should be if we suggest to the user to do <activity> at <when>
-        private LazyInputs getCoordinatesForSuggestion(DateTime when, Activity suggested)
-        {
-            return this.getCoordinatesForParticipation(when, suggested);
-        }
 
         private List<Activity> getActivitiesForLongtermInterpolation()
         {

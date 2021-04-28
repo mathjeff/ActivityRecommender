@@ -641,12 +641,12 @@ Means.MeanErr: 5.451, StdDevs.MeanErr: 5.7184, efficiency
 Means.MeanErr: 1.142, StdDevs.MeanErr: 1.142, longtermEfficiencyIfParticipated
 
 updated results on 2021-04-25 after passing lots of coordinates to the LazyDimension_Interpolator
-Means.MeanErr: 0.0266, StdDevs.MeanErr: 0.0327, longtermHappinessIfSuggested
-Means.MeanErr: 0.0253, StdDevs.MeanErr: 0.0666, longtermHappinessIfParticipated
+Means.MeanErr: 0.0266, StdDevs.MeanErr: 0.033, longtermHappinessIfSuggested
+Means.MeanErr: 0.025, StdDevs.MeanErr: 0.0671, longtermHappinessIfParticipated
 Means.MeanErr: 0.1394, StdDevs.MeanErr: 0.1058, score
 0.9622,                                         equivalentWeightedProbability
 Means.MeanErr: 5.4443, StdDevs.MeanErr: 5.7141, efficiency
-Means.MeanErr: 0.4111, StdDevs.MeanErr: 0.5529, longtermEfficiencyIfParticipated
+Means.MeanErr: 0.4013, StdDevs.MeanErr: 0.564, longtermEfficiencyIfParticipated
 EngineTester completed in 00:01:51
  */
 

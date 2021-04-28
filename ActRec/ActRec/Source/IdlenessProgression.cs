@@ -11,7 +11,7 @@ using AdaptiveInterpolation;
 // Perhaps a television program only comes out once a week and trying to watch it more often wouldn't work
 namespace ActivityRecommendation
 {
-    class IdlenessProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
+    public class IdlenessProgression : IComparer<DateTime>, ICombiner<Participation>, IProgression
     {
         #region Constructor
 

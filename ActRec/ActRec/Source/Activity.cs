@@ -119,8 +119,8 @@ namespace ActivityRecommendation
         public List<ActivitySuggestion> PendingSuggestions = new List<ActivitySuggestion>();
         public List<EfficiencyMeasurement> PendingEfficiencyMeasurements = new List<EfficiencyMeasurement>();
         public ConsiderationProgression ConsiderationProgression {  get { return this.considerationProgression; } }
-        public IProgression IdlenessProgression { get { return this.idlenessProgression; } }
-        public IProgression ParticipationProgression { get { return this.participationProgression; } }
+        public IdlenessProgression IdlenessProgression { get { return this.idlenessProgression; } }
+        public AutoSmoothed_ParticipationProgression ParticipationProgression { get { return this.participationProgression; } }
 
         public int NumParticipations
         {

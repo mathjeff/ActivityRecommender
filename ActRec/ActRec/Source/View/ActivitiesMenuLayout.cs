@@ -35,14 +35,14 @@ namespace ActivityRecommendation.View
             StackEntry importEntry = new StackEntry(this.importPremadeActivitiesLayout, "Import Some Premade Activities", null);
             StackEntry addEntry = new StackEntry(this.activityCreationLayout, "Add/Edit Activities", null);
             StackEntry editEntry = new StackEntry(this.activityEditingLayout, "Edit Activities", null);
-            StackEntry protoactivitiesEntry = new StackEntry(this.protoactivitiesLayout, "Brainstorm Protoactivities", null);
+            StackEntry protoactivitiesEntry = new StackEntry(this.protoactivitiesLayout, "Protoactivities: Brainstorm", null);
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout(new BrowseActivitiesMenu_Namer(this.activityDatabase), browseEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("New Activity (Category, ToDo, Problem, Solution)", this.activityCreationLayout.GetFeatures()), addEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Edit Activities", this.activityEditingLayout.GetFeatures()), editEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("Brainstorm Protoactivities", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry);
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Protoactivities: Brainstorm", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry);
             this.SetContent(fullBuilder.Build());
         }
 

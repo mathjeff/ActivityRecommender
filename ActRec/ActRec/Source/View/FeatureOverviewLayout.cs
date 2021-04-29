@@ -100,7 +100,7 @@ namespace ActivityRecommendation.View
                         .AddMessage("Have you ever had an idea that you thought was really cool but not quite complete? Can you immediately recall all of the ideas you've ever had?")
                         .AddMessage("Have you ever tried writing your ideas down so you can remember them later? Have you ever found that your list quickly became too long and disorganized?")
                         .AddMessage("ActivityRecommender solves this problem by allowing you to save your ideas, compare them, edit them, browse your top ideas, promote them into Activities, and delete them.")
-                        .AddMessage("These ideas are called ProtoActivities (because they turn into Activities) and can be found at Start -> Activities -> Brainstorm Protoactivities")
+                        .AddMessage("These ideas are called ProtoActivities (because they turn into Activities) and can be found at Start -> Activities -> Protoactivities: Brainstorm")
                         .AddMessage("If you ever have an idea you want to remember later, just make a ProtoActivity. If you ever need inspiration, just browse your best protoactivities.")
                         .Build()
                     )

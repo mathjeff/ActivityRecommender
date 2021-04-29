@@ -762,10 +762,10 @@ namespace ActivityRecommendation
             this.layoutStack.RemoveLayout();
         }
 
-        public void ImportData(object sender, FileData fileData)
+        public void ImportData(object sender, OpenedFile fileData)
         {
-            TextReader reader = new StreamReader(fileData.GetStream());
-            this.ImportData(fileData.FileName, reader);
+            TextReader reader = new StreamReader(fileData.Content);
+            this.ImportData(fileData.Path, reader);
         }
         private void doImport(TextReader content)
         {

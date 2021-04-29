@@ -148,11 +148,26 @@ namespace ActivityRecommendation
         }
 
         // asks the user to choose a file, asynchronously
-        public async Task<FileData> PromptUserForFile()
+        public async Task<OpenedFile> PromptUserForFile()
         {
             await this.requestPermission();
             IFilePicker filePicker = CrossFilePicker.Current;
-            return await filePicker.PickFile();
+            FileData fileData = await filePicker.PickFile();
+            if (fileData == null)
+                return null;
+            return new OpenedFile(fileData.FilePath, fileData.GetStream());
+        }
+        public async Task<OpenedFile> Open(string path)
+        {
+            FileStream stream = File.OpenRead(path);
+            return new OpenedFile(path, stream);
+        }
+
+        public async Task<List<string>> ListDir()
+        {
+            await this.requestPermission();
+            string[] arrayResult = Directory.GetFiles(this.RootDir);
+            return new List<string>(arrayResult);
         }
 
         private async Task requestPermission()
@@ -166,8 +181,6 @@ namespace ActivityRecommendation
             {
                 System.Diagnostics.Debug.WriteLine("Permissions[" + permission + "] = " + status[permission]);
             }
-
-
         }
     }
 
@@ -182,5 +195,16 @@ namespace ActivityRecommendation
         public string Path;
         public string Content;
         public bool Successful;
+    }
+
+    public class OpenedFile
+    {
+        public OpenedFile(string path, Stream content)
+        {
+            this.Path = path;
+            this.Content = content;
+        }
+        public string Path;
+        public Stream Content;
     }
 }

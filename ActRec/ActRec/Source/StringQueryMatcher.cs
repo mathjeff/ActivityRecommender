@@ -67,6 +67,20 @@ namespace ActivityRecommendation
                     return 0;
             }
 
+            if (query.EndsWith(" ") && numSimilarities > 0)
+            {
+                if (itemWords.Count > 0)
+                {
+                    // If the query ends with " ", then prefer to match items that have more words remaining
+                    numSimilarities++;
+                    itemWords.RemoveAt(0);
+                }
+                else
+                {
+                    numUnmatchedWords++;
+                }
+            }
+
             numUnmatchedWords += itemWords.Count;
 
             // Usually, case doesn't matter, but it is theoretically possible for a user to have two activities with the same name except casing

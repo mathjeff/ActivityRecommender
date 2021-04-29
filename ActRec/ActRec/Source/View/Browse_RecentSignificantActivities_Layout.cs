@@ -142,7 +142,7 @@ namespace ActivityRecommendation.View
                 title = "Participations in " + this.activity.Name + " since " + this.start;
             }
             ListParticipations_Layout content = new ListParticipations_Layout(participations, this.engine, this.scoreSummarizer, this.layoutStack);
-            TitledControl results = new TitledControl(title, content, 20);
+            TitledControl results = new TitledControl(title, content, 10);
             this.layoutStack.AddLayout(results, "Participations");
         }
         Activity activity;

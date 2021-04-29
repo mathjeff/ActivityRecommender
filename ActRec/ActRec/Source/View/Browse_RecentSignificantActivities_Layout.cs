@@ -24,7 +24,7 @@ namespace ActivityRecommendation.View
             gridBuilder.AddLayout(new TextblockLayout("What changed your happiness most"));
             gridBuilder.AddLayout(new TitledControl("in the last:", durationLayout));
             gridBuilder.AddLayout(new ButtonLayout(okButton, "OK"));
-            this.SetContent(ScrollLayout.New(gridBuilder.Build()));
+            this.SetContent(gridBuilder.Build());
         }
 
         private void OkButton_Clicked(object sender, EventArgs e)
@@ -38,30 +38,30 @@ namespace ActivityRecommendation.View
             TimeSpan windowSize = this.durationLayout.GetDuration();
             DateTime windowEnd = DateTime.Now;
             DateTime windowStart = windowEnd.Subtract(windowSize);
-            Activities_HappinessContributions activities = this.engine.GetMostSignificantRecentActivities(windowStart, 6);
+            Activities_HappinessContributions activities = this.engine.GetMostSignificantRecentActivities(windowStart, 12);
             this.showResults(activities, windowStart, windowEnd);
         }
         private void showResults(Activities_HappinessContributions contributions, DateTime start, DateTime end)
         {
-            GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
             // title
-            string title = "Activities adding or subtracting the most happiness from " + start + " to " + end;
-            gridBuilder.AddLayout(new TextblockLayout(title));
+            string title = "" + (contributions.Best.Count + contributions.Worst.Count) + " Activities adding or subtracting the most happiness from " + start + " to " + end;
+
+            BoundProperty_List heights = new BoundProperty_List(4);
+            heights.BindIndices(1, 3);
+            GridLayout grid = GridLayout.New(heights, new BoundProperty_List(1), LayoutScore.Zero);
+            grid.AddLayout(new TextblockLayout(title));
+
             // contents
+            GridLayout_Builder topBuilder = new Vertical_GridLayout_Builder().Uniform();
             // Show the top activities from best to worst
-            foreach (ActivityHappinessContribution item in contributions.Best)
+            for (int i = 0; i < contributions.Best.Count; i++)
             {
-                gridBuilder.AddLayout(this.renderContribution(item, start));
+                ActivityHappinessContribution item = contributions.Best[i];
+                topBuilder.AddLayout(this.renderContribution("top " + (i + 1) + ": ", item, start));
             }
-            // show a divider if we get all of them
-            if (contributions.ActivitiesRemain)
-                gridBuilder.AddLayout(new TextblockLayout("..."));
-            // Show the bottom activities, also from best to worst
-            for (int i = contributions.Worst.Count - 1; i >= 0; i--)
-            {
-                gridBuilder.AddLayout(this.renderContribution(contributions.Worst[i], start));
-            }
-            // more details
+            grid.AddLayout(ScrollLayout.New(topBuilder.BuildAnyLayout()));
+
+            // Use the help button as the divider between the best and worst activities
             LayoutChoice_Set helpWindow = new HelpWindowBuilder()
                 .AddMessage("Activities that you like more than average are accompanied by positive numbers.")
                 .AddMessage("Activities that you like less than average are accompanied by negative numbers.")
@@ -70,12 +70,20 @@ namespace ActivityRecommendation.View
                 "computing the difference between the happiness of that participation and your overall average happiness, " +
                 "multiplying each by the duration of its participation, and adding up the results.")
                 .Build();
-            gridBuilder.AddLayout(new HelpButtonLayout(helpWindow, this.layoutStack));
+            grid.AddLayout(new HelpButtonLayout("?", helpWindow, this.layoutStack));
 
-            this.layoutStack.AddLayout(gridBuilder.Build(), "Significant Activities");
+            GridLayout_Builder bottomBuilder = new Vertical_GridLayout_Builder().Uniform();
+            // Show the bottom activities, also from best to worst
+            for (int i = contributions.Worst.Count - 1; i >= 0; i--)
+            {
+                bottomBuilder.AddLayout(this.renderContribution("bottom " + (i + 1) + ": ", contributions.Worst[i], start));
+            }
+            grid.AddLayout(bottomBuilder.BuildAnyLayout());
+
+            this.layoutStack.AddLayout(grid, "Significant Activities");
         }
 
-        private LayoutChoice_Set renderContribution(ActivityHappinessContribution contribution, DateTime start)
+        private LayoutChoice_Set renderContribution(string prefix, ActivityHappinessContribution contribution, DateTime start)
         {
             double extraHours = contribution.TotalHappinessIncreaseInSeconds / 3600;
             double roundedHours = Math.Round(extraHours, 2);
@@ -88,7 +96,7 @@ namespace ActivityRecommendation.View
             {
                 bonusText = "" + roundedHours + " hours";
             }
-            string text = contribution.Activity.Name + ": " + bonusText;
+            string text = prefix + contribution.Activity.Name + ": " + bonusText;
             return new SignificantActivity_Layout(text, contribution.Activity, start, this.engine, this.scoreSummarizer, this.layoutStack);
         }
 

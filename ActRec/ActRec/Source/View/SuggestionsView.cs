@@ -21,8 +21,8 @@ namespace ActivityRecommendation.View
         public event RequestSuggestion_Handler RequestSuggestion;
         public delegate void RequestSuggestion_Handler(ActivityRequest request);
 
-        public event VisitParticipationScreenHandler VisitParticipationScreen;
-        public delegate void VisitParticipationScreenHandler();
+        public event VisitParticipationScreenHandler AcceptedSuggestion;
+        public delegate void VisitParticipationScreenHandler(ActivitySuggestion suggestion);
 
         public event VisitActivitiesScreenHandler VisitActivitiesScreen;
         public delegate void VisitActivitiesScreenHandler();
@@ -37,7 +37,7 @@ namespace ActivityRecommendation.View
 
             this.messageLayout = new TextblockLayout("Ask for a suggestion!").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
 
-            this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, engine, layoutStack);
+            this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, 3, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
             this.askWhatIsNext_layout = new TextblockLayout().AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
 
@@ -69,6 +69,7 @@ namespace ActivityRecommendation.View
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 12, 17), "Mentioned that the suggestions were sometimes more repetitive than desired")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 26), "Suggested that the suggestions view could use the same descriptions as the participation entry view")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 4, 24), "Asked for the suggestions to be less repetitive again")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 4, 30), "Asked for the suggestions view to display multiple suggestions at once")
                     .Build()
                  )
                 .Build();
@@ -213,7 +214,7 @@ namespace ActivityRecommendation.View
             this.ExperimentRequested.Invoke();
         }
 
-        public void RemoveSuggestion(ActivitySuggestion suggestion)
+        public void RemoveSuggestion(ActivitiesSuggestion suggestion)
         {
             this.suggestions.Remove(suggestion);
             this.UpdateSuggestionsAndMessage();
@@ -224,21 +225,21 @@ namespace ActivityRecommendation.View
             this.suggestions.Clear();
             this.UpdateSuggestionsAndMessage();
         }
-        public void AddSuggestion(ActivitySuggestion suggestion)
+        public void AddSuggestion(ActivitiesSuggestion suggestion)
         {
             this.suggestions.Add(suggestion);
             this.UpdateSuggestionsAndMessage();
             this.previousDeclinedSuggestion = null;
         }
-        public void AddSuggestions(IEnumerable<ActivitySuggestion> suggestions)
+        public void AddSuggestions(IEnumerable<ActivitiesSuggestion> suggestions)
         {
-            foreach (ActivitySuggestion suggestion in suggestions)
+            foreach (ActivitiesSuggestion suggestion in suggestions)
             {
                 this.suggestions.Add(suggestion);
                 this.UpdateSuggestionsAndMessage();
             }
         }
-        public IEnumerable<ActivitySuggestion> GetSuggestions()
+        public IEnumerable<ActivitiesSuggestion> GetSuggestions()
         {
             this.Update_Suggestion_StartTimes();
             return this.suggestions;
@@ -282,11 +283,15 @@ namespace ActivityRecommendation.View
         {
             // Update the start time of each activity to be when the previous one ends
             DateTime start = DateTime.Now;
-            foreach (ActivitySuggestion suggestion in this.suggestions)
+            foreach (ActivitiesSuggestion suggestion in this.suggestions)
             {
-                TimeSpan duration = suggestion.Duration.Value;
-                suggestion.StartDate = start;
-                suggestion.EndDate = start = start.Add(duration);
+                foreach (ActivitySuggestion child in suggestion.Children)
+                {
+                    TimeSpan duration = child.Duration.Value;
+                    child.StartDate = start;
+                    child.EndDate = start.Add(duration);
+                }
+                start = suggestion.Children[0].EndDate.Value;
             }
         }
         private void UpdateLayout_From_Suggestions()
@@ -294,7 +299,7 @@ namespace ActivityRecommendation.View
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
             // If the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
             // Alternatively, if our suggestion isn't that good, be sure to show them those buttons for making more activities
-            if (this.suggestions.Count < 1 || (this.suggestions.Count == 1 && this.suggestions[0].WorseThanRootActivity))
+            if (this.suggestions.Count < 1 || (this.suggestions.Count == 1 && this.suggestions[0].Children[0].WorseThanRootActivity))
             {
                 layouts.Add(this.newActivities_layout);
             }
@@ -307,18 +312,23 @@ namespace ActivityRecommendation.View
             bool addDoNowButton = true;
             if (this.suggestions.Count > 0)
             {
-                foreach (ActivitySuggestion suggestion in this.suggestions)
+                foreach (ActivitiesSuggestion suggestion in this.suggestions)
                 {
-                    bool repeatingDeclinedSuggestion = false;
-                    if (this.previousDeclinedSuggestion != null && suggestion.ActivityDescriptor.CanMatch(previousDeclinedSuggestion.ActivityDescriptor))
-                        repeatingDeclinedSuggestion = true;
+                    Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion = new Dictionary<ActivitySuggestion, bool>();
+                    foreach (ActivitySuggestion child in suggestion.Children)
+                    {
+                        if (this.previousDeclinedSuggestion != null && this.previousDeclinedSuggestion.CanMatch(child.ActivityDescriptor))
+                            repeatingDeclinedSuggestion[child] = true;
+                        else
+                            repeatingDeclinedSuggestion[child] = false;
+                    }
                     layouts.Add(this.makeLayout(suggestion, addDoNowButton, repeatingDeclinedSuggestion));
                     addDoNowButton = false;
                 }
             }
             // Show an explanation about how multiple suggestions work (they're in chronological order) if there's room
             // Also be sure to save room for the suggestion buttons
-            if (layouts.Count < this.maxNumSuggestions - 1)
+            if (layouts.Count < this.maxNumSuggestions)
             {
                 if (this.suggestions.Count > 0)
                 {
@@ -338,21 +348,24 @@ namespace ActivityRecommendation.View
                 layouts.Add(this.topLayout);
             }
 
-            this.SetContent(new Vertical_GridLayout_Builder().Uniform().AddLayouts(layouts).BuildAnyLayout());
+            LayoutChoice_Set even =  new Vertical_GridLayout_Builder().Uniform().AddLayouts(layouts).BuildAnyLayout();
+            LayoutChoice_Set uneven = new ScoreShifted_Layout(new Vertical_GridLayout_Builder().AddLayouts(layouts).BuildAnyLayout(), LayoutScore.Get_UnCentered_LayoutScore(1));
+
+            this.SetContent(new LayoutUnion(even, uneven));
         }
 
-        private LayoutChoice_Set makeLayout(ActivitySuggestion suggestion, bool doNowButton, bool repeatingDeclinedSuggestion)
+        private LayoutChoice_Set makeLayout(ActivitiesSuggestion suggestion, bool doNowButton, Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion)
         {
             SuggestionView suggestionView = new SuggestionView(suggestion, doNowButton, repeatingDeclinedSuggestion, this.layoutStack);
             suggestionView.Dismissed += SuggestionView_Dismissed;
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
-            suggestionView.VisitParticipationScreen += SuggestionView_VisitParticipationScreen;
+            suggestionView.AcceptedSuggestion += SuggestionView_VisitParticipationScreen;
             return new LayoutCache(suggestionView);
         }
 
-        private void SuggestionView_VisitParticipationScreen()
+        private void SuggestionView_VisitParticipationScreen(ActivitySuggestion suggestion)
         {
-            this.VisitParticipationScreen.Invoke();
+            this.AcceptedSuggestion.Invoke(suggestion);
         }
 
         private void SuggestionView_JustifySuggestion(ActivitySuggestion suggestion)
@@ -360,18 +373,21 @@ namespace ActivityRecommendation.View
             this.JustifySuggestion.Invoke(suggestion);
         }
 
-        private void SuggestionView_Dismissed(ActivitySuggestion suggestion)
+        private void SuggestionView_Dismissed(ActivitiesSuggestion suggestion)
         {
             this.DeclineSuggestion(suggestion);
         }
 
-        private void DeclineSuggestion(ActivitySuggestion suggestion)
+        private void DeclineSuggestion(ActivitiesSuggestion suggestion)
         {
             this.previousDeclinedSuggestion = suggestion;
             this.suggestions.Remove(suggestion);
             ActivitySkip skip = this.recommender.DeclineSuggestion(suggestion);
             double numSecondsThinking = skip.ThinkingTime.TotalSeconds;
-            this.SetErrorMessage("Recorded " + (int)numSecondsThinking + " seconds (wasted) considering " + suggestion.ActivityDescriptor.ActivityName);
+            string message = "Recorded " + (int)numSecondsThinking + " seconds (wasted) considering " + suggestion.Children[0].ActivityDescriptor.ActivityName;
+            if (suggestion.Children.Count > 1)
+                message += ", ...";
+            this.SetErrorMessage(message);
             this.Update_Suggestion_StartTimes();
             this.UpdateLayout_From_Suggestions();
         }
@@ -384,14 +400,14 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set startExperiment_layout;
         LayoutChoice_Set topLayout;
         LayoutStack layoutStack;
-        List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
-        int maxNumSuggestions = 4;
+        List<ActivitiesSuggestion> suggestions = new List<ActivitiesSuggestion>();
+        int maxNumSuggestions = 2;
         Engine engine;
         ActivityRecommender recommender;
         TextblockLayout messageLayout;
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
-        ActivitySuggestion previousDeclinedSuggestion;
+        ActivitiesSuggestion previousDeclinedSuggestion;
         int numCandidates = -1;
 
         TextblockLayout numCandidates_layout = new TextblockLayout().AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);

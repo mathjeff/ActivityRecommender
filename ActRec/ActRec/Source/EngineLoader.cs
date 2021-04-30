@@ -25,13 +25,19 @@ namespace ActivityRecommendation
         {
             // link the skip to its suggestion
             DateTime suggestionCreationDate = newSkip.SuggestionCreationDate;
-            ActivitySuggestion suggestion = this.SuggestionDatabase.GetSuggestion(newSkip.ActivityDescriptor, suggestionCreationDate);
-            if (suggestion != null)
-                suggestion.Skip = newSkip;
+            foreach (ActivityDescriptor descriptor in newSkip.ActivityDescriptors)
+            {
+                ActivitySuggestion suggestion = this.SuggestionDatabase.GetSuggestion(descriptor, suggestionCreationDate);
+                if (suggestion != null)
+                    suggestion.Skip = newSkip;
+            }
         }
-        public override void PreviewSuggestion(ActivitySuggestion suggestion)
+        public override void PreviewSuggestion(ActivitiesSuggestion suggestion)
         {
-            this.SuggestionDatabase.AddSuggestion(suggestion);
+            foreach (ActivitySuggestion child in suggestion.Children)
+            {
+                this.SuggestionDatabase.AddSuggestion(child);
+            }
         }
         public override void PreviewActivityDescriptor(ActivityDescriptor activityDescriptor)
         {

@@ -23,7 +23,7 @@ namespace ActivityRecommendation
                 this.Synchronized = false;
             }
         }
-        public IEnumerable<ActivitySuggestion> Suggestions
+        public IEnumerable<ActivitiesSuggestion> Suggestions
         {
             get
             {
@@ -62,7 +62,7 @@ namespace ActivityRecommendation
         public bool Synchronized { get; set; }  // tells whether the information on disk matches the information in memory
 
         private DateTime? latestActionDate;
-        private IEnumerable<ActivitySuggestion> suggestions = new List<ActivitySuggestion>();
+        private IEnumerable<ActivitiesSuggestion> suggestions = new List<ActivitiesSuggestion>();
         private int numRecent_userchosen_ExperimentSuggestions;
         private string demandedMetricName;
     }

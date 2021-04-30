@@ -91,7 +91,7 @@ namespace ActivityRecommendation
             this.ProcessRating(newRating.SecondRating);
             return this.ProcessRating(newRating);
         }
-        public void AddSuggestion(ActivitySuggestion suggestion)
+        public void AddSuggestion(ActivitiesSuggestion suggestion)
         {
             this.PreviewSuggestion(suggestion);
             this.engine.PutSuggestionInMemory(suggestion);
@@ -110,7 +110,7 @@ namespace ActivityRecommendation
             this.Preview_ProtoActivity(protoActivity);
         }
         public virtual void SetPersona(Persona persona) { }
-        public virtual void PreviewSuggestion(ActivitySuggestion suggestion) { }
+        public virtual void PreviewSuggestion(ActivitiesSuggestion suggestion) { }
         public virtual void PreviewExperiment(PlannedExperiment experiment) { }
         public virtual void PreviewMetric(Metric metric) { }
         public virtual void Preview_ProtoActivity(ProtoActivity protoActivity) { }

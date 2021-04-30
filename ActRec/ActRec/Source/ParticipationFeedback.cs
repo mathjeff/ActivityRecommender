@@ -103,8 +103,8 @@ namespace ActivityRecommendation
             request.ActivityToBeat = this.ChosenActivity.MakeDescriptor();
             request.Date = this.StartDate;
             //request.RequestedProcessingTime = TimeSpan.FromSeconds(0.5);
-            ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
-            Activity betterActivity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
+            ActivitiesSuggestion suggestion = this.engine.MakeRecommendation(request);
+            Activity betterActivity = this.ActivityDatabase.ResolveDescriptor(suggestion.ActivityDescriptors[0]);
             Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, request);
             string redirectionText;
             Color redirectionColor;

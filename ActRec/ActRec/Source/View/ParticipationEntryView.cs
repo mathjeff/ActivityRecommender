@@ -335,7 +335,7 @@ namespace ActivityRecommendation
                 return this.ratingBox.LatestParticipation;
             }
         }
-        public IEnumerable<ActivitySuggestion> CurrentSuggestions = new List<ActivitySuggestion>();
+        public IEnumerable<ActivitiesSuggestion> CurrentSuggestions = new List<ActivitiesSuggestion>();
         public DateTime StartDate
         {
             get
@@ -489,10 +489,13 @@ namespace ActivityRecommendation
 
         private bool get_wasSuggested(ActivityDescriptor activity)
         {
-            foreach (ActivitySuggestion suggestion in this.CurrentSuggestions)
+            foreach (ActivitiesSuggestion suggestion in this.CurrentSuggestions)
             {
-                if (activity.CanMatch(suggestion.ActivityDescriptor))
-                    return true;
+                foreach (ActivitySuggestion child in suggestion.Children)
+                {
+                    if (activity.CanMatch(child.ActivityDescriptor))
+                        return true;
+                }
             }
             return false;
 
@@ -506,6 +509,10 @@ namespace ActivityRecommendation
 
         public void DemandNextParticipationBe(ActivityDescriptor activityDescriptor, Metric metric)
         {
+            if (activityDescriptor != null)
+            {
+                this.SetActivityName(activityDescriptor.ActivityName);
+            }
             this.demanded_nextParticipationActivity = activityDescriptor;
             this.metricChooser.DemandMetric(metric);
             // If there was not previously a demanded participation and metric, then the metric chooser may have allowed the user to enter no metric

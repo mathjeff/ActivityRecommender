@@ -423,10 +423,6 @@ namespace ActivityRecommendation
             this.participationEntryView.AddSetenddateHandler(new EventHandler(this.MakeEndNow));
             this.participationEntryView.AddSetstartdateHandler(new EventHandler(this.MakeStartNow));
             this.participationEntryView.LatestParticipation = this.latestParticipation;
-            if (this.recentUserData.Suggestions.Count() > 0)
-            {
-                this.participationEntryView.SetActivityName(this.recentUserData.Suggestions.First().ActivityDescriptor.ActivityName);
-            }
             this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
             this.participationEntryView.VisitStatisticsScreen += ParticipationEntryView_VisitStatisticsScreen;
@@ -437,7 +433,7 @@ namespace ActivityRecommendation
             this.suggestionsView.RequestSuggestion += SuggestionsView_RequestSuggestion;
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
-            this.suggestionsView.VisitParticipationScreen += SuggestionsView_VisitParticipationScreen;
+            this.suggestionsView.AcceptedSuggestion += SuggestionsView_AcceptedSuggestion;
             this.suggestionsView.VisitActivitiesScreen += SuggestionsView_VisitActivitiesScreen;
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
@@ -656,6 +652,11 @@ namespace ActivityRecommendation
             this.ParticipationEntryView_VisitActivitiesScreen();
         }
 
+        private void SuggestionsView_AcceptedSuggestion(ActivitySuggestion suggestion)
+        {
+            this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
+            this.SuggestionsView_VisitParticipationScreen();
+        }
         private void SuggestionsView_VisitParticipationScreen()
         {
             this.layoutStack.GoBack();
@@ -681,8 +682,8 @@ namespace ActivityRecommendation
 
         private void SuggestionsView_RequestSuggestion(ActivityRequest request)
         {
-            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
-            ActivitySuggestion suggestion = this.MakeRecommendation(request, existingSuggestions);
+            IEnumerable<ActivitiesSuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
+            ActivitiesSuggestion suggestion = this.MakeRecommendation(request, existingSuggestions);
             if (suggestion == null)
             {
                 this.suggestionsView.SetErrorMessage("No activities available! Go create some activities, and return here for suggestions.");
@@ -746,7 +747,7 @@ namespace ActivityRecommendation
             this.SuspectLatestActionDate(when, true);
             this.update_numRecent_userChosenExperimentSuggestions(choices);
             ExperimentSuggestion experimentSuggestion = this.engine.Experiment(choices, when);
-            ActivitySuggestion activitySuggestion = experimentSuggestion.ActivitySuggestion;
+            ActivitiesSuggestion activitySuggestion = new ActivitiesSuggestion(new List<ActivitySuggestion>() { experimentSuggestion.ActivitySuggestion });
             this.recentUserData.DemandedMetricName = experimentSuggestion.MetricName;
             this.AddSuggestion_To_SuggestionsView(activitySuggestion);
 
@@ -943,12 +944,12 @@ namespace ActivityRecommendation
             historyReplayer.ReadText(data.HistoryReader);
             historyReplayer.ReadText(data.RecentUserDataReader);
         }
-        public ActivitySkip DeclineSuggestion(ActivitySuggestion suggestion)
+        public ActivitySkip DeclineSuggestion(ActivitiesSuggestion suggestion)
         {
             // make a Skip object holding the needed data
             DateTime considerationDate = this.LatestActionDate;
-            DateTime suggestionCreationDate = suggestion.CreatedDate;
-            ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptor, suggestionCreationDate, considerationDate, DateTime.Now, suggestion.StartDate);
+            DateTime suggestionCreationDate = suggestion.Children[0].CreatedDate;
+            ActivitySkip skip = new ActivitySkip(suggestion.ActivityDescriptors, suggestionCreationDate, considerationDate, DateTime.Now, suggestion.StartDate);
 
             this.AddSkip(skip);
             this.PersistSuggestions();
@@ -961,15 +962,13 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(new ActivitySuggestion_Explanation_Layout(justification), "Why");
         }
 
-        private void AddSuggestion_To_SuggestionsView(ActivitySuggestion suggestion)
+        private void AddSuggestion_To_SuggestionsView(ActivitiesSuggestion suggestion)
         {
             // add the suggestion to the list (note that this makes the startDate a couple seconds later if it took a couple seconds to compute the suggestion)
             this.suggestionsView.AddSuggestion(suggestion);
 
             if (this.suggestionsView.GetSuggestions().Count() == 1)
             {
-                // autofill the participationEntryView with a convenient value
-                this.participationEntryView.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
                 this.updateExperimentParticipationDemands();
             }
 
@@ -982,10 +981,10 @@ namespace ActivityRecommendation
             Metric demandedMetric = null;
             if (this.suggestionsView.GetSuggestions().Count() > 0)
             {
-                ActivitySuggestion suggestion = this.suggestionsView.GetSuggestions().First();
+                ActivitiesSuggestion suggestion = this.suggestionsView.GetSuggestions().First();
                 if (!suggestion.Skippable)
                 {
-                    demandedActivity = suggestion.ActivityDescriptor;
+                    demandedActivity = suggestion.Children[0].ActivityDescriptor;
                     Activity activity = this.ActivityDatabase.ResolveDescriptor(demandedActivity);
                     string metricName = this.recentUserData.DemandedMetricName;
                     if (metricName != "")
@@ -1003,7 +1002,7 @@ namespace ActivityRecommendation
         }
 
         // called when making a recommendation, either for the SuggestionsView or the ExperimentationInitializationLayout
-        private ActivitySuggestion MakeRecommendation(ActivityRequest request, IEnumerable<ActivitySuggestion> existingSuggestions)
+        private ActivitiesSuggestion MakeRecommendation(ActivityRequest request, IEnumerable<ActivitiesSuggestion> existingSuggestions)
         {
             DateTime now = request.Date;
             this.SuspectLatestActionDate(now, true);
@@ -1018,8 +1017,7 @@ namespace ActivityRecommendation
             IEnumerable<Participation> hypotheticalParticipations = this.SupposeHypotheticalSuggestions(existingSuggestions);
 
             // now we get a recommendation, from among all activities within this category
-            //request.RequestedProcessingTime = this.suggestionProcessingDuration;
-            ActivitySuggestion suggestion = this.engine.MakeRecommendation(request);
+            ActivitiesSuggestion suggestion = this.engine.MakeRecommendation(request);
 
             // if there are no matching activities, then give up
             if (suggestion != null)
@@ -1043,7 +1041,7 @@ namespace ActivityRecommendation
                 return result;
             ActivitySuggestion suggestion = result.ActivitySuggestion;
             this.engine.PutSuggestionInMemory(suggestion); // have to call this.engine.PutSuggestionInMemory so that ActivityRecommender can ask for a suggestion without recording it
-            this.WriteSuggestion(suggestion);
+            this.WriteSuggestion(new ActivitiesSuggestion(suggestion));
             return result;
         }
 
@@ -1052,13 +1050,13 @@ namespace ActivityRecommendation
             return this.engine.Test_ChooseExperimentOption();
         }
 
-        private IEnumerable<Participation> SupposeHypotheticalSuggestions(IEnumerable<ActivitySuggestion> suggestions)
+        private IEnumerable<Participation> SupposeHypotheticalSuggestions(IEnumerable<ActivitiesSuggestion> suggestions)
         {
             List<Participation> fakeParticipations = new List<Participation>(suggestions.Count());
-            foreach (ActivitySuggestion suggestion in suggestions)
+            foreach (ActivitiesSuggestion suggestion in suggestions)
             {
                 // pretend that the user took our suggestion and tell that to the engine
-                Participation fakeParticipation = new Participation(suggestion.StartDate, suggestion.EndDate.Value, suggestion.ActivityDescriptor);
+                Participation fakeParticipation = new Participation(suggestion.StartDate, suggestion.Children.First().EndDate.Value, suggestion.Children.First().ActivityDescriptor);
                 fakeParticipation.Hypothetical = true;
                 this.engine.PutParticipationInMemory(fakeParticipation);
                 fakeParticipations.Add(fakeParticipation);
@@ -1072,7 +1070,7 @@ namespace ActivityRecommendation
                 this.engine.RemoveParticipation(participation);
             }
         }
-        private void WriteSuggestion(ActivitySuggestion suggestion)
+        private void WriteSuggestion(ActivitiesSuggestion suggestion)
         {
             string text = this.textConverter.ConvertToString(suggestion) + Environment.NewLine;
             this.internalFileIo.AppendText(text, this.ratingsFileName);
@@ -1098,8 +1096,8 @@ namespace ActivityRecommendation
             // fill in some default data for the ParticipationEntryView
             this.participationEntryView.Clear();
 
-            IEnumerable<ActivitySuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
-            if (existingSuggestions.Count() > 0 && existingSuggestions.First().ActivityDescriptor.CanMatch(participation.ActivityDescriptor))
+            IEnumerable<ActivitiesSuggestion> existingSuggestions = this.suggestionsView.GetSuggestions();
+            if (existingSuggestions.Count() > 0 && existingSuggestions.First().CanMatch(participation.ActivityDescriptor))
                 this.suggestionsView.RemoveSuggestion(existingSuggestions.First());
             this.PersistSuggestions();
 
@@ -1273,7 +1271,7 @@ namespace ActivityRecommendation
                 //this.WriteRecentUserData();
             }
         }
-        public IEnumerable<ActivitySuggestion> CurrentSuggestions
+        public IEnumerable<ActivitiesSuggestion> CurrentSuggestions
         {
             get
             {

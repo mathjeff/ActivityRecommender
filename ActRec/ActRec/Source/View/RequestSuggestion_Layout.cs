@@ -17,7 +17,7 @@ namespace ActivityRecommendation.View
         public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
 
         public RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowMultipleSuggestionTypes, bool vertical,
-            Engine engine, LayoutStack layoutStack)
+            int numChoicesPerSuggestion, Engine engine, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
             this.allowRequestingActivitiesDirectly = allowRequestingActivitiesDirectly;
@@ -25,6 +25,7 @@ namespace ActivityRecommendation.View
             this.vertical = vertical;
             this.engine = engine;
             this.layoutStack = layoutStack;
+            this.numChoicesPerSuggestion = numChoicesPerSuggestion;
 
             GridLayout_Builder gridBuilder;
             if (vertical)
@@ -33,7 +34,7 @@ namespace ActivityRecommendation.View
                 gridBuilder = new Horizontal_GridLayout_Builder();
             gridBuilder.Uniform();
 
-            Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, false, false, this.vertical, this.engine, this.layoutStack);
+            Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, false, false, this.vertical, numChoicesPerSuggestion, this.engine, this.layoutStack);
             this.impl = child;
             child.RequestSuggestion += Child_RequestSuggestion;
             gridBuilder.AddLayout(this.impl);
@@ -64,7 +65,8 @@ namespace ActivityRecommendation.View
         }
         private void ExpandButton_Clicked(object sender, EventArgs e)
         {
-            Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, this.allowRequestingActivitiesDirectly, this.allowMultipleSuggestionTypes, this.vertical, this.engine, this.layoutStack);
+            Full_RequestSuggestion_Layout child = new Full_RequestSuggestion_Layout(this.activityDatabase, this.allowRequestingActivitiesDirectly, this.allowMultipleSuggestionTypes, this.vertical,
+                this.numChoicesPerSuggestion, this.engine, this.layoutStack);
             child.LatestParticipation = this.latestParticipation;
             child.RequestSuggestion += Child_RequestSuggestion;
             this.impl = child;
@@ -79,6 +81,7 @@ namespace ActivityRecommendation.View
         private LayoutStack layoutStack;
         private Full_RequestSuggestion_Layout impl;
         private Participation latestParticipation;
+        private int numChoicesPerSuggestion;
     }
 
     // A Full_RequestSuggestion_Layout allows the user to request suggestions, and also may give the user some options for customizing their request
@@ -88,8 +91,9 @@ namespace ActivityRecommendation.View
         public delegate void RequestSuggestion_Handler(ActivityRequest activityRequest);
 
         public Full_RequestSuggestion_Layout(ActivityDatabase activityDatabase, bool allowRequestingActivitiesDirectly, bool allowMultipleSuggestionTypes, bool vertical,
-            Engine engine, LayoutStack layoutStack)
+            int numChoicesPerSuggestion, Engine engine, LayoutStack layoutStack)
         {
+            this.numChoicesPerSuggestion = numChoicesPerSuggestion;
             Button suggestionButton = new Button();
             suggestionButton.Clicked += SuggestBestActivity_Clicked;
             ButtonLayout suggest_maxLongtermHappiness_button;
@@ -194,6 +198,7 @@ namespace ActivityRecommendation.View
         private void Suggest(ActivityRequestOptimizationProperty optimizationProperty)
         {
             ActivityRequest activityRequest = new ActivityRequest(this.categoryBox.Activity, this.atLeastAsFunAs_activity, DateTime.Now, optimizationProperty);
+            activityRequest.NumOptionsRequested = this.numChoicesPerSuggestion;
             if (this.atLeastAsFunAs_activity != null)
             {
                 DateTime startDate = activityRequest.Date;
@@ -238,6 +243,7 @@ namespace ActivityRecommendation.View
         private Activity atLeastAsFunAs_activity;
         private ActivityDatabase activityDatabase;
         private Engine engine;
+        private int numChoicesPerSuggestion;
     }
 
     class Specify_AtLeastAsFunAs_Layout : ContainerLayout

@@ -723,7 +723,10 @@ namespace ActivityRecommendation
         public override void PreviewSkip(ActivitySkip newSkip)
         {
             // update the error rate for the participation probability predictor
-            this.UpdateParticipationProbabilityError(newSkip.ActivityDescriptor, newSkip.CreationDate, 0);
+            foreach (ActivityDescriptor descriptor in newSkip.ActivityDescriptors)
+            {
+                this.UpdateParticipationProbabilityError(descriptor, newSkip.CreationDate, 0);
+            }
             // inform the ratingSummarizer that the user wasn't doing anything during this time
             this.ratingSummarizer.AddParticipationIntensity(newSkip.ConsideredSinceDate, newSkip.ThinkingTime, 0);
         }

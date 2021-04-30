@@ -51,7 +51,7 @@ namespace ActivityRecommendation
             this.addText(text);
         }
 
-        public override void PreviewSuggestion(ActivitySuggestion suggestion)
+        public override void PreviewSuggestion(ActivitiesSuggestion suggestion)
         {
             string text = this.textConverter.ConvertToString(suggestion);
             this.addText(text);

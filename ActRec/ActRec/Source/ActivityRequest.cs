@@ -41,6 +41,7 @@ namespace ActivityRecommendation
         public Rating RawRawing { get; set; }
         public Rating UserPredictedRating { get; set; }
         public TimeSpan? RequestedProcessingTime { get; set; }
+        public int NumOptionsRequested = 1;
 
         // The number of suggestions that must be accepted divided by the number of suggestions that will be done.
         // In most cases, this is 1, but an experiment requires consenting to multiple activities and then doing only one.

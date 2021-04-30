@@ -192,7 +192,7 @@ namespace ActivityRecommendation
             if (data.LatestActionDate != null)
                 properties[this.DateTag] = this.ConvertToStringBody(data.LatestActionDate);
             if (data.Suggestions != null)
-                properties[this.SuggestionsTag] = this.ConvertToStringBody(data.Suggestions);
+                properties[this.RecentUserData_MultipleSuggestions_Tag] = this.ConvertToStringBody(data.Suggestions);
             if (data.NumRecent_UserChosen_ExperimentSuggestions != 0)
                 properties[this.NumRecent_UserChosen_ExperimentSuggestions_Tag] = this.ConvertToStringBody(data.NumRecent_UserChosen_ExperimentSuggestions);
             if (data.DemandedMetricName != "")
@@ -228,7 +228,7 @@ namespace ActivityRecommendation
             Dictionary<string, string> properties = new Dictionary<string, string>();
             string objectName = this.SkipTag;
 
-            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(skip.ActivityDescriptor);
+            properties[this.ActivityDescriptorsTag] = this.ConvertToStringBody(skip.ActivityDescriptors);
             properties[this.DateTag] = this.ConvertToStringBody(skip.CreationDate);
             properties[this.SuggestionCreationDate] = this.ConvertToStringBody(skip.SuggestionCreationDate);
             if (skip.SuggestionStartDate != skip.SuggestionCreationDate)
@@ -238,16 +238,16 @@ namespace ActivityRecommendation
 
             return this.ConvertToString(properties, objectName);
         }
-        public string ConvertToString(ActivitySuggestion activitySuggestion)
+        public string ConvertToString(ActivitiesSuggestion activitySuggestion)
         {
             string body = this.ConvertToStringBody(activitySuggestion);
-            return this.ConvertToString(body, this.SuggestionTag);
+            return this.ConvertToString(body, this.ParallelSuggestions_Tag);
         }
-        public string ConvertToStringBody(ActivitySuggestion activitySuggestion)
+        public string ConvertToStringBody(ActivitiesSuggestion activitySuggestion)
         {
             Dictionary<string, string> properties = new Dictionary<string, string>();
 
-            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(activitySuggestion.ActivityDescriptor);
+            //properties[this.ActivityDescriptorsTag] = this.ConvertToStringBody(activitySuggestion.ActivityDescriptors);
 
             string startDate_text = this.ConvertToStringBody(activitySuggestion.StartDate);
             if (activitySuggestion.CreatedDate != null)
@@ -259,8 +259,17 @@ namespace ActivityRecommendation
                     properties[this.SuggestionCreationDate] = createdDate_text;
             }
             properties[this.SuggestionStartDateTag] = startDate_text;
-            if (activitySuggestion.EndDate != null)
-                properties[this.SuggestionEndDateTag] = this.ConvertToStringBody(activitySuggestion.EndDate);
+
+            List<string> childComponents = new List<string>();
+            foreach (ActivitySuggestion child in activitySuggestion.Children)
+            {
+                Dictionary<string, string> childProperties = new Dictionary<string, string>();
+                childProperties[this.ActivityDescriptorTag] = this.ConvertToStringBody(child.ActivityDescriptor);
+                if (child.EndDate != null)
+                    childProperties[this.SuggestionEndDateTag] = this.ConvertToStringBody(child.EndDate);
+                childComponents.Add(this.ConvertToString(childProperties, this.ChildSuggestion_Tag));
+            }
+            properties[this.ChildSuggestions_Tag] = string.Join("", childComponents);
 
             if (!activitySuggestion.Skippable)
                 properties[this.SkippableTag] = this.ConvertToStringBody(activitySuggestion.Skippable);
@@ -428,6 +437,11 @@ namespace ActivityRecommendation
                     this.ProcessSuggestion(node);
                     continue;
                 }
+                if (node.Name == this.ParallelSuggestions_Tag)
+                {
+                    this.ProcessSuggestions(node);
+                    continue;
+                }
                 if (node.Name == this.ExperimentTag)
                 {
                     this.ProcessExperiment(node);
@@ -527,7 +541,16 @@ namespace ActivityRecommendation
         {
             ActivitySuggestion suggestion = this.ReadSuggestion(nodeRepresentation);
             this.setPendingSkip(null, suggestion.CreatedDate);
-            this.listener.AddSuggestion(suggestion);
+            this.listener.AddSuggestion(new ActivitiesSuggestion(suggestion));
+        }
+        private void ProcessSuggestions(XmlNode nodeRepresentation)
+        {
+            ActivitiesSuggestion suggestion = this.ReadParallelSuggestions(nodeRepresentation);
+            if (suggestion.Children.Count > 0)
+            {
+                this.setPendingSkip(null, suggestion.CreatedDate);
+                this.listener.AddSuggestion(suggestion);
+            }
         }
         private void ProcessExperiment(XmlNode nodeRepresentation)
         {
@@ -816,7 +839,7 @@ namespace ActivityRecommendation
         // returns an object of type "Skip" that this XmlNode represents
         private ActivitySkip ReadSkip(XmlNode nodeRepresentation)
         {
-            ActivityDescriptor activityDescriptor = null;
+            List<ActivityDescriptor> activityDescriptors = new List<ActivityDescriptor>();
             DateTime? suggestionCreationDate = null;
             DateTime? consideredSinceDate = null;
             DateTime? suggestionStartDate = null;
@@ -826,7 +849,12 @@ namespace ActivityRecommendation
             {
                 if (currentChild.Name == this.ActivityDescriptorTag)
                 {
-                    activityDescriptor = this.ReadActivityDescriptor(currentChild);
+                    activityDescriptors = new List<ActivityDescriptor>() { this.ReadActivityDescriptor(currentChild) };
+                    continue;
+                }
+                if (currentChild.Name == this.ActivityDescriptorsTag)
+                {
+                    activityDescriptors = this.ReadActivityDescriptors(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.SuggestionCreationDate)
@@ -865,7 +893,7 @@ namespace ActivityRecommendation
                 // fill in default value for suggestionCreationDate
                 consideredSinceDate = suggestionCreationDate;
             }
-            return new ActivitySkip(activityDescriptor, suggestionCreationDate.Value, consideredSinceDate.Value, skipCreationDate.Value, suggestionStartDate.Value);
+            return new ActivitySkip(activityDescriptors, suggestionCreationDate.Value, consideredSinceDate.Value, skipCreationDate.Value, suggestionStartDate.Value);
         }
 
         // sets the pending skip at the given time (and submits the previous pending skip if it exists)
@@ -1012,6 +1040,19 @@ namespace ActivityRecommendation
             }
             return this.activityDescriptors[name];
         }
+        private List<ActivityDescriptor> ReadActivityDescriptors(XmlNode nodeRepresentation)
+        {
+            List<ActivityDescriptor> children = new List<ActivityDescriptor>();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.ActivityDescriptorTag)
+                {
+                    children.Add(this.ReadActivityDescriptor(currentChild));
+                    continue;
+                }
+            }
+            return children;
+        }
         /*private RatingSource ReadRatingSource(XmlNode nodeRepresentation)
         {
             string text = this.ReadText(nodeRepresentation);
@@ -1037,9 +1078,14 @@ namespace ActivityRecommendation
                     data.LatestActionDate = this.ReadDate(currentChild);
                     continue;
                 }
-                if (currentChild.Name == this.SuggestionsTag)
+                if (currentChild.Name == this.RecentUserData_MultipleSuggestions_Tag)
                 {
-                    data.Suggestions = this.ReadSuggestions(currentChild);
+                    data.Suggestions = this.ReadRecentSuggestions(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.RecentUserData_Suggestions_Legacy_Tag)
+                {
+                    data.Suggestions = this.ReadRecentSuggestions_Legacy(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.NumRecent_UserChosen_ExperimentSuggestions_Tag)
@@ -1055,20 +1101,80 @@ namespace ActivityRecommendation
             }
             return data;
         }
-        private List<ActivitySuggestion> ReadSuggestions(XmlNode nodeRepresentation)
+        private List<ActivitiesSuggestion> ReadRecentSuggestions(XmlNode nodeRepresentation)
         {
-            List<ActivitySuggestion> suggestions = new List<ActivitySuggestion>(nodeRepresentation.ChildNodes.Count);
+            List<ActivitiesSuggestion> suggestions = new List<ActivitiesSuggestion>(nodeRepresentation.ChildNodes.Count);
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
-                ActivitySuggestion suggestion = this.ReadSuggestion(currentChild);
-                suggestions.Add(suggestion);
+                suggestions.Add(this.ReadParallelSuggestions(currentChild));
             }
             return suggestions;
+        }
+        private List<ActivitiesSuggestion> ReadRecentSuggestions_Legacy(XmlNode nodeRepresentation)
+        {
+            List<ActivitiesSuggestion> suggestions = new List<ActivitiesSuggestion>(nodeRepresentation.ChildNodes.Count);
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                suggestions.Add(new ActivitiesSuggestion(this.ReadSuggestion(currentChild)));
+            }
+            return suggestions;
+        }
+        private ActivitiesSuggestion ReadParallelSuggestions(XmlNode nodeRepresentation)
+        {
+            DateTime startDate = new DateTime();
+            DateTime? createdDate = null;
+            bool? skippable = null;
+            List<ActivitySuggestion> children = new List<ActivitySuggestion>();
+            foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
+            {
+                if (currentChild.Name == this.SuggestionCreationDate)
+                {
+                    createdDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SuggestionStartDateTag)
+                {
+                    startDate = this.ReadDate(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.SuggestionTag)
+                {
+                    children.Add(this.ReadSuggestion(currentChild));
+                    continue;
+                }
+                if (currentChild.Name == this.SkippableTag)
+                {
+                    skippable = this.ReadBool(currentChild);
+                    continue;
+                }
+                if (currentChild.Name == this.ChildSuggestions_Tag)
+                {
+                    foreach (XmlNode grandChild in currentChild.ChildNodes)
+                    {
+                        children.Add(this.ReadSuggestion(grandChild));
+                    }
+                    continue;
+                }
+            }
+
+            if (createdDate == null)
+                createdDate = startDate;
+
+            foreach (ActivitySuggestion child in children)
+            {
+                child.CreatedDate = createdDate.Value;
+                child.StartDate = startDate;
+                if (skippable != null)
+                {
+                    child.Skippable = skippable.Value;
+                }
+            }
+            return new ActivitiesSuggestion(children);
         }
         private ActivitySuggestion ReadSuggestion(XmlNode nodeRepresentation)
         {
             ActivityDescriptor descriptor = null;
-            DateTime startDate = new DateTime();
+            DateTime? startDate = new DateTime();
             DateTime? endDate = null;
             DateTime? createdDate = null;
             bool skippable = true;
@@ -1101,14 +1207,19 @@ namespace ActivityRecommendation
                 }
             }
             ActivitySuggestion suggestion = new ActivitySuggestion(descriptor);
+
             if (createdDate == null)
                 createdDate = startDate;
-            suggestion.CreatedDate = createdDate.Value;
-            suggestion.StartDate = startDate;
+            if (createdDate != null)
+                suggestion.CreatedDate = createdDate.Value;
+            if (startDate != null)
+                suggestion.StartDate = startDate.Value;
             suggestion.EndDate = endDate;
             suggestion.Skippable = skippable;
+
             return suggestion;
         }
+
 
         public PlannedExperiment ReadExperiment(XmlNode nodeRepresentation)
         {
@@ -1352,6 +1463,13 @@ namespace ActivityRecommendation
                 if (node.Name == this.SuggestionTag)
                 {
                     ActivitySuggestion suggestion = this.ReadSuggestion(node);
+                    ActivitiesSuggestion parent = new ActivitiesSuggestion(new List<ActivitySuggestion>(){ suggestion });
+                    historyTexts.Add(this.ConvertToString(parent));
+                    continue;
+                }
+                if (node.Name == this.ParallelSuggestions_Tag)
+                {
+                    ActivitiesSuggestion suggestion = this.ReadParallelSuggestions(node);
                     historyTexts.Add(this.ConvertToString(suggestion));
                     continue;
                 }
@@ -1407,6 +1525,19 @@ namespace ActivityRecommendation
                 properties[this.ActivityNameTag] = this.XmlEscape(activityName);
             }
             return this.ConvertToStringBody(properties);
+        }
+        private string ConvertToString(ActivityDescriptor descriptor)
+        {
+            return this.ConvertToString(this.ConvertToStringBody(descriptor), this.ActivityDescriptorTag);
+        }
+        private string ConvertToStringBody(List<ActivityDescriptor> activityDescriptors)
+        {
+            List<string> components = new List<string>();
+            foreach (ActivityDescriptor descriptor in activityDescriptors)
+            {
+                components.Add(this.ConvertToString(descriptor));
+            }
+            return string.Join("", components);
         }
         // converts the DateTime into a string, and doesn't add the initial <Tag> or ending </Tag>
         private string ConvertToStringBody(DateTime? when)
@@ -1477,10 +1608,10 @@ namespace ActivityRecommendation
             return this.ConvertToStringBody(properties);
         }
         // converts the list of suggestions into a string without the initial <Tag> or ending </Tag>
-        private string ConvertToStringBody(IEnumerable<ActivitySuggestion> suggestions)
+        private string ConvertToStringBody(IEnumerable<ActivitiesSuggestion> suggestions)
         {
             string result = "";
-            foreach (ActivitySuggestion suggestion in suggestions)
+            foreach (ActivitiesSuggestion suggestion in suggestions)
             {
                 result += this.ConvertToString(suggestion);
             }
@@ -1519,6 +1650,13 @@ namespace ActivityRecommendation
             get
             {
                 return "Activity";
+            }
+        }
+        public string ActivityDescriptorsTag
+        {
+            get
+            {
+                return "Activities";
             }
         }
         public string ActivityNameTag
@@ -1806,6 +1944,13 @@ namespace ActivityRecommendation
                 return "Suggestion";
             }
         }
+        private string ParallelSuggestions_Tag
+        {
+            get
+            {
+                return "Suggestions";
+            }
+        }
         private string SkippableTag
         {
             get
@@ -1813,13 +1958,35 @@ namespace ActivityRecommendation
                 return "Skippable";
             }
         }
-        private string SuggestionsTag
+        private string ChildSuggestions_Tag
+        {
+            get
+            {
+                return "Options";
+            }
+        }
+        private string ChildSuggestion_Tag
+        {
+            get
+            {
+                return "Option";
+            }
+        }
+        private string RecentUserData_MultipleSuggestions_Tag
+        {
+            get
+            {
+                return "PendingSuggestions";
+            }
+        }
+        private string RecentUserData_Suggestions_Legacy_Tag
         {
             get
             {
                 return "Suggestions";
             }
         }
+
         private string RecentUserDataTag
         {
             get

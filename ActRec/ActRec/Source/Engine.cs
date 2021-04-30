@@ -1,5 +1,6 @@
 ﻿using ActivityRecommendation.Effectiveness;
 using AdaptiveInterpolation;
+using StatLists;
 using System;
 using System.Collections.Generic;
 
@@ -176,31 +177,32 @@ namespace ActivityRecommendation
         // gives the Skip to all Activities to which it applies
         public void CascadeSkip(ActivitySkip newSkip)
         {
-            ActivityDescriptor descriptor = newSkip.ActivityDescriptor;
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            if (activity != null)
+            foreach (ActivityDescriptor descriptor in newSkip.ActivityDescriptors)
             {
-                List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
-                foreach (Activity parent in superCategories)
+                Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+                if (activity != null)
                 {
-                    parent.AddSkip(newSkip);
+                    List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
+                    foreach (Activity parent in superCategories)
+                    {
+                        parent.AddSkip(newSkip);
+                    }
                 }
             }
         }
         // assigns this ActivitySuggestion to each relevant activity
-        private void CascadeSuggestion(ActivitySuggestion newSuggestion)
+        private void CascadeSuggestion(ActivitySuggestion suggestion)
         {
-            ActivityDescriptor descriptor = newSuggestion.ActivityDescriptor;
-            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
+            Activity activity = this.activityDatabase.ResolveDescriptor(suggestion.ActivityDescriptor);
             if (activity != null)
             {
                 List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
                 foreach (Activity parent in superCategories)
                 {
-                    parent.AddSuggestion(newSuggestion);
+                    parent.AddSuggestion(suggestion);
                 }
             }
-            this.longTerm_suggestionValue_interpolator.AddDatapoint(newSuggestion.CreatedDate, this.getCoordinatesForSuggestion(newSuggestion.CreatedDate, activity));
+            this.longTerm_suggestionValue_interpolator.AddDatapoint(suggestion.CreatedDate, this.getCoordinatesForSuggestion(suggestion.CreatedDate, activity));
         }
         // performs Depth First Search to find all superCategories of the given Activity
         public List<Activity> FindAllSupercategoriesOf(Activity child)
@@ -215,12 +217,12 @@ namespace ActivityRecommendation
             else
                 return parent.GetChildrenRecursive();
         }
-        public ActivitySuggestion MakeRecommendation()
+        public ActivitiesSuggestion MakeRecommendation()
         {
             ActivityRequest request = new ActivityRequest();
             return this.MakeRecommendation(request);
         }
-        public ActivitySuggestion MakeRecommendation(DateTime when)
+        public ActivitiesSuggestion MakeRecommendation(DateTime when)
         {
             ActivityRequest request = new ActivityRequest(when);
             return this.MakeRecommendation(request);
@@ -345,7 +347,7 @@ namespace ActivityRecommendation
             // We intentionally process them in a random order later anyway
             return new List<Activity>(interestingCandidates);
         }
-        public ActivitySuggestion MakeRecommendation(ActivityRequest request)
+        public ActivitiesSuggestion MakeRecommendation(ActivityRequest request)
         {
             DateTime when = request.Date;
             Activity activityToBeat = this.activityDatabase.ResolveDescriptor(request.ActivityToBeat);
@@ -448,7 +450,7 @@ namespace ActivityRecommendation
                     }
                 }
                 consideredCandidates.Add(candidate);
-                if (consideredCandidates.Count >= 2 && requestedProcessingTime != null)
+                if (consideredCandidates.Count >= 3 && requestedProcessingTime != null)
                 {
                     // check whether we've used up all of our processing time, but always consider at least two activities
                     DateTime now = DateTime.Now;
@@ -469,24 +471,27 @@ namespace ActivityRecommendation
                     bestActivity = activityToBeat;
             }
             // After finding the activity with the highest expected rating, we need to check for other activities having high variance but almost-as-good values
-            Activity bestActivityToPairWith = bestActivity;
+
             if (bestActivity == null)
                 return null;
-            double bestCombinedScore = GetCombinedValue(bestActivity, bestActivityToPairWith, utilitiesCache).Mean;
+            StatList<double, Activity> bestActivitiesToPairWith = new StatList<double, Activity>(new ReverseDoubleComparer(), new NoopCombiner<Activity>());
             foreach (Activity candidate in consideredCandidates)
             {
                 double currentScore = this.GetCombinedValue(bestActivity, candidate, utilitiesCache).Mean;
-                if (currentScore > bestCombinedScore)
-                {
-                    bestActivityToPairWith = candidate;
-                    bestCombinedScore = currentScore;
-                }
+                bestActivitiesToPairWith.Add(currentScore, candidate);
+            }
+            int availableCount = bestActivitiesToPairWith.NumItems;
+            int returnCount = Math.Min(3, availableCount);
+            List<Activity> resultActivities = new List<Activity>();
+            foreach (ListItemStats<double, Activity> result in bestActivitiesToPairWith.ItemsBetweenIndices(0, returnCount))
+            {
+                resultActivities.Add(result.Value);
             }
             // System.Diagnostics.Debug.WriteLine("bestActivity = " + bestActivity + ", suggesting " + bestActivityToPairWith);
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
             // If there was no such pair, then we just want to choose the best activity because no others could help
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
-            return this.SuggestActivity(bestActivityToPairWith, bestActivity, request, consideredCandidates.Count, true);
+            return this.SuggestMultipleActivityOptions(resultActivities, bestActivity, request, consideredCandidates.Count, true);
         }
         // identifies the Justification that had the largest positive impact on the suggestion value for this activity at this time
         private Justification getMostSignificantJustification(Activity activity, ActivityRequest request)
@@ -510,8 +515,16 @@ namespace ActivityRecommendation
 
             return bestReason;
         }
-
-        private ActivitySuggestion SuggestActivity(Activity activity, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
+        private ActivitiesSuggestion SuggestMultipleActivityOptions(List<Activity> bestActivities, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
+        {
+            List<ActivitySuggestion> children = new List<ActivitySuggestion>();
+            foreach (Activity activity in bestActivities)
+            {
+                children.Add(this.SuggestOneActivity(activity, bestActivityIfWeCanNoLongerLearn, request, numActivitiesConsidered, tryComputeExpectedFeedback));
+            }
+            return new ActivitiesSuggestion(children);
+        }
+        private ActivitySuggestion SuggestOneActivity(Activity activity, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
         {
             DateTime when = request.Date;
             DateTime now = DateTime.Now;
@@ -1543,15 +1556,25 @@ namespace ActivityRecommendation
                 this.activityDatabase.RequestedActivityAtLeastAsGoodAsOther = true;
         }
         // tells the Engine about an ActivitySuggestion that wasn't already in memory (but may have been stored on disk)
+        public void PutSuggestionInMemory(ActivitiesSuggestion suggestion)
+        {
+            foreach (ActivitySuggestion child in suggestion.Children)
+            {
+                this.PutSuggestionInMemory(child);
+            }
+        }
         public void PutSuggestionInMemory(ActivitySuggestion suggestion)
         {
             this.DiscoveredSuggestion(suggestion);
             this.unappliedSuggestions.Add(suggestion);
         }
         // tells the Engine about a new ActivitySuggestion that was just created
-        public void ApplySuggestion(ActivitySuggestion suggestion)
+        public void ApplySuggestion(ActivitiesSuggestion suggestion)
         {
-            this.CascadeSuggestion(suggestion);
+            foreach (ActivitySuggestion child in suggestion.Children)
+            {
+                this.CascadeSuggestion(child);
+            }
         }
         public void PutExperimentInMemory(PlannedExperiment experiment)
         {
@@ -2105,8 +2128,8 @@ namespace ActivityRecommendation
             request.RequestedProcessingTime = requestedProcessingTime;
             request.NumAcceptancesPerParticipation = 3;
 
-            ActivitySuggestion activitySuggestion = this.MakeRecommendation(request);
-            Activity bestActivity = this.activityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
+            ActivitiesSuggestion activitySuggestion = this.MakeRecommendation(request);
+            Activity bestActivity = this.activityDatabase.ResolveDescriptor(activitySuggestion.Children[0].ActivityDescriptor);
             Activity bestActivityIfNoLearning = this.activityDatabase.ResolveDescriptor(activitySuggestion.BestActivityIfWeCanNoLongerLearn);
 
             // chose a random metric for this activity
@@ -2134,7 +2157,7 @@ namespace ActivityRecommendation
             plannedMetric.MetricName = metric.Name;
 
             bool userGuidedThisSuggestion = fromCategory != null;
-            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestActivity(bestActivity, bestActivityIfNoLearning,  request, numActivitiesToChooseFromNow, false), userGuidedThisSuggestion), -1);
+            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestOneActivity(bestActivity, bestActivityIfNoLearning,  request, numActivitiesToChooseFromNow, false), userGuidedThisSuggestion), -1);
         }
 
         // Generates a set of experiment options that together form a possible experiment

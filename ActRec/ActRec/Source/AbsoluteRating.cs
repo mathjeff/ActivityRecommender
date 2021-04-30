@@ -58,13 +58,6 @@ namespace ActivityRecommendation
             base.FillInFromParticipation(participation);
         }
 
-        public override void FillInFromSkip(ActivitySkip skip)
-        {
-            this.ActivityDescriptor = skip.ActivityDescriptor;
-            this.Date = skip.CreationDate;
-            base.FillInFromSkip(skip);
-        }
-
         public override void FillInFromRequest(ActivityRequest request)
         {
             this.ActivityDescriptor = request.FromCategory;

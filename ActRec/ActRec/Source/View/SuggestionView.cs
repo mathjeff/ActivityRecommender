@@ -9,7 +9,7 @@ namespace ActivityRecommendation
     class SuggestionView : ContainerLayout
     {
         public event SuggestionDismissed Dismissed;
-        public delegate void SuggestionDismissed(ActivitySuggestion suggestion);
+        public delegate void SuggestionDismissed(ActivitiesSuggestion suggestion);
 
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment(ActivitySuggestion suggestion);
@@ -17,55 +17,108 @@ namespace ActivityRecommendation
         public event JustifySuggestionHandler JustifySuggestion;
         public delegate void JustifySuggestionHandler(ActivitySuggestion suggestion);
 
-        public event VisitParticipationScreenHandler VisitParticipationScreen;
-        public delegate void VisitParticipationScreenHandler();
+        public event VisitParticipationScreenHandler AcceptedSuggestion;
+        public delegate void VisitParticipationScreenHandler(ActivitySuggestion suggestion);
 
-        public SuggestionView(ActivitySuggestion suggestion, bool isFirstSuggestion, bool repeatingDeclinedSuggestion, LayoutStack layoutStack)
+        public SuggestionView(ActivitiesSuggestion suggestion, bool isFirstSuggestion, Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
 
 
-            // set up grid for holding buttons and content
-            // have the X button use a certain amount of space on the right
-            BoundProperty_List widths = new BoundProperty_List(3);
-            int titleWidthWeight = 6;
-            widths.SetPropertyScale(0, 1);
-            widths.SetPropertyScale(1, titleWidthWeight);
-            widths.SetPropertyScale(2, 1);
-            widths.BindIndices(0, 1);
-            widths.BindIndices(0, 2);
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(1), widths, LayoutScore.Zero);
-
-            // make a doNow button if needed
-            if (isFirstSuggestion)
+            bool allWorseThanAverage = true;
+            foreach (ActivitySuggestion child in suggestion.Children)
             {
-                Button doNowButton = new Button();
-                doNowButton.Clicked += DoNowButton_Clicked;
-                ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "Doing it?");
-                mainGrid.PutLayout(doButtonLayout, 0, 0);
+                if (!child.WorseThanRootActivity)
+                    allWorseThanAverage = false;
             }
+
+            GridLayout_Builder fullBuilder = new Vertical_GridLayout_Builder();
+            string startTimeText = suggestion.Children[0].StartDate.ToString("HH:mm");
+
+            if (allWorseThanAverage)
+                fullBuilder.AddLayout(new TextblockLayout("" + suggestion.Children.Count + " best ideas at " + startTimeText + ". How about a new activity?", 24).AlignHorizontally(TextAlignment.Center));
             else
+                fullBuilder.AddLayout(new TextblockLayout("" + suggestion.Children.Count + " ideas at " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
+
+            List<GridLayout> optionsGrids = new List<GridLayout>();
+            this.explainButtons = new Dictionary<Button, ActivitySuggestion>();
+            this.doButtons = new Dictionary<Button, ActivitySuggestion>();
+            for (int mainFontSize = 20; mainFontSize >= 12; mainFontSize -= 8)
             {
-                mainGrid.PutLayout(new TextblockLayout(), 0, 0);
+                GridLayout optionsGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(suggestion.Children.Count), LayoutScore.Zero);
+
+                for (int i = 0; i < suggestion.Children.Count; i++)
+                {
+                    ActivitySuggestion child = suggestion.Children[i];
+
+                    // set up the options for the text
+                    string mainText = this.summarize(child, repeatingDeclinedSuggestion[child]);
+                    TextblockLayout mainBlock = new TextblockLayout(mainText, mainFontSize);
+                    TextAlignment horizontalAlignment;
+                    TextAlignment verticalAlignment;
+                    if (i == 0)
+                    {
+                        horizontalAlignment = TextAlignment.Start;
+                        if (suggestion.Children.Count == 1)
+                            verticalAlignment = TextAlignment.Start;
+                        else
+                            verticalAlignment = TextAlignment.End;
+                    }
+                    else
+                    {
+                        if (i == suggestion.Children.Count - 1)
+                        {
+                            horizontalAlignment = TextAlignment.End;
+                            verticalAlignment = TextAlignment.Start;
+                        }
+                        else
+                        {
+                            horizontalAlignment = TextAlignment.Center;
+                            verticalAlignment = TextAlignment.Center;
+                        }
+                    }
+                    mainBlock.AlignHorizontally(horizontalAlignment);
+                    mainBlock.AlignVertically(verticalAlignment);
+                    optionsGrid.PutLayout(mainBlock, i, 0);
+
+                    // set up the buttons
+                    GridLayout_Builder buttonsBuilder = new Horizontal_GridLayout_Builder().Uniform();
+                    double buttonFontSize = mainFontSize * 0.9;
+                    // make a doNow button if needed
+                    if (isFirstSuggestion)
+                    {
+                        Button doNowButton = new Button();
+                        doNowButton.Clicked += DoNowButton_Clicked;
+                        this.doButtons[doNowButton] = child;
+                        ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "OK", buttonFontSize);
+                        buttonsBuilder.AddLayout(doButtonLayout);
+                    }
+                    if (child.PredictedScoreDividedByAverage != null)
+                    {
+                        Button explainButton = new Button();
+                        explainButton.Clicked += explainButton_Clicked;
+                        this.explainButtons[explainButton] = child;
+                        ButtonLayout explainLayout = new ButtonLayout(explainButton, "?", buttonFontSize);
+                        buttonsBuilder.AddLayout(explainLayout);
+                    }
+                    optionsGrid.PutLayout(buttonsBuilder.BuildAnyLayout(), i, 1);
+                    if (child.ExpectedReaction != null)
+                    {
+                        TextblockLayout reactionLayout = new TextblockLayout(child.ExpectedReaction, buttonFontSize * 0.9);
+                        reactionLayout.AlignHorizontally(horizontalAlignment);
+                        reactionLayout.AlignVertically(verticalAlignment);
+                        optionsGrid.PutLayout(reactionLayout, i, 2);
+                    }
+
+                    optionsGrids.Add(optionsGrid);
+                }
             }
 
-            // add content
-            string summary = this.summarize(suggestion, repeatingDeclinedSuggestion);
-            List<LayoutChoice_Set> contentChoices = new List<LayoutChoice_Set>();
-            for (int i = 12; i <= 32; i+= 4)
-            {
-                contentChoices.Add(new TextblockLayout(summary, i));
-            }
-            mainGrid.PutLayout(new LayoutUnion(contentChoices), 1, 0);
 
             // Add buttons on the right
             this.cancelButton = new Button();
             this.cancelButton.Clicked += cancelButton_Click;
-            this.justifyButton = new Button();
-            this.justifyButton.Clicked += justifyButton_Click;
-            this.experimentButton = new Button();
-            this.experimentButton.Clicked += ExperimentButton_Clicked;
             this.explainWhyYouCantSkipButton = new Button();
             this.explainWhyYouCantSkipButton.Clicked += ExplainWhyYouCantSkipButton_Clicked;
             ButtonLayout cancelLayout;
@@ -73,139 +126,12 @@ namespace ActivityRecommendation
                 cancelLayout = new ButtonLayout(this.cancelButton, "X");
             else
                 cancelLayout = new ButtonLayout(this.explainWhyYouCantSkipButton, "!");
-            GridLayout_Builder sideBuilder = new Vertical_GridLayout_Builder()
-                .Uniform()
+
+
+            fullBuilder.AddLayout(new LayoutUnion(optionsGrids))
                 .AddLayout(cancelLayout);
-            if (this.suggestion.ParticipationProbability != null)
-                sideBuilder.AddLayout(new ButtonLayout(this.justifyButton, "?"));
-            mainGrid.PutLayout(sideBuilder.Build(), 2, 0);
-            this.SubLayout = mainGrid;
-        }
 
-        // given a probability, returns an adjective to describe it
-        private string getProbabilityAdjective(double probability)
-        {
-            if (probability <= 0.1)
-                return "could be";
-            if (probability <= 0.2)
-                return "will occasionally be";
-            if (probability <= 0.3)
-                return "can potentially be";
-            if (probability <= 0.4)
-                return "might be";
-            if (probability <= 0.5)
-                return "may be";
-            if (probability <= 0.6)
-                return "often will be";
-            if (probability < 0.7)
-                return "is likely to be";
-            if (probability <= 0.8)
-                return "usually will be";
-            if (probability <= 0.9)
-                return "probably will be";
-            if (probability < 1)
-                return "will almost definitely be";
-            return "will certainly be";
-        }
-
-        // given an amount of future happiness (relative to), returns a verb to describe it
-        private string getFutureRatingAdjective(double ratingTimesAverage)
-        {
-            if (ratingTimesAverage <= 0.3)
-                return "miserable";
-            if (ratingTimesAverage <= 0.5)
-                return "terrible";
-            if (ratingTimesAverage <= 0.6)
-                return "poor";
-            if (ratingTimesAverage <= 0.7)
-                return "bad";
-            if (ratingTimesAverage <= 0.75)
-                return "annoying";
-            if (ratingTimesAverage <= 0.85)
-                return "disappointing";
-            if (ratingTimesAverage <= 0.88)
-                return "regrettable";
-            if (ratingTimesAverage <= 0.91)
-                return "unfortunate";
-            if (ratingTimesAverage <= 0.92)
-                return "mediocre";
-            if (ratingTimesAverage <= 0.93)
-                return "so-so";
-            if (ratingTimesAverage <= 0.95)
-                return "decent";
-            if (ratingTimesAverage <= 0.96)
-                return "acceptable";
-            if (ratingTimesAverage <= 0.97)
-                return "sufficient";
-            if (ratingTimesAverage <= 0.98)
-                return "adequate";
-            if (ratingTimesAverage <= 0.985)
-                return "justifiable";
-            if (ratingTimesAverage <= 0.99)
-                return "reasonable";
-            if (ratingTimesAverage <= 0.995)
-                return "fine";
-            if (ratingTimesAverage <= 1)
-                return "satisfactory";
-            if (ratingTimesAverage <= 1.005)
-                return "better than average";
-            if (ratingTimesAverage <= 1.01)
-                return "above average";
-            if (ratingTimesAverage <= 1.015)
-                return "all right";
-            if (ratingTimesAverage <= 1.02)
-                return "ok";
-            if (ratingTimesAverage <= 1.025)
-                return "an improvement";
-            if (ratingTimesAverage <= 1.03)
-                return "worthwhile";
-            if (ratingTimesAverage <= 1.035)
-                return "worth it";
-            if (ratingTimesAverage <= 1.04)
-                return "positive";
-            if (ratingTimesAverage <= 1.045)
-                return "constructive";
-            if (ratingTimesAverage <= 1.05)
-                return "useful";
-            if (ratingTimesAverage <= 1.055)
-                return "helpful";
-            if (ratingTimesAverage <= 1.06)
-                return "better";
-            if (ratingTimesAverage <= 1.065)
-                return "beneficial";
-            if (ratingTimesAverage <= 1.07)
-                return "advantageous";
-            if (ratingTimesAverage <= 1.075)
-                return "an upgrade";
-            if (ratingTimesAverage <= 1.08)
-                return "cool";
-            if (ratingTimesAverage <= 1.085)
-                return "a good idea";
-            if (ratingTimesAverage <= 1.09)
-                return "pretty good";
-            if (ratingTimesAverage <= 1.095)
-                return "high quality";
-            if (ratingTimesAverage <= 1.1)
-                return "nice";
-            if (ratingTimesAverage <= 1.15)
-                return "good";
-            if (ratingTimesAverage <= 1.2)
-                return "rewarding";
-            if (ratingTimesAverage <= 1.25)
-                return "really nice";
-            if (ratingTimesAverage <= 1.3)
-                return "really good";
-            if (ratingTimesAverage <= 1.35)
-                return "valuable";
-            if (ratingTimesAverage <= 1.4)
-                return "great";
-            if (ratingTimesAverage <= 1.45)
-                return "excellent";
-            if (ratingTimesAverage <= 1.5)
-                return "awesome";
-            if (ratingTimesAverage <= 1.6)
-                return "incredible";
-            return "spectacular";
+            this.SubLayout = fullBuilder.BuildAnyLayout();
         }
 
         private string summarize(ActivitySuggestion suggestion, bool repeatingDeclinedSuggestion)
@@ -214,17 +140,11 @@ namespace ActivityRecommendation
             string text;
             string shortTimeFormat = "HH:mm";
             string longTimeFormat = "HH:mm:ss";
-            string expectedReaction = suggestion.ExpectedReaction;
-            if (expectedReaction == null)
-                expectedReaction = "";
-            else
-                expectedReaction = " Feedback: \"" + expectedReaction + "\"";
 
             if (!suggestion.Skippable)
             {
                 // If this is an unskippable experiment, then remind the user that they promised to do it
                 text = "You promised to do " + suggestion.ActivityDescriptor.ActivityName + " at " + suggestion.StartDate.ToString(shortTimeFormat) + ".";
-                text += expectedReaction;
                 text += " Get started!";
             }
             else
@@ -246,22 +166,24 @@ namespace ActivityRecommendation
                     timeFormat = shortTimeFormat;
                 else
                     timeFormat = longTimeFormat;
-                string whenText = suggestion.StartDate.ToString(timeFormat);
+                string whenText;
                 if (suggestion.EndDate.HasValue)
-                    whenText += " - " + suggestion.EndDate.Value.ToString(timeFormat);
+                    whenText = " (until " + suggestion.EndDate.Value.ToString(timeFormat) + ")";
+                else
+                    whenText = "";
                 text += " " + whenText + ".";
-                text += expectedReaction;
-                // If we don't like our best idea, then also suggest trying something new
-                if (suggestion.WorseThanRootActivity)
-                    text += "\nMaybe a new activity could be better?";
             }
             return text;
         }
 
         private void DoNowButton_Clicked(object sender, EventArgs e)
         {
-            if (this.VisitParticipationScreen != null)
-                this.VisitParticipationScreen.Invoke();
+            if (this.AcceptedSuggestion != null)
+            {
+                Button button = sender as Button;
+                ActivitySuggestion suggestion = this.doButtons[button];
+                this.AcceptedSuggestion.Invoke(suggestion);
+            }
         }
 
         private void ExplainWhyYouCantSkipButton_Clicked(object sender, EventArgs e)
@@ -271,16 +193,14 @@ namespace ActivityRecommendation
                 "That's where you can specify that you didn't complete it."), "Help");
         }
 
-        private void ExperimentButton_Clicked(object sender, EventArgs e)
-        {
-            if (this.ExperimentRequested != null)
-                this.ExperimentRequested.Invoke(this.suggestion);
-        }
-
-        void justifyButton_Click(object sender, EventArgs e)
+        void explainButton_Clicked(object sender, EventArgs e)
         {
             if (this.JustifySuggestion != null)
-                this.JustifySuggestion.Invoke(this.suggestion);
+            {
+                Button explainButton = sender as Button;
+                ActivitySuggestion suggestion = this.explainButtons[explainButton];
+                this.JustifySuggestion.Invoke(suggestion);
+            }
         }
 
         void cancelButton_Click(object sender, EventArgs e)
@@ -288,36 +208,12 @@ namespace ActivityRecommendation
             if (this.Dismissed != null)
                 this.Dismissed.Invoke(this.suggestion);
         }
-
-        private LayoutChoice_Set make_displayField(string propertyName, string propertyValue)
-        {
-            GridLayout centeredGrid = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-            GridLayout uncenteredGrid = GridLayout.New(new BoundProperty_List(1), new BoundProperty_List(2), LayoutScore.Get_UnCentered_LayoutScore(1));
-
-            TextblockLayout nameLayout = new TextblockLayout(propertyName);
-            nameLayout.AlignHorizontally(TextAlignment.Start);
-            nameLayout.AlignVertically(TextAlignment.Center);
-            centeredGrid.AddLayout(nameLayout);
-            uncenteredGrid.AddLayout(nameLayout);
-
-            TextblockLayout valueLayout = new TextblockLayout(propertyValue);
-            valueLayout.AlignHorizontally(TextAlignment.Center);
-            valueLayout.AlignVertically(TextAlignment.Center);
-            centeredGrid.AddLayout(valueLayout);
-            uncenteredGrid.AddLayout(valueLayout);
-
-            LayoutUnion row = new LayoutUnion(centeredGrid, uncenteredGrid);
-
-            return row;
-            
-        }
         
         Button cancelButton;
         Button explainWhyYouCantSkipButton;
-        Button justifyButton;
-        Button experimentButton;
-        ActivitySuggestion suggestion;
+        Dictionary<Button, ActivitySuggestion> explainButtons;
+        Dictionary<Button, ActivitySuggestion> doButtons;
+        ActivitiesSuggestion suggestion;
         LayoutStack layoutStack;
-        
     }
 }

@@ -7,11 +7,11 @@ namespace ActivityRecommendation
 {
     public class ActivitySuggestion
     {
-        public ActivitySuggestion(ActivityDescriptor descriptor)
+        public ActivitySuggestion(ActivityDescriptor activityDescriptor)
         {
-            this.ActivityDescriptor = descriptor;
+            this.ActivityDescriptor = activityDescriptor;
         }
-        public ActivityDescriptor ActivityDescriptor { get; set; }
+        public ActivityDescriptor ActivityDescriptor;
         public ActivityDescriptor BestActivityIfWeCanNoLongerLearn { get; set; } // what the best activity would be if we weren't going to learn anything from this suggestion
         public DateTime StartDate { get; set; }                 // the date that we want the user to start the activity
         public DateTime? EndDate { get; set; }                   // the date that we want the user to stop the activity
@@ -35,16 +35,91 @@ namespace ActivityRecommendation
         public string ExpectedReaction { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all
         public int NumActivitiesConsidered { get; set; }
-        // number of suggestions for which we don't have another suggestion to follow up with
-        public virtual int CountNumLeaves()
-        {
-            return 1; // self
-        }
-        public virtual int CountNumLevelsFromLeaf()
-        {
-            return 0; // self
-        }
         public bool Skippable = true;
+    }
+
+    public class ActivitiesSuggestion
+    {
+        public ActivitiesSuggestion()
+        {
+            this.Children = new List<ActivitySuggestion>();
+        }
+        public ActivitiesSuggestion(List<ActivitySuggestion> children)
+        {
+            this.Children = children;
+        }
+        public ActivitiesSuggestion(ActivitySuggestion child)
+        {
+            this.Children = new List<ActivitySuggestion>() { child };
+        }
+        public bool CanMatch(ActivityDescriptor activityDescriptor)
+        {
+            foreach (ActivitySuggestion ours in this.Children)
+            {
+                if (ours.ActivityDescriptor.CanMatch(activityDescriptor))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool CanMatch(ActivitiesSuggestion other)
+        {
+            foreach (ActivitySuggestion child in this.Children)
+            {
+                if (other.CanMatch(child.ActivityDescriptor))
+                    return true;
+            }
+            return false;
+        }
+        public DateTime StartDate
+        {
+            get
+            {
+                return this.Children.First().StartDate;
+            }
+        }
+        public DateTime CreatedDate
+        {
+            get
+            {
+                return this.Children.First().CreatedDate;
+            }
+        }
+        public List<ActivityDescriptor> ActivityDescriptors
+        {
+            get
+            {
+                List<ActivityDescriptor> result = new List<ActivityDescriptor>();
+                foreach (ActivitySuggestion child in this.Children)
+                {
+                    result.Add(child.ActivityDescriptor);
+                }
+                return result;
+            }
+        }
+        public bool Skippable
+        {
+            get
+            {
+                foreach (ActivitySuggestion suggestion in this.Children)
+                {
+                    if (!suggestion.Skippable)
+                        return false;
+                }
+                return true;
+            }
+        }
+
+        public ActivityDescriptor BestActivityIfWeCanNoLongerLearn
+        {
+            get
+            {
+                return this.Children[0].BestActivityIfWeCanNoLongerLearn;
+            }
+        }
+
+        public List<ActivitySuggestion> Children;
     }
 
 

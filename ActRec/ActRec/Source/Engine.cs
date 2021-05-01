@@ -614,6 +614,11 @@ namespace ActivityRecommendation
         private Distribution GetCombinedValue(Activity activityA, Activity activityB, UtilitiesAnalysis recommendationsCache)
         {
             Distribution a = recommendationsCache.suggestionValues[activityA].Distribution;
+            if (activityA == activityB)
+            {
+                // If the two activities are the same, then their values can't vary independently
+                return a;
+            }
             Distribution b = recommendationsCache.suggestionValues[activityB].Distribution;
             TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
             TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;

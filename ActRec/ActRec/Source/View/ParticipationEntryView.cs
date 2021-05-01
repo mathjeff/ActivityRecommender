@@ -669,16 +669,20 @@ namespace ActivityRecommendation
 
         private ParticipationFeedback computeFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
         {
-            if (this.demanded_nextParticipationActivity != null && !this.demanded_nextParticipationActivity.Matches(chosenActivity))
+            if (this.demanded_nextParticipationActivity != null)
             {
-                string summary = "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
-                string details = "You previously initiated an experiment where you promised that you would be willing to do " +
-                    this.demanded_nextParticipationActivity.ActivityName + ". Instead you did " + chosenActivity.Name + ". If you " +
-                    "don't follow through on your promises, then your data might be skewed in strange ways. For example, it's possible that " +
-                    "in the evening that you may choose to skip doing difficult tasks and save them for the morning. This could cause you to " +
-                    "take more time working on any individual task in the morning than in the evening, which could incorrectly suggest that " +
-                    "your efficiency is lower in the morning than in the evening.";
-                return new ParticipationFeedback(chosenActivity, summary, false, new TextblockLayout(details));
+                if (!this.demanded_nextParticipationActivity.Matches(chosenActivity))
+                {
+                    string summary = "THE IRE OF THE EXPERIMENT GODS RAINS ON YOU AND YOUR BROKEN PROMISES";
+                    string details = "You previously initiated an experiment where you promised that you would be willing to do " +
+                        this.demanded_nextParticipationActivity.ActivityName + ". Instead you did " + chosenActivity.Name + ". If you " +
+                        "don't follow through on your promises, then your data might be skewed in strange ways. For example, it's possible that " +
+                        "in the evening that you may choose to skip doing difficult tasks and save them for the morning. This could cause you to " +
+                        "take more time working on any individual task in the morning than in the evening, which could incorrectly suggest that " +
+                        "your efficiency is lower in the morning than in the evening.";
+                    return new ParticipationFeedback(chosenActivity, summary, false, new TextblockLayout(details));
+                }
+                return null; // no feedback for experiments
             }
             ParticipationFeedback standardFeedback = this.engine.computeStandardParticipationFeedback(chosenActivity, startDate, endDate);
             if (standardFeedback != null)

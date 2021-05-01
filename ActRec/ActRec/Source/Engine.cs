@@ -2355,8 +2355,18 @@ namespace ActivityRecommendation
         {
             get
             {
-                List<Activity> activities = new List<Activity>(this.ActivityDatabase.AllActivities);
-                // it takes more time to also analyze the ratings for the root activity, but it's probably not very helpful to do
+                List<Activity> activities = new List<Activity>();
+                foreach (Activity candidate in this.ActivityDatabase.AllActivities)
+                {
+                    // ratings for the root activity aren't particularly interesting
+                    if (candidate == this.ActivityDatabase.RootActivity)
+                        continue;
+                    // each ToDo only gets done once and isn't super exciting to share
+                    if (candidate is ToDo)
+                        continue;
+                    activities.Add(candidate);
+                }
+                
                 activities.Remove(this.ActivityDatabase.RootActivity);
                 activities.Sort(new ActivityAverageScoreComparer());
                 activities.Reverse();

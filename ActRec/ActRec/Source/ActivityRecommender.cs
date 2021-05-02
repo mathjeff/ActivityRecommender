@@ -403,7 +403,7 @@ namespace ActivityRecommendation
             this.viewManager = new ViewManager(null, this.mainLayout, this.VisualDefaults);
 
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
-            ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack);
+            ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack, this.publicFileIo, this.textConverter);
 
             ActivitySearchView searchView = new ActivitySearchView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack, true);
             searchView.RequestDeletion += SearchView_RequestStartDeletion;
@@ -1217,7 +1217,7 @@ namespace ActivityRecommendation
 
         private void write_protoActivities_database()
         {
-            string text = this.textConverter.ConvertToString(this.protoActivities_database) + Environment.NewLine;
+            string text = this.textConverter.ConvertToString(this.protoActivities_database, false) + Environment.NewLine;
             this.internalFileIo.EraseFileAndWriteContent(this.protoActivities_filename, text);
         }
 

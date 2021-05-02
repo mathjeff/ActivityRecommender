@@ -9,7 +9,7 @@ namespace ActivityRecommendation.View
 {
     class ProtoActivities_Layout : ContainerLayout
     {
-        public ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, ActivityDatabase activityDatabase, LayoutStack layoutStack)
+        public ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, ActivityDatabase activityDatabase, LayoutStack layoutStack, PublicFileIo publicFileIo, TextConverter textConverter)
         {
             this.protoActivity_database = protoActivity_database;
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
@@ -23,9 +23,14 @@ namespace ActivityRecommendation.View
             menuBuilder.AddLayout(
                 new AppFeatureCount_ButtonName_Provider("Browse Best ProtoActivities", this.browseBestProtoactivities_layout.GetFeatures()),
                 new StackEntry(this.browseBestProtoactivities_layout, "Browse Best ProtoActivities", null));
-                
+
             menuBuilder.AddLayout("View All ProtoActivities", new BrowseAll_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
             menuBuilder.AddLayout("Search ProtoActivities", new SearchProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
+
+            this.exportProtoactivities_layout = new ExportProtoactivities_Layout(protoActivity_database, publicFileIo, textConverter, layoutStack);
+            menuBuilder.AddLayout(
+                new AppFeatureCount_ButtonName_Provider("Export Protoactivities", this.exportProtoactivities_layout.GetFeatures()),
+                new StackEntry(this.exportProtoactivities_layout, "Export Protoactiviteies", null));
             menuBuilder.AddLayout("Help", new HelpWindowBuilder()
                 .AddMessage("Here you can brainstorm things that you might want to do but that aren't yet formed well enough to be meaningful to suggest.")
                 .AddMessage("Once an idea that you enter here does become worth suggesting, you can promote it from a ProtoActivity to an Activity")
@@ -43,7 +48,7 @@ namespace ActivityRecommendation.View
         ProtoActivity_Database protoActivity_database;
         ProtoActivity_LayoutBuilder newProtoactivityBuilder;
         BrowseBest_ProtoActivities_Layout browseBestProtoactivities_layout;
-
+        ExportProtoactivities_Layout exportProtoactivities_layout;
     }
 
 

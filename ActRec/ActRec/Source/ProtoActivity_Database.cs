@@ -106,6 +106,16 @@ namespace ActivityRecommendation
             return results;
         }
 
+        public List<ProtoActivity> SortedByDecreasingInterest()
+        {
+            List<ProtoActivity> results = new List<ProtoActivity>();
+            foreach (ProtoActivity_EstimatedInterest interest in this.GetMostInteresting(this.Count))
+            {
+                results.Add(interest.ProtoActivity);
+            }
+            return results;
+        }
+
         public ProtoActivity TextSearch(string query)
         {
             List<ProtoActivity> matches = this.TextSearch(query, 1);

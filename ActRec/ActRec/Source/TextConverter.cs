@@ -200,13 +200,22 @@ namespace ActivityRecommendation
 
             return this.ConvertToString(properties, objectName);
         }
-        public string ConvertToString(ProtoActivity_Database database)
+        public string ConvertToString(ProtoActivity_Database database, bool forSharing)
         {
             List<String> components = new List<string>();
-            foreach (ProtoActivity protoActivity in database.ProtoActivities)
+            IEnumerable<ProtoActivity> protoactivities;
+            if (forSharing)
+                protoactivities = database.SortedByDecreasingInterest();
+            else
+                protoactivities = database.ProtoActivities;
+            foreach (ProtoActivity protoActivity in protoactivities)
             {
                 if (protoActivity.Text != null && protoActivity.Text != "")
+                {
                     components.Add(this.ConvertToString(protoActivity));
+                    if (forSharing)
+                        components.Add("\n\n\n");
+                }
             }
             return string.Join(Environment.NewLine, components);
         }

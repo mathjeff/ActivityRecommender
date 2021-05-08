@@ -15,6 +15,13 @@ namespace ActivityRecommendation
         {
             this.halfLife = halfLife;
         }
+        public TimeSpan HalfLife
+        {
+            get
+            {
+                return this.halfLife;
+            }
+        }
 
         // returns the cumulative weight for all dates through the given date
         protected override double GetWeightBetweenDates(DateTime startDate, DateTime endDate)

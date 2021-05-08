@@ -41,12 +41,12 @@ namespace ActivityRecommendation
 
             HelpWindowBuilder builder = new HelpWindowBuilder().AddMessage("Results");
             builder
-                .AddMessage("typical longtermHappinessPredictionIfSuggested error = " + results.Longterm_PredictionIfSuggested_Error)
-                .AddMessage("typical longtermHappinessPredictionIfParticipated error = " + results.Longterm_PredictionIfParticipated_Error)
-                .AddMessage("typicalScoreError = " + results.TypicalScoreError)
-                .AddMessage("equivalentWeightedProbability = " + results.TypicalProbability)
-                .AddMessage("typicalEfficiencyError = " + results.TypicalEfficiencyError)
-                .AddMessage("typical longtermEfficiencyIfParticipated error = " + results.Longterm_EfficiencyIfPredicted_Error);
+                .AddMessage("typical longtermHappinessPredictionIfSuggested error:\n" + results.Longterm_PredictionIfSuggested_Error)
+                .AddMessage("typical longtermHappinessPredictionIfParticipated error:\n" + results.Longterm_PredictionIfParticipated_Error)
+                .AddMessage("typicalScoreError:\n" + results.TypicalScoreError)
+                .AddMessage("equivalentWeightedProbability:\n" + results.TypicalProbability)
+                .AddMessage("typicalEfficiencyError:\n" + results.TypicalEfficiencyError)
+                .AddMessage("typical longtermEfficiencyIfParticipated error:\n" + results.Longterm_EfficiencyIfPredicted_Error);
 
             ParticipationSurprise surprise = results.ParticipationHavingMostSurprisingScore;
             if (surprise != null)

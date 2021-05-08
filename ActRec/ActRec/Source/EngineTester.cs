@@ -648,6 +648,15 @@ Means.MeanErr: 0.1394, StdDevs.MeanErr: 0.1058, score
 Means.MeanErr: 5.4443, StdDevs.MeanErr: 5.7141, efficiency
 Means.MeanErr: 0.4013, StdDevs.MeanErr: 0.564, longtermEfficiencyIfParticipated
 EngineTester completed in 00:01:51
+
+updated results on 2021-05-08 after adding another output format
+Means.MeanErr: 0.0266 (19 days), StdDevs.MeanErr: 0.033 (24 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.025 (18 days), StdDevs.MeanErr: 0.0671 (49 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1058 (0.1993 * average), score
+0.9622,                                         equivalentWeightedProbability
+Means.MeanErr: 5.4443 (3.0786 * average), StdDevs.MeanErr: 5.7141 (3.2311 * average), efficiency
+Means.MeanErr: 0.4013 (3 days), StdDevs.MeanErr: 0.564 (4 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:00.9650314
  */
 
 namespace ActivityRecommendation
@@ -855,9 +864,9 @@ namespace ActivityRecommendation
             return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer, double.PositiveInfinity);
         }
 
-        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ScoreSummarizer ratingSummarizer, double maxAllowedError)
+        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ExponentialRatingSummarizer ratingSummarizer, double maxAllowedError)
         {
-            PredictionErrors result = new PredictionErrors(maxAllowedError);
+            PredictionErrors result = new LongtermPredictionErrors(ratingSummarizer.HalfLife, maxAllowedError);
             foreach (Prediction prediction in predictions.Keys)
             {
                 ScoreSummary summary = predictions[prediction];
@@ -932,14 +941,14 @@ namespace ActivityRecommendation
         }
         public DateTime? EarliestRatingDate { get; set; }
 
-        private PredictionErrors shortTermScore_error = new PredictionErrors(1);
+        private PredictionErrors shortTermScore_error = new ShorttermPredictionErrors(1);
         private Distribution squared_longTermValue_error = new Distribution();
         private Distribution squaredParticipationProbabilityError = new Distribution();
         private Distribution participationPrediction_score = new Distribution();
-        private PredictionErrors shortTermEfficiency_error = new PredictionErrors(double.PositiveInfinity);
+        private PredictionErrors shortTermEfficiency_error = new ShorttermPredictionErrors(double.PositiveInfinity);
         private ParticipationSurprise mostSurprisingParticipation;
-        private ScoreSummarizer ratingSummarizer;
-        private ScoreSummarizer efficiencySummarizer;
+        private ExponentialRatingSummarizer ratingSummarizer;
+        private ExponentialRatingSummarizer efficiencySummarizer;
         // the Engine predicts longterm value based on its suggestions. valueIfSuggested_predictions maps the predictions made to the actual observed longterm value
         private Dictionary<Prediction, ScoreSummary> valueIfSuggested_predictions = new Dictionary<Prediction, ScoreSummary>();
         // the Engine predicts longterm value based on what the user participates in. valueIfParticipated_predictions maps the predictions made to the actual observed longterm value
@@ -972,14 +981,15 @@ namespace ActivityRecommendation
 
     // A PredictionErrors records errors in Predictions
     // Each Prediction contains a Mean and a StdDev, and a PredictionErrors records the errors in each
-    public class PredictionErrors
+    public abstract class PredictionErrors
     {
         public PredictionErrors(double maxAllowedError)
         {
             this.maxAllowedError = maxAllowedError;
         }
-        public void Add(double correctValue, Distribution prediction)
+        public virtual void Add(double correctValue, Distribution prediction)
         {
+            // update errorsOfMeansSquared
             double errorOfMean = correctValue - prediction.Mean;
             if (Math.Abs(errorOfMean) > this.maxAllowedError)
             {
@@ -987,31 +997,77 @@ namespace ActivityRecommendation
             }
             this.errorsOfMeansSquared = this.errorsOfMeansSquared.Plus(Distribution.MakeDistribution(errorOfMean * errorOfMean, 0, 1));
 
+            // update errorsOfStdDevsSquared
             double predictedStddev = prediction.StdDev;
             double errorOfStdDev = Math.Abs(errorOfMean) - predictedStddev;
             this.errorsOfStdDevsSquared = this.errorsOfStdDevsSquared.Plus(Distribution.MakeDistribution(errorOfStdDev * errorOfStdDev, 0, 1));
         }
-        public override string ToString()
-        {
-            return "Means.MeanErr: " + Math.Round(this.meanErrorsOfMeans, 4).ToString() + ", StdDevs.MeanErr: " + Math.Round(this.meanErrorOfStdDevs, 4).ToString();
-        }
-        private double meanErrorsOfMeans
+        protected double meanErrorsOfMeans
         {
             get
             {
                 return Math.Sqrt(this.errorsOfMeansSquared.Mean);
             }
         }
-        private double meanErrorOfStdDevs
+        protected double meanErrorOfStdDevs
         {
             get
             {
                 return Math.Sqrt(this.errorsOfStdDevsSquared.Mean);
             }
         }
+
         private Distribution errorsOfMeansSquared = new Distribution();
         private Distribution errorsOfStdDevsSquared = new Distribution();
         private double maxAllowedError;
+    }
+
+    public class LongtermPredictionErrors : PredictionErrors
+    {
+        public LongtermPredictionErrors(TimeSpan halfLife, double maxAllowedError) : base(maxAllowedError)
+        {
+            this.halfLife = halfLife;
+        }
+        public override string ToString()
+        {
+            return "Means.MeanErr: " + this.formatValue(this.meanErrorsOfMeans) + ", StdDevs.MeanErr: " + this.formatValue(this.meanErrorOfStdDevs);
+        }
+
+        // given a double representing the net present value from 0 to 1, format it as a string
+        private string formatValue(double value)
+        {
+            double valueInDays = value * this.halfLife.TotalDays;
+            return "" + Math.Round(value, 4) + " (" + Math.Round(valueInDays) + " days)";
+        }
+        private TimeSpan halfLife;
+    }
+
+    public class ShorttermPredictionErrors : PredictionErrors
+    {
+        public ShorttermPredictionErrors(double maxAllowedError) : base(maxAllowedError)
+        {
+        }
+        public override string ToString()
+        {
+            return "Means.MeanErr: " + this.formatValue(this.meanErrorsOfMeans) + ", StdDevs.MeanErr: " + this.formatValue(this.meanErrorOfStdDevs);
+        }
+        public override void Add(double correctValue, Distribution prediction)
+        {
+            base.Add(correctValue, prediction);
+
+            // update observed
+            this.correctValues.Add(correctValue);
+        }
+
+        // given a double representing the an error value from 0 to 1, format it as a string
+        private string formatValue(double value)
+        {
+            double meanCorrectValue = this.correctValues.Mean;
+
+            return "" + Math.Round(value, 4) + " (" + Math.Round(value / meanCorrectValue, 4) + " * average)";
+        }
+
+        private Distribution correctValues = new Distribution();
     }
 
     public class ParticipationSurprise

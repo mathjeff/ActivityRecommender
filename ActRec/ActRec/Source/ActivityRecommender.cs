@@ -492,8 +492,7 @@ namespace ActivityRecommendation
             );
             introMenu_builder.AddLayout(new AppFeatureCount_ButtonName_Provider("Start!", usageMenu.GetFeatures()), new StackEntry(usageMenu, "Home", null));
 
-            introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
-            introMenu_builder.AddLayout("Credits (your name could be here!)",
+            introMenu_builder.AddLayout("Feedback + Credits",
                 (new HelpWindowBuilder()
                     .AddMessage("If you would like to appear in ActivityRecommender's credits, you can start by suggesting an improvement to ActivityRecommender here!")
                     .AddLayout(OpenIssue_Layout.New())
@@ -516,6 +515,7 @@ namespace ActivityRecommendation
                     )
                ).Build()
             );
+            introMenu_builder.AddLayout("Debugging", debuggingBuilder.Build());
 
             LayoutChoice_Set helpOrStart_menu = introMenu_builder.Build();
 

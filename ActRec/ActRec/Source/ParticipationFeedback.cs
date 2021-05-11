@@ -112,10 +112,21 @@ namespace ActivityRecommendation
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFun, 1);
             if (improvementInDays <= 0)
             {
+                string noIdeasText = "I don't have any better suggestions for things to do at this time.";
                 if (ExpectedFutureFun >= 0)
-                    redirectionText = "Nice! I don't have any better suggestions for things to do at this time.";
+                {
+                    if (PredictedValue >= 1)
+                        redirectionText = "Nice! " + noIdeasText; // Happy now, happy later
+                    else
+                        redirectionText = noIdeasText + " Sorry!"; // Happy later, not happy now
+                }
                 else
-                    redirectionText = "Not bad. I don't have any better suggestions for things to do at this time.";
+                {
+                    if (PredictedValue >= 1)
+                        redirectionText = noIdeasText; // Happy now, not happy later
+                    else
+                        redirectionText = "How about adding a new activity? " + noIdeasText; // Not happy now or later
+                }
                 redirectionColor = Color.Green;
             }
             else

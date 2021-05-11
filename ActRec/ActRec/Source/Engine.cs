@@ -2788,9 +2788,9 @@ namespace ActivityRecommendation
                                     // soothing but not a soothing time
                                     // not an efficient activity, but an efficient time
                                     if (fast)
-                                        remark = "Maybe do something else?";
+                                        remark = "Maybe " + recommendedTime + " could be even better?";
                                     else
-                                        remark = "Could you do something else?";
+                                        remark = "I think " + recommendedTime + " could be even better";
                                 }
                                 else // !efficientTime
                                 {
@@ -2999,7 +2999,7 @@ namespace ActivityRecommendation
                                     if (fast)
                                         remark = "Not bad";
                                     else
-                                        remark = "Not bad, but you might prefer something else";
+                                        remark = "Not bad, but something else might be even better";
                                 }
                             }
                             else // !efficientActivity

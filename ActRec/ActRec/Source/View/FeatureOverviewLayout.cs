@@ -1,5 +1,6 @@
 ﻿using ActivityRecommendation.View;
 using VisiPlacement;
+using Xamarin.Forms;
 
 // This file serves two pruposes:
 // #1. It generates the features overview screen in the application, primarily for the purpose of getting users excited
@@ -148,9 +149,12 @@ namespace ActivityRecommendation.View
                         "device, which you can then separately save.")
                         .Build()
                     )
-                    .AddLayout("Open source", new Vertical_GridLayout_Builder()
-                        .AddLayout(new TextblockLayout("Visit https://github.com/mathjeff/ActivityRecommender for more information. If you're thinking about contributing, start by opening an issue. Thanks!"))
+                    .AddLayout("Open source", new Vertical_GridLayout_Builder().Uniform()
+                        .AddLayout(new TextblockLayout("To see how ActivityRecommender works, check out the source code at:").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center))
+                        .AddLayout(new OpenUrl_Layout("https://github.com/mathjeff/ActivityRecommender"))
+                        .AddLayout(new TextblockLayout("If you're thinking about contributing:").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center))
                         .AddLayout(OpenIssue_Layout.New())
+                        .AddLayout(new TextblockLayout("Thanks!").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center))
                         .Build()
                     )
                     .AddLayout("But feel free to thank us", (new HelpWindowBuilder())

@@ -16,5 +16,5 @@ For a list of properties observed about human behavior as a result of ActivityRe
 To build/edit ActivityRecommender, see [Building.md](Building.md)
 
 Other questions?
-   *   Open a bug
+   *   Open an Issue
    *   Ask in [our subreddit](https://www.reddit.com/r/ActivityRecommender/)

@@ -181,6 +181,7 @@ namespace ActivityRecommendation.View
                 this.SubLayout = this.multiActivitiesLayout;
                 double numProtos = this.protoActivity_database.Count;
                 this.titleLayout.setText("Protoactivity Tournament: compare 2");
+                this.titleLayout.AlignHorizontally(TextAlignment.Center);
 
                 int numBrowses = this.computeNumBrowses();
                 double numBrowsesPerProto = numBrowses / numProtos;

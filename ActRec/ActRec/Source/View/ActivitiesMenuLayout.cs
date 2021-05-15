@@ -16,7 +16,7 @@ namespace ActivityRecommendation.View
             LayoutStack layoutStack,
             ActivityDatabase activityDatabase)
         {
-            this.SetTitle("Activities: Add/Browse");
+            this.SetTitle("Activities");
 
             this.browseInheritancesLayout = browseInheritancesLayout;
             this.importPremadeActivitiesLayout = importPremadeActivitiesLayout;
@@ -31,17 +31,17 @@ namespace ActivityRecommendation.View
 
         private void setupLayouts()
         {
-            StackEntry browseEntry = new StackEntry(this.browseInheritancesLayout, "Browse My Activities", null);
-            StackEntry importEntry = new StackEntry(this.importPremadeActivitiesLayout, "Import Some Premade Activities", null);
-            StackEntry addEntry = new StackEntry(this.activityCreationLayout, "Add/Edit Activities", null);
-            StackEntry editEntry = new StackEntry(this.activityEditingLayout, "Edit Activities", null);
+            StackEntry browseEntry = new StackEntry(this.browseInheritancesLayout, "Browse", null);
+            StackEntry importEntry = new StackEntry(this.importPremadeActivitiesLayout, "Quickstart / Premade", null);
+            StackEntry addEntry = new StackEntry(this.activityCreationLayout, "New", null);
+            StackEntry editEntry = new StackEntry(this.activityEditingLayout, "Edit", null);
             StackEntry protoactivitiesEntry = new StackEntry(this.protoactivitiesLayout, "Protoactivities: Brainstorm", null);
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout(new BrowseActivitiesMenu_Namer(this.activityDatabase), browseEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("Import Some Premade Activities", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("New Activity (Category, ToDo, Problem, Solution)", this.activityCreationLayout.GetFeatures()), addEntry)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider("Edit Activities", this.activityEditingLayout.GetFeatures()), editEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Quickstart / Premade", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("New (Category / ToDo / Problem)", this.activityCreationLayout.GetFeatures()), addEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider("Edit", this.activityEditingLayout.GetFeatures()), editEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Protoactivities: Brainstorm", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry);
             this.SetContent(fullBuilder.Build());
         }
@@ -75,7 +75,7 @@ namespace ActivityRecommendation.View
         public MenuItem Get()
         {
             int count = this.activityDatabase.NumCustomActivities;
-            string title = "Browse My Activities (" + count + ")";
+            string title = "Browse (" + count + ")";
             return new MenuItem(title, null);
         }
 

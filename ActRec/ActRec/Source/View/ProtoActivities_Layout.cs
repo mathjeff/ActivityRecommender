@@ -7,35 +7,37 @@ using VisiPlacement;
 
 namespace ActivityRecommendation.View
 {
-    class ProtoActivities_Layout : ContainerLayout
+    class ProtoActivities_Layout : TitledControl
     {
         public ProtoActivities_Layout(ProtoActivity_Database protoActivity_database, ActivityDatabase activityDatabase, LayoutStack layoutStack, PublicFileIo publicFileIo, TextConverter textConverter)
         {
+            this.SetTitle("Protoactivities");
+
             this.protoActivity_database = protoActivity_database;
             MenuLayoutBuilder menuBuilder = new MenuLayoutBuilder(layoutStack);
             this.newProtoactivityBuilder = new ProtoActivity_LayoutBuilder(protoActivity_database, activityDatabase, layoutStack);
             menuBuilder.AddLayout(
-                new AppFeatureCount_ButtonName_Provider("Enter New Protoactivity", this.newProtoactivityBuilder.GetFeatures()),
+                new AppFeatureCount_ButtonName_Provider("New", this.newProtoactivityBuilder.GetFeatures()),
                 this.newProtoactivityBuilder
             );
 
             this.browseBestProtoactivities_layout = new BrowseBest_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack);
             menuBuilder.AddLayout(
-                new AppFeatureCount_ButtonName_Provider("Browse Best ProtoActivities", this.browseBestProtoactivities_layout.GetFeatures()),
-                new StackEntry(this.browseBestProtoactivities_layout, "Browse Best ProtoActivities", null));
+                new AppFeatureCount_ButtonName_Provider("Browse Best", this.browseBestProtoactivities_layout.GetFeatures()),
+                new StackEntry(this.browseBestProtoactivities_layout, "Browse Best", null));
 
-            menuBuilder.AddLayout("View All ProtoActivities", new BrowseAll_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
-            menuBuilder.AddLayout("Search ProtoActivities", new SearchProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
+            menuBuilder.AddLayout("List All", new BrowseAll_ProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
+            menuBuilder.AddLayout("Search", new SearchProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
 
             this.exportProtoactivities_layout = new ExportProtoactivities_Layout(protoActivity_database, publicFileIo, textConverter, layoutStack);
             menuBuilder.AddLayout(
-                new AppFeatureCount_ButtonName_Provider("Export Protoactivities", this.exportProtoactivities_layout.GetFeatures()),
-                new StackEntry(this.exportProtoactivities_layout, "Export Protoactiviteies", null));
+                new AppFeatureCount_ButtonName_Provider("Export", this.exportProtoactivities_layout.GetFeatures()),
+                new StackEntry(this.exportProtoactivities_layout, "Export", null));
             menuBuilder.AddLayout("Help", new HelpWindowBuilder()
                 .AddMessage("Here you can brainstorm things that you might want to do but that aren't yet formed well enough to be meaningful to suggest.")
                 .AddMessage("Once an idea that you enter here does become worth suggesting, you can promote it from a ProtoActivity to an Activity")
                 .Build());
-            this.SubLayout = menuBuilder.Build();
+            this.SetContent(menuBuilder.Build());
         }
 
         public List<AppFeature> GetFeatures()

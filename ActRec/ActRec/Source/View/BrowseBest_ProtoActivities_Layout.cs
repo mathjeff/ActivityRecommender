@@ -60,7 +60,7 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set helpButton = new HelpButtonLayout(
                 new HelpWindowBuilder()
                 .AddMessage("If you have entered any ProtoActivities (which are ideas that are not yet fully-formed enough for you to want them to be suggested), then you can browse them here.")
-                .AddMessage("This screen allows you to see the ProtoActivites that ActivityRecommender thinks you consider to be most interesting, and also asks you to choose which one of the top " +
+                .AddMessage("This screen allows you to see the ProtoActivities that ActivityRecommender thinks you consider to be most interesting, and also asks you to choose which one of the top " +
                 "two is most interesting to you.")
                 .AddMessage("If you want to modify a ProtoActivity, press its Edit button (note that if you make any changes, then this will temporarily dismiss it (by resetting its interest score)).")
                 .AddMessage("If you want to see different ProtoActivities, then first you should choose which one (of the two visible ProtoActivities) you like less. Press the button marked " +

@@ -260,7 +260,7 @@ namespace ActivityRecommendation.View
                 GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder().Uniform();
                 LayoutChoice_Set helpLayout = new HelpWindowBuilder()
                     .AddMessage("ActivityRecommender needs to know what you like to do, for providing suggestions, autocomplete, and more.")
-                    .AddMessage("Do you like any of the activites here?")
+                    .AddMessage("Do you like any of the activities here?")
                     .AddMessage("Selecting 'I like this' on an item of the form 'child (parent)' indicates two things: A: that you believe that the child is encompassed by the parent, and B: that the child is relevant to you.")
                     .AddMessage("Pushing the 'I like all kinds' button is equivalent to pushing the 'I like this' button on the given activity and all of its descendants.")
                     .AddMessage("Pushing the 'Not Interested' button will simply hide the given activity in this screen")

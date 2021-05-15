@@ -35,7 +35,7 @@ namespace ActivityRecommendation
             this.chooseDate_button = new Button();
             this.chooseDate_button.Clicked += ChooseDate_button_Clicked;
             this.title = title;
-            LayoutChoice_Set titleLayout = new TextblockLayout(title).AlignHorizontally(TextAlignment.Center);
+            LayoutChoice_Set titleLayout = new TextblockLayout(title).AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
             LayoutChoice_Set contentLayout = ButtonLayout.WithoutBevel(this.chooseDate_button);
             if (placeTitleAbove)
             {

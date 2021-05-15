@@ -13,7 +13,7 @@ namespace ActivityRecommendation
 {
     class RelativeRatingEntryView : TitledControl
     {
-        public RelativeRatingEntryView() : base("Relative Score")
+        public RelativeRatingEntryView() : base("Score:")
         {
             this.TitleLayout.AlignVertically(TextAlignment.Center);
             this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
@@ -22,9 +22,23 @@ namespace ActivityRecommendation
             this.scaleBox.Keyboard = Keyboard.Numeric;
             this.scaleBox.TextChanged += this.ScaleBlock_TextChanged;
             this.scaleBoxLayout = new TextboxLayout(this.scaleBox);
+            ContainerLayout scaleBoxHolder = new ContainerLayout(null, this.scaleBoxLayout, false);
+            // The fact that the rating is relative to the previous participation is really important, so we put this text into its own text block.
+            // Additionally, the timesBlock might be able to fit into the same line as the text box into which the user types the rating ratio.
+            TextblockLayout timesBlock = new TextblockLayout("times").AlignVertically(TextAlignment.Center).AlignHorizontally(TextAlignment.Center);
+
+            LayoutChoice_Set horizontalBox = new Horizontal_GridLayout_Builder()
+                .AddLayout(scaleBoxHolder)
+                .AddLayout(timesBlock)
+                .BuildAnyLayout();
+
+            LayoutChoice_Set verticalBox = new Vertical_GridLayout_Builder()
+                .AddLayout(scaleBoxHolder)
+                .AddLayout(timesBlock)
+                .BuildAnyLayout();
 
             this.Clear();
-            this.mainDisplayGrid.AddLayout(this.scaleBoxLayout);
+            this.mainDisplayGrid.AddLayout(new LayoutUnion(horizontalBox, verticalBox));
 
             // We try to use large font for the name layout and we also try to use as many clarifying words as possible
             // If not all of the words fit onscreen at large font, we will shrink the font and also potentially remove some words
@@ -107,8 +121,8 @@ namespace ActivityRecommendation
                     else
                         dateFormatString = "HH:mm:ss";
                     string prevDescription = "" + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
-                    this.fullNameLayout.setText("times the score of your latest participation in " + prevDescription);
-                    this.shortenedNameLayout.setText("times " + prevDescription);
+                    this.fullNameLayout.setText("the score of your latest participation in " + prevDescription);
+                    this.shortenedNameLayout.setText(prevDescription);
                     this.SetContent(this.mainDisplayGrid);
                 }
                 else

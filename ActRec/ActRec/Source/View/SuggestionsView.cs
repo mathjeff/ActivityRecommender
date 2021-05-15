@@ -29,6 +29,7 @@ namespace ActivityRecommendation.View
 
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine) : base("Get Suggestions")
         {
+            this.TitleLayout.AlignVertically(TextAlignment.Center);
             this.activityDatabase = activityDatabase;
             this.engine = engine;
             this.recommender = recommenderToInform;
@@ -191,7 +192,7 @@ namespace ActivityRecommendation.View
             if (this.numCandidates < 0)
             {
                 this.numCandidates = this.engine.GetActivitiesToConsider(new ActivityRequest()).Count;
-                this.numCandidates_layout.setText("" + this.numCandidates + " candidates");
+                this.numCandidates_layout.setText("I have " + this.numCandidates + " activities I can suggest");
             }
         }
         public void OnBack(LayoutChoice_Set layout)

@@ -47,15 +47,11 @@ namespace ActivityRecommendation.View
             string nowText = now.ToString("yyyy-MM-dd-HH-mm-ss");
             string fileName = "ActivityPrefSummary-" + nowText + ".txt";
 
-            Task<FileExportResult> result = this.fileIo.ExportFile(fileName, fileText);
+            Task t = this.fileIo.Share(fileName, fileText);
 
-            result.ContinueWith(task =>
+            t.ContinueWith(task =>
             {
-                string title;
-                if (result.Result.Successful)
-                    title = "Exported " + fileName + " successfully";
-                else
-                    title = "Failed to export " + fileName;
+                string title = "Exported " + fileName;
                 gridBuilder.AddLayout(new TextblockLayout("(" + title + ")"));
                 gridBuilder.AddLayout(new TextblockLayout(" avg (count) : name"));
                 foreach (string text in texts)

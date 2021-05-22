@@ -6,8 +6,7 @@
 
 	<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="29" />
 	<application
-		android:label="ActRec.Android"
-		android:requestLegacyExternalStorage="true">
+		android:label="ActRec.Android">
 	</application>
 
 </manifest>

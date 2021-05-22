@@ -34,7 +34,7 @@ namespace ActivityRecommendation.View
     public class RenormalizeEfficiency_Button : ContainerLayout
     {
         public event RequestEfficiencyRecalculation_Handler RequestRecalculation;
-        public delegate void RequestEfficiencyRecalculation_Handler(string BackupFilepath);
+        public delegate void RequestEfficiencyRecalculation_Handler(string BackupContent);
         public RenormalizeEfficiency_Button()
         {
             Button button = new Button();
@@ -45,10 +45,10 @@ namespace ActivityRecommendation.View
         private void Button_Clicked(object sender, EventArgs e)
         {
             if (this.RequestRecalculation != null)
-                this.RequestRecalculation.Invoke(this.BackupFilepath);
+                this.RequestRecalculation.Invoke(this.BackupContent);
         }
 
-        public string BackupFilepath;
+        public string BackupContent;
     }
 
 }

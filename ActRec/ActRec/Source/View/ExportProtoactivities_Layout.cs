@@ -55,11 +55,8 @@ namespace ActivityRecommendation.View
         {
             string filename = "Protoactivities-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".txt";
             string text = this.textConverter.ConvertToString(this.protoActivity_database, true);
-            FileExportResult result = await this.fileIo.ExportFile(filename, text);
-            if (result.Successful)
-                this.layoutStack.AddLayout(new ExportSuccessLayout(result.Path, this.fileIo), "Success");
-            else
-                this.layoutStack.AddLayout(new TextblockLayout("Failed to export " + result.Path), "Failure");
+            await this.fileIo.Share(filename, text);
+            this.layoutStack.AddLayout(new ExportSuccessLayout("file", this.fileIo), "Success");
         }
 
         private ProtoActivity_Database protoActivity_database;

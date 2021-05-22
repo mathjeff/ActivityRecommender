@@ -124,16 +124,19 @@ namespace ActivityRecommendation
         {
             basedir = dir;
         }
-        // saves text to a file where the user can do something with it
-        public async Task<FileExportResult> ExportFile(string fileName, string content)
+        // gives a file to the user to save
+        public async Task<FileShareResult> Share(string fileName, string content)
         {
-            await this.requestPermission();
-            string destDir = RootDir;
-            if (!Directory.Exists(destDir))
-                Directory.CreateDirectory(destDir);
-            string path = Path.Combine(destDir, fileName);
-            File.WriteAllText(path, content);
-            return new FileExportResult(path, content, true);
+            var file = Path.Combine(Xamarin.Essentials.FileSystem.CacheDirectory, fileName);
+            File.WriteAllText(file, content);
+
+            await Xamarin.Essentials.Share.RequestAsync(new ShareFileRequest
+            {
+                Title = fileName,
+                File = new ShareFile(file)
+            });
+
+            return new FileShareResult(content);
         }
 
         private string RootDir
@@ -183,17 +186,13 @@ namespace ActivityRecommendation
         }
     }
 
-    public class FileExportResult
+    public class FileShareResult
     {
-        public FileExportResult(string path, string content, bool successful)
+        public FileShareResult(string content)
         {
-            this.Path = path;
             this.Content = content;
-            this.Successful = successful;
         }
-        public string Path;
         public string Content;
-        public bool Successful;
     }
 
     public class OpenedFile

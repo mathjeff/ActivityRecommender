@@ -582,8 +582,8 @@ namespace ActivityRecommendation
         {
             DeleteActivity_Button deleter = new DeleteActivity_Button(activity);
             deleter.RequestDeletion += DeleteButton_RequestDeleteActivityNow;
-            FileExportResult exportResult = await this.ExportData(deleter);
-            deleter.BackupFilepath = exportResult.Content;
+            FileShareResult exportResult = await this.ExportData(deleter);
+            deleter.BackupContent = exportResult.Content;
         }
 
         private void DeleteButton_RequestDeleteActivityNow(Activity activity, string backupContent)
@@ -601,8 +601,8 @@ namespace ActivityRecommendation
         {
             RenormalizeEfficiency_Button renormalizer = new RenormalizeEfficiency_Button();
             renormalizer.RequestRecalculation += RenormalizeEfficiencyButton_Clicked;
-            FileExportResult exportResult = await this.ExportData(renormalizer);
-            renormalizer.BackupFilepath = exportResult.Content;
+            FileShareResult exportResult = await this.ExportData(renormalizer);
+            renormalizer.BackupContent = exportResult.Content;
         }
 
         private void RenormalizeEfficiencyButton_Clicked(string backupContent)
@@ -811,7 +811,7 @@ namespace ActivityRecommendation
             return data;
         }
 
-        public async Task<FileExportResult> ExportData(LayoutChoice_Set successFooter = null)
+        public async Task<FileShareResult> ExportData(LayoutChoice_Set successFooter = null)
         {
             string content = this.getPersistentUserData().serialize();
 
@@ -820,21 +820,15 @@ namespace ActivityRecommendation
             string fileName = "ActivityData-" + nowText + ".txt";
 
             // TODO make it possible for the user to control the file path
-            FileExportResult result = await this.publicFileIo.ExportFile(fileName, content);
+            await this.publicFileIo.Share(fileName, content);
 
-            if (result.Successful)
-            {
-                GridLayout_Builder builder = new Vertical_GridLayout_Builder()
-                    .AddLayout(new ExportSuccessLayout(result.Path, this.publicFileIo));
-                if (successFooter != null)
-                    builder.AddLayout(successFooter);
-                this.layoutStack.AddLayout(builder.BuildAnyLayout(), "Export Success");
-            }
-            else
-            {
-                this.layoutStack.AddLayout(new TextblockLayout("Failed to save " + result.Path), "Export Failure");
-            }
-            return result;
+            GridLayout_Builder builder = new Vertical_GridLayout_Builder()
+                .AddLayout(new ExportSuccessLayout("file", this.publicFileIo));
+            if (successFooter != null)
+                builder.AddLayout(successFooter);
+            this.layoutStack.AddLayout(builder.BuildAnyLayout(), "Exported");
+
+            return new FileShareResult(content);
         }
 
         public bool GoBack()

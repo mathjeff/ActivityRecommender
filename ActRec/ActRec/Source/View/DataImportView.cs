@@ -29,10 +29,6 @@ namespace ActivityRecommendation
         }
         private LayoutChoice_Set makeContent()
         {
-            this.importLatest_button = new Button();
-            this.importLatest_button.Clicked += ImportLatest_button_Clicked;
-            ButtonLayout latestLayout = new ButtonLayout(this.importLatest_button, "Import latest");
-
             this.chooseFile_button = new Button();
             this.chooseFile_button.Clicked += ChooseFile;
             ButtonLayout chooseLayout = new ButtonLayout(this.chooseFile_button, "Select file");
@@ -41,10 +37,9 @@ namespace ActivityRecommendation
                 .Uniform()
                 .AddLayout(new TextblockLayout("The file to import should be of the form created by the Export feature " +
                 "(and the name of file should start with \"ActivityData\")"));
-            builder.AddLayout(latestLayout);
             builder.AddLayout(chooseLayout);
 
-            return builder.Build();
+            return builder.BuildAnyLayout();
         }
 
         private async void ImportLatest_button_Clicked(object sender, EventArgs e)
@@ -57,7 +52,7 @@ namespace ActivityRecommendation
             }
             else
             {
-                this.layoutStack.AddLayout(new TextblockLayout("No data file found!"), "Import Error");
+                this.layoutStack.AddLayout(new TextblockLayout("No data file found! Go back and choose one."), "Import Error");
             }
         }
 
@@ -132,7 +127,8 @@ namespace ActivityRecommendation
             button.Clicked += Button_Clicked;
 
             this.SetTitle("Confirm Import");
-            this.SetContent(new ButtonLayout(button));
+            
+            this.SetContent(new ButtonLayout(button, "Import " + fileName + " and overwrite ALL existing data.", 24, true, false, true, true));
         }
 
         private void Button_Clicked(object sender, EventArgs e)

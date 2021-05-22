@@ -53,10 +53,10 @@ namespace ActivityRecommendation.View
         private void Button_Clicked(object sender, EventArgs e)
         {
             if (this.RequestDeletion != null)
-                this.RequestDeletion.Invoke(this.activity, this.BackupFilepath);
+                this.RequestDeletion.Invoke(this.activity, this.BackupContent);
         }
 
-        public string BackupFilepath;
+        public string BackupContent;
 
         private Activity activity;
     }

@@ -481,7 +481,7 @@ namespace ActivityRecommendation
                 bestActivitiesToPairWith.Add(currentScore, candidate);
             }
             int availableCount = bestActivitiesToPairWith.NumItems;
-            int returnCount = Math.Min(3, availableCount);
+            int returnCount = Math.Min(1, availableCount);
             List<Activity> resultActivities = new List<Activity>();
             foreach (ListItemStats<double, Activity> result in bestActivitiesToPairWith.ItemsBetweenIndices(0, returnCount))
             {

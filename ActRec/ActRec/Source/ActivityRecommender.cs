@@ -88,7 +88,7 @@ namespace ActivityRecommendation
             get
             {
                 return new VisualDefaults_Builder()
-                    .DisplayName("Night")
+                    .DisplayName("Castle")
                     .UneditableText_Color(Color.LightGray)
                     .UneditableText_Background(Color.Black)
                     .ApplicationBackground(Color.Black)
@@ -100,7 +100,7 @@ namespace ActivityRecommendation
         {
             List<VisualDefaults> all = new List<VisualDefaults>();
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Vampire")
+                .DisplayName("Dracula")
                 .UneditableText_Color(Color.DarkRed)
                 .UneditableText_Background(Color.Black)
                 .ApplicationBackground(Color.Gray)
@@ -108,7 +108,24 @@ namespace ActivityRecommendation
                 .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .FontName("BlackChancery.ttf#BlackChancery")
                 .Build());
-            all.Add(this.defaultVisualDefaults); // night
+            all.Add(this.defaultVisualDefaults);
+
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Lightning")
+                .UneditableText_Color(Color.FromRgb(252, 239, 37))
+                .UneditableText_Background(Color.FromRgb(0, 0, 0))
+                .ApplicationBackground(Color.FromRgb(166, 166, 166))
+                .ButtonInnerBevelColor(Color.FromRgb(190, 234, 235))
+                .ButtonOuterBevelColor(Color.FromRgb(190, 234, 235))
+                .FontName("SatellaRegular.ttf#Satella")
+                .Build());
+            all.Add(new VisualDefaults_Builder()
+                .DisplayName("Bug")
+                .UneditableText_Color(Color.FromRgb(134, 224, 215))
+                .UneditableText_Background(Color.FromRgb(26, 25, 18))
+                .ApplicationBackground(Color.FromRgb(165, 69, 73))
+                .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
+                .Build());
 
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Scifi")
@@ -120,7 +137,7 @@ namespace ActivityRecommendation
                 .FontName("SatellaRegular.ttf#Satella")
                 .Build());
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Terminal")
+                .DisplayName("Programming")
                 .UneditableText_Color(Color.Green)
                 .UneditableText_Background(Color.Black)
                 .ApplicationBackground(Color.Black)
@@ -148,7 +165,7 @@ namespace ActivityRecommendation
                 .Build());
 
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Cocoa")
+                .DisplayName("Brownie")
                 .UneditableText_Color(Color.FromRgb(175, 99, 81))
                 .UneditableText_Background(Color.FromRgb(50, 24, 27))
                 .ApplicationBackground(Color.FromRgb(112, 61, 54))
@@ -157,54 +174,54 @@ namespace ActivityRecommendation
                 .FontName("TitanOne.ttf#TitanOne")
                 .Build());
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Butter")
-                .UneditableText_Color(Color.FromRgb(255, 204, 0))
-                .UneditableText_Background(Color.FromRgb(32, 0, 37))
-                .ApplicationBackground(Color.FromRgb(199, 153, 9))
-                .ButtonInnerBevelColor(Color.FromRgb(208, 208, 208))
-                .ButtonOuterBevelColor(Color.FromRgb(169, 169, 169))
-                .FontName("TitanOne.ttf#TitanOne")
+                .DisplayName("Ice Cream")
+                .UneditableText_Color(Color.FromRgb(253, 241, 56))
+                .UneditableText_Background(Color.FromRgb(29, 114, 171))
+                .ApplicationBackground(Color.Gray)
+                .ButtonInnerBevelColor(Color.FromRgb(172, 68, 72))
+                .ButtonOuterBevelColor(Color.FromRgb(218, 4, 16))
+                .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                 .Build());
 
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Story")
-                .UneditableText_Color(Color.FromRgb(150, 193, 235))
-                .UneditableText_Background(Color.FromRgb(25, 62, 113))
+                .DisplayName("Fantasy")
+                .UneditableText_Color(Color.FromRgb(117, 195, 118))
+                .UneditableText_Background(Color.FromRgb(33, 52, 104))
                 .ApplicationBackground(Color.FromRgb(87, 127, 174))
                 .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
                 .ButtonOuterBevelColor(Color.FromRgb(210, 210, 210))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Time")
-                .UneditableText_Color(Color.FromRgb(246, 246, 245))
-                .UneditableText_Background(Color.FromRgb(113, 75, 55))
-                .ApplicationBackground(Color.FromRgb(96, 96, 96))
-                .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
-                .ButtonOuterBevelColor(Color.FromRgb(215, 215, 215))
+                .DisplayName("Game")
+                .UneditableText_Color(Color.FromRgb(190, 190, 190))
+                .UneditableText_Background(Color.FromRgb(17, 24, 90))
+                .ApplicationBackground(Color.FromRgb(60, 60, 65))
+                .ButtonInnerBevelColor(Color.FromRgb(33, 159, 164))
+                .ButtonOuterBevelColor(Color.FromRgb(1, 252, 255))
                 .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
                 .FontSizeMultiplier(1.5)
                 .Build());
-                
+
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Salt Water")
+                .DisplayName("Tuna")
                 .UneditableText_Color(Color.FromRgb(225, 225, 225))
-                .UneditableText_Background(Color.FromRgb(62, 99, 150))
+                .UneditableText_Background(Color.FromRgb(25, 62, 113))
                 .ApplicationBackground(Color.FromRgb(145, 163, 189))
-                .FontName("PruistineScript.ttf#Pruistine-Script")
+                .FontName("SatellaRegular.ttf#Satella")
                 .Build());
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Taffy")
-                .UneditableText_Color(Color.FromRgb(241, 80, 133))
-                .UneditableText_Background(Color.FromRgb(29, 114, 171))
-                .ApplicationBackground(Color.Gray)
-                .ButtonInnerBevelColor(Color.FromRgb(3, 45, 120))
-                .ButtonOuterBevelColor(Color.FromRgb(4, 60, 150))
+                .DisplayName("Salad")
+                .UneditableText_Color(Color.FromRgb(46, 96, 0))
+                .UneditableText_Background(Color.FromRgb(219, 225, 138))
+                .ApplicationBackground(Color.FromRgb(133, 162, 168))
+                .ButtonInnerBevelColor(Color.FromRgb(99, 137, 39))
+                .ButtonOuterBevelColor(Color.FromRgb(70, 120, 3))
                 .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                 .Build());
 
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Garden")
+                .DisplayName("Forest")
                 .UneditableText_Color(Color.FromRgb(240, 245, 95))
                 .UneditableText_Background(Color.FromRgb(21, 60, 8))
                 .ApplicationBackground(Color.Black)
@@ -213,16 +230,6 @@ namespace ActivityRecommendation
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
             all.Add(new VisualDefaults_Builder()
-                .DisplayName("Salad")
-                .UneditableText_Color(Color.FromRgb(135, 40, 30))
-                .UneditableText_Background(Color.FromRgb(119, 165, 53))
-                .ApplicationBackground(Color.FromRgb(227, 205, 148))
-                .ButtonInnerBevelColor(Color.FromRgb(60, 60, 60))
-                .ButtonOuterBevelColor(Color.FromRgb(80, 80, 80))
-                .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
-                .Build());
-
-            all.Add(new VisualDefaults_Builder()
                 .DisplayName("Fire")
                 .UneditableText_Color(Color.FromRgb(243, 241, 37))
                 .UneditableText_Background(Color.FromRgb(177, 46, 14))
@@ -230,15 +237,6 @@ namespace ActivityRecommendation
                 .ButtonInnerBevelColor(Color.FromRgb(100, 100, 100))
                 .ButtonOuterBevelColor(Color.FromRgb(130, 130, 130))
                 .FontName("BlackChancery.ttf#BlackChancery")
-                .Build());
-            all.Add(new VisualDefaults_Builder()
-                .DisplayName("Truck")
-                .UneditableText_Color(Color.FromRgb(96, 96, 96))
-                .UneditableText_Background(Color.FromRgb(236, 236, 236))
-                .ApplicationBackground(Color.FromRgb(166, 166, 166))
-                .ButtonInnerBevelColor(Color.FromRgb(10, 10, 10))
-                .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
-                .FontName("SatellaRegular.ttf#Satella")
                 .Build());
 
             return all;

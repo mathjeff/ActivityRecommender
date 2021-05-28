@@ -42,9 +42,13 @@ namespace ActivityRecommendation
 
         public void AddSeries(List<Datapoint> data, bool drawRegressionLine)
         {
-            this.AddSeries(this.NewPlotRequest(data, drawRegressionLine));
+            this.AddSeries(this.NewPlotRequest(data, drawRegressionLine, true, this.colorIndex));
         }
-        public void AddSeries(PlotRequest request)
+        public void AddSeries(List<Datapoint> data, bool drawRegressionLine, bool drawData, int colorIndex)
+        {
+            this.AddSeries(this.NewPlotRequest(data, drawRegressionLine, drawData, colorIndex));
+        }
+        private void AddSeries(PlotRequest request)
         {
             this.plotRequests.Add(request);
 
@@ -59,35 +63,35 @@ namespace ActivityRecommendation
                 if (this.maxYPresent < datapoint.Output)
                     this.maxYPresent = datapoint.Output;
             }
-
-
         }
-        private PlotRequest NewPlotRequest(List<Datapoint> data, bool drawRegressionLine)
+        private PlotRequest NewPlotRequest(List<Datapoint> data, bool drawRegressionLine, bool drawData, int colorIndex)
         {
-            SKColor drawingColor = this.GetNextColor();
-            if (drawRegressionLine)
-            {
-                SKColor regressionColor = this.GetNextColor();
-                return new PlotRequest(data, drawingColor, regressionColor);
-            }
-            return new PlotRequest(data, drawingColor);
+            this.colorIndex = colorIndex;
+            SKColor drawingColor = this.GetColor(this.colorIndex);
+            if (!drawData)
+                drawingColor = SKColors.Empty;
+            this.colorIndex++;
+            SKColor regressionColor = this.GetColor(this.colorIndex);
+            if (!drawRegressionLine)
+                regressionColor = SKColors.Empty;
+            this.colorIndex++;
+            return new PlotRequest(data, drawingColor, regressionColor);
         }
-        private SKColor GetNextColor()
+        private SKColor GetColor(int index)
         {
-            this.numColors++;
-            switch (this.numColors)
+            switch (index)
             {
-                case 1:
+                case 0:
                     return SKColors.DarkGreen;
-                case 2:
+                case 1:
                     return SKColors.Red;
-                case 3:
+                case 2:
                     return SKColors.Blue;
-                case 4:
+                case 3:
                     return SKColors.Yellow;
-                case 5:
+                case 4:
                     return SKColors.White;
-                case 6:
+                case 5:
                     return SKColors.DarkCyan;
             }
             throw new InvalidOperationException("Not enough colors configured to add another series to this PlotView");
@@ -158,7 +162,8 @@ namespace ActivityRecommendation
                     if (Math.Abs(x2 - x) < resolution && Math.Abs(y2 - y) < resolution)
                         continue; // skip any lines that the user won't be able to see
 
-                    canvas.DrawLine((float)x, (float)y, (float)x2, (float)y2, brush);
+                    if (plotRequest.DrawData)
+                        canvas.DrawLine((float)x, (float)y, (float)x2, (float)y2, brush);
                     x = x2;
                     y = y2;
                 }
@@ -257,7 +262,7 @@ namespace ActivityRecommendation
         private double minYPresent = double.PositiveInfinity;
         private double maxYPresent = double.NegativeInfinity;
 
-        private int numColors = 0;
+        private int colorIndex = 0;
 
     }
 
@@ -290,6 +295,13 @@ namespace ActivityRecommendation
             get
             {
                 return this.RegressionLine_Color != SKColors.Empty;
+            }
+        }
+        public bool DrawData
+        {
+            get
+            {
+                return this.DrawColor != SKColors.Empty;
             }
         }
         public List<Datapoint> Data;

@@ -90,42 +90,125 @@ namespace ActivityRecommendation
 
             Button helpButton = new Button();
             helpButton.Clicked += HelpButton_Clicked;
-            return new ButtonLayout(helpButton, "Explain");
+            return new ButtonLayout(helpButton, "Plots");
         }
 
         private void HelpButton_Clicked(object sender, EventArgs e)
         {
             this.statsLayoutHolder.SubLayout = new TextblockLayout("");
 
-            LayoutChoice_Set ratingsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("Green: ratings")
-                .AddMessage("Red: trend of green")
-                .AddMessage("Blue: overall happiness (all activities)")
-                .AddMessage("Yellow: efficiency (all activities)")
-                .AddMessage("White: trend of yellow")
-                .AddMessage("Tick marks: months, days or years")
+            Button ratingsToggle = new Button();
+            ratingsToggle.Clicked += RatingsButton_Clicked;
+
+            Button ratingsTrendToggle = new Button();
+            ratingsTrendToggle.Clicked += RatingsTrendButton_Clicked;
+
+            Button overallHappinessToggle = new Button();
+            overallHappinessToggle.Clicked += OverallHappinessToggle_Clicked;
+
+            Button efficiencyToggle = new Button();
+            efficiencyToggle.Clicked += EfficiencyToggle_Clicked;
+
+            Button efficiencyTrendToggle = new Button();
+            efficiencyTrendToggle.Clicked += EfficiencyTrendToggle_Clicked;
+
+            LayoutChoice_Set ratingPlotsLayout = new Vertical_GridLayout_Builder().Uniform()
+                .AddLayout(new ButtonLayout(ratingsToggle, "Green: ratings"))
+                .AddLayout(new ButtonLayout(ratingsTrendToggle, "Red: trend of ratings"))
+                .AddLayout(new ButtonLayout(overallHappinessToggle, "Blue: overall happiness (all activities)"))
+                .AddLayout(new ButtonLayout(efficiencyToggle, "Yellow: efficiency (all activities)"))
+                .AddLayout(new ButtonLayout(efficiencyTrendToggle, "White: trend of efficiency"))
+                .AddLayout(new TextblockLayout("Tick marks: months, days or years"))
                 .Build();
+
+            Button timeToggle = new Button();
+            timeToggle.Clicked += TimeToggle_Clicked;
+
+            Button timeTrendToggle = new Button();
+            timeTrendToggle.Clicked += TimeTrendToggle_Clicked;
+
+            Button numSuggestionsToggle = new Button();
+            numSuggestionsToggle.Clicked += NumSuggestionsToggle_Clicked;
+
+            Button effectivenessToggle = new Button();
+            effectivenessToggle.Clicked += EffectivenessToggle_Clicked;
+
+            LayoutChoice_Set participationPlotsLayout = new Vertical_GridLayout_Builder().Uniform()
+                .AddLayout(new ButtonLayout(timeToggle, "Green: cumulative time spent"))
+                .AddLayout(new ButtonLayout(timeTrendToggle, "Red: trend of time spent"))
+                .AddLayout(new ButtonLayout(numSuggestionsToggle, "Blue: cumulative # suggestions"))
+                .AddLayout(new ButtonLayout(effectivenessToggle, "Yellow: cumulative effectiveness (efficiency * time)"))
+                .AddLayout(new TextblockLayout("Tick marks: months, days or years"))
+                .Build();
+
             LayoutChoice_Set creditsLayout = new CreditsButtonBuilder(this.layoutStack)
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 3, 28), "Pointed out that the top of the app was occluded on iOS")
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 1, 24), "Asked for the graph legends to appear at the same time as the graphs")
                 .Build();
-            LayoutChoice_Set participationsHelpLayout = new HelpWindowBuilder()
-                .AddMessage("Green: cumulative time spent")
-                .AddMessage("Red: trend of green")
-                .AddMessage("Blue: cumulative # suggestions")
-                .AddMessage("Yellow: cumulative effectiveness (efficiency * time)")
-                .AddMessage("Tick marks: months, days or years")
-                .Build();
 
             BoundProperty_List rowHeights = new BoundProperty_List(3);
-            rowHeights.BindIndices(0, 2);
+            rowHeights.BindIndices(0, 1);
             GridLayout helpGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
 
-            helpGrid.AddLayout(ratingsHelpLayout);
+            helpGrid.AddLayout(ratingPlotsLayout);
+            helpGrid.AddLayout(participationPlotsLayout);
             helpGrid.AddLayout(creditsLayout);
-            helpGrid.AddLayout(participationsHelpLayout);
 
             this.statsLayoutHolder.SubLayout = helpGrid;
+        }
+
+        private void EffectivenessToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showEffectiveness = !this.showEffectiveness;
+            this.UpdateParticipationsPlot();
+        }
+
+        private void NumSuggestionsToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showNumSuggestions = !this.showNumSuggestions;
+            this.UpdateParticipationsPlot();
+        }
+
+        private void TimeTrendToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showTimeSpentTrend = !this.showTimeSpentTrend;
+            this.UpdateParticipationsPlot();
+        }
+
+        private void TimeToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showTimeSpent = !this.showTimeSpent;
+            this.UpdateParticipationsPlot();
+        }
+
+        private void EfficiencyTrendToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showEfficiencyTrend = !this.showEfficiencyTrend;
+            this.UpdateRatingsPlot();
+        }
+
+        private void EfficiencyToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showEfficiency = !this.showEfficiency;
+            this.UpdateRatingsPlot();
+        }
+
+        private void OverallHappinessToggle_Clicked(object sender, EventArgs e)
+        {
+            this.showOverallHappiness = !this.showOverallHappiness;
+            this.UpdateRatingsPlot();
+        }
+
+        private void RatingsTrendButton_Clicked(object sender, EventArgs e)
+        {
+            this.showRatingsTrend = !this.showRatingsTrend;
+            this.UpdateRatingsPlot();
+        }
+
+        private void RatingsButton_Clicked(object sender, EventArgs e)
+        {
+            this.showRatings = !this.showRatings;
+            this.UpdateRatingsPlot();
         }
 
         public void CalculateExtraStats()
@@ -183,7 +266,7 @@ namespace ActivityRecommendation
                         points.Add(new Datapoint(x, y, 1));
                 }
             }
-            newPlot.AddSeries(points, true);
+            newPlot.AddSeries(points, this.showRatingsTrend, this.showRatings, 0);
 
             // compute a smoothed version of the ratings so we can show which activities are actually worth doing
             // (for example, sleeping might feel boring but might increase later happiness)
@@ -227,8 +310,14 @@ namespace ActivityRecommendation
                         datapoint.Output = datapoint.Output / maxY;
                     }
                 }
-                bool showTrend = (ratingSummarizer == this.overallEfficiency_summarizer);
-                newPlot.AddSeries(smoothedRatings, showTrend);
+                if (ratingSummarizer == this.overallRating_summarizer)
+                {
+                    newPlot.AddSeries(smoothedRatings, false, this.showOverallHappiness, 2);
+                }
+                else
+                {
+                    newPlot.AddSeries(smoothedRatings, this.showEfficiencyTrend, this.showEfficiency, 3);
+                }
             }
 
             DateTime end = DateTime.Now;
@@ -436,9 +525,9 @@ namespace ActivityRecommendation
                 }
             }
 
-            newPlot.AddSeries(cumulativeParticipationDurations, true);
-            newPlot.AddSeries(cumulativeSuggestionCounts, false);
-            newPlot.AddSeries(cumulativeEffectivenesses, false);
+            newPlot.AddSeries(cumulativeParticipationDurations, this.showTimeSpentTrend, this.showTimeSpent, 0);
+            newPlot.AddSeries(cumulativeSuggestionCounts, false, this.showNumSuggestions, 2);
+            newPlot.AddSeries(cumulativeEffectivenesses, false, this.showEffectiveness, 3);
 
             // assign y-axis tick marks
             if (spacePerTick > 0)
@@ -453,6 +542,7 @@ namespace ActivityRecommendation
                 newPlot.YAxisSubdivisions = yTicks;
             }
 
+            this.participationsContent = newPlot;
             this.participationsView.SetContent(new ImageLayout(newPlot, LayoutScore.Get_UsedSpace_LayoutScore(1)));
 
             DateTime end = DateTime.Now;
@@ -554,7 +644,9 @@ namespace ActivityRecommendation
         Activity yAxisActivity;
         IProgression xAxisProgression;
         TitledControl ratingsView;
+        PlotView participationsContent;
         TitledControl participationsView;
+        PlotView ratingsContent;
         ScoreSummarizer overallRating_summarizer;
         ScoreSummarizer overallEfficiency_summarizer;
 
@@ -568,5 +660,16 @@ namespace ActivityRecommendation
         LayoutStack layoutStack;
 
         ContainerLayout statsLayoutHolder;
+
+        private bool showRatings = true;
+        private bool showRatingsTrend = true;
+        private bool showOverallHappiness = true;
+        private bool showEfficiency = true;
+        private bool showEfficiencyTrend = true;
+
+        private bool showTimeSpent = true;
+        private bool showTimeSpentTrend = true;
+        private bool showNumSuggestions = true;
+        private bool showEffectiveness = true;
     }
 }

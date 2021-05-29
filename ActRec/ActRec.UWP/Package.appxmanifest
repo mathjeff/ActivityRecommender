@@ -8,8 +8,8 @@
 
   <Identity
     Name="7e46ce3c-d95e-4de8-b141-c1bffeb99ec2"
-    Publisher="CN=9bc402ea-3ce7-4c68-8263-e69845e7c104"
-    Version="1.1.0.0" />
+    Publisher="CN=gasto"
+    Version="1.1.2.0" />
 
   <mp:PhoneIdentity PhoneProductId="ec0cc741-fd3e-485c-81be-68815c480690" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

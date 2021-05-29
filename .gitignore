@@ -13,3 +13,6 @@ packages
 *csproj~
 *.xaml~
 *~
+AppPackages
+BundleArtifacts
+*.pfx

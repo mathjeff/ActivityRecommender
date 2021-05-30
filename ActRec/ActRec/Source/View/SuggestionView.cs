@@ -36,7 +36,7 @@ namespace ActivityRecommendation
             GridLayout_Builder fullBuilder = new Vertical_GridLayout_Builder();
             string startTimeText = suggestion.Children[0].StartDate.ToString("HH:mm");
 
-            if (allWorseThanAverage)
+            if (allWorseThanAverage && suggestion.Skippable)
                 fullBuilder.AddLayout(new TextblockLayout("" + suggestion.Children.Count + " best ideas at " + startTimeText + ". How about a new activity?", 24).AlignHorizontally(TextAlignment.Center));
             else
                 fullBuilder.AddLayout(new TextblockLayout("" + suggestion.Children.Count + " ideas at " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));

@@ -69,6 +69,9 @@ namespace ActivityRecommendation
             this.timeFractionDisplay = new TextblockLayout();
             this.timeFractionDisplay.AlignHorizontally(TextAlignment.Center);
             builder.AddLayout(this.timeFractionDisplay);
+            this.timePerInstance_Display = new TextblockLayout();
+            this.timePerInstance_Display.AlignHorizontally(TextAlignment.Center);
+            builder.AddLayout(this.timePerInstance_Display);
 
             // display rating statistics
             this.ratingWhenNotSuggested_Display = new TitledTextblock("Mean rating:");
@@ -376,6 +379,7 @@ namespace ActivityRecommendation
 
             // figure out which dates we care about
             int numActiveIntervals = 0;
+            int numIncludedParticipations = 0;
 
             foreach (Participation participation in participations)
             {
@@ -441,6 +445,7 @@ namespace ActivityRecommendation
                         }
                     }
                     numActiveIntervals++;
+                    numIncludedParticipations++;
                     // add datapoints denoting the end of the idle interval
                     cumulativeParticipationDurations.Add(new Datapoint(x2, cumulativeParticipationSeconds, weight));
                     cumulativeEffectivenesses.Add(new Datapoint(x2, cumulativeEffectiveness, weight));
@@ -549,7 +554,7 @@ namespace ActivityRecommendation
 
             System.Diagnostics.Debug.WriteLine("spent " + end.Subtract(start) + " to update partipations plot");
 
-            this.UpdateParticipationStatsView(cumulativeParticipationSeconds);
+            this.UpdateParticipationStatsView(cumulativeParticipationSeconds, numIncludedParticipations);
 
             // debugging
             //this.SetContent(this.participationsView.GetContent());
@@ -579,11 +584,15 @@ namespace ActivityRecommendation
         {
             this.UpdateDrawing();
         }
-        public void UpdateParticipationStatsView(double numSeconds)
+        public void UpdateParticipationStatsView(double numSecondsSpent, int numParticipations)
         {
-            double numHoursSpent = numSeconds / 3600;
+            double numHoursSpent = numSecondsSpent / 3600;
             DateTime startDate = this.queryStartDateDisplay.GetDate();
             DateTime endDate = this.queryEndDateDisplay.GetDate();
+
+            double numHoursPerParticipation = 0;
+            if (numParticipations > 0)
+                numHoursPerParticipation = numHoursSpent / numParticipations;
 
             // figure out how much time there was between these dates
             TimeSpan availableDuration = endDate.Subtract(startDate);
@@ -591,8 +600,9 @@ namespace ActivityRecommendation
             double participationFraction = numHoursSpent / totalNumHours;
 
             // now update the text blocks
-            this.totalTimeDisplay.setText("You've spent " + Environment.NewLine + Math.Round(numHoursSpent, 3) + " hours on " + this.YAxisLabel);
-            this.timeFractionDisplay.setText("Or " + Environment.NewLine + Math.Round(participationFraction * 24 * 60, 3).ToString() + " minutes per day");
+            this.totalTimeDisplay.setText(Math.Round(numHoursSpent, 1).ToString() + " hours on " + this.YAxisLabel + ":");
+            this.timeFractionDisplay.setText(Math.Round(participationFraction * 24 * 60, 2).ToString() + " minutes per day,");
+            this.timePerInstance_Display.setText(Math.Round(numHoursPerParticipation * 60, 2).ToString() + " minutes per participation.");
         }
 
         public string XAxisLabel
@@ -655,6 +665,7 @@ namespace ActivityRecommendation
         DateEntryView queryEndDateDisplay;
         TextblockLayout totalTimeDisplay;
         TextblockLayout timeFractionDisplay;
+        TextblockLayout timePerInstance_Display;
         TitledTextblock ratingWhenSuggested_Display;
         TitledTextblock ratingWhenNotSuggested_Display;
         LayoutStack layoutStack;

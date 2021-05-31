@@ -5,4 +5,8 @@
     xmlns:local="using:ActRec.UWP"
     RequestedTheme="Light">
 
+    <Application.Resources>
+        <SolidColorBrush x:Key="ButtonForegroundPointerOver">#80ffffff</SolidColorBrush>
+    </Application.Resources>
+
 </Application>

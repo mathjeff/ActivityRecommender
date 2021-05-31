@@ -506,6 +506,7 @@ namespace ActivityRecommendation
                                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2019, 9, 21), "Tested ActivityRecommender on iOS")
                                 .AddContribution(ActRecContributor.DAD, new DateTime(2020, 2, 14), "Offered some ideas about application icons, with examples")
                                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 2, 16), "Created the application icon that Android and iOS users see now")
+                                .AddContribution(ActRecContributor.MOM, new DateTime(2021, 5, 30), "Mentioned that the back buttons were hard to recognize as being back buttons")
                                 .Build()
                             ),
                             layoutStack

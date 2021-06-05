@@ -52,7 +52,7 @@ namespace ActivityRecommendation.View
 
             GridLayout grid = GridLayout.New(rowHeights, columnWidths, LayoutScore.Zero);
 
-            this.numBrowsesPerProtoactivity_Layout = new TextblockLayout();
+            this.numBrowsesPerProtoactivity_Layout = new TextblockLayout().AlignVertically(TextAlignment.Center);
             grid.PutLayout(this.numBrowsesPerProtoactivity_Layout, 0, 0);
 
             this.titleLayout = new TextblockLayout("Browse Best ProtoActivities");

@@ -14,11 +14,8 @@ namespace ActivityRecommendation
         public event VisitActivitiesScreenHandler VisitActivitiesScreen;
         public delegate void VisitActivitiesScreenHandler();
 
-        public event VisitActivitiesScreenHandler VisitSuggestionsScreen;
+        public event VisitSuggestionsScreenHandler VisitSuggestionsScreen;
         public delegate void VisitSuggestionsScreenHandler();
-
-        public event VisitStatisticsScreenHandler VisitStatisticsScreen;
-        public delegate void VisitStatisticsScreenHandler();
 
         public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
         {
@@ -54,13 +51,21 @@ namespace ActivityRecommendation
             this.participationFeedbackButtonLayout = new ButtonLayout(responseButton);
             contents.AddLayout(nameAndFeedback_builder.BuildAnyLayout());
 
-            this.navigationLayout = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
-            Button suggestionsButton = new Button();
-            suggestionsButton.Clicked += SuggestionsButton_Clicked;
-            this.navigationLayout.AddLayout(new ButtonLayout(suggestionsButton, "What's next?"));
-            Button analyzeButton = new Button();
-            analyzeButton.Clicked += AnalyzeButton_Clicked;
-            this.navigationLayout.AddLayout(new ButtonLayout(analyzeButton, "Analyze!"));
+            Button acceptSuggestion_button = new Button();
+            acceptSuggestion_button.Clicked += AcceptSuggestions_button_Clicked;
+
+            Button visitSuggestions_button = new Button();
+            visitSuggestions_button.Clicked += VisitSuggestions_button_Clicked;
+            this.suggestionLayout = new TextblockLayout();
+
+            this.suggestionsLayout = new Vertical_GridLayout_Builder()
+                .AddLayout(suggestionLayout)
+                .AddLayout(new Horizontal_GridLayout_Builder().Uniform()
+                    .AddLayout(new ButtonLayout(acceptSuggestion_button, "Yes"))
+                    .AddLayout(new ButtonLayout(visitSuggestions_button, "More ideas"))
+                    .BuildAnyLayout()
+                )
+                .BuildAnyLayout();
 
             Button experimentFeedbackButton = new Button();
             experimentFeedbackButton.Clicked += ExperimentFeedbackButton_Clicked;
@@ -145,6 +150,7 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 10, 3), "Pointed out that it was possible record participations in the future.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 9), "Suggested making different metrics appear more distinct.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 21), "Pointed out that the participation feedback had stopped finding a better activity")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 6, 6), "Suggested show suggestions in the participation entry view")
                     .Build()
                 )
                 .Build();
@@ -205,13 +211,16 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(new ExperimentResultsView(this.LatestParticipation), "Experiment Results");
         }
 
-        private void AnalyzeButton_Clicked(object sender, EventArgs e)
+        private void AcceptSuggestions_button_Clicked(object sender, EventArgs e)
         {
-            if (this.VisitStatisticsScreen != null)
-                this.VisitStatisticsScreen.Invoke();
+            // The response button suggested requesting another suggestion
+            if (this.suggestedActivityName != null)
+            {
+                this.SetActivityName(this.suggestedActivityName);
+            }
         }
 
-        private void SuggestionsButton_Clicked(object sender, EventArgs e)
+        private void VisitSuggestions_button_Clicked(object sender, EventArgs e)
         {
             // The response button suggested requesting another suggestion
             if (this.VisitSuggestionsScreen != null)
@@ -311,6 +320,7 @@ namespace ActivityRecommendation
 
         public void Clear()
         {
+            this.wasEverCleared = true;
             this.ratingBox.Clear();
             this.nameBox.Clear();
             this.CommentText = "";
@@ -335,7 +345,7 @@ namespace ActivityRecommendation
                 return this.ratingBox.LatestParticipation;
             }
         }
-        public IEnumerable<ActivitiesSuggestion> CurrentSuggestions = new List<ActivitiesSuggestion>();
+        public IEnumerable<ActivitiesSuggestion> ExternalSuggestions = new List<ActivitiesSuggestion>();
         public DateTime StartDate
         {
             get
@@ -425,7 +435,7 @@ namespace ActivityRecommendation
                 return this.metricChooser.Metric;
             }
         }
-        public Participation GetParticipation(ActivityDatabase activities, Engine engine)
+        public Participation GetParticipation(Engine engine)
         {
             Activity activity = this.nameBox.Activity;
             if (activity == null)
@@ -489,7 +499,7 @@ namespace ActivityRecommendation
 
         private bool get_wasSuggested(ActivityDescriptor activity)
         {
-            foreach (ActivitiesSuggestion suggestion in this.CurrentSuggestions)
+            foreach (ActivitiesSuggestion suggestion in this.ExternalSuggestions)
             {
                 foreach (ActivitySuggestion child in suggestion.Children)
                 {
@@ -497,8 +507,11 @@ namespace ActivityRecommendation
                         return true;
                 }
             }
+            if (activity.ActivityName == this.suggestedActivityName)
+            {
+                return true;
+            }
             return false;
-
         }
 
         public void ActivityNameText_Changed()
@@ -649,9 +662,25 @@ namespace ActivityRecommendation
                     }
                     else
                     {
-                        // We can remind the user to get another suggestion,
-                        // and we can give them a convenient button for going there
-                        this.promptHolder.SubLayout = this.navigationLayout;
+                        // If the user has submitted a participation before, it should be fast to get a suggestion, so we do that now
+                        if (this.wasEverCleared)
+                        {
+                            this.updateSuggestion();
+                            if (this.suggestedActivityName != null)
+                            {
+                                this.promptHolder.SubLayout = this.suggestionsLayout;
+                                this.suggestionLayout.setText("How about " + this.suggestedActivityName + "?");
+                            }
+                            else
+                            {
+                                this.promptHolder.SubLayout = null;
+                            }
+                        }
+                        else
+                        {
+                            // If the user hasn't submitted a participation during this usage of ActivityRecommender yet, then it will probably be slow to get a suggestion, so we'll wait until later before showing a suggestion
+                            this.promptHolder.SubLayout = null;
+                        }
                     }
                 }
                 else
@@ -705,7 +734,24 @@ namespace ActivityRecommendation
             return null;
         }
 
-
+        private void updateSuggestion()
+        {
+            ActivitySuggestion suggestion;
+            string text = null;
+            ActivitiesSuggestion choices = this.engine.MakeRecommendation();
+            if (choices != null)
+            {
+                suggestion = choices.Children[0];
+                string name = suggestion.ActivityDescriptor.ActivityName;
+                text = "How about " + name + "?";
+                this.suggestedActivityName = name;
+            }
+            else
+            {
+                this.suggestedActivityName = null;
+            }
+            this.suggestionLayout.setText(text);
+        }
         private string TaskCompleted_Text
         {
             get
@@ -757,7 +803,8 @@ namespace ActivityRecommendation
         Button okButton;
         ButtonLayout participationFeedbackButtonLayout;
         ContainerLayout promptHolder;
-        GridLayout navigationLayout;
+        TextblockLayout suggestionLayout;
+        LayoutChoice_Set suggestionsLayout;
         LayoutChoice_Set experimentFeedbackLayout;
         string feedback;
         Engine engine;
@@ -770,6 +817,8 @@ namespace ActivityRecommendation
         ContainerLayout helpStatusHolder;
         ActivityDescriptor demanded_nextParticipationActivity;
         ParticipationFeedback participationFeedback;
+        string suggestedActivityName;
+        bool wasEverCleared;
     }
 
     class LongtermPrediction

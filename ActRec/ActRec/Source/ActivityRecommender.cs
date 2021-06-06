@@ -423,7 +423,6 @@ namespace ActivityRecommendation
             this.participationEntryView.LatestParticipation = this.latestParticipation;
             this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
-            this.participationEntryView.VisitStatisticsScreen += ParticipationEntryView_VisitStatisticsScreen;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);
@@ -1081,7 +1080,7 @@ namespace ActivityRecommendation
         private void SubmitParticipation()
         {
             // give the participation to the engine
-            Participation participation = this.participationEntryView.GetParticipation(this.engine.ActivityDatabase, this.engine);
+            Participation participation = this.participationEntryView.GetParticipation(this.engine);
             if (participation == null)
                 return;
 
@@ -1274,7 +1273,7 @@ namespace ActivityRecommendation
             set
             {
                 this.recentUserData.Suggestions = value;
-                this.participationEntryView.CurrentSuggestions = this.recentUserData.Suggestions;
+                this.participationEntryView.ExternalSuggestions = this.recentUserData.Suggestions;
 
                 this.writeRecentUserData_if_needed();
             }

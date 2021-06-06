@@ -191,7 +191,7 @@ namespace ActivityRecommendation.View
         private void userEnteredText(string oldText, string newText)
         {
             // System.Diagnostics.Debug.WriteLine("User entered text. Old text = '" + oldText + "', new text = '" + newText + "'");
-            List<String> markers = new List<string> { "\n", "\t" };
+            List<String> markers = new List<string> { "\n", "\t" , "\r"};
             bool addedMarker = false;
             foreach (String marker in markers)
             {

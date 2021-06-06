@@ -402,7 +402,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set topLayout;
         LayoutStack layoutStack;
         List<ActivitiesSuggestion> suggestions = new List<ActivitiesSuggestion>();
-        int maxNumSuggestions = 2;
+        int maxNumSuggestions = 4;
         Engine engine;
         ActivityRecommender recommender;
         TextblockLayout messageLayout;

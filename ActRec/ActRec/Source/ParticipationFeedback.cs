@@ -108,7 +108,7 @@ namespace ActivityRecommendation
             Prediction betterPrediction = this.engine.Get_OverallHappiness_ParticipationEstimate(betterActivity, request);
             string redirectionText;
             Color redirectionColor;
-            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution);
+            Distribution betterFutureHappinessImprovementInDays = this.engine.compute_longtermValue_increase_in_days(betterPrediction.Distribution, this.StartDate, this.StartDate);
             double improvementInDays = Math.Round(betterFutureHappinessImprovementInDays.Mean - this.ExpectedFutureFun, 1);
             if (improvementInDays <= 0)
             {

@@ -920,12 +920,12 @@ namespace ActivityRecommendation
 
 
 
-        public Distribution compute_longtermValue_increase_in_days(Distribution chosenValue)
+        public Distribution compute_longtermValue_increase_in_days(Distribution chosenValue, DateTime when, DateTime baselineEnd)
         {
             if (chosenValue.Weight <= 0)
                 return new Distribution();
 
-            Distribution baseValue = new Distribution(this.longTerm_participationValue_interpolator.GetAverage());
+            Distribution baseValue = this.longTerm_participationValue_interpolator.AverageUntil(baselineEnd);
 
             Distribution bonusInDays = new Distribution();
             // relWeight(x) = 2^(-x/halflife)
@@ -2397,21 +2397,21 @@ namespace ActivityRecommendation
         }
 
         // given an activity and a DateTime for its Participation to start, estimates the change in longterm happiness (measured in days) caused by doing it
-        private Distribution compute_longtermValue_increase(Activity chosenActivity, DateTime startDate)
+        private Distribution compute_longtermValue_increase(Activity chosenActivity, DateTime startDate, DateTime baselineEnd)
         {
             ActivityRequest request = new ActivityRequest(startDate);
 
             Distribution thisValue = this.Get_OverallHappiness_ParticipationEstimate(chosenActivity, request).Distribution;
 
-            Distribution increase = this.compute_longtermValue_increase_in_days(thisValue);
+            Distribution increase = this.compute_longtermValue_increase_in_days(thisValue, startDate, baselineEnd);
             return increase;
         }
 
         // given an activity and a DateTime for its Participation to start, estimates the change in efficiency (measured in hours) in the near future caused by doing it
-        private Distribution computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate)
+        private Distribution computeEfficiencyIncrease(Activity chosenActivity, DateTime startDate, DateTime baselineEnd)
         {
             Distribution previous = this.Get_OverallEfficiency_ParticipationEstimate(chosenActivity, startDate).Distribution;
-            Distribution baseValue = new Distribution(this.longTerm_efficiency_interpolator.GetAverage());
+            Distribution baseValue = this.longTerm_efficiency_interpolator.AverageUntil(baselineEnd);
             Distribution increase = this.computeEfficiencyIncrease(baseValue, previous);
             return increase;
         }
@@ -2468,22 +2468,22 @@ namespace ActivityRecommendation
                 return null;
             }
 
-            Distribution comparisonBonusInDays = this.compute_longtermValue_increase(chosenActivity, comparisonDate);
+            Distribution comparisonBonusInDays = this.compute_longtermValue_increase(chosenActivity, comparisonDate, startDate);
             if (comparisonBonusInDays.Mean == 0)
             {
                 // not enough data
                 return null;
             }
-            Distribution comparisonEfficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, comparisonDate);
+            Distribution comparisonEfficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, comparisonDate, startDate);
             Distribution comparisonValueRatio = this.compute_estimatedRating_ratio(chosenActivity, comparisonDate);
 
-            Distribution longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate);
+            Distribution longtermBonusInDays = this.compute_longtermValue_increase(chosenActivity, startDate, startDate);
             if (longtermBonusInDays.Mean == 0)
             {
                 // no data
                 return null;
             }
-            Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate);
+            Distribution efficiencyBonusInHours = this.computeEfficiencyIncrease(chosenActivity, startDate, startDate);
             Distribution shorttermValueRatio = this.compute_estimatedRating_ratio(chosenActivity, startDate);
 
             double roundedShorttermRatio = Math.Round(shorttermValueRatio.Mean, 3);

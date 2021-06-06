@@ -58,10 +58,27 @@ namespace ActivityRecommendation
                 this.ratingSummariesToUpdate.Enqueue(summary);
             }
         }
-        public AdaptiveInterpolation.Distribution GetAverage()
+        // gets the average of all points in this interpolator
+        public Distribution GetAverage()
         {
-            return this.interpolator.GetAverage();
+            return new Distribution(this.interpolator.GetAverage());
         }
+        // gets the averag eof all points in this interpolator before the given DateTime
+        public Distribution AverageUntil(DateTime when)
+        {
+            if (when.CompareTo(this.ratingSummarizer.LatestKnownDate) >= 0)
+                return this.GetAverage();
+            Distribution result = new Distribution();
+            foreach (ScoreSummary summary in this.ratingSummariesToUpdate)
+            {
+                if (summary.StartDate.CompareTo(when) <= 0)
+                {
+                    result = result.Plus(summary.Item);
+                }
+            }
+            return result;
+        }
+
         Queue<ScoreSummary> ratingSummariesToUpdate;
         LazyDimension_Interpolator<Distribution> interpolator;
         ScoreSummarizer ratingSummarizer;

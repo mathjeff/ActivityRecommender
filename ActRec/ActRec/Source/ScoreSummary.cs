@@ -13,8 +13,8 @@ namespace ActivityRecommendation
         // The reason someone might want this would be if they want to make a bunch of ScoreSummary objects and don't want lots of repeats all saying the same thing
         public ScoreSummary(DateTime when, bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint = false)
         {
-            this.earliestKnownDate = when;
-            this.latestKnownDate = when;
+            this.startDate = when;
+            this.endDate = when;
             this.useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint = useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;
         }
 
@@ -23,7 +23,7 @@ namespace ActivityRecommendation
         {
             DateTime latestDate = summarizer.LatestKnownDate;
             // fetch any ratings that appeared since our last update
-            this.Update(summarizer, this.latestKnownDate, latestDate);
+            this.Update(summarizer, this.endDate, latestDate);
         }
 
         // Pulls new ratings from the RatingSummarizer within a certain date range and updates metadata (min/max)
@@ -31,24 +31,24 @@ namespace ActivityRecommendation
         {
             if (!this.useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint)
             {
-                bool earlierThanFirstDatapoint = this.earliestKnownDate.CompareTo(summarizer.EarliestKnownDate) < 0;
+                bool earlierThanFirstDatapoint = this.startDate.CompareTo(summarizer.EarliestKnownDate) < 0;
                 if (earlierThanFirstDatapoint)
                     return;
             }
 
-            if (earliestDateToInclude.CompareTo(this.earliestKnownDate) < 0)
+            if (earliestDateToInclude.CompareTo(this.startDate) < 0)
             {
                 bool endInclusive = (this.values.Weight <= 0);
-                this.importData(summarizer, earliestDateToInclude, this.earliestKnownDate, true, endInclusive);
-                this.earliestKnownDate = earliestDateToInclude;
+                this.importData(summarizer, earliestDateToInclude, this.startDate, true, endInclusive);
+                this.startDate = earliestDateToInclude;
             }
 
             bool startInclusive = (this.values.Weight <= 0);
-            int endComparison = latestDateToInclude.CompareTo(this.latestKnownDate);
+            int endComparison = latestDateToInclude.CompareTo(this.endDate);
             if (endComparison > 0 || (startInclusive && endComparison >= 0))
             {
-                this.importData(summarizer, this.latestKnownDate, latestDateToInclude, startInclusive, true);
-                this.latestKnownDate = latestDateToInclude;
+                this.importData(summarizer, this.endDate, latestDateToInclude, startInclusive, true);
+                this.endDate = latestDateToInclude;
             }
         }
 
@@ -88,8 +88,16 @@ namespace ActivityRecommendation
 
         #endregion
 
-        DateTime earliestKnownDate;  // the date that this RatingSummary describes
-        DateTime latestKnownDate;   // the date of the latest rating known to this RatingSummary
+        public DateTime StartDate
+        {
+            get
+            {
+                return this.startDate;
+            }
+        }
+
+        DateTime startDate;  // the date that this RatingSummary describes
+        DateTime endDate;   // the date of the latest rating known to this RatingSummary
         bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;
         Distribution values = Distribution.Zero;
     }

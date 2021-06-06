@@ -149,10 +149,14 @@ namespace ActivityRecommendation
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
             if (activity != null)
             {
+                // give participation to ancestor activities too
                 List<Activity> superCategories = this.FindAllSupercategoriesOf(activity);
                 foreach (Activity parent in superCategories)
                 {
-                    parent.AddParticipation(newParticipation);
+                    if (parent != activity)
+                    {
+                        parent.AddParticipation(newParticipation);
+                    }
                 }
             }
             RelativeEfficiencyMeasurement efficiencyMeasurement = newParticipation.RelativeEfficiencyMeasurement;
@@ -1387,16 +1391,6 @@ namespace ActivityRecommendation
                 this.latestInteractionDate = when;
             }
         }
-        // provides a previously unknown participation to the Engine
-        /*public void AddParticipation(Participation newParticipation)
-        {
-            // write it to the hard drive
-            this.WriteParticipation(newParticipation);
-            // adjust any global dates for having found it
-            this.DiscoveredParticipation(newParticipation);
-            // give it to any relevant Activities
-            this.CascadeParticipation(newParticipation);
-        }*/
         // tells the Engine about a participation that wasn't already in memory (but may have been stored on disk)
         public void PutParticipationInMemory(Participation newParticipation)
         {
@@ -1411,8 +1405,10 @@ namespace ActivityRecommendation
             this.unappliedParticipations.Add(newParticipation);
             this.PutActivityDescriptorInMemory(newParticipation.ActivityDescriptor);
 
-            this.weightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(newParticipation.ActivityDescriptor);
+            activity.AddParticipation(newParticipation);
 
+            this.weightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
             
             Rating rating = newParticipation.GetCompleteRating();
             if (rating != null)
@@ -1426,6 +1422,11 @@ namespace ActivityRecommendation
             }
         }
 
+        public void PutCommentInMemory(ParticipationComment comment)
+        {
+            Activity activity = this.ActivityDatabase.ResolveDescriptor(comment.ActivityDescriptor);
+            activity.AddComment(comment);
+        }
         // updates any existing experiments with information from newParticipation
         private void updateExperimentsWithNewParticipation(Participation newParticipation)
         {
@@ -3412,7 +3413,7 @@ namespace ActivityRecommendation
         private List<AbsoluteRating> unappliedRatings;              // lists all Ratings that the RatingProgressions don't know about yet
         private List<Participation> unappliedParticipations;        // lists all Participations that the ParticipationProgressions don't know about yet
         private List<ActivitySkip> unappliedSkips;                  // lists all skips that the progressions don't know about yet
-        private List<ActivitySuggestion> unappliedSuggestions;            // lists all ActivitySuggestions that the Activities don't know about yet
+        private List<ActivitySuggestion> unappliedSuggestions;      // lists all ActivitySuggestions that the Activities don't know about yet
         DateTime firstInteractionDate;
         DateTime latestInteractionDate;
         bool requiresFullUpdate = true;

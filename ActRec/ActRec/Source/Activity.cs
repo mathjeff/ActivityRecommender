@@ -543,10 +543,6 @@ namespace ActivityRecommendation
         }
         private void ApplyPendingParticipations()
         {
-            this.ApplyPendingParticipationsForShorttermAnalysis();
-        }
-        private void ApplyPendingParticipationsForShorttermAnalysis()
-        {
             foreach (Participation newParticipation in this.PendingParticipationsForShorttermAnalysis)
             {
                 // get the coordinates at that time and save them
@@ -564,6 +560,11 @@ namespace ActivityRecommendation
                 this.considerationProgression.AddParticipation(newParticipation);
             }
             this.PendingParticipationsForShorttermAnalysis.Clear();
+        }
+        private Participation GetParticipationForDate(DateTime when)
+        {
+            this.ApplyPendingParticipations();
+            return this.participationProgression.GetParticipationAt(when);
         }
         public List<Participation> Participations
         {
@@ -698,7 +699,7 @@ namespace ActivityRecommendation
         {
             this.SetupPredictorsIfNeeded();
             this.ApplyPendingSkips();
-            this.ApplyPendingParticipationsForShorttermAnalysis();
+            this.ApplyPendingParticipations();
 
             double[] coordinates = new double[this.ratingTrainingProgressions.Count];
             int i;
@@ -796,11 +797,11 @@ namespace ActivityRecommendation
             List<double> coordinateList = new List<double>(activities.Count * this.participationTestingProgressions.Count + 1);
             // concatenate all coordinates from all supercategories
             coordinateList.Add(this.timeOfDayProgression.GetValueAt(when, false).Value.Mean);
-            foreach (Activity doable in activities)
+            foreach (Activity activity in activities)
             {
-                doable.ApplyPendingSkips();
-                doable.ApplyPendingParticipationsForShorttermAnalysis();
-                foreach (IProgression progression in doable.participationTestingProgressions)
+                activity.ApplyPendingSkips();
+                activity.ApplyPendingParticipations();
+                foreach (IProgression progression in activity.participationTestingProgressions)
                 {
                     ProgressionValue value = progression.GetValueAt(when, false);
                     if (value != null)
@@ -1058,6 +1059,11 @@ namespace ActivityRecommendation
             return null;
         }
 
+        public void AddComment(ParticipationComment comment)
+        {
+            Participation participation = this.GetParticipationForDate(comment.ApplicableDate);
+            participation.AddPostComment(comment);
+        }
 
         #endregion
 
@@ -1408,7 +1414,6 @@ namespace ActivityRecommendation
         Distribution thinkingTimes;
         ScoreSummarizer overallRatings_summarizer;
         ScoreSummarizer overallEfficiency_summarizer;
-
         #endregion
 
     }

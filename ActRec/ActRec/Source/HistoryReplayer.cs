@@ -78,6 +78,10 @@ namespace ActivityRecommendation
                 return this.ProcessRating((AbsoluteRating)newRating);
             return null;
         }
+        public virtual void AddComment(ParticipationComment comment)
+        {
+            this.engine.PutCommentInMemory(comment);
+        }
         public virtual AbsoluteRating ProcessRating(AbsoluteRating newRating) { return newRating; }
         public virtual RelativeRating ProcessRating(RelativeRating newRating) 
         {

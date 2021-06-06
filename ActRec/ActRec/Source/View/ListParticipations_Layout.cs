@@ -10,6 +10,8 @@ namespace ActivityRecommendation.View
 {
     class ListParticipations_Layout : ContainerLayout
     {
+        public event AddParticipationComment_Handler AddParticipationComment;
+        public delegate void AddParticipationComment_Handler(ParticipationComment comment);
         public ListParticipations_Layout(List<Participation> participations, bool showRatings, Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack, Random randomGenerator)
         {
             this.participations = participations;
@@ -36,7 +38,9 @@ namespace ActivityRecommendation.View
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();
             foreach (Participation participation in participations)
             {
-                gridBuilder.AddLayout(new ParticipationView(participation, this.scoreSummarizer, this.layoutStack, this.engine, showRatings));
+                ParticipationView v = new ParticipationView(participation, this.scoreSummarizer, this.layoutStack, this.engine, showRatings);
+                v.AddParticipationComment += Child_AddParticipationComment;
+                gridBuilder.AddLayout(v);
             }
             if (!showRatings)
             {
@@ -47,6 +51,12 @@ namespace ActivityRecommendation.View
                 gridBuilder.AddLayout(showRatings_layout);
             }
             this.SubLayout = ScrollLayout.New(gridBuilder.BuildAnyLayout());
+        }
+
+        private void Child_AddParticipationComment(ParticipationComment comment)
+        {
+            if (AddParticipationComment != null)
+                AddParticipationComment.Invoke(comment);
         }
 
         private void ShowRatings_button_Clicked(object sender, EventArgs e)

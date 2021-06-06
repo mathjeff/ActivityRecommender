@@ -11,6 +11,9 @@ namespace ActivityRecommendation.View
 {
     class BrowseParticipations_Layout : ContainerLayout
     {
+        public event AddParticipationComment_Handler AddParticipationComment;
+        public delegate void AddParticipationComment_Handler(ParticipationComment comment);
+
         public BrowseParticipations_Layout(ActivityDatabase activityDatabase, Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
@@ -286,6 +289,19 @@ namespace ActivityRecommendation.View
                 return participations;
             }
         }
+        private ListParticipations_Layout New_ListParticipationsLayout(List<Participation> participations)
+        {
+            ListParticipations_Layout result = new ListParticipations_Layout(participations, this.ShowRatings, this.engine, this.scoreSummarizer, this.layoutStack, this.randomGenerator);
+            result.AddParticipationComment += Result_AddParticipationComment;
+            return result;
+
+        }
+
+        private void Result_AddParticipationComment(ParticipationComment comment)
+        {
+            if (this.AddParticipationComment != null)
+                this.AddParticipationComment.Invoke(comment);
+        }
 
         private LayoutChoice_Set make_topParticipations_layout()
         {
@@ -298,7 +314,7 @@ namespace ActivityRecommendation.View
                 participations = participations.GetRange(0, this.maxNumTopParticipationsToShow);
 
             TitledControl mainView = new TitledControl("" + participations.Count + " matching participations with highest " + this.sortBy_box.SelectedItem + " (of " + availableCount + ") in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.engine, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
+            mainView.SetContent(this.New_ListParticipationsLayout(participations));
             return mainView;
         }
 
@@ -324,7 +340,7 @@ namespace ActivityRecommendation.View
 
             // build layout
             TitledControl mainView = new TitledControl("" + chosenParticipations.Count + " matching participations with most extreme " + this.sortBy_box.SelectedItem.ToLower() + " (of " + availableCount + ") in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(chosenParticipations, this.ShowRatings, this.engine, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
+            mainView.SetContent(this.New_ListParticipationsLayout(chosenParticipations));
             return mainView;
         }
 
@@ -336,7 +352,7 @@ namespace ActivityRecommendation.View
                 return this.Get_NoParticipations_Layout();
 
             TitledControl result = new TitledControl("Remember this?", 30);
-            result.SetContent(new ListParticipations_Layout(new List<Participation>() { participation }, this.ShowRatings, this.engine, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
+            result.SetContent(this.New_ListParticipationsLayout(new List<Participation>() { participation }));
             return result;
         }
 

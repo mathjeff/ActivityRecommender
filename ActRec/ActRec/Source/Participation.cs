@@ -118,6 +118,15 @@ namespace ActivityRecommendation
                 this.rawRating = value;
             }
         }
+        public void AddPostComment(ParticipationComment comment)
+        {
+            if (this.postComments == null)
+            {
+                this.postComments = new List<ParticipationComment>();
+            }
+            this.postComments.Add(comment);
+        }
+
         // returns a Rating with as much information filled in as possible based on the data in this participation
         public Rating GetCompleteRating()
         {
@@ -180,6 +189,18 @@ namespace ActivityRecommendation
 
         private Rating rawRating;
 
+        public List<ParticipationComment> PostComments
+        {
+            get
+            {
+                if (this.postComments == null)
+                {
+                    return new List<ParticipationComment>();
+                }
+                return this.postComments;
+            }
+        }
+        private List<ParticipationComment> postComments;
         #endregion
     }
 

@@ -70,6 +70,10 @@ namespace ActivityRecommendation
                 return results;
             }
         }
+        public Participation GetParticipationAt(DateTime when)
+        {
+            return this.searchHelper.CombineBetweenKeys(when, true, when, true).Participation;
+        }
         public List<Participation> GetParticipationsSince(DateTime when)
         {
             IEnumerable<ListItemStats<DateTime, ParticipationAndSummary>> stats = this.searchHelper.ItemsAfterKey(when, true);

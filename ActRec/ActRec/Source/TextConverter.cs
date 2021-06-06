@@ -54,7 +54,7 @@ namespace ActivityRecommendation
             if (participation.Suggested)
                 properties[this.WasSuggestedTag] = this.ConvertToStringBody(participation.Suggested);
             if (comment != null)
-                properties[this.CommentTag] = this.XmlEscape(comment);
+                properties[this.ParticipationEmbeddedComment_Tag] = this.XmlEscape(comment);
             if (participation.Consideration != null)
                 properties[this.ConsiderationTag] = this.ConvertToStringBody(participation.Consideration);
             
@@ -124,6 +124,17 @@ namespace ActivityRecommendation
 
             return this.ConvertToString(properties, objectName);
         }
+        public string ConvertToString(ParticipationComment comment)
+        {
+            Dictionary<string, string> properties = new Dictionary<string, string>();
+            properties[this.TopLevelComment_Text_Tag] = this.XmlEscape(comment.Text);
+            properties[this.ActivityDescriptorTag] = this.ConvertToStringBody(comment.ActivityDescriptor);
+            properties[this.TopLevelComment_Applicable_Tag] = this.ConvertToStringBody(comment.ApplicableDate);
+            properties[this.TopLevelComment_CreatedDate_Tag] = this.ConvertToStringBody(comment.CreatedDate);
+
+            return this.ConvertToString(properties, this.ParticipationEmbeddedComment_Tag);
+        }
+
         // converts the Inheritance into a string that is ready to write to disk
         public string ConvertToString(Inheritance inheritance)
         {
@@ -471,6 +482,11 @@ namespace ActivityRecommendation
                     this.ProcessPersona(node);
                     continue;
                 }
+                if (node.Name == this.TopLevelComment_Tag)
+                {
+                    this.ProcessComment(node);
+                    continue;
+                }
                 throw new Exception("Unrecognized node: <" + node.Name + ">");
             }
         }
@@ -510,6 +526,11 @@ namespace ActivityRecommendation
                 this.listener.AddParticipation(currentParticipation);
             else
                 System.Diagnostics.Debug.WriteLine("Skipping invalid participation having startDate = " + currentParticipation.StartDate.ToString() + " and endDate = " + currentParticipation.EndDate);
+        }
+        private void ProcessComment(XmlNode nodeRepresentation)
+        {
+            ParticipationComment comment = this.ReadTopLevelComment(nodeRepresentation);
+            this.listener.AddComment(comment);
         }
         private void ProcessRating(XmlNode nodeRepresentation)
         {
@@ -658,7 +679,7 @@ namespace ActivityRecommendation
                     }
                     continue;
                 }
-                if (currentChild.Name == this.CommentTag)
+                if (currentChild.Name == this.ParticipationEmbeddedComment_Tag)
                 {
                     comment = this.ReadText(currentChild);
                     continue;
@@ -769,6 +790,38 @@ namespace ActivityRecommendation
 
             this.latestParticipationRead = currentParticipation;
             return currentParticipation;
+        }
+
+        private ParticipationComment ReadTopLevelComment(XmlNode nodeRepresentation)
+        {
+            string text = null;
+            DateTime applicableDate = new DateTime();
+            DateTime createdDate = new DateTime();
+            ActivityDescriptor activity = null;
+            foreach (XmlNode child in nodeRepresentation.ChildNodes)
+            {
+                if (child.Name == this.TopLevelComment_Text_Tag)
+                {
+                    text = this.ReadText(child);
+                    continue;
+                }
+                if (child.Name == this.ActivityDescriptorTag)
+                {
+                    activity = this.ReadActivityDescriptor(child);
+                    continue;
+                }
+                if (child.Name == this.TopLevelComment_Applicable_Tag)
+                {
+                    applicableDate = this.ReadDate(child);
+                    continue;
+                }
+                if (child.Name == this.TopLevelComment_CreatedDate_Tag)
+                {
+                    createdDate = this.ReadDate(child);
+                    continue;
+                }
+            }
+            return new ParticipationComment(text, applicableDate, createdDate, activity);
         }
 
         // Before ActivityRecommender supported multiple metrics per activity, we did not record which metric was being completed.
@@ -1457,6 +1510,12 @@ namespace ActivityRecommendation
                     historyTexts.Add(this.ConvertToString(participation));
                     continue;
                 }
+                if (node.Name == this.TopLevelComment_Tag)
+                {
+                    ParticipationComment comment = this.ReadTopLevelComment(node);
+                    historyTexts.Add(this.ConvertToString(comment));
+                    continue;
+                }
                 if (node.Name == this.SkipTag)
                 {
                     ActivitySkip skip = this.ReadSkip(node);
@@ -1938,11 +1997,40 @@ namespace ActivityRecommendation
             }
         }
 
-        private string CommentTag
+        private string ParticipationEmbeddedComment_Tag
         {
             get
             {
                 return "Comment";
+            }
+        }
+
+        private string TopLevelComment_Tag
+        {
+            get
+            {
+                return "Comment";
+            }
+        }
+        private string TopLevelComment_CreatedDate_Tag
+        {
+            get
+            {
+                return "Created";
+            }
+        }
+        private string TopLevelComment_Applicable_Tag
+        {
+            get
+            {
+                return "Date";
+            }
+        }
+        private string TopLevelComment_Text_Tag
+        {
+            get
+            {
+                return "Text";
             }
         }
 
@@ -2084,7 +2172,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                return this.CommentTag;
+                return this.ParticipationEmbeddedComment_Tag;
             }
         }
         private string ProtoActivity_LastInteracted_Tag

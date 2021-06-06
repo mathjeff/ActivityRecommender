@@ -8,6 +8,9 @@ namespace ActivityRecommendation.View
 {
     class Browse_RecentSignificantActivities_Layout : TitledControl
     {
+        public event AddParticipationComment_Handler AddParticipationComment;
+        public delegate void AddParticipationComment_Handler(ParticipationComment comment);
+
         public Browse_RecentSignificantActivities_Layout(Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
         {
             this.SetTitle("Significant recent activities");
@@ -97,7 +100,8 @@ namespace ActivityRecommendation.View
                 bonusText = "" + roundedHours + " hours";
             }
             string text = prefix + contribution.Activity.Name + ": " + bonusText;
-            return new SignificantActivity_Layout(text, contribution.Activity, start, this.engine, this.scoreSummarizer, this.layoutStack);
+            SignificantActivity_Layout result = new SignificantActivity_Layout(text, contribution.Activity, start, this.engine, this.scoreSummarizer, this.layoutStack);
+            return result;
         }
 
         private DurationEntryView durationLayout;
@@ -108,6 +112,9 @@ namespace ActivityRecommendation.View
 
     class SignificantActivity_Layout : ContainerLayout
     {
+        public event AddParticipationComment_Handler AddParticipationComment;
+        public delegate void AddParticipationComment_Handler(ParticipationComment comment);
+
         public SignificantActivity_Layout(string text, Activity activity, DateTime start, Engine engine, ScoreSummarizer scoreSummarizer,  LayoutStack layoutStack)
         {
             this.engine = engine;
@@ -142,9 +149,17 @@ namespace ActivityRecommendation.View
                 title = "Participations in " + this.activity.Name + " since " + this.start;
             }
             ListParticipations_Layout content = new ListParticipations_Layout(participations, this.engine, this.scoreSummarizer, this.layoutStack);
+            content.AddParticipationComment += Content_AddParticipationComment;
             TitledControl results = new TitledControl(title, content, 10);
             this.layoutStack.AddLayout(results, "Participations");
         }
+
+        private void Content_AddParticipationComment(ParticipationComment comment)
+        {
+            if (AddParticipationComment != null)
+                AddParticipationComment.Invoke(comment);
+        }
+
         Activity activity;
         DateTime start;
         LayoutStack layoutStack;

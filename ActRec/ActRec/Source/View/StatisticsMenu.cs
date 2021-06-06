@@ -14,6 +14,10 @@ namespace ActivityRecommendation.View
 
         public event VisitParticipationScreenHandler VisitParticipationsScreen;
         public delegate void VisitParticipationScreenHandler();
+
+        public event AddParticipationComment_Handler AddParticipationComment;
+        public delegate void AddParticipationComment_Handler(ParticipationComment comment);
+
         public StatisticsMenu(Engine engine, LayoutStack layoutStack, PublicFileIo publicFileIo, Persona persona)
         {
             this.engine = engine;
@@ -52,7 +56,11 @@ namespace ActivityRecommendation.View
                     visualizationBuilder.AddLayout("Efficiency Growth", new EfficiencyTrendLayout(this.engine.EfficiencyCorrelator));
                     // Screens that require you to specify which activity you're interested in
                     visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
-                    visualizationBuilder.AddLayout("Search Participations", new BrowseParticipations_Layout(this.ActivityDatabase, this.engine, this.engine.RatingSummarizer, this.layoutStack));
+
+                    BrowseParticipations_Layout browseLayout = new BrowseParticipations_Layout(this.ActivityDatabase, this.engine, this.engine.RatingSummarizer, this.layoutStack);
+                    browseLayout.AddParticipationComment += BrowseLayout_AddParticipationComment;
+                    visualizationBuilder.AddLayout("Search Participations", browseLayout);
+
                     visualizationBuilder.AddLayout("Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
 
                     this.normalContent = visualizationBuilder.Build();
@@ -60,6 +68,13 @@ namespace ActivityRecommendation.View
                 return this.normalContent;
             }
         }
+
+        private void BrowseLayout_AddParticipationComment(ParticipationComment comment)
+        {
+            if (AddParticipationComment != null)
+                AddParticipationComment.Invoke(comment);
+        }
+
         private LayoutChoice_Set NoActivities_Layout
         {
             get

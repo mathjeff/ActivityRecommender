@@ -436,6 +436,7 @@ namespace ActivityRecommendation
             this.updateExperimentParticipationDemands();
 
             this.statisticsMenu = new StatisticsMenu(this.engine, this.layoutStack, this.publicFileIo, this.persona);
+            this.statisticsMenu.AddParticipationComment += StatisticsMenu_AddParticipationComment;
             this.statisticsMenu.VisitActivitiesScreen += VisualizationMenu_VisitActivitiesScreen;
             this.statisticsMenu.VisitParticipationsScreen += VisualizationMenu_VisitParticipationsScreen;
 
@@ -558,6 +559,21 @@ namespace ActivityRecommendation
             helpOrStart_menu = new Vertical_GridLayout_Builder().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
+        }
+
+        private void StatisticsMenu_AddParticipationComment(ParticipationComment comment)
+        {
+            this.addComment(comment);
+        }
+        private void addComment(ParticipationComment comment)
+        {
+            this.engine.PutCommentInMemory(comment);
+            this.writeComment(comment);
+        }
+        private void writeComment(ParticipationComment comment)
+        {
+            string text = this.textConverter.ConvertToString(comment);
+            this.internalFileIo.AppendText(text, this.ratingsFileName);
         }
 
         private void RecalculateEfficiency_layout_Confirmed_BackupBefore_RecalculateEfficiency()

@@ -29,7 +29,7 @@ namespace ActivityRecommendation.View
         {
             StackEntry activitiesEntry = new StackEntry(this.activitiesLayout, "Activities", null);
             StackEntry participationsEntry = new StackEntry(this.participationsLayout, "Record Participations", null);
-            StackEntry suggestionsEntry = new StackEntry(this.suggestionsLayout, "Suggest/Experiment", this.suggestionsLayout);
+            StackEntry suggestionsEntry = new StackEntry(this.suggestionsLayout, "Suggest/Experiment", null);
             StackEntry statisticsEntry = new StackEntry(this.statisticsLayout, "Analyze", null);
             StackEntry importExportEntry = new StackEntry(this.importExportLayout, "Import/Export", null);
 

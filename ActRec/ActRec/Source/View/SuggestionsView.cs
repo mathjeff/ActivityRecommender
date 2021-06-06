@@ -10,7 +10,7 @@ using Xamarin.Forms;
 // A SuggestionsView provides a user interface for requesting and receiving suggestions for which Activity to do
 namespace ActivityRecommendation.View
 {
-    class SuggestionsView : TitledControl, OnBack_Listener
+    class SuggestionsView : TitledControl
     {
         public event RequestedExperiment ExperimentRequested;
         public delegate void RequestedExperiment();
@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
 
             this.layoutStack = layoutStack;
 
-            this.messageLayout = new TextblockLayout("Ask for a suggestion!").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
+            this.messageLayout = new TextblockLayout("").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
 
             this.requestSuggestion_layout = new RequestSuggestion_Layout(activityDatabase, true, true, false, 3, engine, layoutStack);
             this.requestSuggestion_layout.RequestSuggestion += RequestSuggestion_layout_RequestSuggestion;
@@ -79,7 +79,7 @@ namespace ActivityRecommendation.View
             this.experimentButton = new Button();
             this.startExperiment_layout = new ButtonLayout(this.experimentButton, "Efficiency Experiment");
             this.experimentButton.Clicked += ExperimentButton_Clicked;
-            this.topLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
+            this.bottomLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
 
             Vertical_GridLayout_Builder noActivities_help_builder = new Vertical_GridLayout_Builder();
             noActivities_help_builder.AddLayout(new TextblockLayout("This screen is where you will be able to ask for suggestions of what to do."));
@@ -138,10 +138,9 @@ namespace ActivityRecommendation.View
             brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
 
             GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
-            builder.AddLayout(this.numCandidates_layout);
-            // Because numCandidates_layout shows the number of candidate activities, we can use extra-short descriptions on the create-new buttons
-            builder.AddLayout(new ButtonLayout(createNewActivity_button, "Add New Activity"));
-            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "Brainstorm New Activities"));
+            builder.AddLayout(new TextblockLayout("How about:").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center));
+            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "brainstorming"));
+            builder.AddLayout(new ButtonLayout(createNewActivity_button, "a new activity?"));
 
             this.newActivities_layout = builder.Build();
         }
@@ -149,7 +148,7 @@ namespace ActivityRecommendation.View
         private void CreateNewActivity_button_Clicked(object sender, EventArgs e)
         {
             ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
-            this.layoutStack.AddLayout(creationLayout, "New Activity", this);
+            this.layoutStack.AddLayout(creationLayout, "New Activity");
         }
 
         private void BrainstormNewActivities_button_Clicked(object sender, EventArgs e)
@@ -167,8 +166,6 @@ namespace ActivityRecommendation.View
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
         {
-            this.updateNumCandidateActivities();
-
             // show/hide the noActivities_explanationLayout as needed
             bool shouldShowActivityCreationHelp = !this.activityDatabase.ContainsCustomActivity();
             if (shouldShowActivityCreationHelp)
@@ -185,24 +182,6 @@ namespace ActivityRecommendation.View
             }
             // call parent
             return base.GetBestLayout(query);
-        }
-
-        private void updateNumCandidateActivities()
-        {
-            if (this.numCandidates < 0)
-            {
-                this.numCandidates = this.engine.GetActivitiesToConsider(new ActivityRequest()).Count;
-                this.numCandidates_layout.setText("I have " + this.numCandidates + " activities I can suggest");
-            }
-        }
-        public void OnBack(LayoutChoice_Set layout)
-        {
-            this.invalidateNumCandidates();
-        }
-
-        private void invalidateNumCandidates()
-        {
-            this.numCandidates = -1;
         }
 
         private void RequestSuggestion_layout_RequestSuggestion(ActivityRequest activityRequest)
@@ -298,9 +277,8 @@ namespace ActivityRecommendation.View
         private void UpdateLayout_From_Suggestions()
         {
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
-            // If the user hasn't asked for any suggestions yet, then show them some buttons for making more activities
-            // Alternatively, if our suggestion isn't that good, be sure to show them those buttons for making more activities
-            if (this.suggestions.Count < 1 || (this.suggestions.Count == 1 && this.suggestions[0].Children[0].WorseThanRootActivity))
+            // If our suggestion isn't very good, be sure to show the user some buttons for making more activities
+            if (this.suggestions.Count == 1 && this.suggestions[0].Children[0].WorseThanRootActivity)
             {
                 layouts.Add(this.newActivities_layout);
             }
@@ -329,7 +307,7 @@ namespace ActivityRecommendation.View
             }
             // Show an explanation about how multiple suggestions work (they're in chronological order) if there's room
             // Also be sure to save room for the suggestion buttons
-            if (layouts.Count < this.maxNumSuggestions)
+            if (layouts.Count <= this.maxNumSuggestions - 2)
             {
                 if (this.suggestions.Count > 0)
                 {
@@ -346,7 +324,7 @@ namespace ActivityRecommendation.View
             // show help and experiments if there are no suggestions visible
             if (this.suggestions.Count < 1)
             {
-                layouts.Add(this.topLayout);
+                layouts.Add(this.bottomLayout);
             }
 
             LayoutChoice_Set even =  new Vertical_GridLayout_Builder().Uniform().AddLayouts(layouts).BuildAnyLayout();
@@ -399,7 +377,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set helpButton_layout;
         Button experimentButton;
         LayoutChoice_Set startExperiment_layout;
-        LayoutChoice_Set topLayout;
+        LayoutChoice_Set bottomLayout;
         LayoutStack layoutStack;
         List<ActivitiesSuggestion> suggestions = new List<ActivitiesSuggestion>();
         int maxNumSuggestions = 4;
@@ -409,9 +387,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
         ActivitiesSuggestion previousDeclinedSuggestion;
-        int numCandidates = -1;
 
-        TextblockLayout numCandidates_layout = new TextblockLayout().AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
         LayoutChoice_Set newActivities_layout;
     }
 

@@ -54,9 +54,22 @@ namespace ActivityRecommendation.View
         private async void export()
         {
             string filename = "Protoactivities-" + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".txt";
-            string text = this.textConverter.ConvertToString(this.protoActivity_database, true);
+            string text = this.serialize();
             await this.fileIo.Share(filename, text);
             this.layoutStack.AddLayout(new ExportSuccessLayout("file", this.fileIo), "Success");
+        }
+
+        private string serialize()
+        {
+            List<string> components = new List<string>();
+            List<ProtoActivity> protos = this.protoActivity_database.SortedByDecreasingInterest();
+            protos.Reverse();
+            foreach (ProtoActivity protoActivity in protos)
+            {
+                components.Add("  " + protoActivity.Text.Replace("\n", "\n  "));
+            }
+            string result = string.Join("\n\n//////////////////////////////\n\n", components);
+            return result;
         }
 
         private ProtoActivity_Database protoActivity_database;

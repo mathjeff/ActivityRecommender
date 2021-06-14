@@ -60,7 +60,7 @@ namespace ActivityRecommendation
 
         private void ScaleBlock_TextChanged(object sender, TextChangedEventArgs e)
         {
-            this.UpdateDateColor();
+            this.UpdateColor();
         }
         private bool IsRatioValid()
         {
@@ -85,7 +85,7 @@ namespace ActivityRecommendation
         {
             this.scaleBox.Placeholder = text;
         }
-        void UpdateDateColor()
+        void UpdateColor()
         {
             if (this.IsRatioValid() || this.scaleBox.Text == "")
                 this.AppearValid();

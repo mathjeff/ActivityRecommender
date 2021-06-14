@@ -16,13 +16,34 @@ namespace ActivityRecommendation.View
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
 
+            Button nextButton = new Button();
+            nextButton.Clicked += NextButton_Clicked;
+            this.nextButtonLayout = new ButtonLayout(nextButton, "Older");
+
+            Button prevButton = new Button();
+            prevButton.Clicked += PrevButton_Clicked;
+            this.prevButtonLayout = new ButtonLayout(prevButton, "Newer");
+
             this.protoActivity_database.TextChanged += ProtoActivity_database_TextChanged;
             this.invalidate();
+        }
+
+        private void PrevButton_Clicked(object sender, EventArgs e)
+        {
+            this.startIndex -= pageCount;
+            this.update();
+        }
+
+        private void NextButton_Clicked(object sender, EventArgs e)
+        {
+            this.startIndex += this.pageCount;
+            this.update();
         }
 
         private void invalidate()
         {
             this.SubLayout = null;
+            this.startIndex = 0;
             this.protoActivities_by_button = new Dictionary<Button, ProtoActivity>();
         }
 
@@ -42,10 +63,21 @@ namespace ActivityRecommendation.View
             else
             {
                 GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform();
-                foreach (ProtoActivity protoActivity in protoActivity_database.ProtoActivities)
+                List<ProtoActivity> protoActivities = new List<ProtoActivity>(protoActivity_database.ProtoActivities);
+                protoActivities.Reverse();
+                if (this.startIndex < 0)
+                    this.startIndex = 0;
+                if (startIndex >= protoActivities.Count)
+                    startIndex = protoActivities.Count - 1;
+                int endIndex = Math.Min(startIndex + this.pageCount, protoActivities.Count);
+                if (this.startIndex > 0)
+                    builder.AddLayout(this.prevButtonLayout);
+                for (int i = startIndex; i < endIndex; i++)
                 {
-                    builder.AddLayout(this.summarize(protoActivity));
+                    builder.AddLayout(this.summarize(protoActivities[i]));
                 }
+                if (endIndex < protoActivities.Count)
+                    builder.AddLayout(this.nextButtonLayout);
                 this.SubLayout = ScrollLayout.New(builder.BuildAnyLayout());
             }
         }
@@ -81,5 +113,9 @@ namespace ActivityRecommendation.View
         private ActivityDatabase activityDatabase;
         private LayoutStack layoutStack;
         private Dictionary<Button, ProtoActivity> protoActivities_by_button;
+        private int startIndex;
+        private ButtonLayout nextButtonLayout;
+        private ButtonLayout prevButtonLayout;
+        private int pageCount = 10;
     }
 }

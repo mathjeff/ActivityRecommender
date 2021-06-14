@@ -1613,23 +1613,24 @@ namespace ActivityRecommendation
             }
             this.weightedRatingSummarizer.RemoveParticipation(participationToRemove.StartDate);
         }
-        public RelativeRating MakeRelativeRating(Participation mainParticipation, double scale, Participation otherParticipation)
+        public RelativeRating MakeRelativeRating(ActivityDescriptor activity, DateTime when, double scale, Participation otherParticipation)
         {
             // Create activities if missing
             if (this.requiresFullUpdate)
                 this.FullUpdate();
             // Compute updated rating estimates for these activities
-            Activity thisActivity = this.activityDatabase.ResolveDescriptor(mainParticipation.ActivityDescriptor);
-            Activity otherActivity = this.activityDatabase.ResolveDescriptor(otherParticipation.ActivityDescriptor);
-            DateTime when = mainParticipation.StartDate;
+            Activity thisActivity = this.activityDatabase.ResolveDescriptor(activity);
+            Activity otherActivity = this.activityDatabase.ResolveDescriptor(activity);
             ActivityRequest request = new ActivityRequest(when);
             this.EstimateSuggestionValue(thisActivity, request);
             this.EstimateSuggestionValue(otherActivity, request);
-            this.MakeRecommendation(mainParticipation.StartDate);
+            this.MakeRecommendation(when);
 
             // make an AbsoluteRating for the Activity (leave out date + activity because it's implied)
             AbsoluteRating thisRating = new AbsoluteRating();
-            Distribution thisPrediction = this.EstimateRating(thisActivity, mainParticipation.StartDate).Distribution;
+            thisRating.Date = when;
+            thisRating.ActivityDescriptor = activity;
+            Distribution thisPrediction = this.EstimateRating(thisActivity, when).Distribution;
 
             // make an AbsoluteRating for the other Activity (include date + activity because they're not implied)
             AbsoluteRating otherRating = new AbsoluteRating();

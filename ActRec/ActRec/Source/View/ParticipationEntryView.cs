@@ -75,6 +75,7 @@ namespace ActivityRecommendation
 
             GridLayout commentAndRating_grid = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             this.ratingBox = new RelativeRatingEntryView();
+            this.ratingBox.RatingRatioChanged += RatingBox_RatingRatioChanged;
             commentAndRating_grid.AddLayout(this.ratingBox);
             this.commentBox = new PopoutTextbox("Comment", layoutStack);
             this.commentBox.Placeholder("(Optional)");
@@ -199,6 +200,32 @@ namespace ActivityRecommendation
             noActivities_help_builder.AddLayout(new ButtonLayout(activitiesButton));
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
+        }
+
+        private void RatingBox_RatingRatioChanged()
+        {
+            this.ratingBox.SetRatingComparison(getRatingBoxComparison());
+        }
+
+        private int getRatingBoxComparison()
+        {
+            int notApplicable = 0;
+            double? ratio = this.ratingBox.GetRatio();
+            if (ratio == null)
+                return notApplicable;
+            if (!this.startDateBox.IsDateValid())
+                return notApplicable;
+            DateTime when = this.StartDate;
+            Activity activity = this.nameBox.Activity;
+            if (activity == null)
+                return notApplicable;
+            Distribution usualDistribution = this.engine.EstimateRating(activity, when).Distribution;
+            double updatedScore = this.engine.MakeRelativeRating(activity.MakeDescriptor(), when, ratio.Value, this.ratingBox.LatestParticipation).SecondRating.Score;
+            if (updatedScore >= usualDistribution.Mean + usualDistribution.StdDev)
+                return 1;
+            if (updatedScore <= usualDistribution.Mean - usualDistribution.StdDev)
+                return -1;
+            return 0;
         }
 
         private void ExperimentFeedbackButton_Clicked(object sender, EventArgs e)
@@ -468,7 +495,7 @@ namespace ActivityRecommendation
 
             try
             {
-                Rating rating = this.ratingBox.GetRating(engine, participation);
+                Rating rating = this.ratingBox.GetRelativeRating(engine, participation);
                 participation.RawRating = rating;
             }
             catch (Exception)

@@ -75,7 +75,7 @@ namespace ActivityRecommendation
                 thisParticipation = thisRating.Source.ConvertedAsParticipation;
             if (otherParticipation != null && thisParticipation != null)
             {
-                RelativeRating modifiedRating = this.engine.MakeRelativeRating(thisParticipation, newRating.RawScoreScale.Value, otherParticipation);
+                RelativeRating modifiedRating = this.engine.MakeRelativeRating(thisParticipation.ActivityDescriptor, thisParticipation.StartDate, newRating.RawScoreScale.Value, otherParticipation);
                 if (modifiedRating.BetterRating.ActivityDescriptor != null)
                 {
                     if (!modifiedRating.BetterRating.ActivityDescriptor.CanMatch(newRating.BetterRating.ActivityDescriptor))

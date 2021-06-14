@@ -13,7 +13,9 @@ namespace ActivityRecommendation
 {
     class RelativeRatingEntryView : TitledControl
     {
-        public RelativeRatingEntryView() : base("Score:")
+        public event RatingRatioChanged_Handler RatingRatioChanged;
+        public delegate void RatingRatioChanged_Handler();
+        public RelativeRatingEntryView() : base("")
         {
             this.TitleLayout.AlignVertically(TextAlignment.Center);
             this.mainDisplayGrid = GridLayout.New(new BoundProperty_List(2), new BoundProperty_List(1), LayoutScore.Zero);
@@ -60,6 +62,8 @@ namespace ActivityRecommendation
 
         private void ScaleBlock_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (this.RatingRatioChanged != null)
+                this.RatingRatioChanged.Invoke();
             this.UpdateColor();
         }
         private bool IsRatioValid()
@@ -136,7 +140,7 @@ namespace ActivityRecommendation
             }
         }
         // creates the rating to assign to the given Participation
-        public Rating GetRating(Engine engine, Participation participation)
+        public Rating GetRelativeRating(Engine engine, Participation participation)
         {
             // abort if null input
             double? maybeScale = this.GetRatio();
@@ -145,13 +149,43 @@ namespace ActivityRecommendation
             double scale = maybeScale.Value;
             if (this.latestParticipation == null)
                 return null;
-            RelativeRating rating = engine.MakeRelativeRating(participation, scale, this.latestParticipation);
+            RelativeRating rating = engine.MakeRelativeRating(participation.ActivityDescriptor, participation.StartDate, scale, this.latestParticipation);
             return rating;
+        }
+        // provides what the actual rating was compared to what a typical rating would be
+        // 0 means within normal expectations (1 stddev)
+        // 1 means more than expected
+        // -1 means less than expected
+        public void SetRatingComparison(int ratingComparison)
+        {
+            this.ratingComparison = ratingComparison;
+            this.UpdateReactionText();
+        }
+
+        private void UpdateReactionText()
+        {
+            if (this.ratingComparison > 0)
+            {
+                this.SetTitle("Wow! Score:");
+            }
+            else
+            {
+                if (this.ratingComparison < 0)
+                {
+                    this.SetTitle("Aww. Score:");
+                }
+                else
+                {
+                    this.SetTitle("Score:");
+                }
+            }
         }
 
         public void Clear()
         {
             this.scaleBox.Text = "";
+            this.ratingComparison = 0;
+            this.UpdateReactionText();
         }
 
         private GridLayout mainDisplayGrid;
@@ -160,5 +194,6 @@ namespace ActivityRecommendation
         private TextblockLayout shortenedNameLayout;
         private Editor scaleBox;
         private TextboxLayout scaleBoxLayout;
+        private int ratingComparison;
     }
 }

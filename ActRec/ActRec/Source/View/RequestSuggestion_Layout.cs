@@ -206,7 +206,7 @@ namespace ActivityRecommendation.View
                 Participation hypotheticalParticipation = new Participation(startDate, hypotheticalEndDate, activityRequest.ActivityToBeat);
                 hypotheticalParticipation.Hypothetical = true;
 
-                Rating userPredictedRating = this.specify_AtLeastAsFunAs_Layout.EstimatedRating_Box.GetRating(this.engine, hypotheticalParticipation);
+                Rating userPredictedRating = this.specify_AtLeastAsFunAs_Layout.EstimatedRating_Box.GetRelativeRating(this.engine, hypotheticalParticipation);
                 activityRequest.UserPredictedRating = userPredictedRating;
             }
             this.RequestSuggestion.Invoke(activityRequest);

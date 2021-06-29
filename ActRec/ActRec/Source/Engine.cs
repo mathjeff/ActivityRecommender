@@ -541,7 +541,7 @@ namespace ActivityRecommendation
             suggestion.ParticipationProbability = this.EstimateParticipationProbability(activity, request.Date).Distribution.Mean;
             if (tryComputeExpectedFeedback)
             {
-                ParticipationFeedback feedback = this.computeStandardParticipationFeedback(activity, when, when);
+                ParticipationFeedback feedback = this.computeStandardParticipationFeedback(activity, when, when, false);
                 if (feedback != null)
                     suggestion.ExpectedReaction = feedback.Summary;
             }
@@ -2460,7 +2460,7 @@ namespace ActivityRecommendation
             // the last thing we did was suggest this activity
             return true;
         }
-        public ParticipationFeedback computeStandardParticipationFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate)
+        public ParticipationFeedback computeStandardParticipationFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate, bool alreadyHappened = true)
         {
             this.ApplyParticipationsAndRatings();
             DateTime comparisonDate = this.chooseRandomBelievableParticipationStart(chosenActivity, startDate);
@@ -2517,7 +2517,7 @@ namespace ActivityRecommendation
             bool soothingTime = (longtermBonusInDays.Mean > comparisonBonusInDays.Mean);
             bool efficientActivity = (efficiencyBonusInHours.Mean >= 0);
             bool efficientTime = (efficiencyBonusInHours.Mean >= comparisonEfficiencyBonusInHours.Mean);
-            bool suggested = this.get_wasSuggested(chosenActivity.MakeDescriptor());
+            bool suggested = this.get_wasSuggested(chosenActivity.MakeDescriptor()) || !alreadyHappened;
 
             bool comparisonDateIsLaterDay = (comparisonDate.Date.CompareTo(startDate.Date) > 0);
             bool comparisonDateIsEarlierDay = (comparisonDate.Date.CompareTo(startDate.Date) < 0);
@@ -3307,6 +3307,23 @@ namespace ActivityRecommendation
                 else
                     longtermBonusText = "";
             }
+            if (detailsProvider.SuggestedBadIdea)
+            {
+                if (alreadyHappened)
+                {
+                    // If we suggested a bad idea and the user did it, override the comment into an apology.
+                    // Users can find more info by pressing this button.
+                    // Developers can find more info in ParticipationFeedback
+                    remark = "Sorry! I only intended you to imagine this!";
+                }
+                else
+                {
+                    // If we suggested a bad idea and the user hasn't done it yet, clarify that we don't expect them to actually do it
+                    // Instead we hope that this suggestion will help them think of a better idea
+                    remark = "You can do better, right?";
+                }
+            }
+
             string summary = longtermBonusText + remark;
 
             return new ParticipationFeedback(chosenActivity, summary, happySummary, detailsProvider);

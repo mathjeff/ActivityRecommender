@@ -50,6 +50,23 @@ namespace ActivityRecommendation
         public LayoutChoice_Set MakeLayout(LayoutStack layoutStack)
         {
             Vertical_GridLayout_Builder builder = new Vertical_GridLayout_Builder();
+            if (this.SuggestedBadIdea)
+            {
+                string apology;
+                if (this.PredictedValue > 1)
+                {
+                    // A fun idea that we didn't expect the user to do
+                    // We expected the user to get distracted while considering the fun idea
+                    apology = "Sorry, I didn't expect you to actually do this! I thought that this suggestion would help you think of a better idea!";
+                }
+                else
+                {
+                    // An annoying idea that we didn't expect the user to do
+                    // We expected the user to remember how annoying this was and to avoid it and things like it
+                    apology = "Sorry, I didn't expect you to actually do this! I thought that this suggestion would remind you to look harder for something better!";
+                }
+                builder.AddLayout(new TextblockLayout(apology));
+            }
             builder.AddLayout(new TextblockLayout(ChosenActivity.Name));
             builder.AddLayout(new TextblockLayout("From " + this.StartDate + " to " + this.EndDate + ", " + ParticipationDurationDividedByAverage + " as long as average. I predict:"));
 
@@ -157,6 +174,15 @@ namespace ActivityRecommendation
             return builder.BuildAnyLayout();
         }
 
+        // Sometimes the Engine will make a suggestion and not expect the user to take that suggestion, and we want to apologize if the user actually takes that suggestion.
+        // SuggestedBadIdea indicates whether we suggested a bad idea that we didn't expect the user to do
+        public bool SuggestedBadIdea
+        {
+            get
+            {
+                return this.Suggested && this.ExpectedFutureFun < 0;
+            }
+        }
         static TextblockLayout signedColoredValue(double value, double neutralColorThreshold, double stddev)
         {
             string text;

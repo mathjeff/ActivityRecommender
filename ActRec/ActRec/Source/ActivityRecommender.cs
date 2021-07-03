@@ -659,7 +659,7 @@ namespace ActivityRecommendation
         private void ParticipationEntryView_VisitActivitiesScreen()
         {
             this.layoutStack.GoBack();
-            this.layoutStack.AddLayout(this.activitiesMenuLayout, "Activities");
+            this.layoutStack.AddLayout(this.activitiesMenuLayout, "Organize Activities");
         }
 
         private void SuggestionsView_VisitActivitiesScreen()

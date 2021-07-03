@@ -123,12 +123,12 @@ namespace ActivityRecommendation.View
             steps.AddRange(this.clickButton("Appearance"));
             steps.AddRange(this.clickButton("Welcome"));
             steps.AddRange(this.clickButton("Start!"));
-            steps.AddRange(this.clickButton("Activities"));
+            steps.AddRange(this.clickButton("Organize Activities"));
             steps.AddRange(this.clickButton("Import Some Premade Activities"));
             steps.AddRange(this.clickButton("I like this!"));
             steps.AddRange(this.clickButton("I like all kinds! (17 ideas)"));
             steps.AddRange(this.clickButton("I like all kinds! (60 ideas)"));
-            steps.AddRange(this.clickButton("Activities"));
+            steps.AddRange(this.clickButton("Organize Activities"));
             steps.AddRange(this.clickButton("Home"));
             steps.AddRange(this.clickButton("Suggest/Experiment"));
             steps.AddRange(this.clickButton("Suggest"));

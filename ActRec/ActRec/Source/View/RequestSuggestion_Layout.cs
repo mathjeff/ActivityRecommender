@@ -98,7 +98,7 @@ namespace ActivityRecommendation.View
             suggestionButton.Clicked += SuggestBestActivity_Clicked;
             ButtonLayout suggest_maxLongtermHappiness_button;
             if (allowMultipleSuggestionTypes)
-                suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest Best");
+                suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Best");
             else
                 suggest_maxLongtermHappiness_button = new ButtonLayout(suggestionButton, "Suggest");
             LayoutChoice_Set suggestButton_layout;
@@ -109,12 +109,12 @@ namespace ActivityRecommendation.View
                 {
                     Button suggestionButton2 = new Button();
                     suggestionButton2.Clicked += SuggestMostLikelyActivity_Clicked;
-                    ButtonLayout suggest_mostLikely_button = new ButtonLayout(suggestionButton2, "Suggest Most Likely");
+                    ButtonLayout suggest_mostLikely_button = new ButtonLayout(suggestionButton2, "Most Likely");
                     builder.AddLayout(suggest_mostLikely_button);
 
                     Button suggestionButton3 = new Button();
                     suggestionButton3.Clicked += SuggestMostEfficientActivity_Clicked;
-                    ButtonLayout suggest_mostEfficient_button = new ButtonLayout(suggestionButton3, "Suggest For Most Future Efficiency");
+                    ButtonLayout suggest_mostEfficient_button = new ButtonLayout(suggestionButton3, "Most Future Efficiency");
                     builder.AddLayout(suggest_mostEfficient_button);
                 }
                 suggestButton_layout = builder.BuildAnyLayout();

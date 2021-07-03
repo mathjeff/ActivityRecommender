@@ -71,6 +71,7 @@ namespace ActivityRecommendation.View
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 26), "Suggested that the suggestions view could use the same descriptions as the participation entry view")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 4, 24), "Asked for the suggestions to be less repetitive again")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 4, 30), "Asked for the suggestions view to display multiple suggestions at once")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 7, 2), "Suggested shorter suggestion button text")
                     .Build()
                  )
                 .Build();

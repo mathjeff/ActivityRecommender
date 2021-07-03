@@ -42,6 +42,11 @@ namespace ActivityRecommendation.View
             return base.GetBestLayout(query);
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new AnalysisFeature(this.engine.ActivityDatabase) };
+        }
+
         private LayoutChoice_Set NormalLayout
         {
             get
@@ -149,5 +154,38 @@ namespace ActivityRecommendation.View
         private LayoutChoice_Set noActivities_layout;
         private PublicFileIo publicFileIo;
         private Persona persona;
+    }
+
+    public class AnalysisFeature : AppFeature
+    {
+        public AnalysisFeature(ActivityDatabase activityDatabase)
+        {
+            this.activityDatabase = activityDatabase;
+        }
+        public string GetDescription()
+        {
+            // When we start recording whether this feature has been used, we should also split it into a more granular set of features
+            return "Analyze your data";
+        }
+
+        public bool GetIsUsable()
+        {
+            if (!this.activityDatabase.ContainsCustomActivity())
+                return false;
+
+            if (this.activityDatabase.RootActivity.NumParticipations < 1)
+                return false;
+
+            return true;
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            // Not currently recording whether this has been used
+            // For the moment we assume that if it can be used then it was used
+            return this.GetIsUsable();
+        }
+
+        private ActivityDatabase activityDatabase;
     }
 }

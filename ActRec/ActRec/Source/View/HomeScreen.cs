@@ -11,7 +11,7 @@ namespace ActivityRecommendation.View
             ActivitiesMenuLayout activitiesLayout,
             ParticipationEntryView participationsLayout,
             SuggestionsView suggestionsLayout,
-            LayoutChoice_Set statisticsLayout,
+            StatisticsMenu statisticsLayout,
             LayoutChoice_Set importExportLayout,
             LayoutStack layoutStack)
         {
@@ -37,7 +37,7 @@ namespace ActivityRecommendation.View
             fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Activities", this.activitiesLayout.GetFeatures()), activitiesEntry);
             fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Record Participations", this.participationsLayout.GetFeatures()), participationsEntry);
             fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Suggest/Experiment", this.suggestionsLayout.GetFeatures()), suggestionsEntry);
-            fullBuilder.AddLayout(statisticsEntry);
+            fullBuilder.AddLayout(new AppFeatureCount_ButtonName_Provider("Analyze", this.statisticsLayout.GetFeatures()), statisticsEntry);
             fullBuilder.AddLayout(importExportEntry);
             this.SubLayout = fullBuilder.Build();
         }
@@ -46,12 +46,13 @@ namespace ActivityRecommendation.View
             List<AppFeature> features = new List<AppFeature>(this.activitiesLayout.GetFeatures());
             features.AddRange(this.participationsLayout.GetFeatures());
             features.AddRange(this.suggestionsLayout.GetFeatures());
+            features.AddRange(this.statisticsLayout.GetFeatures());
             return features;
         }
         private ActivitiesMenuLayout activitiesLayout;
         private ParticipationEntryView participationsLayout;
         private SuggestionsView suggestionsLayout;
-        private LayoutChoice_Set statisticsLayout;
+        private StatisticsMenu statisticsLayout;
         private LayoutChoice_Set importExportLayout;
 
         private LayoutStack layoutStack;

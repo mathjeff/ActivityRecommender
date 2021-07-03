@@ -28,6 +28,11 @@ namespace ActivityRecommendation.View
             this.invalidate();
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new ListProtoactivities_Feature(this.protoActivity_database) };
+        }
+
         private void PrevButton_Clicked(object sender, EventArgs e)
         {
             this.startIndex -= pageCount;
@@ -117,5 +122,30 @@ namespace ActivityRecommendation.View
         private ButtonLayout nextButtonLayout;
         private ButtonLayout prevButtonLayout;
         private int pageCount = 10;
+    }
+
+    class ListProtoactivities_Feature : AppFeature
+    {
+        public ListProtoactivities_Feature(ProtoActivity_Database protoactivityDatabase)
+        {
+            this.protoactivityDatabase = protoactivityDatabase;
+        }
+
+        public string GetDescription()
+        {
+            return "List protoactivities";
+        }
+
+        public bool GetIsUsable()
+        {
+            return this.protoactivityDatabase.NonEmpty;
+        }
+        public bool GetHasBeenUsed()
+        {
+            // We don't track whether the user used this feature, so we assume it was used if it's usable
+            return this.GetIsUsable();
+        }
+
+        private ProtoActivity_Database protoactivityDatabase;
     }
 }

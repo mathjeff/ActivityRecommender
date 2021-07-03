@@ -45,7 +45,7 @@ namespace ActivityRecommendation.View
 
         public List<AppFeature> GetFeatures()
         {
-            List<AppFeature> features = new List<AppFeature>(this.activityCreationLayout.GetFeatures());
+            List<AppFeature> features = new List<AppFeature>();
             features.AddRange(this.inheritanceCreationLayout.GetFeatures());
             features.AddRange(this.metricEditingLayout.GetFeatures());
             return features;

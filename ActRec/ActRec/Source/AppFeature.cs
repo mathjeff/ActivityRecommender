@@ -32,9 +32,16 @@ namespace ActivityRecommendation
             this.updateStatuses();
 
             // some counts
+            // number of features that are usable and have never been used
             int numNewUsableFeatures = this.newUsableFeatures.Count;
+            // number of features that have never been used
             int numNewFeatures = numNewUsableFeatures + this.lockedFeatures.Count;
+            // number of features that have been used
             int numUsedFeatures = this.numUsedFeatures;
+            // number of features
+            int numFeatures = numUsedFeatures + numNewFeatures;
+            // number of features that can be used
+            int numUsableFeatures = numUsedFeatures + numNewUsableFeatures;
 
             // Determine how to describe the number of unused features
             string numFeaturesLabel;
@@ -124,9 +131,10 @@ namespace ActivityRecommendation
                         // Extra text can be distracting, especially when it duplicates other text
                     }
                 }
-
             }
-            return new MenuItem(this.name, numFeaturesLabel + sampleFeatureLabel);
+            // Allow the user to click the menu item if it doesn't declare any features or if there is at least one usable feature
+            bool buttonEnabled = (numFeatures < 1 || numUsableFeatures > 0);
+            return new MenuItem(this.name, numFeaturesLabel + sampleFeatureLabel, buttonEnabled);
         }
 
         private void updateStatuses()

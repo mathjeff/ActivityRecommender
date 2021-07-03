@@ -50,6 +50,7 @@ namespace ActivityRecommendation.View
         {
             List<AppFeature> features = new List<AppFeature>(this.importPremadeActivitiesLayout.GetFeatures());
             features.AddRange(this.activityCreationLayout.GetFeatures());
+            features.AddRange(this.activityEditingLayout.GetFeatures());
             features.AddRange(this.protoactivitiesLayout.GetFeatures());
             return features;
         }

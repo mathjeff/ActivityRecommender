@@ -44,6 +44,7 @@ namespace ActivityRecommendation.View
         {
             List<AppFeature> features = new List<AppFeature>(this.newProtoactivityBuilder.GetFeatures());
             features.AddRange(this.browseBestProtoactivities_layout.GetFeatures());
+            features.AddRange(this.exportProtoactivities_layout.GetFeatures());
             return features;
         }
 

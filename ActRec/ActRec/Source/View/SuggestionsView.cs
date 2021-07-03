@@ -125,43 +125,12 @@ namespace ActivityRecommendation.View
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
 
-            this.make_makeNewActivities_layout();
-
             this.UpdateSuggestions();
         }
 
-        private void make_makeNewActivities_layout()
-        {
-            Button createNewActivity_button = new Button();
-            createNewActivity_button.Clicked += CreateNewActivity_button_Clicked;
-            Button brainstormNewActivities_button = new Button();
-            brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
-
-            GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
-            builder.AddLayout(new TextblockLayout("How about:").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center));
-            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "brainstorming"));
-            builder.AddLayout(new ButtonLayout(createNewActivity_button, "a new activity?"));
-
-            this.newActivities_layout = builder.Build();
-        }
-
-        private void CreateNewActivity_button_Clicked(object sender, EventArgs e)
-        {
-            ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
-            this.layoutStack.AddLayout(creationLayout, "New Activity");
-        }
-
-        private void BrainstormNewActivities_button_Clicked(object sender, EventArgs e)
-        {
-            if (this.VisitActivitiesScreen != null)
-                this.VisitActivitiesScreen.Invoke();
-        }
-
-
         private void VisitActivities_button_Clicked(object sender, EventArgs e)
         {
-            if (this.VisitActivitiesScreen != null)
-                this.VisitActivitiesScreen.Invoke();
+            this.VisitActivitiesScreen.Invoke();
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -277,11 +246,6 @@ namespace ActivityRecommendation.View
         private void UpdateLayout_From_Suggestions()
         {
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
-            // If our suggestion isn't very good, be sure to show the user some buttons for making more activities
-            if (this.suggestions.Count == 1 && this.suggestions[0].Children[0].WorseThanRootActivity)
-            {
-                layouts.Add(this.newActivities_layout);
-            }
             // show feedback if there is any
             if (this.messageLayout.ModelledText != "")
             {
@@ -339,7 +303,20 @@ namespace ActivityRecommendation.View
             suggestionView.Dismissed += SuggestionView_Dismissed;
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
             suggestionView.AcceptedSuggestion += SuggestionView_VisitParticipationScreen;
+            suggestionView.VisitActivitiesScreen += SuggestionView_VisitActivitiesScreen;
+            suggestionView.Request_MakeNewActivity += SuggestionView_Request_MakeNewActivity;
             return new LayoutCache(suggestionView);
+        }
+
+        private void SuggestionView_Request_MakeNewActivity()
+        {
+            ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
+            this.layoutStack.AddLayout(creationLayout, "New Activity");
+        }
+
+        private void SuggestionView_VisitActivitiesScreen()
+        {
+            this.VisitActivitiesScreen.Invoke();
         }
 
         private void SuggestionView_VisitParticipationScreen(ActivitySuggestion suggestion)
@@ -387,8 +364,6 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
         ActivitiesSuggestion previousDeclinedSuggestion;
-
-        LayoutChoice_Set newActivities_layout;
     }
 
     class RequestSuggestion_Feature : AppFeature

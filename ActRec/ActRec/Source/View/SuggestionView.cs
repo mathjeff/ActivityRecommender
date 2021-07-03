@@ -11,7 +11,7 @@ namespace ActivityRecommendation
         public event SuggestionDismissed Dismissed;
         public delegate void SuggestionDismissed(ActivitiesSuggestion suggestion);
 
-        public event RequestedExperiment ExperimentRequested;
+        public event RequestedExperiment RequestExperiment;
         public delegate void RequestedExperiment(ActivitySuggestion suggestion);
 
         public event JustifySuggestionHandler JustifySuggestion;
@@ -20,11 +20,17 @@ namespace ActivityRecommendation
         public event VisitParticipationScreenHandler AcceptedSuggestion;
         public delegate void VisitParticipationScreenHandler(ActivitySuggestion suggestion);
 
+        public event VisitActivitiesScreenHandler VisitActivitiesScreen;
+        public delegate void VisitActivitiesScreenHandler();
+
+        public event NewActivitityHandler Request_MakeNewActivity;
+        public delegate void NewActivitityHandler();
+
+
         public SuggestionView(ActivitiesSuggestion suggestion, bool isFirstSuggestion, Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
-
 
             bool allWorseThanAverage = true;
             foreach (ActivitySuggestion child in suggestion.Children)
@@ -36,17 +42,20 @@ namespace ActivityRecommendation
             GridLayout_Builder fullBuilder = new Vertical_GridLayout_Builder();
             string startTimeText = suggestion.Children[0].StartDate.ToString("HH:mm");
 
-            if (allWorseThanAverage && suggestion.Skippable)
-                fullBuilder.AddLayout(new TextblockLayout("Best idea at " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
+            bool badSuggestion = (allWorseThanAverage && suggestion.Skippable);
+
+            if (badSuggestion)
+                fullBuilder.AddLayout(new TextblockLayout("Best ideas at " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
             else
                 fullBuilder.AddLayout(new TextblockLayout("At " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
 
-            List<GridLayout> optionsGrids = new List<GridLayout>();
+            List<LayoutChoice_Set> specificFont_contentChoices = new List<LayoutChoice_Set>(); // list of layouts we might use, each with a different font size
             this.explainButtons = new Dictionary<Button, ActivitySuggestion>();
             this.doButtons = new Dictionary<Button, ActivitySuggestion>();
             for (int mainFontSize = 20; mainFontSize >= 12; mainFontSize -= 8)
             {
-                GridLayout optionsGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(suggestion.Children.Count), LayoutScore.Zero);
+                // grid containing the specific activities the user could do
+                GridLayout activityOptionsGrid = GridLayout.New(new BoundProperty_List(3), BoundProperty_List.Uniform(suggestion.Children.Count), LayoutScore.Zero);
 
                 for (int i = 0; i < suggestion.Children.Count; i++)
                 {
@@ -80,7 +89,7 @@ namespace ActivityRecommendation
                     }
                     mainBlock.AlignHorizontally(horizontalAlignment);
                     mainBlock.AlignVertically(verticalAlignment);
-                    optionsGrid.PutLayout(mainBlock, i, 0);
+                    activityOptionsGrid.PutLayout(mainBlock, i, 0);
 
                     // set up the buttons
                     GridLayout_Builder buttonsBuilder = new Horizontal_GridLayout_Builder().Uniform();
@@ -102,21 +111,38 @@ namespace ActivityRecommendation
                         ButtonLayout explainLayout = new ButtonLayout(explainButton, "?", buttonFontSize);
                         buttonsBuilder.AddLayout(explainLayout);
                     }
-                    optionsGrid.PutLayout(buttonsBuilder.BuildAnyLayout(), i, 1);
+                    activityOptionsGrid.PutLayout(buttonsBuilder.BuildAnyLayout(), i, 1);
                     if (child.ExpectedReaction != null)
                     {
                         TextblockLayout reactionLayout = new TextblockLayout(child.ExpectedReaction, buttonFontSize * 0.9);
                         reactionLayout.AlignHorizontally(horizontalAlignment);
                         reactionLayout.AlignVertically(verticalAlignment);
-                        optionsGrid.PutLayout(reactionLayout, i, 2);
+                        activityOptionsGrid.PutLayout(reactionLayout, i, 2);
                     }
 
-                    optionsGrids.Add(optionsGrid);
                 }
+
+                LayoutChoice_Set optionsAtThisFontSize;
+                if (badSuggestion)
+                {
+                    // If the suggestion is bad and we don't really want the user to do it, then we also show the user some convenient buttons for making more activities
+                    GridLayout wrapper = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.WithRatios(new List<double>() { suggestion.Children.Count, 1 }), LayoutScore.Zero);
+                    wrapper.AddLayout(activityOptionsGrid); // activity suggestions
+                    wrapper.AddLayout(this.make_otherActivities_layout(mainFontSize)); // layout for making new activities
+                    optionsAtThisFontSize = wrapper;
+                }
+                else
+                {
+                    // If the suggestion isn't bad, then the options we give are just the activities being suggested
+                    optionsAtThisFontSize = activityOptionsGrid;
+                }
+                specificFont_contentChoices.Add(optionsAtThisFontSize);
+
             }
 
+            LayoutChoice_Set contentGrid = LayoutUnion.New(specificFont_contentChoices);
 
-            // Add buttons on the right
+            // Add cancel buttons to the bottom
             this.cancelButton = new Button();
             this.cancelButton.Clicked += cancelButton_Click;
             this.explainWhyYouCantSkipButton = new Button();
@@ -127,11 +153,36 @@ namespace ActivityRecommendation
             else
                 cancelLayout = new ButtonLayout(this.explainWhyYouCantSkipButton, "!");
 
+            
 
-            fullBuilder.AddLayout(new LayoutUnion(optionsGrids))
+            fullBuilder.AddLayout(contentGrid)
                 .AddLayout(cancelLayout);
 
             this.SubLayout = fullBuilder.BuildAnyLayout();
+        }
+
+        private LayoutChoice_Set make_otherActivities_layout(double fontSize)
+        {
+            Button createNewActivity_button = new Button();
+            createNewActivity_button.Clicked += CreateNewActivity_button_Clicked;
+            Button brainstormNewActivities_button = new Button();
+            brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
+
+            GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
+            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "Brainstorm", fontSize));
+            builder.AddLayout(new ButtonLayout(createNewActivity_button, "New activity", fontSize));
+
+            return builder.BuildAnyLayout();
+        }
+
+        private void BrainstormNewActivities_button_Clicked(object sender, EventArgs e)
+        {
+            this.VisitActivitiesScreen.Invoke();
+        }
+
+        private void CreateNewActivity_button_Clicked(object sender, EventArgs e)
+        {
+            this.Request_MakeNewActivity.Invoke();
         }
 
         private string summarize(ActivitySuggestion suggestion, bool repeatingDeclinedSuggestion)

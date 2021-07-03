@@ -27,6 +27,11 @@ namespace ActivityRecommendation.View
             this.SubLayout = sublayout;
         }
 
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new SearchProtoActivities_Feature(this.protoactivityDatabase) };
+        }
+
         private void QueryText_Changed(object sender, TextChangedEventArgs e)
         {
             this.updateButtonText();
@@ -71,5 +76,30 @@ namespace ActivityRecommendation.View
         private ActivityDatabase activityDatabase;
         private Editor queryBox;
         private Button okButton;
+    }
+
+    class SearchProtoActivities_Feature : AppFeature
+    {
+        public SearchProtoActivities_Feature(ProtoActivity_Database protoActivity_database)
+        {
+            this.protoActivity_database = protoActivity_database;
+        }
+
+        public string GetDescription()
+        {
+            return "Search your protoactivities";
+        }
+
+        public bool GetIsUsable()
+        {
+            return this.protoActivity_database.NonEmpty;
+        }
+
+        public bool GetHasBeenUsed()
+        {
+            // We don't track whether this has been used so we assume if it's usable then it has been used
+            return this.GetIsUsable();
+        }
+        private ProtoActivity_Database protoActivity_database;
     }
 }

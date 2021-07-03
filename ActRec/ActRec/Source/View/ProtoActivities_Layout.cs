@@ -33,7 +33,11 @@ namespace ActivityRecommendation.View
                 new AppFeatureCount_ButtonName_Provider("List All", listLayout.GetFeatures()),
                 new StackEntry(listLayout, "List All", null));
 
-            menuBuilder.AddLayout("Search", new SearchProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack));
+            this.searchLayout = new SearchProtoActivities_Layout(protoActivity_database, activityDatabase, layoutStack);
+
+            menuBuilder.AddLayout(
+                new AppFeatureCount_ButtonName_Provider("Search", this.searchLayout.GetFeatures()),
+                new StackEntry(searchLayout, "Search", null));
 
             this.exportProtoactivities_layout = new ExportProtoactivities_Layout(protoActivity_database, publicFileIo, textConverter, layoutStack);
             menuBuilder.AddLayout(
@@ -51,6 +55,7 @@ namespace ActivityRecommendation.View
             List<AppFeature> features = new List<AppFeature>(this.newProtoactivityBuilder.GetFeatures());
             features.AddRange(this.browseBestProtoactivities_layout.GetFeatures());
             features.AddRange(this.listLayout.GetFeatures());
+            features.AddRange(this.searchLayout.GetFeatures());
             features.AddRange(this.exportProtoactivities_layout.GetFeatures());
             return features;
         }
@@ -60,6 +65,7 @@ namespace ActivityRecommendation.View
         BrowseBest_ProtoActivities_Layout browseBestProtoactivities_layout;
         ExportProtoactivities_Layout exportProtoactivities_layout;
         BrowseAll_ProtoActivities_Layout listLayout;
+        SearchProtoActivities_Layout searchLayout;
     }
 
 

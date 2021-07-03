@@ -182,14 +182,26 @@ namespace ActivityRecommendation
             {
                 this.childNameBox.Clear();
                 this.parentNameBox.Clear();
-                this.feedbackLayout.setText("Created " + childDescriptor.ActivityName);
+                this.showMessage("Created " + childDescriptor.ActivityName);
                 if (this.GoBackAfterCreation)
                     this.layoutStack.GoBack();
             }
             else
             {
-                this.feedbackLayout.setText(error);
+                this.showError(error);
             }
+        }
+
+        private void showError(string text)
+        {
+            this.feedbackLayout.setText(text);
+            this.feedbackLayout.setTextColor(Color.Red);
+        }
+
+        private void showMessage(string text)
+        {
+            this.feedbackLayout.setText(text);
+            this.feedbackLayout.resetTextColor();
         }
 
         private void TypeSelector_Clicked(object sender, EventArgs e)
@@ -230,7 +242,7 @@ namespace ActivityRecommendation
                     }
                 }
             }
-            this.feedbackLayout.setText(text);
+            this.showMessage(text);
         }
 
         private ActivityNameEntryBox childNameBox;

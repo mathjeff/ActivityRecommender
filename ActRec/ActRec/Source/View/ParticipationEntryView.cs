@@ -151,7 +151,8 @@ namespace ActivityRecommendation
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 10, 3), "Pointed out that it was possible record participations in the future.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 9), "Suggested making different metrics appear more distinct.")
                     .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 3, 21), "Pointed out that the participation feedback had stopped finding a better activity")
-                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 6, 6), "Suggested show suggestions in the participation entry view")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 6, 6), "Suggested showing suggestions in the participation entry view")
+                    .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2021, 7, 2), "Suggested shortening the text in the rating entry view")
                     .Build()
                 )
                 .Build();

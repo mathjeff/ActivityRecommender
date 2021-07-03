@@ -27,7 +27,10 @@ namespace ActivityRecommendation
             ContainerLayout scaleBoxHolder = new ContainerLayout(null, this.scaleBoxLayout, false);
             // The fact that the rating is relative to the previous participation is really important, so we put this text into its own text block.
             // Additionally, the timesBlock might be able to fit into the same line as the text box into which the user types the rating ratio.
-            TextblockLayout timesBlock = new TextblockLayout("times").AlignVertically(TextAlignment.Center).AlignHorizontally(TextAlignment.Center);
+            // Also, if there's enough space then we spell out the exact meaning more clearly
+            LayoutChoice_Set conciseTimesBlock = new ScoreShifted_Layout(new TextblockLayout("x prev:").AlignVertically(TextAlignment.Center).AlignHorizontally(TextAlignment.Center), LayoutScore.Get_ReducedContent_Score(1));
+            LayoutChoice_Set fullTimesBlock = new TextblockLayout("times previous:").AlignVertically(TextAlignment.Center).AlignHorizontally(TextAlignment.Center);
+            LayoutChoice_Set timesBlock = new LayoutUnion(fullTimesBlock, conciseTimesBlock);
 
             LayoutChoice_Set horizontalBox = new Horizontal_GridLayout_Builder()
                 .AddLayout(scaleBoxHolder)
@@ -43,18 +46,9 @@ namespace ActivityRecommendation
             this.mainDisplayGrid.AddLayout(new LayoutUnion(horizontalBox, verticalBox));
 
             // We try to use large font for the name layout and we also try to use as many clarifying words as possible
-            // If not all of the words fit onscreen at large font, we will shrink the font and also potentially remove some words
             this.fullNameLayout = new TextblockLayout();
-            this.shortenedNameLayout = new TextblockLayout("", 10);
             this.mainDisplayGrid.AddLayout(
-                new LayoutUnion(
-                    new List<LayoutChoice_Set>()
-                    {
-                        this.fullNameLayout,
-                        // We don't want to remove the clarifying words (so we give it a score penalty), but it is better than cropping
-                        new ScoreShifted_Layout(this.shortenedNameLayout, LayoutScore.Get_ReducedContent_Score(1))
-                    }
-                )
+                this.fullNameLayout
             );
 
             this.Placeholder("(Optional)");
@@ -121,12 +115,11 @@ namespace ActivityRecommendation
                     string dateFormatString;
                     // Show the day if it happened more than 24 hours ago
                     if (now.Subtract(value.StartDate).CompareTo(new TimeSpan(24, 0, 0)) > 0)
-                        dateFormatString = "yyyy-MM-ddTHH:mm:ss";
+                        dateFormatString = "yyyy-MM-ddTHH:mm";
                     else
-                        dateFormatString = "HH:mm:ss";
-                    string prevDescription = "" + value.ActivityDescriptor.ActivityName + " from " + value.StartDate.ToString(dateFormatString) + " to " + value.EndDate.ToString(dateFormatString);
-                    this.fullNameLayout.setText("the score of your latest participation in " + prevDescription);
-                    this.shortenedNameLayout.setText(prevDescription);
+                        dateFormatString = "HH:mm";
+                    string prevDescription = "" + value.ActivityDescriptor.ActivityName + ", " + value.StartDate.ToString(dateFormatString) + " - " + value.EndDate.ToString(dateFormatString);
+                    this.fullNameLayout.setText(prevDescription);
                     this.SetContent(this.mainDisplayGrid);
                 }
                 else
@@ -191,7 +184,6 @@ namespace ActivityRecommendation
         private GridLayout mainDisplayGrid;
         private Participation latestParticipation;
         private TextblockLayout fullNameLayout;
-        private TextblockLayout shortenedNameLayout;
         private Editor scaleBox;
         private TextboxLayout scaleBoxLayout;
         private int ratingComparison;

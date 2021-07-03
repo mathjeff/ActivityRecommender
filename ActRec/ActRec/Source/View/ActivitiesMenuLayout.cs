@@ -38,9 +38,9 @@ namespace ActivityRecommendation.View
             StackEntry protoactivitiesEntry = new StackEntry(this.protoactivitiesLayout, "Protoactivities: Brainstorm", null);
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout(new AppFeatureCount_ButtonName_Provider(new BrowseActivitiesMenu_Namer(this.activityDatabase), this.browseInheritancesLayout.GetFeatures()), browseEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Quickstart / Premade", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("New (Category / ToDo / Problem)", this.activityCreationLayout.GetFeatures()), addEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider(new BrowseActivitiesMenu_Namer(this.activityDatabase), this.browseInheritancesLayout.GetFeatures()), browseEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Edit", this.activityEditingLayout.GetFeatures()), editEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Protoactivities: Brainstorm", this.protoactivitiesLayout.GetFeatures()), protoactivitiesEntry);
             this.SetContent(fullBuilder.Build());

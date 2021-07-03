@@ -68,6 +68,13 @@ namespace ActivityRecommendation
                 return this.ProtoActivities.Count();
             }
         }
+        public bool NonEmpty
+        {
+            get
+            {
+                return this.Count > 0;
+            }
+        }
         public void MarkWorse(ProtoActivity worseActivity, ProtoActivity betterActivity, DateTime when)
         {
             worseActivity.MarkWorse(when);

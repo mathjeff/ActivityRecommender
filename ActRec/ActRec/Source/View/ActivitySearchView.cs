@@ -54,6 +54,11 @@ namespace ActivityRecommendation.View
             this.ensureAutocompleteUpdated();
             return base.GetBestLayout(query);
         }
+
+        public List<AppFeature> GetFeatures()
+        {
+            return new List<AppFeature>() { new SearchActivities_Feature(this.activityDatabase, this.protoActivity_database) };
+        }
         private void ensureAutocompleteUpdated()
         {
             if (this.autocompleteUpdated)
@@ -224,4 +229,31 @@ namespace ActivityRecommendation.View
         bool allowDeletion;
         bool autocompleteUpdated = false;
     }
+
+    class SearchActivities_Feature : AppFeature
+    {
+        public SearchActivities_Feature(ActivityDatabase activityDatabase, ProtoActivity_Database protoActivity_database)
+        {
+            this.activityDatabase = activityDatabase;
+            this.protoActivity_database = protoActivity_database;
+        }
+        public string GetDescription()
+        {
+            return "Browse your activities";
+        }
+
+        public bool GetIsUsable()
+        {
+            return this.activityDatabase.ContainsCustomActivity() || this.protoActivity_database.Count > 0;
+        }
+        public bool GetHasBeenUsed()
+        {
+            // Not tracking whether it has been used
+            // We assume if it is usable then it has been used
+            return this.GetIsUsable();
+        }
+        private ActivityDatabase activityDatabase;
+        private ProtoActivity_Database protoActivity_database;
+    }
+
 }

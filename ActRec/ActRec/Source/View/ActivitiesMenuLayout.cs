@@ -8,7 +8,7 @@ namespace ActivityRecommendation.View
     class ActivitiesMenuLayout : TitledControl
     {
         public ActivitiesMenuLayout(
-            LayoutChoice_Set browseInheritancesLayout,
+            ActivitySearchView browseInheritancesLayout,
             ActivityImportLayout importPremadeActivitiesLayout,
             ActivityCreationLayout activityCreationLayout,
             ActivityEditingLayout activityEditingLayout,
@@ -38,7 +38,7 @@ namespace ActivityRecommendation.View
             StackEntry protoactivitiesEntry = new StackEntry(this.protoactivitiesLayout, "Protoactivities: Brainstorm", null);
 
             MenuLayoutBuilder fullBuilder = new MenuLayoutBuilder(this.layoutStack)
-                .AddLayout(new BrowseActivitiesMenu_Namer(this.activityDatabase), browseEntry)
+                .AddLayout(new AppFeatureCount_ButtonName_Provider(new BrowseActivitiesMenu_Namer(this.activityDatabase), this.browseInheritancesLayout.GetFeatures()), browseEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Quickstart / Premade", this.importPremadeActivitiesLayout.GetFeatures()), importEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("New (Category / ToDo / Problem)", this.activityCreationLayout.GetFeatures()), addEntry)
                 .AddLayout(new AppFeatureCount_ButtonName_Provider("Edit", this.activityEditingLayout.GetFeatures()), editEntry)
@@ -51,12 +51,13 @@ namespace ActivityRecommendation.View
             List<AppFeature> features = new List<AppFeature>(this.importPremadeActivitiesLayout.GetFeatures());
             features.AddRange(this.activityCreationLayout.GetFeatures());
             features.AddRange(this.activityEditingLayout.GetFeatures());
+            features.AddRange(this.browseInheritancesLayout.GetFeatures());
             features.AddRange(this.protoactivitiesLayout.GetFeatures());
             return features;
         }
 
         LayoutStack layoutStack;
-        LayoutChoice_Set browseInheritancesLayout;
+        ActivitySearchView browseInheritancesLayout;
         ActivityImportLayout importPremadeActivitiesLayout;
         ActivityCreationLayout activityCreationLayout;
         ActivityEditingLayout activityEditingLayout;
@@ -66,18 +67,18 @@ namespace ActivityRecommendation.View
 
     }
 
-    class BrowseActivitiesMenu_Namer : ValueProvider<MenuItem>
+    class BrowseActivitiesMenu_Namer : ValueProvider<string>
     {
         public BrowseActivitiesMenu_Namer(ActivityDatabase activityDatabase)
         {
             this.activityDatabase = activityDatabase;
         }
 
-        public MenuItem Get()
+        public string Get()
         {
             int count = this.activityDatabase.NumCustomActivities;
             string title = "Browse (" + count + ")";
-            return new MenuItem(title, null);
+            return title;
         }
 
 

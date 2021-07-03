@@ -19,8 +19,12 @@ namespace ActivityRecommendation
     class AppFeatureCount_ButtonName_Provider : ValueProvider<MenuItem>
     {
         public AppFeatureCount_ButtonName_Provider(string name, List<AppFeature> features)
+            : this(new ConstantValueProvider<string>(name), features)
         {
-            this.name = name;
+        }
+        public AppFeatureCount_ButtonName_Provider(ValueProvider<string> nameProvider, List<AppFeature> features)
+        {
+            this.nameProvider = nameProvider;
             this.newUsableFeatures = new List<AppFeature>();
             this.lockedFeatures = features;
         }
@@ -93,7 +97,7 @@ namespace ActivityRecommendation
                 if (numNewUnusableFeatures == 0)
                 {
                     // All features have been used! We don't need to inform the user about anything new
-                    return new MenuItem(this.name, "");
+                    return new MenuItem(this.nameProvider.Get(), "");
                 }
                 else
                 {
@@ -134,7 +138,7 @@ namespace ActivityRecommendation
             }
             // Allow the user to click the menu item if it doesn't declare any features or if there is at least one usable feature
             bool buttonEnabled = (numFeatures < 1 || numUsableFeatures > 0);
-            return new MenuItem(this.name, numFeaturesLabel + sampleFeatureLabel, buttonEnabled);
+            return new MenuItem(this.nameProvider.Get(), numFeaturesLabel + sampleFeatureLabel, buttonEnabled);
         }
 
         private void updateStatuses()
@@ -170,7 +174,7 @@ namespace ActivityRecommendation
         }
 
         private int numUsedFeatures;
-        private string name;
+        private ValueProvider<string> nameProvider;
         // features that can be used but that haven't yet been used
         private List<AppFeature> newUsableFeatures;
         // features that can't be used because of dependencies

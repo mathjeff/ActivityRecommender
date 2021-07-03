@@ -23,7 +23,7 @@ namespace ActivityRecommendation.View
 
             Button rootActivity_button = new Button();
             rootActivity_button.Clicked += RootActivity_button_Clicked;
-            this.rootActivity_buttonLayout = new ButtonLayout(rootActivity_button, "Or, see the root activity");
+            this.rootActivity_buttonLayout = new ButtonLayout(rootActivity_button, "Or browse hierarchically");
             this.footer = new ContainerLayout();
 
             this.SubLayout = new Vertical_GridLayout_Builder()
@@ -36,7 +36,7 @@ namespace ActivityRecommendation.View
                 .AddLayout(footer)
                 .BuildAnyLayout();
 
-            this.titleLayout = new TextblockLayout("Activity name (and/or ProtoActivity name):");
+            this.titleLayout = new TextblockLayout("Activity name (and/or ProtoActivity name):").AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
         }
 
         private void RootActivity_button_Clicked(object sender, EventArgs e)

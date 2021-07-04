@@ -1,4 +1,5 @@
 ﻿using AdaptiveInterpolation;
+using StatLists;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,11 @@ namespace ActivityRecommendation
 {
     class LongtermValuePredictor
     {
-        public LongtermValuePredictor(ScoreSummarizer ratingSummarizer)
+        public LongtermValuePredictor(ExponentialRatingSummarizer ratingSummarizer)
         {
             this.ratingSummarizer = ratingSummarizer;
             this.interpolator = new LazyDimension_Interpolator<Distribution>(new DistributionAdder());
-            this.ratingSummariesToUpdate = new Queue<ScoreSummary>();
+            this.ratingSummariesToUpdate = new List<ScoreSummary>();
         }
         public AdaptiveInterpolation.Distribution Interpolate(LazyInputs coordinates)
         {
@@ -28,35 +29,76 @@ namespace ActivityRecommendation
             if (this.ShouldIncludeSummary(summary))
             {
                 this.interpolator.AddDatapoint(summary);
-                this.ratingSummariesToUpdate.Enqueue(summary);
+                this.ratingSummariesToUpdate.Add(summary);
             }
         }
         private bool ShouldIncludeSummary(ScoreSummary summary)
         {
             return summary.Item.Weight > 0;
         }
-        public void UpdateMany(int count)
+        public void UpdateMany(int numUpdates)
         {
-            // Even if we have time to update many rating summaries, we don't need to update more than we have
-            if (count > this.ratingSummariesToUpdate.Count)
-                count = this.ratingSummariesToUpdate.Count;
-            for (int i = 0; i < count; i++)
+            if (this.ratingSummariesToUpdate.Count < 1)
+                return; // nothing to update
+
+            // If we have enough time to update all points, then just do that
+            int count = this.ratingSummariesToUpdate.Count;
+            if (numUpdates >= count)
             {
-                this.UpdateOne();
+                this.updateAll();
+                return;
+            }
+            // make sure there's a wave at the end
+            if (this.waves.Count < 1 || this.waves[this.waves.Count - 1] < this.ratingSummariesToUpdate.Count)
+                this.waves.Add(this.ratingSummariesToUpdate.Count - 1);
+            // advance the next few waves
+            for (int i = 0; i < numUpdates; i++)
+            {
+                this.waveIndex++;
+                if (this.waveIndex >= this.waves.Count)
+                    this.waveIndex = 0;
+                int waveLocation = this.waves[this.waveIndex];
+                if (waveLocation >= 0)
+                {
+                    this.UpdateAtIndex(this.waves[this.waveIndex]);
+                    this.waves[this.waveIndex]--;
+                }
+            }
+            // delete any waves that moved too far
+            for (int i = this.waves.Count - 1; i >= 0; i--)
+            {
+                if (i == 0)
+                {
+                    // If the first wave fell off the end, remove it
+                    if (this.waves[i] < 0)
+                    {
+                        this.waves.RemoveAt(i);
+                    }
+                }
+                else
+                {
+                    // If a subsequent wave passed half of its previous wave, remove it
+                    int thisAdvancement = this.ratingSummariesToUpdate.Count - this.waves[i];
+                    int nextAdvancement = this.ratingSummariesToUpdate.Count - this.waves[i - 1];
+                    if (thisAdvancement * 2 > nextAdvancement)
+                        this.waves.RemoveAt(i);
+                }
             }
         }
-        public void UpdateOne()
+        private void updateAll()
         {
-            if (this.ratingSummariesToUpdate.Count > 0)
+            for (int i = 0; i < this.ratingSummariesToUpdate.Count; i++)
             {
-                ScoreSummary summary = ratingSummariesToUpdate.Dequeue();
-                this.interpolator.RemoveDatapoint(summary);
-
-                summary.Update(this.ratingSummarizer);
-
-                this.interpolator.AddDatapoint(summary);
-                this.ratingSummariesToUpdate.Enqueue(summary);
+                this.UpdateAtIndex(i);
             }
+            this.waves = new List<int>();
+        }
+        private void UpdateAtIndex(int index)
+        {
+            ScoreSummary summary = this.ratingSummariesToUpdate[index];
+            this.interpolator.RemoveDatapoint(summary);
+            summary.Update(this.ratingSummarizer);
+            this.interpolator.AddDatapoint(summary);
         }
         // gets the average of all points in this interpolator
         public Distribution GetAverage()
@@ -79,8 +121,10 @@ namespace ActivityRecommendation
             return result;
         }
 
-        Queue<ScoreSummary> ratingSummariesToUpdate;
+        List<ScoreSummary> ratingSummariesToUpdate;
         LazyDimension_Interpolator<Distribution> interpolator;
-        ScoreSummarizer ratingSummarizer;
+        ExponentialRatingSummarizer ratingSummarizer;
+        List<int> waves = new List<int>();
+        int waveIndex;
     }
 }

@@ -23,19 +23,28 @@ namespace ActivityRecommendation
             }
         }
 
-        // returns the cumulative weight for all dates through the given date
-        protected override double GetWeightBetweenDates(DateTime startDate, DateTime endDate)
+        // returns the total weight for all dates through the given date
+        public override double GetWeightBetweenDates(DateTime startDate, DateTime endDate)
         {
-            TimeSpan duration = endDate.Subtract(startDate);
-            double durationWeight = 1 - Math.Pow(2, -duration.TotalSeconds / this.halfLife.TotalSeconds);
+            double durationWeight = 1 - this.getWeightAfterDuration(endDate.Subtract(startDate));
 
             TimeSpan wait = startDate.Subtract(this.firstDate);
-            double waitMultiplier = Math.Pow(2, -wait.TotalSeconds / this.halfLife.TotalSeconds);
+            double waitMultiplier = this.getWeightAfterDuration(wait);
 
             double result = durationWeight * waitMultiplier;
             return result;
         }
 
+        // returns the total weight for all dates after the given date
+        public double GetWeightAfterDate(DateTime startDate)
+        {
+            return this.getWeightAfterDuration(startDate.Subtract(this.firstDate));
+        }
+        // returns the amount of weight that occurs after the given duration divided by the total amount of weight
+        private double getWeightAfterDuration(TimeSpan duration)
+        {
+            return Math.Pow(2, -duration.TotalSeconds / this.halfLife.TotalSeconds);
+        }
         private TimeSpan halfLife;
     }
 }

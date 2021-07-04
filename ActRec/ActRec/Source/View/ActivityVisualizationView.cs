@@ -277,7 +277,7 @@ namespace ActivityRecommendation
             List<ScoreSummarizer> ratingSummarizers = new List<ScoreSummarizer>();
             ratingSummarizers.Add(this.overallRating_summarizer);
             ratingSummarizers.Add(this.overallEfficiency_summarizer);
-            foreach (ScoreSummarizer ratingSummarizer in ratingSummarizers)
+            foreach (ExponentialRatingSummarizer ratingSummarizer in ratingSummarizers)
             {
                 double i;
                 ScoreSummary ratingSummary = new ScoreSummary(endDate);
@@ -290,18 +290,21 @@ namespace ActivityRecommendation
                     if (when.CompareTo(ratingSummarizer.EarliestKnownDate) < 0)
                         break;
                     ratingSummary.Update(ratingSummarizer, when, endDate);
-                    double x = this.GetXCoordinate(when);
-                    double y = ratingSummary.Item.Mean;
-                    if (!double.IsNaN(y))
+                    if (ratingSummary.Item.Weight > 0)
                     {
-                        if (ratingSummarizer == this.overallEfficiency_summarizer)
+                        double x = this.GetXCoordinate(when);
+                        double y = ratingSummary.Item.Mean;
+                        if (!double.IsNaN(y))
                         {
-                            // rescale so that the typical value for this rating summarizer (1) is moved to match the typical value for the other plotted values (0.5)
-                            y /= 2;
+                            if (ratingSummarizer == this.overallEfficiency_summarizer)
+                            {
+                                // rescale so that the typical value for this rating summarizer (1) is moved to match the typical value for the other plotted values (0.5)
+                                y /= 2;
+                            }
+                            if (y > maxY)
+                                maxY = y;
+                            smoothedRatings.Add(new Datapoint(x, y, 1));
                         }
-                        if (y > maxY)
-                            maxY = y;
-                        smoothedRatings.Add(new Datapoint(x, y, 1));
                     }
                 }
                 smoothedRatings.Reverse();

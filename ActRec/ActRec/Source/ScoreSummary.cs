@@ -19,7 +19,7 @@ namespace ActivityRecommendation
         }
 
         // Pulls all newer ratings from the RatingSummarizer
-        public void Update(ScoreSummarizer summarizer)
+        public void Update(ExponentialRatingSummarizer summarizer)
         {
             DateTime latestDate = summarizer.LatestKnownDate;
             // fetch any ratings that appeared since our last update
@@ -27,7 +27,7 @@ namespace ActivityRecommendation
         }
 
         // Pulls new ratings from the RatingSummarizer within a certain date range and updates metadata (min/max)
-        public void Update(ScoreSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
+        public void Update(ExponentialRatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude)
         {
             if (!this.useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint)
             {
@@ -50,10 +50,11 @@ namespace ActivityRecommendation
                 this.importData(summarizer, this.endDate, latestDateToInclude, startInclusive, true);
                 this.endDate = latestDateToInclude;
             }
+            this.timeWeight = 1 - (summarizer.GetWeightAfterDate(this.endDate) / summarizer.GetWeightAfterDate(this.startDate));
         }
 
         // implements the pull of new data from the RatingSummarizer
-        private void importData(ScoreSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude, bool startInclusive, bool endInclusive)
+        private void importData(ExponentialRatingSummarizer summarizer, DateTime earliestDateToInclude, DateTime latestDateToInclude, bool startInclusive, bool endInclusive)
         {
             this.values = this.values.Plus(summarizer.GetValueDistributionForDates(earliestDateToInclude, latestDateToInclude, startInclusive, endInclusive));
         }
@@ -69,7 +70,7 @@ namespace ActivityRecommendation
                 // So, this.values might have a high stddev because it describes a population
                 // However, this.Item describes the net present value of the user's happiness now, which is an average
                 // So, we ignore the standard deviation here
-                return Distribution.MakeDistribution(this.values.Mean, 0, 1);
+                return Distribution.MakeDistribution(this.values.Mean, 0, this.timeWeight);
             }
         }
 
@@ -99,6 +100,13 @@ namespace ActivityRecommendation
         DateTime startDate;  // the date that this RatingSummary describes
         DateTime endDate;   // the date of the latest rating known to this RatingSummary
         bool useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint;
+
+        // The weight assigned to these values is the weight of the ratings we know about
+        // If a lot of time elapsed with very few ratings, the weight of this value will be small
         Distribution values = Distribution.Zero;
+
+        // This weight is the weight of the time that this summary encompasses
+        // If a lot of time elapsed with very few ratings, the weight of this value will be high
+        double timeWeight;
     }
 }

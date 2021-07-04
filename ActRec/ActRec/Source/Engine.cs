@@ -874,12 +874,12 @@ namespace ActivityRecommendation
             return activitiesForLongtermInterpolation;
         }
 
-        private Distribution Interpolate_LongtermValue_If_Participatied(Activity activity, DateTime when)
+        private Distribution Interpolate_LongtermValue_If_Participated(Activity activity, DateTime when)
         {
             LazyInputs coordinates = this.getCoordinatesForParticipation(when, activity);
-            Distribution noise = Distribution.MakeDistribution(0.5, 0.125, 2);
-            Distribution result = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates)).Plus(noise);
-            //System.Diagnostics.Debug.WriteLine("If doing " + activity + " at " + when + ", interpolate longterm happiness of " + result);
+            Distribution defaultPrediction = Distribution.MakeDistribution(0.5, 0.125, 2);
+            Distribution interpolation = new Distribution(this.longTerm_participationValue_interpolator.Interpolate(coordinates));
+            Distribution result = interpolation.Plus(defaultPrediction);
             return result;
         }
 
@@ -896,12 +896,12 @@ namespace ActivityRecommendation
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.4);
+            double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5);
             shortTerm_prediction.Distribution = shortTerm_prediction.Distribution.CopyAndReweightTo(shortWeight);
             distributions.Add(shortTerm_prediction.Distribution);
 
             double mediumWeight = activity.NumParticipations;
-            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participatied(activity, when);
+            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participated(activity, when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
             distributions.Add(mediumTerm_distribution);
 
@@ -956,9 +956,9 @@ namespace ActivityRecommendation
         private Distribution interpolate_longtermValue_if_suggested(Activity activity, DateTime when)
         {
             LazyInputs inputs = this.getCoordinatesForSuggestion(when, activity);
-            Distribution noise = Distribution.MakeDistribution(0.5, 0.125, 2);
-            Distribution result = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs)).Plus(noise);
-            //System.Diagnostics.Debug.WriteLine("If suggesting " + activity + " at " + when + ", interpolate longterm happiness of " + result);
+            Distribution defaultPrediction = Distribution.MakeDistribution(0.5, 0.125, 2);
+            Distribution interpolation = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs));
+            Distribution result = interpolation.Plus(defaultPrediction);
             return result;
         }
 
@@ -1007,7 +1007,7 @@ namespace ActivityRecommendation
             // For C: we count the number of participations since the user did this activity
             int participationsSince = this.activityDatabase.RootActivity.GetNumParticipationsSince(activity.DiscoveryDate);
             double mediumWeight = shortWeight * 500.0 / ((1.0 - participationProbability) + (1.0 / (activity.NumParticipations + 1) + (1.0 / (participationsSince + 1))));
-            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participatied(activity, when);
+            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participated(activity, when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
 
             // When predicting longterm happiness based on the DateTimes of suggestions of this Activity, there are two likely sources of error.
@@ -1035,7 +1035,7 @@ namespace ActivityRecommendation
                 double parentRelativeWeight = 80 - activity.NumConsiderations;
                 foreach (Activity parent in activity.Parents)
                 {
-                    Distribution parentDistribution = this.Interpolate_LongtermValue_If_Participatied(parent, when);
+                    Distribution parentDistribution = this.Interpolate_LongtermValue_If_Participated(parent, when);
                     double parentWeight = shortWeight * parentRelativeWeight;
                     parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
                     distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
@@ -3436,8 +3436,8 @@ namespace ActivityRecommendation
         DateTime latestInteractionDate;
         bool requiresFullUpdate = true;
         Distribution thinkingTime;      // how long the user spends before skipping a suggestion
-        ScoreSummarizer weightedRatingSummarizer;
-        ScoreSummarizer efficiencySummarizer;
+        ExponentialRatingSummarizer weightedRatingSummarizer;
+        ExponentialRatingSummarizer efficiencySummarizer;
         EfficiencyCorrelator efficiencyCorrelator;
         
         

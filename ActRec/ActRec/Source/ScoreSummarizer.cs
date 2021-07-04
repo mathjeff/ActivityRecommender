@@ -90,7 +90,7 @@ namespace ActivityRecommendation
             }
         }
         // returns the cumulative weight for all dates through the given date
-        protected abstract double GetWeightBetweenDates(DateTime startDate, DateTime endDate);
+        public abstract double GetWeightBetweenDates(DateTime startDate, DateTime endDate);
 
         private StatList<DateTime, Distribution> valuesByDate;
         protected DateTime firstDate;

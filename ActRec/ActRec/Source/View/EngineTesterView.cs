@@ -37,29 +37,79 @@ namespace ActivityRecommendation
             DateTime end = DateTime.Now;
             TimeSpan duration = end.Subtract(start);
 
-            HelpWindowBuilder builder = new HelpWindowBuilder().AddMessage("Results");
-            builder
-                .AddMessage("typical longtermHappinessPredictionIfSuggested error:\n" + results.Longterm_PredictionIfSuggested_Error)
-                .AddMessage("typical longtermHappinessPredictionIfParticipated error:\n" + results.Longterm_PredictionIfParticipated_Error)
-                .AddMessage("typicalScoreError:\n" + results.TypicalScoreError)
-                .AddMessage("equivalentWeightedProbability:\n" + results.TypicalProbability)
-                .AddMessage("typicalEfficiencyError:\n" + results.TypicalEfficiencyError)
-                .AddMessage("typical longtermEfficiencyIfParticipated error:\n" + results.Longterm_EfficiencyIfPredicted_Error);
+            GridLayout_Builder builder = new Vertical_GridLayout_Builder().Uniform()
+                .AddLayout(new TextblockLayout("Results"))
+                .AddLayout(this.resultLayout("typical longtermHappinessPredictionIfSuggested error:\n", results.Longterm_PredictionIfSuggested_Error))
+                .AddLayout(this.resultLayout("typical longtermHappinessPredictionIfParticipated error:\n", results.Longterm_PredictionIfParticipated_Error))
+                .AddLayout(this.resultLayout("typicalScoreError:\n", results.TypicalScoreError))
+                .AddLayout(new TextblockLayout("equivalentWeightedProbability:\n" + results.TypicalProbability))
+                .AddLayout(this.resultLayout("typicalEfficiencyError:\n", results.TypicalEfficiencyError))
+                .AddLayout(this.resultLayout("typical longtermEfficiencyIfParticipated error:\n", results.Longterm_EfficiencyIfPredicted_Error));
 
             ParticipationSurprise surprise = results.ParticipationHavingMostSurprisingScore;
             if (surprise != null)
             {
-                builder = builder.AddMessage("Most surprising participation: " + surprise.ActivityDescriptor.ActivityName + " at " +
-                    surprise.Date + ": expected rating " + surprise.ExpectedRating + ", got " + surprise.ActualRating);
+                builder = builder.AddLayout(new TextblockLayout("Most surprising participation: " + surprise.ActivityDescriptor.ActivityName + " at " +
+                    surprise.Date + ": expected rating " + surprise.ExpectedRating + ", got " + surprise.ActualRating));
             }
 
-            builder = builder.AddMessage("Computed results in " + duration);
+            builder = builder.AddLayout(new TextblockLayout("Computed results in " + duration));
             LayoutChoice_Set resultsView = builder.Build();
 
             this.layoutStack.AddLayout(resultsView, "Test Results");
         }
 
+        private LayoutChoice_Set resultLayout(string label, PredictionErrors errors)
+        {
+            string text = label + errors.ToString();
+            Button button = new Button();
+            button.Clicked += ResultButton_Clicked;
+            this.errorsByButton[button] = errors;
+            ButtonLayout buttonLayout = new ButtonLayout(button, text);
+            return buttonLayout;
+        }
+
+        private void ResultButton_Clicked(object sender, EventArgs e)
+        {
+            Button button = sender as Button;
+            PredictionErrors errors = this.errorsByButton[button];
+            this.showErrors(errors);
+        }
+
+        private void showErrors(PredictionErrors errors)
+        {
+            PlotView plotView = new PlotView();
+            List<Datapoint> correctValues = new List<Datapoint>();
+            List<Datapoint> predictedValues = new List<Datapoint>();
+            List<Datapoint> predictedPlusStdDev = new List<Datapoint>();
+            if (!double.IsInfinity(errors.MinAllowedValue))
+                plotView.MinY = errors.MinAllowedValue;
+            if (!double.IsInfinity(errors.MaxAllowedValue))
+                plotView.MaxY = errors.MaxAllowedValue;
+            DateTime referenceDate = new DateTime(2000, 1, 1);
+            foreach (PredictionError error in errors.All)
+            {
+                double x = error.When.Subtract(referenceDate).TotalSeconds;
+                correctValues.Add(new Datapoint(x, error.ActualMean, 1));
+                predictedValues.Add(new Datapoint(x, error.Predicted.Mean, 1));
+                predictedPlusStdDev.Add(new Datapoint(x, error.Predicted.Mean + error.Predicted.StdDev, 1));
+            }
+            plotView.AddSeries(correctValues, false);
+            plotView.AddSeries(predictedValues, false);
+            plotView.AddSeries(predictedPlusStdDev, false);
+
+            ImageLayout imageLayout = new ImageLayout(plotView, LayoutScore.Get_UsedSpace_LayoutScore(1));
+            TextblockLayout legend = new TextblockLayout("Prediction errors over time. Green: actual value. Blue: predicted value. White: prediction mean + stddev.");
+
+            LayoutChoice_Set layout = new Vertical_GridLayout_Builder()
+                .AddLayout(imageLayout)
+                .AddLayout(legend)
+                .BuildAnyLayout();
+            this.layoutStack.AddLayout(layout, "errors");
+        }
+
         ActivityRecommender activityRecommender;
         LayoutStack layoutStack;
+        Dictionary<Button, PredictionErrors> errorsByButton = new Dictionary<Button, PredictionErrors>();
     }
 }

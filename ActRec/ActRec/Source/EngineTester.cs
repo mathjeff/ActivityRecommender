@@ -666,6 +666,16 @@ Means.MeanErr: 0.1406 (0.2648 * average), StdDevs.MeanErr: 0.1059 (0.1995 * aver
 Means.MeanErr: 5.2399 (3.0475 * average), StdDevs.MeanErr: 5.4989 (3.1982 * average), efficiency
 Means.MeanErr: 0.4013 (3 days), StdDevs.MeanErr: 0.564 (4 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:04.1935225
+
+updated results on 2021-07-05 after some correctness fixes: now incorporating the future values of non-suggested participations, and also having the LongtermValuePredictor update more often
+and some accuracy improvements ScoreSummary incorporating weight, new interpolator that considers weight when splitting, and child activities having few participations incorporating predictions from parents having lots of participations
+Means.MeanErr: 0.0325 (24 days), StdDevs.MeanErr: 0.0283 (21 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0321 (23 days), StdDevs.MeanErr: 0.03 (22 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1395 (0.2628 * average), StdDevs.MeanErr: 0.1039 (0.1957 * average), score
+0.9471,                                         equivalentWeightedProbability
+Means.MeanErr: 5.2664 (3.0629 * average), StdDevs.MeanErr: 5.6189 (3.2679 * average), efficiency
+Means.MeanErr: 0.3916 (3 days), StdDevs.MeanErr: 0.3389 (2 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:39.5356054
  */
 
 namespace ActivityRecommendation

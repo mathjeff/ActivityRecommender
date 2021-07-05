@@ -16,14 +16,14 @@ namespace ActivityRecommendation.View
             DateTime now = DateTime.Now;
             engine.EnsureRatingsAreAssociated();
 
-            LinearProgression progressionToPredict = activityToPredict.ParticipationsSmoothed(windowSize);
+            LinearProgression progressionToPredict = activityToPredict.ParticipationsSmoothed((new TimeSpan()).Subtract(windowSize));
 
             StatList<double, Activity> results = new StatList<double, Activity>(new DoubleComparer(), new NoopCombiner<Activity>());
 
             foreach (Activity activity in activitiesToPredictFrom)
             {
                 System.Diagnostics.Debug.WriteLine("comparing " + activity + " and " + activityToPredict.Name);
-                List<Datapoint> datapoints = activity.compareParticipations(TimeSpan.FromSeconds(1), progressionToPredict, now.Subtract(windowSize));
+                List<Datapoint> datapoints = activity.compareParticipations(windowSize, progressionToPredict, now.Subtract(windowSize));
 
                 // now compute the value of the formula
                 Correlator correlator = new Correlator();
@@ -32,11 +32,10 @@ namespace ActivityRecommendation.View
                     correlator.Add(datapoint);
                 }
 
-                double bonusSecondsPerWindow = correlator.Slope;
-                if (!double.IsNaN(bonusSecondsPerWindow))
+                double outputIncreasePerInputIncrease = correlator.Slope;
+                if (!double.IsNaN(outputIncreasePerInputIncrease))
                 {
-                    double bonusSecondsPerDay = bonusSecondsPerWindow / windowSize.TotalDays;
-                    results.Add(bonusSecondsPerDay / 60, activity);
+                    results.Add(outputIncreasePerInputIncrease, activity);
                 }
             }
 
@@ -71,24 +70,21 @@ namespace ActivityRecommendation.View
             }
             else
             {
-                if (numPositives > 0 && numNegatives > 0)
-                {
-                    string title = "Activities whose participations are strongly correlated with participations in " + activityToPredict.Name + " over the next " +
-                        Math.Round(windowSize.TotalDays, 0) + " days";
-                    layoutBuilder.AddLayout(new TextblockLayout(title));
-                }
+                string title = "Things you do that are correlated with doing more or less of " + activityToPredict.Name + " over the following " +
+                    Math.Round(windowSize.TotalDays, 0) + " days";
+                layoutBuilder.AddLayout(new TextblockLayout(title));
 
                 if (numPositives > 0)
                 {
                     if (numPositives > 1)
-                        layoutBuilder.AddLayout(new TextblockLayout("These activities add to the number of minutes spent per day:"));
+                        layoutBuilder.AddLayout(new TextblockLayout("Doing one minute of these activities adds this many minutes:"));
                     else
-                        layoutBuilder.AddLayout(new TextblockLayout("This activity adds to the number of minutes spent per day:"));
+                        layoutBuilder.AddLayout(new TextblockLayout("Doing one minute of this activity adds this many minutes:"));
                     foreach (ListItemStats<double, Activity> result in mostPositivelyCorrelated)
                     {
                         double correlation = result.Key;
                         Activity activity = result.Value;
-                        String message = activity.ToString() + ": " + Math.Round(correlation, 5);
+                        String message = activity.Name + ": " + Math.Round(correlation, 5);
                         layoutBuilder.AddLayout(new TextblockLayout(message));
                     }
                 }
@@ -96,14 +92,14 @@ namespace ActivityRecommendation.View
                 if (numNegatives > 0)
                 {
                     if (numNegatives > 1)
-                        layoutBuilder.AddLayout(new TextblockLayout("These activities subtract from the number of minutes spent per day:"));
+                        layoutBuilder.AddLayout(new TextblockLayout("Doing one minute of these activities subtracts this many minutes:"));
                     else
-                        layoutBuilder.AddLayout(new TextblockLayout("This activity subtracts from the number of minutes spent per day:"));
+                        layoutBuilder.AddLayout(new TextblockLayout("Doing one minute of this activity subtracts this many minutes:"));
                     foreach (ListItemStats<double, Activity> result in mostNegativelyCorrelated)
                     {
                         double correlation = result.Key;
                         Activity activity = result.Value;
-                        String message = activity.ToString() + ": " + Math.Round(correlation, 5);
+                        String message = activity.Name + ": " + Math.Round(correlation, 5);
                         layoutBuilder.AddLayout(new TextblockLayout(message));
                     }
                 }

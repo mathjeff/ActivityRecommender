@@ -155,11 +155,19 @@ namespace ActivityRecommendation
                 prevDate = deltaIntensity.Key;
             }
             // find what's in the sliding window by subtracting the cumulative from the shifted cumulative
-            LinearProgression shiftedCumulatives = cumulatives.Shifted((new TimeSpan()).Subtract(windowSize));
-            shiftedCumulatives.Add(maxDate, sum);
-            cumulatives.Add(maxDate, sum);
-            LinearProgression result = shiftedCumulatives.Minus(cumulatives);
-            return result;
+            LinearProgression shiftedCumulatives = cumulatives.Shifted(windowSize);
+            if (windowSize.TotalSeconds > 0)
+            {
+                cumulatives.Add(maxDate.Add(windowSize), sum);
+                LinearProgression result = cumulatives.Minus(shiftedCumulatives);
+                return result;
+            }
+            else
+            {
+                shiftedCumulatives.Add(maxDate, sum);
+                LinearProgression result = shiftedCumulatives.Minus(cumulatives);
+                return result;
+            }
         }
 
         #endregion

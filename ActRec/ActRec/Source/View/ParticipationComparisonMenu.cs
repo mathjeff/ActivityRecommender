@@ -28,7 +28,7 @@ namespace ActivityRecommendation.View
             this.durationBox = new DurationEntryView();
             builder.AddLayout(this.durationBox);
 
-            this.activityToPredictFrom_box = new ActivityNameEntryBox("Predictor Activity (default = all):", activityDatabase, layoutStack);
+            this.activityToPredictFrom_box = new ActivityNameEntryBox("Predictor Activity (default = all categories):", activityDatabase, layoutStack);
             builder.AddLayout(this.activityToPredictFrom_box);
 
             builder.AddLayout(new TextblockLayout("Comparison Type:"));
@@ -67,7 +67,7 @@ namespace ActivityRecommendation.View
                     predictors.Add(this.activityToPredictFrom_box.Activity);
                     return predictors;
                 }
-                return this.activityDatabase.AllActivities;
+                return this.activityDatabase.AllCategories;
             }
         }
 

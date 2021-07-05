@@ -382,6 +382,20 @@ namespace ActivityRecommendation
                 return this.allActivities;
             }
         }
+        public IEnumerable<Category> AllCategories
+        {
+            get
+            {
+                List<Category> results = new List<Category>();
+                foreach (Activity activity in this.AllActivities)
+                {
+                    Category category = activity as Category;
+                    if (category != null)
+                        results.Add(category);
+                }
+                return results;
+            }
+        }
         public IEnumerable<ToDo> AllOpenTodos
         {
             get

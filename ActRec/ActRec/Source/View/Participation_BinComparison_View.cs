@@ -17,7 +17,7 @@ namespace ActivityRecommendation.View
             DateTime now = DateTime.Now;
             engine.EnsureRatingsAreAssociated();
 
-            LinearProgression progressionToPredict = activityToPredict.ParticipationsSmoothed(windowSize);
+            LinearProgression progressionToPredict = activityToPredict.ParticipationsSmoothed((new TimeSpan()).Subtract(windowSize));
 
             StatList<NeighborhoodInterpolation, Activity> results = new StatList<NeighborhoodInterpolation, Activity>(new Neighborhood_MiddleOutputMean_Comparer(), new NoopCombiner<Activity>());
             foreach (Activity activity in activitiesToPredictFrom)

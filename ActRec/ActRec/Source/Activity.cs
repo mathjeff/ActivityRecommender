@@ -1152,8 +1152,6 @@ namespace ActivityRecommendation
         // The input coordinates are measured in seconds (spend on this activity during the window)
         public List<Datapoint> compareParticipations(TimeSpan smoothingWindowDuration, LinearProgression progressionToPredict, DateTime cutoffDate)
         {
-            // smoothing with a short duration is a hacky way of getting a LinearProgression that models the instantaneous rate of participation
-            // ideally we'll add support directly into the LinearProgression class itself
             LinearProgression predictor = this.ParticipationsSmoothed(smoothingWindowDuration);
             
             StatList<DateTime, bool> union = new StatList<DateTime, bool>(new DateComparer(), new NoopCombiner<bool>());

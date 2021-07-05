@@ -1100,7 +1100,6 @@ namespace ActivityRecommendation
             if (participation == null)
                 return;
 
-            participation.Suggested = false;
             this.AddParticipation(participation);
             // fill in some default data for the ParticipationEntryView
             this.participationEntryView.Clear();

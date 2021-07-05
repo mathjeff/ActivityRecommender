@@ -711,8 +711,9 @@ namespace ActivityRecommendation
 
         public override void PreviewParticipation(Participation newParticipation)
         {
-            // update the error rate for the participation probability predictor
+            this.updatePredictionsIfParticipated(newParticipation.ActivityDescriptor, newParticipation.StartDate);
 
+            // update the error rate for the participation probability predictor
             if (newParticipation.Suggested)
             {
                 // if the activity was certaintly not suggested, then we don't want to include it in our estimate 
@@ -778,30 +779,32 @@ namespace ActivityRecommendation
                 this.mostSurprisingParticipation = newSurprise;
             }
         }
-        public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
+        public void updatePredictionsIfParticipated(ActivityDescriptor descriptor, DateTime when)
         {
             ActivityRequest request = new ActivityRequest(when);
-            if (actualIntensity > 1 || actualIntensity < 0)
-                System.Diagnostics.Debug.WriteLine("Invalid participation intensity: " + actualIntensity);
-            // compute the estimate participation probability
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            Prediction predictionForSuggestion =  this.engine.EstimateSuggestionValue(activity, request);
+            Prediction predictionForSuggestion = this.engine.EstimateSuggestionValue(activity, request);
 
             if (predictionForSuggestion.Distribution.Weight > 0)
             {
                 ScoreSummary ratingSummary = new ScoreSummary(when);
                 this.valueIfSuggested_predictions[predictionForSuggestion] = ratingSummary;
 
-                if (actualIntensity >= 1)
-                {
-                    Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, request);
-                    this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
+                Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, request);
+                this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
 
-                    ScoreSummary efficiencySummary = new ScoreSummary(when);
-                    Prediction efficiencyIfParticipated = this.engine.Get_OverallEfficiency_ParticipationEstimate(activity, when);
-                    this.efficiencyIfParticipated_predictions[efficiencyIfParticipated] = efficiencySummary;
-                }
+                ScoreSummary efficiencySummary = new ScoreSummary(when);
+                Prediction efficiencyIfParticipated = this.engine.Get_OverallEfficiency_ParticipationEstimate(activity, when);
+                this.efficiencyIfParticipated_predictions[efficiencyIfParticipated] = efficiencySummary;
             }
+
+        }
+        public void UpdateParticipationProbabilityError(ActivityDescriptor descriptor, DateTime when, double actualIntensity)
+        {
+            if (actualIntensity > 1 || actualIntensity < 0)
+                System.Diagnostics.Debug.WriteLine("Invalid participation intensity: " + actualIntensity);
+            // compute the estimate participation probability
+            Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
 
             double predictedProbability = this.engine.EstimateParticipationProbability(activity, when).Distribution.Mean;
             double error = predictedProbability - actualIntensity;

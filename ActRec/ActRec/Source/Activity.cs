@@ -201,6 +201,7 @@ namespace ActivityRecommendation
         {
             get
             {
+                this.SetupPredictorsIfNeeded();
                 return this.parentsUsedForPrediction;
             }
         }
@@ -813,6 +814,7 @@ namespace ActivityRecommendation
             double[] coordinates = coordinateList.ToArray();
 
             // have the interpolator make an estimate for these coordinates
+            this.SetupPredictorsIfNeeded();
             List<Prediction> results = new List<Prediction>(this.extraRatingPredictionLinks.Count + 1);
             Distribution estimate = this.QueryParticipationProbabilityInterpolator(coordinates);
             double weight = this.NumConsiderations;
@@ -1248,12 +1250,14 @@ namespace ActivityRecommendation
 
         private bool shouldUseNewlyAddedParentForPrediction(Activity parent)
         {
-            // If the parent Doable has been done a bunch of times already, then it takes a long time to analyze it and we don't want that
-            // If this Doable has been done a bunch of times already, then we already have enough information and don't need it
+            // If this activity hasn't been done very many times yet, then it's important to incorporate information from parent activities
+            if (this.NumConsiderations < 100)
+                return true;
+            // if the parent parent hasn't been done very many times yet, then it won't take too long to analyze the parent
             if (parent.NumConsiderations < 1000)
                 return true;
-            else
-                return false;
+            // If this activity has been done a bunch of times and the parent has too, then it's not important to also incorporate analyses from the parent
+            return false;
         }
 
         // initialize the PredictionLinks that estimate the rating of this Doable

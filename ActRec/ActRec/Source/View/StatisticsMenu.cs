@@ -53,13 +53,14 @@ namespace ActivityRecommendation.View
             {
                 if (this.normalContent == null)
                 {
+                    // These screens are supposed to be ordered from more simple and/or more interesting on top to more complicated and/or less interesting on the bottom
                     MenuLayoutBuilder visualizationBuilder = new MenuLayoutBuilder(this.layoutStack);
-                    // Screens that will identify which activity is interesting for you
+
                     visualizationBuilder.AddLayout("Significant Activities", new Browse_RecentSignificantActivities_Layout(this.engine, this.engine.RatingSummarizer, this.layoutStack));
                     visualizationBuilder.AddLayout("Favorite Activities", new PreferenceSummaryLayout(this.engine, this.layoutStack, this.publicFileIo));
                     visualizationBuilder.AddLayout("Life Story", new ParticipationSummarizerLayout(this.engine, this.persona, this.layoutStack));
                     visualizationBuilder.AddLayout("Efficiency Growth", new EfficiencyTrendLayout(this.engine.EfficiencyCorrelator));
-                    // Screens that require you to specify which activity you're interested in
+
                     visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
 
                     BrowseParticipations_Layout browseLayout = new BrowseParticipations_Layout(this.ActivityDatabase, this.engine, this.engine.RatingSummarizer, this.layoutStack);
@@ -67,6 +68,8 @@ namespace ActivityRecommendation.View
                     visualizationBuilder.AddLayout("Search Participations", browseLayout);
 
                     visualizationBuilder.AddLayout("Cross-Activity Correlations", new ParticipationComparisonMenu(this.layoutStack, this.ActivityDatabase, this.engine));
+
+                    visualizationBuilder.AddLayout("Number of Activities over Time", new NumberOfActivities_Graph(this.ActivityDatabase));
 
                     this.normalContent = visualizationBuilder.Build();
                 }

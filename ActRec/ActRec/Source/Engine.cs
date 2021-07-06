@@ -435,7 +435,7 @@ namespace ActivityRecommendation
                     /*
                     if (bestActivity != null)
                     {
-                        System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + recommendationsCache.suggestionValues[candidate].Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + recommendationsCache.suggestionValues[bestActivity].Distribution.Mean + " as highest-value suggestion");
+                        System.Diagnostics.Debug.WriteLine("Candidate " + candidate + " with suggestion value " + utilitiesCache.suggestionValues[candidate].Distribution.Mean + " replaced " + bestActivity + " with suggestion value " + utilitiesCache.suggestionValues[bestActivity].Distribution.Mean + " as highest-value suggestion");
                     }
                     */
                     bestActivity = candidate;
@@ -922,8 +922,6 @@ namespace ActivityRecommendation
             return prediction;
         }
 
-
-
         public Distribution compute_longtermValue_increase_in_days(Distribution chosenValue, DateTime when, DateTime baselineEnd)
         {
             if (chosenValue.Weight <= 0)
@@ -972,77 +970,32 @@ namespace ActivityRecommendation
         private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, ActivityRequest request)
         {
             DateTime when = request.Date;
-            List<Prediction> distributions = new List<Prediction>();
-
+            List<Prediction> predictions = new List<Prediction>();
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateUtility(activity, request);
 
-            Prediction probabilityPrediction = this.EstimateParticipationProbability(activity, request.Date);
-            double participationProbability = probabilityPrediction.Distribution.Mean;
-
-            // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
-            // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
-            // When there is a huge amount of data, we focus on the fact that suggesting the activity will probably make the user as happy as suggesting the activity in the past
-
-            Prediction ratingPrediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
-            ratingPrediction.Justification.Label = "How much you should enjoy doing  " + activity.Name;
-
-            Distribution shortTerm_distribution = this.RatingAndProbability_Into_Value(ratingPrediction.Distribution, participationProbability, activity.MeanParticipationDuration, request.NumAcceptancesPerParticipation);
-            Justification shortTermJustification = new Composite_SuggestionJustification(shortTerm_distribution, ratingPrediction.Justification, probabilityPrediction.Justification);
-            Prediction shortTerm_prediction = new Prediction(activity, shortTerm_distribution, when, shortTermJustification);
-
-            double shortWeight = shortTerm_prediction.Distribution.Weight;
-            shortTermJustification.Label = "Your short-term happiness from " + activity.Name;
-            shortTerm_prediction.Justification = shortTermJustification;
-            distributions.Add(shortTerm_prediction);
-
-            // When predicting longterm happiness based on the DateTimes of participations, there are three likely sources of error.
-            // A: The user might not take our suggestion: our suggestion might not turn into a participation
-            // B: The user might not have done this activity very often, so we might not have high confidence about how happy the user is after doing it
-            // C: The times when the user did this activity might have been recently, so we might not have high confidence about how happy the user is after doing it
-            //
-            // To turn these components into weights, we essentially turn them into error values and then compute their reciprocals to turn them back into weights
-            // For A: we can just directly use the probability that the user won't take our suggestion
-            // For B: we count the number of times that the user has done this activity, and then compute the reciprocal to turn it into an estimate of the error
-            // For C: we count the number of participations since the user did this activity
-            int participationsSince = this.activityDatabase.RootActivity.GetNumParticipationsSince(activity.DiscoveryDate);
-            double mediumWeight = shortWeight * 500.0 / ((1.0 - participationProbability) + (1.0 / (activity.NumParticipations + 1) + (1.0 / (participationsSince + 1))));
-            Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participated(activity, when);
-            Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
-
-            // When predicting longterm happiness based on the DateTimes of suggestions of this Activity, there are two likely sources of error.
-            // A: Suggesting this Activity isn't actually what's changing the user's net present happiness.
-            // B: The true net present happiness can't be perfectly computed until after we know how happy the user will be in the future.
-            //
-            // For A: we need to have lots of suggestions, and we increase the weight based on the number of suggestions.
-            // For B: we decrease the weight of the prediction for activities we haven't known about for long
+            // ask the interpolator how happy the user is after this is suggested
             Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when);
-            InterpolatorSuggestion_Justification mediumJustification = new InterpolatorSuggestion_Justification(
-                activity, mediumTerm_distribution, null);
-            mediumJustification.Label = "How happy you have been after doing " + activity.Name;
-            if (mediumWeight > 0)
-                distributions.Add(new Prediction(activity, mediumTerm_distribution, when, mediumJustification));
-
             InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
                 activity, longTerm_distribution, null);
             longtermJustification.Label = "How happy you have been after " + activity.Name + " is suggested";
-            if (longTerm_distribution.Weight > 0)
-                distributions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
 
-            // also include parent activities in the prediction if this activity is one that the user hasn't done often
-            /*if (activity.NumConsiderations < 80)
-            {
-                double parentRelativeWeight = 80 - activity.NumConsiderations;
-                foreach (Activity parent in activity.Parents)
-                {
-                    Distribution parentDistribution = this.Interpolate_LongtermValue_If_Participated(parent, when);
-                    double parentWeight = shortWeight * parentRelativeWeight;
-                    parentDistribution = parentDistribution.CopyAndReweightTo(parentWeight);
-                    distributions.Add(new Prediction(activity, parentDistribution, when, "How happy you have been after doing " + parent.Name));
-                }
-            }*/
+            // Estimate participation probability
+            Prediction probabilityPrediction = this.EstimateParticipationProbability(activity, request.Date);
+            double participationProbability = probabilityPrediction.Distribution.Mean;
 
-            return distributions;
+            // Estimate how happy the user will be if they do this
+            Prediction participationPrediction = this.Get_OverallHappiness_ParticipationEstimate(activity, request);
+
+            // Estimate how happy the user will be as a result of the possibility of doing this
+            // If we suggest an activirty, then the user might do it. When the user does it, we give feedback. If we expected the user to take our suggestion and they do take it, then
+            // we want our feedback to be positive. So, when participation probability is high, this estimate should be a large fraction of the overall estimate.
+            participationPrediction.Distribution = participationPrediction.Distribution.CopyAndReweightTo(longTerm_distribution.Weight * participationProbability);
+
+            predictions.Add(participationPrediction);
+            predictions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
+
+            return predictions;
         }
 
         private Prediction Get_OverallHappiness_SuggestionEstimate(Activity activity, ActivityRequest request)

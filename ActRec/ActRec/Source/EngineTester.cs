@@ -676,6 +676,24 @@ Means.MeanErr: 0.1395 (0.2628 * average), StdDevs.MeanErr: 0.1039 (0.1957 * aver
 Means.MeanErr: 5.2664 (3.0629 * average), StdDevs.MeanErr: 5.6189 (3.2679 * average), efficiency
 Means.MeanErr: 0.3916 (3 days), StdDevs.MeanErr: 0.3389 (2 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:39.5356054
+
+updated results on 2021-07-06 with new data:
+Means.MeanErr: 0.0438 (32 days), StdDevs.MeanErr: 0.0398 (29 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0437 (32 days), StdDevs.MeanErr: 0.0411 (30 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1039 (0.1957 * average), score
+0.9472,                                         equivalentWeightedProbability
+Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
+Means.MeanErr: 0.6508 (5 days), StdDevs.MeanErr: 0.5815 (4 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:29.8838670
+
+updated results on 2021-07-06 when exluding the last week of predictions from error calculations:
+Means.MeanErr: 0.0323 (24 days), StdDevs.MeanErr: 0.0281 (20 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0319 (23 days), StdDevs.MeanErr: 0.0298 (22 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1039 (0.1957 * average), score
+0.9472,                                         equivalentWeightedProbability
+Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
+Means.MeanErr: 0.6512 (5 days), StdDevs.MeanErr: 0.5824 (4 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:31.2458927
  */
 
 namespace ActivityRecommendation
@@ -885,10 +903,25 @@ namespace ActivityRecommendation
         private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ExponentialRatingSummarizer ratingSummarizer, double minAllowedValue, double maxAllowedValue)
         {
             PredictionErrors result = new LongtermPredictionErrors(ratingSummarizer.HalfLife, minAllowedValue, maxAllowedValue);
+
+            DateTime maxObservedDate = new DateTime();
+            foreach (Prediction prediction in predictions.Keys)
+            {
+                if (prediction.CreationDate.CompareTo(maxObservedDate) > 0)
+                    maxObservedDate = prediction.CreationDate;
+            }
+            DateTime lastDateToInclude = maxObservedDate.Subtract(TimeSpan.FromDays(7));
+
             foreach (Prediction prediction in predictions.Keys)
             {
                 ScoreSummary summary = predictions[prediction];
                 summary.Update(ratingSummarizer);
+                if (prediction.ApplicableDate.CompareTo(lastDateToInclude) > 0)
+                {
+                    // When estimating the error of the predictions about the future of the past,
+                    // skip any predictions that happened too recently for us to know much about their futures
+                    continue;
+                }
                 if (summary.Item.Weight > 0)
                 {
                     result.Add(prediction.ApplicableDate, summary.Item.Mean, prediction.Distribution);

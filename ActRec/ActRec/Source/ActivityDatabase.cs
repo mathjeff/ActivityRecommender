@@ -96,7 +96,7 @@ namespace ActivityRecommendation
             if (child == null)
                 return "Child " + inheritance.ChildDescriptor.ActivityName + " does not exist";
             if (inheritance.ParentDescriptor == null)
-                return "Parent name is required";
+                return "Parent name is required: try \"Activity\"";
             Activity parent = this.ResolveDescriptor(inheritance.ParentDescriptor);
             if (parent == null)
                 return "Parent " + inheritance.ParentDescriptor.ActivityName + " does not exist";
@@ -627,7 +627,7 @@ namespace ActivityRecommendation
                 return "Child " + existingChild.Name + " already exists";
             ActivityDescriptor parentDescriptor = inheritance.ParentDescriptor;
             if (parentDescriptor == null)
-                return "Parent name is required";
+                return "Parent name is required: try \"Activity\"";
             Activity parent = this.ResolveDescriptor(parentDescriptor);
             if (parent == null)
                 return "Parent " + parentDescriptor.ActivityName + " does not exist";

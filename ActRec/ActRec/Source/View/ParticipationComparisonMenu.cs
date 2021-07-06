@@ -33,7 +33,7 @@ namespace ActivityRecommendation.View
 
             builder.AddLayout(new TextblockLayout("Comparison Type:"));
             this.typebox = new VisiPlacement.CheckBox("Linear Regression", "Bin Comparison");
-            builder.AddLayout(ButtonLayout.WithoutBevel(this.typebox));
+            builder.AddLayout(this.typebox);
 
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Click;

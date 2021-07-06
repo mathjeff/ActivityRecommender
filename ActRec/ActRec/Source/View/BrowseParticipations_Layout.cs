@@ -35,26 +35,26 @@ namespace ActivityRecommendation.View
             LayoutChoice_Set displayRatings_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Show ratings?"))
-                .AddLayout(new ButtonLayout(this.displayRatings_box))
+                .AddLayout(this.displayRatings_box)
                 .BuildAnyLayout();
             this.requireComments_box = new VisiPlacement.CheckBox("No", "Yes");
             this.requireComments_box.Checked = true;
             LayoutChoice_Set requireComments_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Require comments?"))
-                .AddLayout(new ButtonLayout(this.requireComments_box))
+                .AddLayout(this.requireComments_box)
                 .BuildAnyLayout();
-            this.requireSuccessful_box = new VisiPlacement.SingleSelect(new List<string>() { "Any", "No Metric", "Successful", "Failed" });
+            this.requireSuccessful_box = new VisiPlacement.SingleSelect(null, new List<string>() { "Any", "No Metric", "Successful", "Failed" });
             LayoutChoice_Set requireSuccessful_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Require success status ="))
-                .AddLayout(new ButtonLayout(this.requireSuccessful_box))
+                .AddLayout(this.requireSuccessful_box)
                 .BuildAnyLayout();
-            this.sortBy_box = new VisiPlacement.SingleSelect(new List<string>() { this.sortByFun_text, this.sortBy_netPresentHappiness_text, this.sortByEfficiency_text });
+            this.sortBy_box = new VisiPlacement.SingleSelect(null, new List<string>() { this.sortByFun_text, this.sortBy_netPresentHappiness_text, this.sortByEfficiency_text });
             LayoutChoice_Set sortBy_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Sort by"))
-                .AddLayout(new ButtonLayout(this.sortBy_box))
+                .AddLayout(this.sortBy_box)
                 .BuildAnyLayout();
             
 

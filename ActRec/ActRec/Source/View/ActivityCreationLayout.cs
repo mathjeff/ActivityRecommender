@@ -13,21 +13,19 @@ namespace ActivityRecommendation
             this.activityDatabase = activityDatabase;
             this.layoutStack = layoutStack;
 
-            this.SetTitle("Add New Activity to Choose From");
-            LayoutChoice_Set typeList = new TextblockLayout("Activity types: Category, ToDo, Problem, Solution");
-            SingleSelect typeSelector = new SingleSelect(this.typeChoices);
+            this.SetTitle("New Activity");
+            SingleSelect typeSelector = new SingleSelect("Type:", this.typeChoices);
 
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(4), new BoundProperty_List(1), LayoutScore.Zero);
-            mainGrid.AddLayout(typeList);
-            mainGrid.AddLayout(ButtonLayout.WithoutBevel(typeSelector));
-            this.feedbackLayout = new TextblockLayout();
+            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(3), new BoundProperty_List(1), LayoutScore.Zero);
+            mainGrid.AddLayout(typeSelector);
+            this.feedbackLayout = new TextblockLayout("", 18).AlignVertically(TextAlignment.Center);
             mainGrid.AddLayout(this.feedbackLayout);
 
             GridLayout bottomGrid = GridLayout.New(new BoundProperty_List(2), BoundProperty_List.Uniform(2), LayoutScore.Zero);
             mainGrid.AddLayout(bottomGrid);
 
             this.typePicker = typeSelector;
-            typeSelector.Clicked += TypeSelector_Clicked;
+            typeSelector.Updated += TypeSelector_Clicked;
 
             this.childNameBox = new ActivityNameEntryBox("Activity Name", activityDatabase, layoutStack, true);
             this.childNameBox.AutoAcceptAutocomplete = false;
@@ -79,16 +77,16 @@ namespace ActivityRecommendation
         {
             get
             {
-                SingleSelect_Choice categoryType = new SingleSelect_Choice("Type = Category", Color.FromRgb(181, 255, 254));
-                SingleSelect_Choice todoType = new SingleSelect_Choice("Type = ToDo", Color.FromRgb(179, 172, 166));
-                SingleSelect_Choice problemType = new SingleSelect_Choice("Type = Problem", Color.FromRgb(235, 228, 134));
+                SingleSelect_Choice categoryType = new SingleSelect_Choice("Category", Color.FromRgb(181, 255, 254));
+                SingleSelect_Choice todoType = new SingleSelect_Choice("ToDo", Color.FromRgb(179, 172, 166));
+                SingleSelect_Choice problemType = new SingleSelect_Choice("Problem", Color.FromRgb(235, 228, 134));
                 List<SingleSelect_Choice> choices = new List<SingleSelect_Choice>() { categoryType, todoType, problemType };
                 // If the user has already entered a solution, then they probably already know that a category can be used as a solution,
                 // so we don't need to remind them. They can check the Help if they'd like a reminder.
                 // If the user hasn't yet entered a solution, we may need to explicitly call out Solution as a separate menu option
                 if (!this.activityDatabase.HasSolution)
                 {
-                    SingleSelect_Choice solutionType = new SingleSelect_Choice("Type = Solution", Color.FromRgb(48, 237, 138));
+                    SingleSelect_Choice solutionType = new SingleSelect_Choice("Solution", Color.FromRgb(48, 237, 138));
                     choices.Add(solutionType);
                 }
                 return choices;
@@ -204,7 +202,7 @@ namespace ActivityRecommendation
             this.feedbackLayout.resetTextColor();
         }
 
-        private void TypeSelector_Clicked(object sender, EventArgs e)
+        private void TypeSelector_Clicked(SingleSelect singleSelect)
         {
             if (this.SelectedActivityTypeIsSolution)
             {

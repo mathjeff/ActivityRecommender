@@ -59,12 +59,12 @@ namespace ActivityRecommendation.View
         public HelpDurationInput_DetailsLayout()
         {
             this.typeBox = new VisiPlacement.CheckBox("as a multiple of your effort:", "as a number of minutes:");
-            this.typeBox.Clicked += TypeBox_Clicked;
+            this.typeBox.Updated += TypeBox_Clicked;
             this.minutesDurationLayout = new MinutesDurationLayout();
             this.ratioLayout = new RatioLayout();
             this.gridLayout = GridLayout.New(BoundProperty_List.Uniform(3), new BoundProperty_List(1), LayoutScore.Zero);
             this.gridLayout.AddLayout(new TextblockLayout("Enter help received"));
-            this.gridLayout.AddLayout(new ButtonLayout(this.typeBox));
+            this.gridLayout.AddLayout(this.typeBox);
             this.SubLayout = this.gridLayout;
             this.updateSublayout();
         }
@@ -78,7 +78,7 @@ namespace ActivityRecommendation.View
             return this.impl.Compute(participationDuration);
         }
 
-        private void TypeBox_Clicked(object sender, EventArgs e)
+        private void TypeBox_Clicked(SingleSelect singleSelect)
         {
             this.updateSublayout();
         }

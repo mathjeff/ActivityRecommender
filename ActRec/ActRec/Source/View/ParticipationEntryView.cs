@@ -590,21 +590,21 @@ namespace ActivityRecommendation
                     SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
                     SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
                     if (this.EnteringToDo)
-                        singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete, obsolete });
+                        singleSelect = new SingleSelect(null, new List<SingleSelect_Choice>() { complete, incomplete, obsolete });
                     else
-                        singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
+                        singleSelect = new SingleSelect(null, new List<SingleSelect_Choice>() { complete, incomplete });
                 }
                 else
                 {
                     SingleSelect_Choice complete = new SingleSelect_Choice(this.ProblemComplete_Text, Color.LightBlue);
                     SingleSelect_Choice incomplete = new SingleSelect_Choice(this.ProblemIncomplete_Text, Color.Orange);
-                    singleSelect = new SingleSelect(new List<SingleSelect_Choice>() { complete, incomplete });
+                    singleSelect = new SingleSelect(null, new List<SingleSelect_Choice>() { complete, incomplete });
                 }
                 this.todoCompletionStatusPicker = singleSelect;
                 singleSelect.Updated += SingleSelect_Updated;
 
                 this.helpStatusHolder.SubLayout = this.helpStatusPicker;
-                this.todoCompletionStatusHolder.SubLayout = ButtonLayout.WithoutBevel(this.todoCompletionStatusPicker);
+                this.todoCompletionStatusHolder.SubLayout = this.todoCompletionStatusPicker;
             }
             else
             {

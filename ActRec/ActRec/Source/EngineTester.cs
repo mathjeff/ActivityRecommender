@@ -953,9 +953,17 @@ namespace ActivityRecommendation
                 results.TypicalScoreError = this.shortTermScore_error;
 
                 // Compute how well the probability prediction does (weighting smaller probabilities more heavily)
-                // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
-                // scoreComponent = 0.5 * (-Math.Log(predictedProbability) + -Math.Log(1 - predictedProbability) - 2)
-                // 2 * scoreComponent + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
+                //
+                // We want to calculate the effective predictedProbability that would give us the value of participationPrediction_score.Mean that we have
+                //
+                // The formula by which we calculate participationPrediction_score.Mean is:
+                // participationPrediction_score.Mean = 0.5 * (-Math.Log(predictedProbability) + -actualIntensity / predictedProbability + -Math.Log(1 - predictedProbability) + (actualIntensity - 1) / (1 - predictedProbability))
+                //
+                // The question is, given a particular score mean, what value of predictedProbability would a rational model have to output to produce that score?
+                // Note that if a rational model outputs a certain value for predictedProbability, then it means that the value of actualIntensity will match that value, on average
+                // That gives us:
+                // participationPrediction_score.Mean = 0.5 * (-Math.Log(predictedProbability) + -Math.Log(1 - predictedProbability) - 2)
+                // 2 * participationPrediction_score.Mean + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
                 // 2 * this.participationPrediction_score.Mean + 2 = (-Math.Log(predictedProbability * (1 - predictedProbability)))
                 // predictedProbability * (1 - predictedProbability) = e ^ (-2 * this.participationPrediction_score.Mean - 2);
                 // X * X - X + e ^ (-2 * this.participationPrediction_score.Mean - 2) = 0

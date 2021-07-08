@@ -60,6 +60,8 @@ namespace ActivityRecommendation
                 "that there is also a choice named \"Solution\", which is another name for Category, to emphasize this.")
                 .AddLayout(new CreditsButtonBuilder(layoutStack)
                     .AddContribution(ActRecContributor.AARON_SMITH, new DateTime(2019, 8, 17), "Suggested that if Activity is the only valid choice then it should autopopulate")
+                    .AddContribution(ActRecContributor.DAGOBERT_RENOUF, new DateTime(2021, 06, 14), "Mentioned that it was difficult to determine how to create a new activity without " +
+                    "visual hierarchy among the elements on the screen")
                     .Build()
                 )
                 .Build();

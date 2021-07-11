@@ -12,7 +12,6 @@ namespace ActivityRecommendation
             this.ActivityDescriptor = activityDescriptor;
         }
         public ActivityDescriptor ActivityDescriptor;
-        public ActivityDescriptor BestActivityIfWeCanNoLongerLearn { get; set; } // what the best activity would be if we weren't going to learn anything from this suggestion
         public DateTime StartDate { get; set; }                 // the date that we want the user to start the activity
         public DateTime? EndDate { get; set; }                   // the date that we want the user to stop the activity
         public DateTime CreatedDate { get; set; }               // the date at which the suggestion was created
@@ -108,14 +107,6 @@ namespace ActivityRecommendation
                         return false;
                 }
                 return true;
-            }
-        }
-
-        public ActivityDescriptor BestActivityIfWeCanNoLongerLearn
-        {
-            get
-            {
-                return this.Children[0].BestActivityIfWeCanNoLongerLearn;
             }
         }
 

@@ -378,7 +378,9 @@ namespace ActivityRecommendation
                 // Use its short-term value as a minimum when considering other activities
                 this.EnsureCalculatedSuggestionValue(activityToBeat, request);
                 ratingsCache.futureEfficiencies[activityToBeat] = this.Get_OverallEfficiency_ParticipationEstimate(activityToBeat, when);
-                utilitiesCache.suggestionValues[activityToBeat] = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, double.MaxValue), when, "you asked for an activity at least as fun as this one");
+                Prediction prediction = new Prediction(activityToBeat, Distribution.MakeDistribution(0, 0, double.MaxValue), when, "you asked for an activity at least as fun as this one");
+                utilitiesCache.futureHappinessIfSuggested[activityToBeat] = prediction;
+                utilitiesCache.suggestionValues[activityToBeat] = prediction;
                 if (candidates.Contains(activityToBeat))
                 {
                     candidates.Remove(activityToBeat);
@@ -398,7 +400,6 @@ namespace ActivityRecommendation
 
                 // estimate how good it is for us to suggest this particular activity
                 this.EnsureCalculatedSuggestionValue(candidate, request);
-                Distribution currentRating = utilitiesCache.suggestionValues[candidate].Distribution;
                 bool better = false;
                 if (request.Optimize == ActivityRequestOptimizationProperty.LONGTERM_EFFICIENCY)
                 {
@@ -478,24 +479,11 @@ namespace ActivityRecommendation
 
             if (bestActivity == null)
                 return null;
-            StatList<double, Activity> bestActivitiesToPairWith = new StatList<double, Activity>(new ReverseDoubleComparer(), new NoopCombiner<Activity>());
-            foreach (Activity candidate in consideredCandidates)
-            {
-                double currentScore = this.GetCombinedValue(bestActivity, candidate, utilitiesCache).Mean;
-                bestActivitiesToPairWith.Add(currentScore, candidate);
-            }
-            int availableCount = bestActivitiesToPairWith.NumItems;
-            int returnCount = Math.Min(1, availableCount);
-            List<Activity> resultActivities = new List<Activity>();
-            foreach (ListItemStats<double, Activity> result in bestActivitiesToPairWith.ItemsBetweenIndices(0, returnCount))
-            {
-                resultActivities.Add(result.Value);
-            }
             // System.Diagnostics.Debug.WriteLine("bestActivity = " + bestActivity + ", suggesting " + bestActivityToPairWith);
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
             // If there was no such pair, then we just want to choose the best activity because no others could help
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
-            return this.SuggestMultipleActivityOptions(resultActivities, bestActivity, request, consideredCandidates.Count, true);
+            return this.SuggestMultipleActivityOptions(new List<Activity>() { bestActivity }, request, consideredCandidates.Count, true);
         }
         // identifies the Justification that had the largest positive impact on the suggestion value for this activity at this time
         private Justification getMostSignificantJustification(Activity activity, ActivityRequest request)
@@ -519,21 +507,20 @@ namespace ActivityRecommendation
 
             return bestReason;
         }
-        private ActivitiesSuggestion SuggestMultipleActivityOptions(List<Activity> bestActivities, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
+        private ActivitiesSuggestion SuggestMultipleActivityOptions(List<Activity> bestActivities, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
         {
             List<ActivitySuggestion> children = new List<ActivitySuggestion>();
             foreach (Activity activity in bestActivities)
             {
-                children.Add(this.SuggestOneActivity(activity, bestActivityIfWeCanNoLongerLearn, request, numActivitiesConsidered, tryComputeExpectedFeedback));
+                children.Add(this.SuggestOneActivity(activity, request, numActivitiesConsidered, tryComputeExpectedFeedback));
             }
             return new ActivitiesSuggestion(children);
         }
-        private ActivitySuggestion SuggestOneActivity(Activity activity, Activity bestActivityIfWeCanNoLongerLearn, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
+        private ActivitySuggestion SuggestOneActivity(Activity activity, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
         {
             DateTime when = request.Date;
             DateTime now = DateTime.Now;
             ActivitySuggestion suggestion = new ActivitySuggestion(activity.MakeDescriptor());
-            suggestion.BestActivityIfWeCanNoLongerLearn = bestActivityIfWeCanNoLongerLearn.MakeDescriptor();
             suggestion.CreatedDate = now;
             suggestion.StartDate = when;
             suggestion.NumActivitiesConsidered = numActivitiesConsidered;
@@ -626,90 +613,6 @@ namespace ActivityRecommendation
             TimeSpan randomIdleTime = TimeSpan.FromSeconds(randomSeconds);
             return latestParticipationEnd.Add(randomIdleTime);
         }
-        // This function essentially addresses the well-known multi-armed bandit problem
-        // Given two distributions, we estimate the expected total value from choosing values from them
-        private Distribution GetCombinedValue(Activity activityA, Activity activityB, UtilitiesAnalysis recommendationsCache)
-        {
-            Distribution a = recommendationsCache.suggestionValues[activityA].Distribution;
-            if (activityA == activityB)
-            {
-                // If the two activities are the same, then their values can't vary independently
-                return a;
-            }
-            Distribution b = recommendationsCache.suggestionValues[activityB].Distribution;
-            TimeSpan interval1 = activityA.AverageTimeBetweenConsiderations;
-            TimeSpan interval2 = activityB.AverageTimeBetweenConsiderations;
-            // Convert to BinomialDistribution
-            BinomialDistribution distribution1 = new BinomialDistribution((1 - a.Mean) * a.Weight, a.Mean * a.Weight);
-            BinomialDistribution distribution2 = new BinomialDistribution((1 - b.Mean) * b.Weight, b.Mean * b.Weight);
-
-            // We weight our time exponentially, estimating that it takes two years for our time to double            
-            // Here are the scales by which the importances are expected to multiply every time we consider these activities
-            TimeSpan halfLife = this.Get_UserPreferences().HalfLife;
-            double scale1 = Math.Pow(0.5, (interval1.TotalSeconds / halfLife.TotalSeconds));
-            double scale2 = Math.Pow(0.5, (interval2.TotalSeconds / halfLife.TotalSeconds));
-
-            // For now we just do a brief brute-force analysis
-            return this.GetCombinedValue(distribution1, scale1, distribution2, scale2, 4);
-        }
-        // This function essentially addresses the multi-armed bandit problem
-        // Given two distributions, we estimate the expected total value from choosing values from them
-        // distributionA is the previously viewed values for option A
-        // weightScaleA is a multiplier about how much we care about the results of the next iteration
-        // We also assume here that each distribution is a binomial distribution
-        private Distribution GetCombinedValue(BinomialDistribution distributionA, double weightScaleA, BinomialDistribution distributionB, double weightScaleB, int numIterations)
-        {
-            // For now we just do a brief brute-force analysis
-            if (numIterations <= 0)
-            {
-                // simply choose the better activity and be done with it
-                if (distributionA.Mean > distributionB.Mean)
-                    return Distribution.MakeDistribution(distributionA.Mean, 0, 1);
-                else
-                    return Distribution.MakeDistribution(distributionB.Mean, 0, 1);
-            }
-            numIterations--;
-            // We can choose A or B. Consider both and choose the better option
-            BinomialDistribution luckyA = new BinomialDistribution(distributionA);
-            BinomialDistribution unluckyA = new BinomialDistribution(distributionA);
-            luckyA.NumOnes++;
-            unluckyA.NumZeros++;
-            BinomialDistribution luckyB = new BinomialDistribution(distributionB);
-            BinomialDistribution unluckyB = new BinomialDistribution(distributionB);
-            luckyB.NumOnes++;
-            unluckyB.NumZeros++;
-            // TODO: use Dynamic Programming to make this require O(n^2) time steps rather than O(4^n)
-            Distribution luckyScoreA = GetCombinedValue(luckyA, weightScaleA, distributionB, weightScaleB, numIterations);
-            Distribution unluckyScoreA = GetCombinedValue(unluckyA, weightScaleA, distributionB, weightScaleB, numIterations);
-            Distribution scoreA = luckyScoreA.CopyAndReweightBy(distributionA.Mean).Plus(unluckyScoreA.CopyAndReweightBy(1 - distributionA.Mean));
-            Distribution luckyScoreB = GetCombinedValue(distributionA, weightScaleA, luckyB, weightScaleB, numIterations);
-            Distribution unluckyScoreB = GetCombinedValue(distributionA, weightScaleA, unluckyB, weightScaleB, numIterations);
-            Distribution scoreB = luckyScoreB.CopyAndReweightBy(distributionB.Mean).Plus(unluckyScoreB.CopyAndReweightBy(1 - distributionB.Mean));
-
-            Distribution overallScoreA, overallScoreB;
-
-            {
-                // calculate overall score if choosing option A
-                Distribution earlyScore = Distribution.MakeDistribution(distributionA.Mean, 0, 1);
-                Distribution lateScore = scoreA;
-                double lateWeight = weightScaleA;
-                double earlyWeight = 1 - lateWeight;
-                overallScoreA = earlyScore.CopyAndReweightBy(earlyWeight).Plus(lateScore.CopyAndReweightBy(lateWeight));
-            }
-            {
-                // calculate overall score if choosing option B
-                Distribution earlyScore = Distribution.MakeDistribution(distributionB.Mean, 0, 1);
-                Distribution lateScore = scoreB;
-                double lateWeight = weightScaleB;
-                double earlyWeight = 1 - lateWeight;
-                overallScoreB = earlyScore.CopyAndReweightBy(earlyWeight).Plus(lateScore.CopyAndReweightBy(lateWeight));
-            }
-
-            if (overallScoreA.Mean > overallScoreB.Mean)
-                return overallScoreA;
-            else
-                return overallScoreB;
-        }
 
         // update the estimate of what rating the user would give to this activity now
         public Prediction EstimateRating(Activity activity, DateTime when)
@@ -779,11 +682,11 @@ namespace ActivityRecommendation
         }
 
         // recompute the estime of how good it would be to suggest this activity now
-        public Prediction EstimateSuggestionValue(Activity activity, ActivityRequest request)
+        public Prediction EstimateFutureHappinessIfSuggested(Activity activity, ActivityRequest request)
         {
             this.EnsureRatingsAreAssociated();
             this.EnsureCalculatedSuggestionValue(activity, request);
-            return this.currentUtilitiesCache.suggestionValues[activity];
+            return this.currentUtilitiesCache.futureHappinessIfSuggested[activity];
         }
 
         // update the estimate of how good it would be to suggest this activity now, unless the computation is already up-to-date
@@ -794,8 +697,35 @@ namespace ActivityRecommendation
 
             if (!recommendationsCache.suggestionValues.ContainsKey(activity))
             {
-                Prediction suggestionPrediction = this.Get_OverallHappiness_SuggestionEstimate(activity, request);
-                recommendationsCache.suggestionValues[activity] = suggestionPrediction;
+                // First we calculate how happy we expect the user to be after we suggest this activity
+                DateTime when = request.Date;
+                Prediction happinessPrediction = this.Get_OverallHappiness_SuggestionEstimate(activity, request);
+                recommendationsCache.futureHappinessIfSuggested[activity] = happinessPrediction;
+                Distribution happinessDistribution = happinessPrediction.Distribution;
+
+                // Next we incorporate the possibility of learning something about the user and calculate a score about how good it would be to suggest this activity
+
+                // The longer it has been since the user thought about this activity, the more that we can learn by suggesting this activity
+                DateTime lastInteracted = activity.LatestInteractionDate;
+                double idleSeconds = when.Subtract(lastInteracted).TotalSeconds;
+                double idlenessWeight = this.weightedRatingSummarizer.getWeightInDuration(idleSeconds);
+
+                double predictionMean = happinessDistribution.Mean;
+                double predictionUncertainty = happinessDistribution.StdDev;
+                Distribution suggestionValue = Distribution.MakeDistribution(predictionMean + predictionUncertainty * idlenessWeight / Math.Sqrt(activity.NumConsiderations + 1), happinessDistribution.StdDev, happinessDistribution.Weight);
+                LabeledDistributionJustification justification = new LabeledDistributionJustification(suggestionValue, "Increased the score to discover whether this could be better than expected");
+
+
+                Composite_SuggestionJustification compositeJustification = new Composite_SuggestionJustification(suggestionValue,
+                    new List<Justification>() {
+                        happinessPrediction.Justification,
+                        justification,
+                        new LabeledDistributionJustification(Distribution.MakeDistribution(idleSeconds, 0, 1), "You last considered this on " + lastInteracted),
+                        new LabeledDistributionJustification(Distribution.MakeDistribution(activity.NumConsiderations, 0, 1), "How many times you have considered this")
+                    });
+                compositeJustification.Label = "How good I think it is to suggest this";
+
+                recommendationsCache.suggestionValues[activity] = new Prediction(activity, suggestionValue, when, compositeJustification);
             }
         }
 
@@ -1012,8 +942,8 @@ namespace ActivityRecommendation
         {
             List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, request);
             Prediction prediction = this.CombineRatingPredictions(predictions);
-            // We don't allow a weight of < 1 because in GetCombinedValue we will be adding a 0 or a 1 and checking the mean of the new distribution
-            prediction.Distribution = prediction.Distribution.CopyAndReweightTo(prediction.Distribution.Weight + 1);
+            prediction.Distribution = prediction.Distribution.CopyAndReweightTo(prediction.Distribution.Weight);
+            prediction.Justification.Label = "How happy I expect you to be after " + activity.Name + " is suggested";
             return prediction;
         }
 
@@ -1032,56 +962,20 @@ namespace ActivityRecommendation
             // get the happiness values computed for the suggested activity
             // which activity we suggested
             Activity activity = this.ActivityDatabase.ResolveDescriptor(activitySuggestion.ActivityDescriptor);
-            // which activity would have been best if we only had time for 1 suggestion and no learning
-            Activity bestActivityIfWeCanNoLongerLearn = this.activityDatabase.ResolveDescriptor(activitySuggestion.BestActivityIfWeCanNoLongerLearn);
             // when we made the suggestion
             DateTime when = this.currentUtilitiesCache.ApplicableDate;
             ActivityRequest request = new ActivityRequest(activity, null, when);
             request.NumAcceptancesPerParticipation = this.currentUtilitiesCache.NumAcceptancesPerParticipation;
-            // what we thought about the suggested activity
-            List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, request);
+
             // how good we thought it was to suggest this activity
-            Distribution ourValue = this.EstimateSuggestionValue(activity, request).Distribution;
-            // convert <predictions> to a List<Justification>
-            List<Justification> clauses = new List<Justification>(predictions.Count);
-            foreach (Prediction contributor in predictions)
-            {
-                clauses.Add(contributor.Justification);
-            }
-            // build a justification for the value of the suggested activity
-            Composite_SuggestionJustification ourExplanation = new Composite_SuggestionJustification(ourValue, clauses);
-            ActivitySuggestion_Explanation combinedExplanation = new ActivitySuggestion_Explanation();
-            combinedExplanation.Score = this.currentRatingsCache.ratings[activity].Distribution.Mean;
-            combinedExplanation.Suggestion = activitySuggestion;
-            if (bestActivityIfWeCanNoLongerLearn != activity)
-            {
-                // get the happiness values computed for the other activity, the best activity if we were no longer able to learn
-                Distribution theirValue = this.EstimateSuggestionValue(bestActivityIfWeCanNoLongerLearn, request).Distribution;
-                LabeledDistributionJustification theirExplanation = new LabeledDistributionJustification(theirValue, "How happy I expect you to be after I suggest " +
-                    bestActivityIfWeCanNoLongerLearn.Name + " (currently expected best activity)");
-
-                // The reason we suggested this activity was not because we have evidence that suggesting it will make the user happy, but rather:
-                // we don't have much information about this activity and we think it could be valuable to learn about it.
-                ourExplanation.Label = "How happy I expect you to be after I suggest " + activity.Name + " (checking whether it could be better)";
-
-                // get the happiness value for the result of the two activities, taking into account the opportunity to learn
-                Distribution combinedValue = this.GetCombinedValue(activity, bestActivityIfWeCanNoLongerLearn, this.utilitiesCacheFor(request));
-
-                // combine all of the above into an ActivitySuggestion_Explanation
-                combinedExplanation.Reasons = new List<Justification>() { theirExplanation, ourExplanation };
-                combinedExplanation.SuggestionValue = combinedValue.Mean;
-
-                return combinedExplanation;
-            }
-            else
-            {
-                // The reason we suggested this activity was because our data indicates it was the most appropriate to suggest.
-                ourExplanation.Label = "How happy I expect you to be after I suggest " + activity.Name;
-                combinedExplanation.Reasons = new List<Justification>() { ourExplanation, };
-                combinedExplanation.SuggestionValue = ourValue.Mean;
-                return combinedExplanation;
-            }
-
+            this.EstimateFutureHappinessIfSuggested(activity, request);
+            Prediction ourValue = this.currentUtilitiesCache.suggestionValues[activity];
+            ActivitySuggestion_Explanation explanation = new ActivitySuggestion_Explanation();
+            explanation.Score = this.currentRatingsCache.ratings[activity].Distribution.Mean;
+            explanation.Suggestion = activitySuggestion;
+            explanation.SuggestionValue = ourValue.Distribution.Mean;
+            explanation.Reasons = new List<Justification>() { ourValue.Justification };
+            return explanation;
         }
         public Prediction CombineRatingPredictions(IEnumerable<Prediction> predictions)
         {
@@ -1585,8 +1479,8 @@ namespace ActivityRecommendation
             Activity thisActivity = this.activityDatabase.ResolveDescriptor(activity);
             Activity otherActivity = this.activityDatabase.ResolveDescriptor(activity);
             ActivityRequest request = new ActivityRequest(when);
-            this.EstimateSuggestionValue(thisActivity, request);
-            this.EstimateSuggestionValue(otherActivity, request);
+            this.EstimateFutureHappinessIfSuggested(thisActivity, request);
+            this.EstimateFutureHappinessIfSuggested(otherActivity, request);
             this.MakeRecommendation(when);
 
             // make an AbsoluteRating for the Activity (leave out date + activity because it's implied)
@@ -2095,7 +1989,6 @@ namespace ActivityRecommendation
 
             ActivitiesSuggestion activitySuggestion = this.MakeRecommendation(request);
             Activity bestActivity = this.activityDatabase.ResolveDescriptor(activitySuggestion.Children[0].ActivityDescriptor);
-            Activity bestActivityIfNoLearning = this.activityDatabase.ResolveDescriptor(activitySuggestion.BestActivityIfWeCanNoLongerLearn);
 
             // chose a random metric for this activity
             List<Metric> metrics = new List<Metric>();
@@ -2122,7 +2015,7 @@ namespace ActivityRecommendation
             plannedMetric.MetricName = metric.Name;
 
             bool userGuidedThisSuggestion = fromCategory != null;
-            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestOneActivity(bestActivity, bestActivityIfNoLearning,  request, numActivitiesToChooseFromNow, false), userGuidedThisSuggestion), -1);
+            return new SuggestedMetric_Metadata(new SuggestedMetric(plannedMetric, this.SuggestOneActivity(bestActivity, request, numActivitiesToChooseFromNow, false), userGuidedThisSuggestion), -1);
         }
 
         // Generates a set of experiment options that together form a possible experiment
@@ -2343,7 +2236,7 @@ namespace ActivityRecommendation
         {
             ActivityRequest request = new ActivityRequest(startDate);
             Activity rootActivity = this.ActivityDatabase.RootActivity;
-            this.EstimateSuggestionValue(chosenActivity, request);
+            this.EstimateFutureHappinessIfSuggested(chosenActivity, request);
             Prediction prediction = this.EstimateRating(chosenActivity, startDate);
             return this.compute_estimatedRating_ratio(prediction.Distribution, rootActivity.Ratings);
         }

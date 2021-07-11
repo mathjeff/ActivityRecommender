@@ -802,7 +802,7 @@ namespace ActivityRecommendation
             ActivityRequest request = new ActivityRequest(when);
             // compute estimated score
             Activity activity = this.activityDatabase.ResolveDescriptor(rating.ActivityDescriptor);
-            this.engine.EstimateSuggestionValue(activity, request);
+            this.engine.EstimateFutureHappinessIfSuggested(activity, request);
             Prediction prediction = this.engine.EstimateRating(activity, when);
             double expectedRating = prediction.Distribution.Mean;
 
@@ -829,7 +829,7 @@ namespace ActivityRecommendation
         {
             ActivityRequest request = new ActivityRequest(when);
             Activity activity = this.activityDatabase.ResolveDescriptor(descriptor);
-            Prediction predictionForSuggestion = this.engine.EstimateSuggestionValue(activity, request);
+            Prediction predictionForSuggestion = this.engine.EstimateFutureHappinessIfSuggested(activity, request);
 
             if (predictionForSuggestion.Distribution.Weight > 0)
             {

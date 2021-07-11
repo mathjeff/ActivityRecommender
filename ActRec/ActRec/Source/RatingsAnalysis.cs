@@ -40,7 +40,9 @@ namespace ActivityRecommendation
         // A prediction for the user's short-term happiness if this activity is suggested
         // Basically this is the rating, except slightly lower based on the participation probability and typical thinking time
         public Dictionary<Activity, double> utilities = new Dictionary<Activity, double>();
-        // the importance of suggesting the activity
+        // how happy the user should be if we suggest this activitythe importance of suggesting the activity
+        public Dictionary<Activity, Prediction> futureHappinessIfSuggested = new Dictionary<Activity, Prediction>();
+        // how important it is to suggest this activity
         public Dictionary<Activity, Prediction> suggestionValues = new Dictionary<Activity, Prediction>();
     }
 

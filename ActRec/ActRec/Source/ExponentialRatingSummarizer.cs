@@ -41,9 +41,17 @@ namespace ActivityRecommendation
             return this.getWeightAfterDuration(startDate.Subtract(this.firstDate));
         }
         // returns the amount of weight that occurs after the given duration divided by the total amount of weight
-        private double getWeightAfterDuration(TimeSpan duration)
+        public double getWeightAfterDuration(TimeSpan duration)
         {
             return Math.Pow(2, -duration.TotalSeconds / this.halfLife.TotalSeconds);
+        }
+        public double getWeightAfterDuration(double numSeconds)
+        {
+            return Math.Pow(2, -numSeconds / this.halfLife.TotalSeconds);
+        }
+        public double getWeightInDuration(double numSeconds)
+        {
+            return 1 - this.getWeightAfterDuration(numSeconds);
         }
         private TimeSpan halfLife;
     }

@@ -846,24 +846,30 @@ namespace ActivityRecommendation
             List<Activity> allActivities = this.getActivitiesForLongtermInterpolation();
 
             // Collect all of the coordinates
+            List<LazyInputs> inputs = new List<LazyInputs>();
             // Note that even enumerating all of the coordinates takes too much memory, so we provide a few lazy getters that each know how to get lots of different coordinates
             List<LazyCoordinate> coordinates = new List<LazyCoordinate>();
+
             // How long it has been since a reference date
             coordinates.Add(new LazyProgressionValue(when, TimeProgression.AbsoluteTime));
             // How long it has been since the day started
             coordinates.Add(new LazyProgressionValue(when, TimeProgression.DayCycle));
-            LazyInputs independentInputs = new LazyInputList(coordinates);
-            // How long it has been since the user did any particular activity
-            LazyInputs idlenessInputs = new IdlenessInputs(when, participated, allActivities);
-            // How much the user has been doing each particular activity recently
-            LazyInputs participationInputs = new ParticipationInputs(when, participated, allActivities);
-            // The relative frequencies of Participations and Skips in each particular activity
-            LazyInputs considerationInputs = new ConsiderationInputs(when, participated, null, allActivities);
+            inputs.Add(new LazyInputList(coordinates));
+
+            // How long it has been since the user considered this activity
+            inputs.Add(new IdlenessInputs(when, considered));
+
             // The identities of the activity the user participated in
-            LazyInputs memberOf_inputs = new ActivityInList_Inputs(considered, allActivities);
+            inputs.Add(new ActivityInList_Inputs(considered, allActivities));
+
+            // How much the user has been doing each particular activity recently
+            inputs.Add(new ParticipationInputs(when, participated, allActivities));
+
+            // The relative frequencies of Participations and Skips in each particular activity
+            inputs.Add(new ConsiderationInputs(when, participated, null, allActivities));
 
             // all of these coordinates, combined
-            return new ConcatInputs(new List<LazyInputs>() { independentInputs, memberOf_inputs, participationInputs, considerationInputs, idlenessInputs, });
+            return new ConcatInputs(inputs);
         }
 
 

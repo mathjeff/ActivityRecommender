@@ -703,6 +703,15 @@ Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1039 (0.1957 * aver
 Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
 Means.MeanErr: 0.6512 (5 days), StdDevs.MeanErr: 0.5824 (4 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:29.8333621
+
+updated results on 2021-07-11 after interpolating based on how long ago the user considered specifically this activity rather than each activity
+Means.MeanErr: 0.0328 (24 days), StdDevs.MeanErr: 0.0273 (20 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0316 (23 days), StdDevs.MeanErr: 0.0299 (22 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1039 (0.1957 * average), score
+0.9472,                                         equivalentWeightedProbability
+Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
+Means.MeanErr: 0.653 (5 days), StdDevs.MeanErr: 0.5701 (4 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:29.2661034
 */
 
 namespace ActivityRecommendation

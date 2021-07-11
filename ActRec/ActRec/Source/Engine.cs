@@ -889,34 +889,35 @@ namespace ActivityRecommendation
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, request.Date);
 
-            List<Distribution> distributions = new List<Distribution>();
+            List<Prediction> predictions = new List<Prediction>();
 
             // When there is little data, we focus on the fact that doing the activity will probably be as good as doing that activity (or its parent activities)
             // When there is a medium amount of data, we focus on the fact that doing the activity will probably make the user as happy as having done the activity in the past
 
             Prediction shortTerm_prediction = this.CombineRatingPredictions(activity.Get_ShortTerm_RatingEstimates(when));
+            shortTerm_prediction.Justification.Label = "How happy I expect you to be while doing " + activity.Name;
             double shortWeight = Math.Pow(activity.NumParticipations + 1, 0.5);
             shortTerm_prediction.Distribution = shortTerm_prediction.Distribution.CopyAndReweightTo(shortWeight);
-            distributions.Add(shortTerm_prediction.Distribution);
+            predictions.Add(shortTerm_prediction);
 
             double mediumWeight = activity.NumParticipations;
             Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participated(activity, when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
-            distributions.Add(mediumTerm_distribution);
+            predictions.Add(new Prediction(activity, mediumTerm_distribution, when, new InterpolatorSuggestion_Justification(activity, mediumTerm_distribution, null)));
 
             if (activity.NumParticipations < 40)
             {
                 // before we have much data, we predict that the happiness after doing this activity resembles that after doing its parent activities
                 foreach (Activity parent in activity.ParentsUsedForPrediction)
                 {
-                    Distribution parentDistribution = this.Get_OverallHappiness_ParticipationEstimate(parent, request).Distribution.CopyAndReweightTo(8);
-                    distributions.Add(parentDistribution);
+                    Prediction parentPrediction = this.Get_OverallHappiness_ParticipationEstimate(parent, request);
+                    parentPrediction.Distribution = parentPrediction.Distribution.CopyAndReweightTo(8);
+                    predictions.Add(parentPrediction);
                 }
             }
 
-            Distribution distribution = this.CombineRatingDistributions(distributions);
-            Prediction prediction = shortTerm_prediction;
-            prediction.Distribution = distribution;
+            Prediction prediction = this.CombineRatingPredictions(predictions);
+            prediction.Justification.Label = "How happy I expect you to be after doing " + activity.Name;
 
             return prediction;
         }
@@ -987,11 +988,21 @@ namespace ActivityRecommendation
             Prediction participationPrediction = this.Get_OverallHappiness_ParticipationEstimate(activity, request);
 
             // Estimate how happy the user will be as a result of the possibility of doing this
-            // If we suggest an activirty, then the user might do it. When the user does it, we give feedback. If we expected the user to take our suggestion and they do take it, then
+            // If we suggest an activity, then the user might do it. When the user does it, we give feedback. If we expected the user to take our suggestion and they do take it, then
             // we want our feedback to be positive. So, when participation probability is high, this estimate should be a large fraction of the overall estimate.
-            participationPrediction.Distribution = participationPrediction.Distribution.CopyAndReweightTo(longTerm_distribution.Weight * participationProbability);
+            Distribution futureHappinessIfParticipated = participationPrediction.Distribution;
+            Distribution weightedFutureHappinessIfPredicted = futureHappinessIfParticipated.CopyAndReweightBy(participationProbability);
+            // Calculate how happy the user would be if they skipped this a bunch of times and then did it
+            Distribution futureHappinessFromParticipationOrSkips = this.RatingAndProbability_Into_Value(weightedFutureHappinessIfPredicted, participationProbability, UserPreferences.DefaultPreferences.HalfLife.TotalSeconds, request.NumAcceptancesPerParticipation);
+            // Calculate how happy the user would be if they had a certain probability to either do this once or skip it once
+            Distribution futureHappinessFromParticipationOrSkip = futureHappinessFromParticipationOrSkips.CopyAndReweightBy(participationProbability);
 
-            predictions.Add(participationPrediction);
+            // explain how we calculated the future happiness based on whether the user does this activity or not
+            Composite_SuggestionJustification participationFuture_justification = new Composite_SuggestionJustification(futureHappinessFromParticipationOrSkip, participationPrediction.Justification, probabilityPrediction.Justification);
+            participationFuture_justification.Label = "How happy I expect you to be as a result of doing or skipping " + activity.Name;
+            Prediction predictionFromParticipationOrSkip = new Prediction(activity, futureHappinessFromParticipationOrSkip, when, participationFuture_justification);
+
+            predictions.Add(predictionFromParticipationOrSkip);
             predictions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
 
             return predictions;

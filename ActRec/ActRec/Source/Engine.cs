@@ -757,11 +757,6 @@ namespace ActivityRecommendation
             // It's probably more accurate to assume that the user will make their own selection of an activity to do, but the user doesn't want us to model it like that
             // Because if we do model the possibility that the user will choose their own activity, then that can incentivize purposely bad suggestions to prompt the user to have to think of something
             double skipProbability = 1 - suggestedParticipation_probability;
-            // double skipProbability = (1 - suggestedParticipation_probability) * (double)(this.numSkips + 1) / ((double)this.numSkips + (double)this.numUnpromptedParticipations + 2);
-            double nonsuggestedParticipation_probability = 1 - (suggestedParticipation_probability + skipProbability);
-
-            // Now compute the probability that the eventual selection will be a suggested activity (assuming that all activities are like this one)
-            double probabilitySuggested = suggestedParticipation_probability / (suggestedParticipation_probability + nonsuggestedParticipation_probability);
 
             // Now compute the expected amount of wasted time
             double estimatedNumFutureSkips;
@@ -776,10 +771,9 @@ namespace ActivityRecommendation
             // = -1 + 1 / (1 - (the probability that the user will skip the activity))
             // So the amount of waste is (the average length of a skip) * (-1 + 1 / (1 - (the probability that the user will skip the activity)))
 
-            Distribution valueWhenChosen = rating.CopyAndReweightTo(probabilitySuggested).Plus(this.ratingsOfUnpromptedActivities.CopyAndReweightTo(1 - probabilitySuggested));
             // reweight such that more rating data increases certainty, and more confidence in more skips will increases certainty too
             double weight = rating.Weight + estimatedNumFutureSkips;
-            Distribution overallValue = valueWhenChosen.CopyAndReweightTo(meanParticipationDuration).Plus(Distribution.MakeDistribution(0, 0, averageWastedSecondsPerParticipation)).CopyAndReweightTo(weight);
+            Distribution overallValue = rating.CopyAndReweightTo(meanParticipationDuration).Plus(Distribution.MakeDistribution(0, 0, averageWastedSecondsPerParticipation)).CopyAndReweightTo(weight);
 
             return overallValue;
         }
@@ -854,10 +848,9 @@ namespace ActivityRecommendation
             coordinates.Add(new LazyProgressionValue(when, TimeProgression.AbsoluteTime));
             // How long it has been since the day started
             coordinates.Add(new LazyProgressionValue(when, TimeProgression.DayCycle));
-            inputs.Add(new LazyInputList(coordinates));
-
             // How long it has been since the user considered this activity
-            inputs.Add(new IdlenessInputs(when, considered));
+            coordinates.Add(new LazyProgressionValue(when, considered.IdlenessProgression));
+            inputs.Add(new LazyInputList(coordinates));
 
             // The identities of the activity the user participated in
             inputs.Add(new ActivityInList_Inputs(considered, allActivities));

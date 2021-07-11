@@ -86,24 +86,26 @@ namespace ActivityRecommendation
         {
             // find the most recent Participation
             ListItemStats<DateTime, Participation> previousStats = this.searchHelper.FindPreviousItem(when, strictlyEarlier);
+            DateTime previousEnd;
             // make sure that we have enough data
             if (previousStats == null)
             {
-                return null;
-                //ProgressionValue defaultValue = new ProgressionValue(when, new Distribution(), -1);
-                //return defaultValue;
+                previousEnd = this.Owner.DiscoveryDate;
             }
-            // figure out whether we're in the middle of a participation or not
-            Participation previousParticipation = previousStats.Value;
+            else
+            {
+                // figure out whether we're in the middle of a participation or not
+                Participation previousParticipation = previousStats.Value;
+                previousEnd = previousParticipation.EndDate;
+            }
             //int index = 2 * this.searchHelper.CountBeforeKey(when, !strictlyEarlier);
-            if (previousParticipation.EndDate.CompareTo(when) > 0)
+            if (previousEnd.CompareTo(when) > 0)
             {
                 // we're in the middle of a participation, so the value is zero
-                //index++;
                 return new ProgressionValue(when, new Distribution(0, 0, 1));
             }
             // we're not in the middle of a participation, so the value is the amount of time since the last one ended
-            TimeSpan duration = when.Subtract(previousParticipation.EndDate);
+            TimeSpan duration = when.Subtract(previousEnd);
             Distribution currentValue = Distribution.MakeDistribution(duration.TotalSeconds, 0, 1);
             ProgressionValue result = new ProgressionValue(when, currentValue);
             return result;

@@ -710,8 +710,8 @@ Means.MeanErr: 0.0316 (23 days), StdDevs.MeanErr: 0.0299 (22 days), longtermHapp
 Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1039 (0.1957 * average), score
 0.9472,                                         equivalentWeightedProbability
 Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
-Means.MeanErr: 0.653 (5 days), StdDevs.MeanErr: 0.5701 (4 days), longtermEfficiencyIfParticipated
-EngineTester completed in 00:02:29.2661034
+Means.MeanErr: 0.6524 (5 days), StdDevs.MeanErr: 0.5704 (4 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:28.7317889
 */
 
 namespace ActivityRecommendation

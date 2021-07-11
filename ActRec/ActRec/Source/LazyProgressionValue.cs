@@ -15,7 +15,7 @@ namespace ActivityRecommendation
 
         public double GetCoordinate()
         {
-            return this.progression.GetValueAt(when, false).Value.Mean;
+            return this.progression.GetValueAt(when, true).Value.Mean;
         }
         public string GetDescription()
         {

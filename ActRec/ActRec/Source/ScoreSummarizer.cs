@@ -14,7 +14,10 @@ namespace ActivityRecommendation
         public ScoreSummarizer()
         {
             this.valuesByDate = new StatList<DateTime,Distribution>(new DateComparer(), new DistributionAdder());
+            this.Description = "A Rating Summarizer";
         }
+        public string Description;
+
         // TODO: replace the StatList (which has key equal to a DateTime) with an NDFinder (which will have a 2d key: (index, date))
         // This will allow objects to say "I want all items that are after index x (which are the ones I don't yet have) and 
         //      after DateTime d (which are the ones I care about)"

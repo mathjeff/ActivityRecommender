@@ -729,9 +729,11 @@ namespace ActivityRecommendation
                 if (convertedRating != null)
                 {
                     convertedRating.AttemptToMatch(this.latestParticipationRead);
+                    currentParticipation.PutAndCompressRating(convertedRating);
                 }
             }
-            currentParticipation.RawRating = rating;
+            if (currentParticipation.RawRating == null)
+                currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
 

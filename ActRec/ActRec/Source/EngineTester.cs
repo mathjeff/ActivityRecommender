@@ -712,6 +712,15 @@ Means.MeanErr: 0.1394 (0.2626 * average), StdDevs.MeanErr: 0.1039 (0.1957 * aver
 Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
 Means.MeanErr: 0.6524 (5 days), StdDevs.MeanErr: 0.5704 (4 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:02:28.7317889
+
+updated results on 2021-07-25 after including participation relative ratings that explicitly specify both participation names
+Means.MeanErr: 0.029 (21 days), StdDevs.MeanErr: 0.0246 (18 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0277 (20 days), StdDevs.MeanErr: 0.0264 (19 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1395 (0.2629 * average), StdDevs.MeanErr: 0.104 (0.1958 * average), score
+0.9472,                                         equivalentWeightedProbability
+Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
+Means.MeanErr: 0.6525 (5 days), StdDevs.MeanErr: 0.5704 (4 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:02:54.3086889
 */
 
 namespace ActivityRecommendation
@@ -721,7 +730,9 @@ namespace ActivityRecommendation
         public EngineTester()
         {
             this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.ratingSummarizer.Description = "EngineTester Score Summarizer";
             this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
+            this.efficiencySummarizer.Description = "EngineTester Efficiency Summarizer";
             this.executionStart = DateTime.Now;
         }
         public override AbsoluteRating ProcessRating(AbsoluteRating newRating)
@@ -932,16 +943,21 @@ namespace ActivityRecommendation
 
             foreach (Prediction prediction in predictions.Keys)
             {
-                ScoreSummary summary = predictions[prediction];
-                summary.Update(ratingSummarizer);
                 if (prediction.ApplicableDate.CompareTo(lastDateToInclude) > 0)
                 {
                     // When estimating the error of the predictions about the future of the past,
                     // skip any predictions that happened too recently for us to know much about their futures
                     continue;
                 }
+                ScoreSummary summary = predictions[prediction];
+                summary.Update(ratingSummarizer);
                 if (summary.Item.Weight > 0)
                 {
+                    double error = Math.Abs(prediction.Distribution.Mean - summary.Item.Mean);
+                    /*if (error > 0.4)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Surprisingly large error: predicted " + prediction.Distribution + ", true future " + summary.Item + " at " + prediction.ApplicableDate);
+                    }*/
                     result.Add(prediction.ApplicableDate, summary.Item.Mean, prediction.Distribution);
                 }
             }
@@ -1077,6 +1093,15 @@ namespace ActivityRecommendation
             {
                 throw new Exception("Prediction too small: " + prediction.Mean);
             }
+            if (correctValue > this.maxAllowedValue)
+            {
+                throw new Exception("True value too large: " + correctValue);
+            }
+            if (correctValue < this.minAllowedValue)
+            {
+                throw new Exception("True value too small: " + correctValue);
+            }
+
             this.errorsOfMeansSquared = this.errorsOfMeansSquared.Plus(Distribution.MakeDistribution(errorOfMean * errorOfMean, 0, 1));
 
             // update errorsOfStdDevsSquared

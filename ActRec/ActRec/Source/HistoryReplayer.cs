@@ -55,13 +55,13 @@ namespace ActivityRecommendation
                 this.engine.FullUpdate();
                 this.updatedAfterInheritances = true;
             }
-            this.PreviewParticipation(newParticipation);
             RelativeRating newRelativeRating = newParticipation.GetCompleteRating() as RelativeRating;
             if (newRelativeRating != null)
             {
                RelativeRating newRating = this.AddRating(newRelativeRating);
                newParticipation.PutAndCompressRating(newRating);
             }
+            this.PreviewParticipation(newParticipation);
 
             this.engine.PutParticipationInMemory(newParticipation);
             this.PostParticipation(newParticipation);

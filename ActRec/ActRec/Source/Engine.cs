@@ -31,7 +31,7 @@ namespace ActivityRecommendation
             this.thinkingTime = Distribution.MakeDistribution(60, 0, 1);      // default amount of time thinking about a suggestion is 1 minute
             this.ratingsOfUnpromptedActivities = Distribution.Zero;
 
-            this.longTerm_suggestionValue_interpolator = new LongtermValuePredictor(this.weightedRatingSummarizer);
+            this.longTerm_skipValue_interpolator = new LongtermValuePredictor(this.weightedRatingSummarizer);
             this.longTerm_participationValue_interpolator = new LongtermValuePredictor(this.weightedRatingSummarizer);
             this.longTerm_efficiency_interpolator = new LongtermValuePredictor(this.efficiencySummarizer);
         }
@@ -192,6 +192,7 @@ namespace ActivityRecommendation
                         parent.AddSkip(newSkip);
                     }
                 }
+                this.longTerm_skipValue_interpolator.AddDatapoint(newSkip.SuggestionCreationDate, this.getCoordinatesForSkip(newSkip.SuggestionCreationDate, activity));
             }
         }
         // assigns this ActivitySuggestion to each relevant activity
@@ -206,7 +207,6 @@ namespace ActivityRecommendation
                     parent.AddSuggestion(suggestion);
                 }
             }
-            this.longTerm_suggestionValue_interpolator.AddDatapoint(suggestion.CreatedDate, this.getCoordinatesForSuggestion(suggestion.CreatedDate, activity));
         }
         // performs Depth First Search to find all superCategories of the given Activity
         public List<Activity> FindAllSupercategoriesOf(Activity child)
@@ -485,28 +485,6 @@ namespace ActivityRecommendation
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
             return this.SuggestMultipleActivityOptions(new List<Activity>() { bestActivity }, request, consideredCandidates.Count, true);
         }
-        // identifies the Justification that had the largest positive impact on the suggestion value for this activity at this time
-        private Justification getMostSignificantJustification(Activity activity, ActivityRequest request)
-        {
-            List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, request);
-            double lowestScore = 1;
-            Justification bestReason = null;
-            foreach (Prediction candidate in predictions)
-            {
-                // make a list of all predictions except this one
-                List<Prediction> predictionsMinusOne = new List<Prediction>(predictions);
-                predictionsMinusOne.Remove(candidate);
-                Prediction prediction = this.CombineRatingPredictions(predictionsMinusOne);
-                Distribution scoreDistribution = prediction.Distribution;
-                if ((scoreDistribution.Mean < lowestScore) || (bestReason == null))
-                {
-                    lowestScore = scoreDistribution.Mean;
-                    bestReason = candidate.Justification;
-                }
-            }
-
-            return bestReason;
-        }
         private ActivitiesSuggestion SuggestMultipleActivityOptions(List<Activity> bestActivities, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
         {
             List<ActivitySuggestion> children = new List<ActivitySuggestion>();
@@ -577,7 +555,6 @@ namespace ActivityRecommendation
                 //  Maybe we could just compute the average happiness from the last ~1 month and use that as a baseline
                 suggestion.WorseThanRootActivity = true;
             }
-            suggestion.MostSignificantJustification = this.getMostSignificantJustification(activity, request);
             return suggestion;
         }
         public DateTime GuessParticipationEndDate(Activity activity, DateTime start)
@@ -754,10 +731,36 @@ namespace ActivityRecommendation
             return this.getCoordinatesForLongtermPrediction(when, participated, null);
         }
 
-        // gets the coordinates for predicting what the user's longterm happiness should be if we suggest to the user to do <activity> at <when>
-        private LazyInputs getCoordinatesForSuggestion(DateTime when, Activity suggested)
+        // gets the coordinates for predicting what the user's longterm happiness should be if we suggest to the user to do <activity> at <when> and they dismiss our suggestion
+        private LazyInputs getCoordinatesForSkip(DateTime when, Activity skipped)
         {
-            return this.getCoordinatesForLongtermPrediction(when, null, suggested);
+            // get all activities
+            List<Activity> allActivities = this.getActivitiesForLongtermInterpolation();
+
+            // Collect all of the coordinates
+            List<LazyInputs> inputs = new List<LazyInputs>();
+            // Note that even enumerating all of the coordinates takes too much memory, so we provide a few lazy getters that each know how to get lots of different coordinates
+            List<LazyCoordinate> coordinates = new List<LazyCoordinate>();
+
+            // How long it has been since a reference date
+            coordinates.Add(new LazyProgressionValue(when, TimeProgression.AbsoluteTime));
+            // How long it has been since the day started
+            coordinates.Add(new LazyProgressionValue(when, TimeProgression.DayCycle));
+            // How long it has been since the user considered this activity
+            coordinates.Add(new LazyProgressionValue(when, skipped.IdlenessProgression));
+            inputs.Add(new LazyInputList(coordinates));
+
+            // The identities of the activity the user participated in
+            inputs.Add(new ActivityInList_Inputs(skipped, allActivities));
+
+            // How much the user has been doing each particular activity recently
+            inputs.Add(new ParticipationInputs(when, null, allActivities));
+
+            // The relative frequencies of Participations and Skips in each particular activity
+            inputs.Add(new ConsiderationInputs(when, null, null, allActivities));
+
+            // all of these coordinates, combined
+            return new ConcatInputs(inputs);
         }
 
         // helper function for getCoordinatesForParticipation and getCoordinatesForSuggestion
@@ -881,34 +884,22 @@ namespace ActivityRecommendation
             return bonusInDays;
         }
 
-        private Distribution interpolate_longtermValue_if_suggested(Activity activity, DateTime when)
+        private Distribution interpolate_longtermValue_if_skipped(Activity activity, DateTime when)
         {
-            LazyInputs inputs = this.getCoordinatesForSuggestion(when, activity);
+            LazyInputs inputs = this.getCoordinatesForSkip(when, activity);
             Distribution defaultPrediction = Distribution.MakeDistribution(0.5, 0.125, 2);
-            Distribution interpolation = new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs));
+            Distribution interpolation = new Distribution(this.longTerm_skipValue_interpolator.Interpolate(inputs));
             Distribution result = interpolation.Plus(defaultPrediction);
             return result;
         }
 
-        private Distribution get_averageValue_if_suggested(Activity activity, DateTime when)
-        {
-            LazyInputs inputs = this.getCoordinatesForSuggestion(when, activity);
-            return new Distribution(this.longTerm_suggestionValue_interpolator.Interpolate(inputs));
-        }
-
         // returns a Prediction of the value of suggesting the given activity at the given time
-        private List<Prediction> Get_OverallHappiness_SuggestionEstimates(Activity activity, ActivityRequest request)
+        private Prediction Get_OverallHappiness_SuggestionEstimate(Activity activity, ActivityRequest request)
         {
             DateTime when = request.Date;
             List<Prediction> predictions = new List<Prediction>();
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateUtility(activity, request);
-
-            // ask the interpolator how happy the user is after this is suggested
-            Distribution longTerm_distribution = this.interpolate_longtermValue_if_suggested(activity, when);
-            InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
-                activity, longTerm_distribution, null);
-            longtermJustification.Label = "How happy you have been after " + activity.Name + " is suggested";
 
             // Estimate participation probability
             Prediction probabilityPrediction = this.EstimateParticipationProbability(activity, request.Date);
@@ -916,31 +907,29 @@ namespace ActivityRecommendation
 
             // Estimate how happy the user will be if they do this
             Prediction participationPrediction = this.Get_OverallHappiness_ParticipationEstimate(activity, request);
+            // ask the interpolator how happy the user is after this is skipped
+            Distribution skippedDistribution = this.interpolate_longtermValue_if_skipped(activity, when);
+            // compute weights
+            double totalWeight = participationPrediction.Distribution.Weight * participationProbability + skippedDistribution.Weight * (1 - participationProbability);
+            double participationWeight = totalWeight * participationProbability;
+            double skipWeight = totalWeight - participationWeight;
 
-            // Estimate how happy the user will be as a result of the possibility of doing this
-            // If we suggest an activity, then the user might do it. When the user does it, we give feedback. If we expected the user to take our suggestion and they do take it, then
-            // we want our feedback to be positive. So, when participation probability is high, this estimate should be a large fraction of the overall estimate.
-            Distribution futureHappinessIfParticipated = participationPrediction.Distribution;
-            Distribution weightedFutureHappinessIfPredicted = futureHappinessIfParticipated.CopyAndReweightBy(participationProbability);
-            // Calculate how happy the user would be if they skipped this a bunch of times and then did it
-            Distribution futureHappinessFromParticipationOrSkips = this.RatingAndProbability_Into_Value(weightedFutureHappinessIfPredicted, participationProbability, UserPreferences.DefaultPreferences.HalfLife.TotalSeconds, request.NumAcceptancesPerParticipation);
-            // Calculate how happy the user would be if they had a certain probability to either do this once or skip it once
-            Distribution futureHappinessFromParticipationOrSkip = futureHappinessFromParticipationOrSkips.CopyAndReweightBy(participationProbability);
+            // create prediction for how happy the user will be after doing this
+            Distribution futureHappinessIfParticipated = participationPrediction.Distribution.CopyAndReweightTo(participationWeight);
+            InterpolatorSuggestion_Justification participationFuture_justification = new InterpolatorSuggestion_Justification(
+                activity, participationPrediction.Distribution, null
+            );
+            participationFuture_justification.Label = "How happy I expect you to be after doing " + activity.Name;
+            predictions.Add(new Prediction(activity, futureHappinessIfParticipated, when, participationFuture_justification));
 
-            // explain how we calculated the future happiness based on whether the user does this activity or not
-            Composite_SuggestionJustification participationFuture_justification = new Composite_SuggestionJustification(futureHappinessFromParticipationOrSkip, participationPrediction.Justification, probabilityPrediction.Justification);
-            participationFuture_justification.Label = "How happy I expect you to be as a result of doing or skipping " + activity.Name;
-            Prediction predictionFromParticipationOrSkip = new Prediction(activity, futureHappinessFromParticipationOrSkip, when, participationFuture_justification);
+            // create prediction for how happy the user will be after skipping this
+            Distribution futureHappinessIfSkipped = skippedDistribution.CopyAndReweightTo(skipWeight);
+            InterpolatorSuggestion_Justification longtermJustification = new InterpolatorSuggestion_Justification(
+                activity, futureHappinessIfSkipped, null);
+            longtermJustification.Label = "How happy you have been after skipping " + activity.Name;
+            predictions.Add(new Prediction(activity, futureHappinessIfSkipped, when, longtermJustification));
 
-            predictions.Add(predictionFromParticipationOrSkip);
-            predictions.Add(new Prediction(activity, longTerm_distribution, when, longtermJustification));
-
-            return predictions;
-        }
-
-        private Prediction Get_OverallHappiness_SuggestionEstimate(Activity activity, ActivityRequest request)
-        {
-            List<Prediction> predictions = this.Get_OverallHappiness_SuggestionEstimates(activity, request);
+            // combine all the components and return final result
             Prediction prediction = this.CombineRatingPredictions(predictions);
             prediction.Distribution = prediction.Distribution.CopyAndReweightTo(prediction.Distribution.Weight);
             prediction.Justification.Label = "How happy I expect you to be after " + activity.Name + " is suggested";
@@ -1215,7 +1204,7 @@ namespace ActivityRecommendation
         {
             if (numRatingsToUpdate > 0)
             {
-                this.longTerm_suggestionValue_interpolator.UpdateMany(numRatingsToUpdate);
+                this.longTerm_skipValue_interpolator.UpdateMany(numRatingsToUpdate);
                 this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
                 this.longTerm_efficiency_interpolator.UpdateMany(numRatingsToUpdate);
             }
@@ -3310,7 +3299,7 @@ namespace ActivityRecommendation
         RatingsAnalysis currentRatingsCache;
         UtilitiesAnalysis currentUtilitiesCache;
 
-        LongtermValuePredictor longTerm_suggestionValue_interpolator;
+        LongtermValuePredictor longTerm_skipValue_interpolator;
         LongtermValuePredictor longTerm_participationValue_interpolator;
         LongtermValuePredictor longTerm_efficiency_interpolator;
 

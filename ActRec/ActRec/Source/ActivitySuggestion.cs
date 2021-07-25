@@ -29,7 +29,6 @@ namespace ActivityRecommendation
         public double? ParticipationProbability { get; set; }
         public double? PredictedScoreDividedByAverage { get; set; }
         public bool WorseThanRootActivity { get; set; }
-        public Justification MostSignificantJustification { get; set; }
         // what we expect the engine's reaction to be if the user does this
         public string ExpectedReaction { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all

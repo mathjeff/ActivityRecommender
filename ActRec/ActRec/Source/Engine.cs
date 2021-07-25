@@ -1266,8 +1266,8 @@ namespace ActivityRecommendation
             activity.AddParticipation(newParticipation);
 
             this.weightedRatingSummarizer.AddParticipationIntensity(newParticipation.StartDate, newParticipation.EndDate, 1);
-            
-            Rating rating = newParticipation.GetCompleteRating();
+
+            Rating rating = newParticipation.Rating;
             if (rating != null)
             {
                 this.PutRatingInMemory(rating);

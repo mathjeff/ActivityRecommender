@@ -24,7 +24,6 @@ namespace ActivityRecommendation
             this.StartDate = startDate;
             this.EndDate = endDate;
             this.ActivityDescriptor = activityDescriptor;
-            this.RawRating = null;
             this.Hypothetical = false;
         }
 
@@ -107,15 +106,18 @@ namespace ActivityRecommendation
 
         
         // returns the exact rating that was given to this Participation
-        public Rating RawRating 
+        public Rating Rating 
         {
             get
             {
-                return this.rawRating;
+                return this.rating;
             }
             set
             {
-                this.rawRating = value;
+                Rating rating = value;
+                if (rating != null)
+                    rating.AttemptToMatch(this);
+                this.rating = rating;
             }
         }
         public void AddPostComment(ParticipationComment comment)
@@ -127,67 +129,65 @@ namespace ActivityRecommendation
             this.postComments.Add(comment);
         }
 
-        // returns a Rating with as much information filled in as possible based on the data in this participation
-        public Rating GetCompleteRating()
+        // returns the rating except removes some redundant data from it first
+        public Rating CompressedRating
         {
-            if (this.RawRating == null)
-                return null;
-            Rating completeRating = this.rawRating.MakeCopy();
-            completeRating.FillInFromParticipation(this);
-            return completeRating;
-        }
-        // Uses the given rawRating as the new RawRating except removes some redundant data from it first
-        public void PutAndCompressRating(RelativeRating rawRating)
-        {
-            RelativeRating dehydrated = new RelativeRating();
-            dehydrated.CopyFrom(rawRating);
-            // check whether the existing rating specifies any duplicate data
-            if (rawRating.BetterRating.ActivityDescriptor != null && rawRating.WorseRating.ActivityDescriptor != null)
+            get
             {
-                // rating specifies data that is redundant with the participation, so find and remove the duplicate data
-                bool betterMatchesThis = false;
-                if (this.ActivityDescriptor.CanMatch(rawRating.BetterRating.ActivityDescriptor))
+                RelativeRating relative = this.rating as RelativeRating;
+                if (relative == null)
+                    return this.rating;
+
+                RelativeRating dehydrated = new RelativeRating();
+                dehydrated.CopyFrom(relative);
+                // check whether the existing rating specifies any duplicate data
+                if (relative.BetterRating.ActivityDescriptor != null && relative.WorseRating.ActivityDescriptor != null)
                 {
-                    if (rawRating.BetterRating.Date.Equals(this.StartDate))
-                        betterMatchesThis = true;
+                    // rating specifies data that is redundant with the participation, so find and remove the duplicate data
+                    bool betterMatchesThis = false;
+                    if (this.ActivityDescriptor.CanMatch(relative.BetterRating.ActivityDescriptor))
+                    {
+                        if (relative.BetterRating.Date.Equals(this.StartDate))
+                            betterMatchesThis = true;
+                    }
+
+                    bool worseMatchesThis = false;
+                    if (this.ActivityDescriptor.CanMatch(relative.WorseRating.ActivityDescriptor))
+                    {
+                        if (relative.WorseRating.Date.Equals(this.StartDate))
+                            worseMatchesThis = true;
+                    }
+                    if (betterMatchesThis && worseMatchesThis)
+                        throw new Exception("Could not determine which AbsoluteRating in " + relative + " describes " + this + "(both match)");
+                    if ((!betterMatchesThis) && (!worseMatchesThis))
+                        throw new Exception("Could not determine which AbsoluteRating in " + relative + " describes " + this + "(neither match)");
+
+                    AbsoluteRating ratingToDehydrate = null;
+                    if (betterMatchesThis)
+                        ratingToDehydrate = dehydrated.BetterRating;
+                    else
+                        ratingToDehydrate = dehydrated.WorseRating;
+                    // clear any fields that are implied due to being attached to this object
+                    ratingToDehydrate.Date = null;
+                    ratingToDehydrate.ActivityDescriptor = null;
                 }
 
-                bool worseMatchesThis = false;
-                if (this.ActivityDescriptor.CanMatch(rawRating.WorseRating.ActivityDescriptor))
-                {
-                    if (rawRating.WorseRating.Date.Equals(this.StartDate))
-                        worseMatchesThis = true;
-                }
-                if (betterMatchesThis && worseMatchesThis)
-                    throw new Exception("Could not determine which AbsoluteRating in " + rawRating + " describes " + this + "(both match)");
-                if ((!betterMatchesThis) && (!worseMatchesThis))
-                    throw new Exception("Could not determine which AbsoluteRating in " + rawRating + " describes " + this + "(neither match)");
-
-                AbsoluteRating ratingToDehydrate = null;
-                if (betterMatchesThis)
-                    ratingToDehydrate = dehydrated.BetterRating;
-                else
-                    ratingToDehydrate = dehydrated.WorseRating;
-                // clear any fields that are implied due to being attached to this object
-                ratingToDehydrate.Date = null;
-                ratingToDehydrate.ActivityDescriptor = null;
+                return dehydrated;
             }
-            // save the simplified rating
-            this.rawRating = dehydrated;
         }
         // returns an AbsoluteRating that contains as much information as possible
         public AbsoluteRating GetAbsoluteRating()
         {
-            Rating fullRating = this.GetCompleteRating();
+            Rating fullRating = this.rating as RelativeRating;
             if (fullRating == null)
                 return null;
             AbsoluteRating converted = new AbsoluteRating();
-            converted.FillInFromParticipation(this);
+            converted.AttemptToMatch(this);
             converted.Score = fullRating.GetScoreForDescriptor(this.ActivityDescriptor);
             return converted;
         }
 
-        private Rating rawRating;
+        private Rating rating;
 
         public List<ParticipationComment> PostComments
         {

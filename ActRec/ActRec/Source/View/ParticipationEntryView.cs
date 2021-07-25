@@ -497,7 +497,7 @@ namespace ActivityRecommendation
             try
             {
                 Rating rating = this.ratingBox.GetRelativeRating(engine, participation);
-                participation.RawRating = rating;
+                participation.Rating = rating;
             }
             catch (Exception)
             {

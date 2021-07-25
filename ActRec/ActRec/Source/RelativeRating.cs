@@ -77,23 +77,6 @@ namespace ActivityRecommendation
                 return this.RawScoreScale;
             }
         }
-        // The participation itself has one Rating, and another Activity has the other rating
-        // Now we figure out which Rating gets assigned to this Participation and give it as much data as possible
-        public override void FillInFromParticipation(Participation participation)
-        {
-            // figure out whether the better activity or the worse activity is the one that generated this rating
-            if (this.WorseRating.IsComplete() && !this.BetterRating.IsComplete())
-            {
-                // if we get here, the better participation generated this RelativeRating
-                this.BetterRating.FillInFromParticipation(participation);
-            }
-            if (this.BetterRating.IsComplete() && !this.WorseRating.IsComplete())
-            {
-                // if we get here, the worse participation generated this RelativeRating
-                this.WorseRating.FillInFromParticipation(participation);
-            }
-            base.FillInFromParticipation(participation);
-        }
 
         public override double GetScoreForDescriptor(ActivityDescriptor descriptor)
         {
@@ -106,12 +89,18 @@ namespace ActivityRecommendation
 
         public override void AttemptToMatch(Participation participation)
         {
-            if (this.BetterRating.IsComplete() && !this.WorseRating.IsComplete())
+            bool betterCanMatch = this.BetterRating.CanMatch(participation);
+            bool worseCanMatch = this.WorseRating.CanMatch(participation);
+
+            // figure out whether the better activity or the worse activity is the one that generated this rating
+            if (betterCanMatch && !worseCanMatch)
             {
+                // if we get here, the better participation generated this RelativeRating
                 this.BetterRating.AttemptToMatch(participation);
             }
-            if (this.WorseRating.IsComplete() && !this.BetterRating.IsComplete())
+            if (worseCanMatch && !betterCanMatch)
             {
+                // if we get here, the worse participation generated this RelativeRating
                 this.WorseRating.AttemptToMatch(participation);
             }
         }

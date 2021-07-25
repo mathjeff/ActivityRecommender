@@ -51,13 +51,6 @@ namespace ActivityRecommendation
             base.CopyFrom(original);
         }
 
-        public override void FillInFromParticipation(Participation participation)
-        {
-            this.ActivityDescriptor = participation.ActivityDescriptor;
-            this.Date = participation.StartDate;
-            base.FillInFromParticipation(participation);
-        }
-
         public override void FillInFromRequest(ActivityRequest request)
         {
             this.ActivityDescriptor = request.FromCategory;
@@ -71,15 +64,6 @@ namespace ActivityRecommendation
         public DateTime? Date { get; set; }
         public double Weight { get; set; }
         public bool FromUser { get; set; } // If true, the user entered this rating. If false, this was inferred by the engine
-        // returns true if this Rating has all the necessary data; returns false if this rating is missing some important information
-        public bool IsComplete()
-        {
-            if (this.ActivityDescriptor == null)
-                return false;
-            if (this.Date == null)
-                return false;
-            return true;
-        }
 
         public override double GetScoreForDescriptor(ActivityDescriptor descriptor)
         {
@@ -110,7 +94,9 @@ namespace ActivityRecommendation
             if (!this.CanMatch(participation))
                 return;
             // This rating seems to describe this participation, so fill in the corresponding data
-            this.FillInFromParticipation(participation);
+            this.ActivityDescriptor = participation.ActivityDescriptor;
+            this.Date = participation.StartDate;
+            base.AttemptToMatch(participation);
         }
         #endregion
 

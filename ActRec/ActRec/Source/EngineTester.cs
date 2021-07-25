@@ -720,7 +720,7 @@ Means.MeanErr: 0.1395 (0.2629 * average), StdDevs.MeanErr: 0.104 (0.1958 * avera
 0.9472,                                         equivalentWeightedProbability
 Means.MeanErr: 5.2333 (3.0646 * average), StdDevs.MeanErr: 5.584 (3.27 * average), efficiency
 Means.MeanErr: 0.6525 (5 days), StdDevs.MeanErr: 0.5704 (4 days), longtermEfficiencyIfParticipated
-EngineTester completed in 00:02:54.3086889
+EngineTester completed in 00:03:02.5331696
 */
 
 namespace ActivityRecommendation

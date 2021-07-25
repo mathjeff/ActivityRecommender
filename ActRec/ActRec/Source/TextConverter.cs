@@ -47,7 +47,7 @@ namespace ActivityRecommendation
             properties[this.ParticipationStartDateTag] = this.ConvertToStringBody(participation.StartDate);
             properties[this.ParticipationEndDateTag] = this.ConvertToStringBody(participation.EndDate);
             // rating
-            Rating rating = participation.RawRating;
+            Rating rating = participation.CompressedRating;
             if (rating != null)
                 properties[this.RatingTag] = this.ConvertToStringBody(rating);
             string comment = participation.Comment;
@@ -720,20 +720,16 @@ namespace ActivityRecommendation
                 throw new InvalidDataException("No activity descriptor specified!");
             }
             Participation currentParticipation = new Participation(startDate, endDate, activityDescriptor);
+            currentParticipation.Rating = rating;
             if (rating != null)
             {
-                // inform the rating of the participation that generated it
-                rating.Source = RatingSource.FromParticipation(currentParticipation);
                 // In case it was a relative rating, give the rating a chance to keep a pointer to the previous participation
                 RelativeRating convertedRating = rating as RelativeRating;
                 if (convertedRating != null)
                 {
                     convertedRating.AttemptToMatch(this.latestParticipationRead);
-                    currentParticipation.PutAndCompressRating(convertedRating);
                 }
             }
-            if (currentParticipation.RawRating == null)
-                currentParticipation.RawRating = rating;
             currentParticipation.Comment = comment;
             currentParticipation.Suggested = suggested;
 

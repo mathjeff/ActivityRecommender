@@ -22,8 +22,8 @@ namespace ActivityRecommendation
         {
             if (this.recomputeRatings)
             {
-                if (newParticipation.RawRating == null)
-                    newParticipation.RawRating = this.engine.MakeEstimatedRating(newParticipation);
+                if (newParticipation.Rating == null)
+                    newParticipation.Rating = this.engine.MakeEstimatedRating(newParticipation);
             }
             if (this.recomputeEfficiencies)
             {
@@ -44,7 +44,7 @@ namespace ActivityRecommendation
             if (newRating.Source != null)
             {
                 Participation participation = newRating.Source.ConvertedAsParticipation;
-                RelativeRating rawRating = participation.RawRating as RelativeRating;
+                RelativeRating rawRating = participation.Rating as RelativeRating;
                 if (rawRating.BetterRating.Date == null && rawRating.WorseRating.Date != null)
                 {
                     // This one is BetterRating

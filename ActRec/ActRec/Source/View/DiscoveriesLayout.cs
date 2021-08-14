@@ -92,7 +92,7 @@ namespace ActivityRecommendation.View
                     .Build()
             );
 
-            menuBuilder.AddLayout("Making plans is useful",
+            menuBuilder.AddLayout("Working on a project requires enough projects!",
                 new HelpWindowBuilder()
                     .AddMessage("Shortly after implementing the experimentation feature in ActivityRecommender, I began to find myself having difficulty " + 
                     "thinking of enough measurable tasks to work on. Without enough tasks, I wouldn't have anything to experiment on, and wouldn't be " +

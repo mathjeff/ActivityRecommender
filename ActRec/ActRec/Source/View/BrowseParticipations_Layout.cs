@@ -32,29 +32,30 @@ namespace ActivityRecommendation.View
 
             this.displayRatings_box = new VisiPlacement.CheckBox("No", "Yes");
             this.displayRatings_box.Checked = true;
+            Thickness buttonMargin = new Thickness(0, 1);
             LayoutChoice_Set displayRatings_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Show ratings?"))
-                .AddLayout(this.displayRatings_box)
+                .AddLayout(new MustBorderLayout(null, this.displayRatings_box, buttonMargin))
                 .BuildAnyLayout();
             this.requireComments_box = new VisiPlacement.CheckBox("No", "Yes");
             this.requireComments_box.Checked = true;
             LayoutChoice_Set requireComments_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Require comments?"))
-                .AddLayout(this.requireComments_box)
+                .AddLayout(new MustBorderLayout(null, this.requireComments_box, buttonMargin))
                 .BuildAnyLayout();
             this.requireSuccessful_box = new VisiPlacement.SingleSelect(null, new List<string>() { "Any", "No Metric", "Successful", "Failed" });
             LayoutChoice_Set requireSuccessful_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Require success status ="))
-                .AddLayout(this.requireSuccessful_box)
+                .AddLayout(new MustBorderLayout(null, this.requireSuccessful_box, buttonMargin))
                 .BuildAnyLayout();
             this.sortBy_box = new VisiPlacement.SingleSelect(null, new List<string>() { this.sortByFun_text, this.sortBy_netPresentHappiness_text, this.sortByEfficiency_text });
             LayoutChoice_Set sortBy_layout = new Horizontal_GridLayout_Builder()
                 .Uniform()
                 .AddLayout(new TextblockLayout("Sort by"))
-                .AddLayout(this.sortBy_box)
+                .AddLayout(new MustBorderLayout(null, this.sortBy_box, buttonMargin))
                 .BuildAnyLayout();
             
 

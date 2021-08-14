@@ -19,8 +19,8 @@ namespace ActivityRecommendation.View
                 new TitledControl("Happiness at any time!",
                     (new MenuLayoutBuilder(layoutStack))
                     .AddLayout("So many activity ideas", (new HelpWindowBuilder())
-                        .AddMessage("To help you effortlessly get started, there are hundreds of wonderful, categorized activity ideas under Start -> Activities -> Import Some Premade Activities.")
-                        .AddMessage("These ideas can supplement your own ideas that you can add under Start -> Activities -> New Activity.")
+                        .AddMessage("To help you effortlessly get started, there are hundreds of wonderful, categorized activity ideas under Start -> Organize Activities -> Quickstart / Premade.")
+                        .AddMessage("These ideas can supplement your own ideas that you can add under Start -> Organize Activities -> New Activity.")
                         .Build()
                     )
                     .AddLayout("Awesome suggestions", (new HelpWindowBuilder())

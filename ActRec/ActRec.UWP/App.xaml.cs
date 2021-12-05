@@ -28,6 +28,7 @@ namespace ActRec.UWP
         /// </summary>
         public App()
         {
+            Xamarin.Forms.Forms.SetFlags("Brush_Experimental");
             this.InitializeComponent();
             this.Suspending += OnSuspending;
         }

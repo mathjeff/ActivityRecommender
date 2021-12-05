@@ -106,6 +106,7 @@ namespace ActivityRecommendation
                 .ApplicationBackground(Color.Gray)
                 .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
                 .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(25, 25, 25))
                 .FontName("BlackChancery.ttf#BlackChancery")
                 .Build());
             all.Add(this.defaultVisualDefaults);
@@ -117,13 +118,15 @@ namespace ActivityRecommendation
                 .ApplicationBackground(Color.FromRgb(166, 166, 166))
                 .ButtonInnerBevelColor(Color.FromRgb(190, 234, 235))
                 .ButtonOuterBevelColor(Color.FromRgb(190, 234, 235))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(40, 43, 44))
                 .FontName("SatellaRegular.ttf#Satella")
                 .Build());
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Bug")
                 .UneditableText_Color(Color.FromRgb(134, 224, 215))
-                .UneditableText_Background(Color.FromRgb(26, 25, 18))
+                .UneditableText_Background(Color.FromRgb(24, 23, 16))
                 .ApplicationBackground(Color.FromRgb(165, 69, 73))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(34, 33, 26))
                 .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                 .Build());
 
@@ -134,6 +137,7 @@ namespace ActivityRecommendation
                 .ApplicationBackground(Color.FromRgb(7, 72, 93))
                 .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
                 .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(13, 32, 52))
                 .FontName("SatellaRegular.ttf#Satella")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -161,16 +165,18 @@ namespace ActivityRecommendation
                 .ApplicationBackground(Color.FromRgb(51, 43, 142))
                 .ButtonInnerBevelColor(Color.FromRgb(175, 164, 175))
                 .ButtonOuterBevelColor(Color.FromRgb(185, 185, 195))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(52, 30, 75))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
 
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Brownie")
                 .UneditableText_Color(Color.FromRgb(175, 99, 81))
-                .UneditableText_Background(Color.FromRgb(50, 24, 27))
+                .UneditableText_Background(Color.FromRgb(40, 20, 22))
                 .ApplicationBackground(Color.FromRgb(112, 61, 54))
                 .ButtonInnerBevelColor(Color.FromRgb(30, 15, 15))
                 .ButtonOuterBevelColor(Color.FromRgb(200, 190, 190))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(65, 34, 37))
                 .FontName("TitanOne.ttf#TitanOne")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -190,6 +196,7 @@ namespace ActivityRecommendation
                 .ApplicationBackground(Color.FromRgb(87, 127, 174))
                 .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
                 .ButtonOuterBevelColor(Color.FromRgb(210, 210, 210))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(53, 73, 114))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
             all.Add(new VisualDefaults_Builder()
@@ -199,6 +206,7 @@ namespace ActivityRecommendation
                 .ApplicationBackground(Color.FromRgb(60, 60, 65))
                 .ButtonInnerBevelColor(Color.FromRgb(33, 159, 164))
                 .ButtonOuterBevelColor(Color.FromRgb(1, 252, 255))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(191, 11, 31))
                 .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
                 .FontSizeMultiplier(1.5)
                 .Build());
@@ -208,34 +216,38 @@ namespace ActivityRecommendation
                 .UneditableText_Color(Color.FromRgb(225, 225, 225))
                 .UneditableText_Background(Color.FromRgb(25, 62, 113))
                 .ApplicationBackground(Color.FromRgb(145, 163, 189))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(108, 108, 108))
                 .FontName("SatellaRegular.ttf#Satella")
                 .Build());
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Salad")
                 .UneditableText_Color(Color.FromRgb(46, 96, 0))
-                .UneditableText_Background(Color.FromRgb(219, 225, 138))
-                .ApplicationBackground(Color.FromRgb(133, 162, 168))
+                .UneditableText_Background(Color.FromRgb(190, 195, 108))
+                .ApplicationBackground(Color.FromRgb(190, 32, 7))
                 .ButtonInnerBevelColor(Color.FromRgb(99, 137, 39))
                 .ButtonOuterBevelColor(Color.FromRgb(70, 120, 3))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(219, 225, 138))
                 .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
                 .Build());
 
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Forest")
                 .UneditableText_Color(Color.FromRgb(240, 245, 95))
-                .UneditableText_Background(Color.FromRgb(21, 60, 8))
+                .UneditableText_Background(Color.FromRgb(10, 30, 3))
                 .ApplicationBackground(Color.Black)
                 .ButtonInnerBevelColor(Color.FromRgb(160, 160, 160))
                 .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(21, 60, 8))
                 .FontName("Beyond-Wonderland.ttf#Beyond-Wonderland")
                 .Build());
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Fire")
                 .UneditableText_Color(Color.FromRgb(243, 241, 37))
-                .UneditableText_Background(Color.FromRgb(177, 46, 14))
+                .UneditableText_Background(Color.FromRgb(190, 6, 3))
                 .ApplicationBackground(Color.FromRgb(209, 143, 25))
                 .ButtonInnerBevelColor(Color.FromRgb(100, 100, 100))
                 .ButtonOuterBevelColor(Color.FromRgb(130, 130, 130))
+                .ButtonBackgroundSecondaryColor(Color.FromRgb(248, 101, 9))
                 .FontName("BlackChancery.ttf#BlackChancery")
                 .Build());
 

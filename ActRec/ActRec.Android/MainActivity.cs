@@ -24,6 +24,8 @@ namespace ActRec.Droid
         {
             base.OnCreate(bundle);
 
+            Xamarin.Forms.Forms.SetFlags("Brush_Experimental");
+
             global::Xamarin.Forms.Forms.Init(this, bundle);
 
             VisiPlacement.Android.AndroidTextMeasurer.Initialize();

@@ -15,6 +15,7 @@ namespace ActRec.iOS
         {
             // if you want to use a different Application Delegate class from "AppDelegate"
             // you can specify it here.
+            Xamarin.Forms.Forms.SetFlags("Brush_Experimental");
             iOSTextMeasurer.Initialize();
             iOSButtonClicker.Initialize();
             UIApplication.Main(args, null, "AppDelegate");

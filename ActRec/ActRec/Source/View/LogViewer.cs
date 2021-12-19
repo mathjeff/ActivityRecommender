@@ -19,7 +19,7 @@ namespace ActivityRecommendation.View
         {
             if (this.text == null)
             {
-                if (this.textProvider == null)
+                if (this.textProvider == null || this.textProvider.Get() == null)
                     this.text = "Reading logs on this platform is not supported. Sorry";
                 else
                     this.text = textProvider.Get().ReadToEnd();

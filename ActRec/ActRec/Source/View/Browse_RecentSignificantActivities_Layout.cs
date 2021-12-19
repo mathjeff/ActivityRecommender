@@ -138,7 +138,7 @@ namespace ActivityRecommendation.View
             List<Participation> participations = this.activity.getParticipationsSince(this.start);
             // we reduce the number of visible participations
             string title;
-            int maxNumParticipations = 20;
+            int maxNumParticipations = 10;
             if (participations.Count > maxNumParticipations)
             {
                 title = "Last " + maxNumParticipations + " participations in " + this.activity.Name;

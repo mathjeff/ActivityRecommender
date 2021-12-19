@@ -55,12 +55,12 @@ namespace ActivityRecommendation.View
                 this.feedbackHolder = new ContainerLayout();
                 Button feedbackButton = new Button();
                 feedbackButton.Clicked += FeedbackButton_Clicked;
-                this.feedbackHolder.SubLayout = new ButtonLayout(feedbackButton, "Compute Feedback");
+                this.feedbackHolder.SubLayout = new ButtonLayout(feedbackButton, "Compute Feedback", 16);
                 mainGrid_builder.AddLayout(this.feedbackHolder);
             }
             New_ParticipationComment_Layout commentBox = new New_ParticipationComment_Layout(participation, this.layoutStack);
             commentBox.AddParticipationComment += CommentBox_AddParticipationComment;
-            mainGrid_builder.AddLayout(new HelpButtonLayout("Add comment", commentBox, layoutStack));
+            mainGrid_builder.AddLayout(new HelpButtonLayout("Add comment", commentBox, layoutStack, 16));
             this.SubLayout = mainGrid_builder.Build();
         }
 

@@ -30,8 +30,8 @@ namespace ActivityRecommendation.View
             mainGrid_builder.AddLayout(new TextblockLayout(participation.StartDate.ToString() + " - " + participation.EndDate.ToString(), 16));
             if (showCalculatedValues)
             {
-                if (participation.GetAbsoluteRating() != null)
-                    mainGrid_builder.AddLayout(new TextblockLayout("Score: " + participation.GetAbsoluteRating().Score, 16));
+                if (participation.GetRecordedRatingAsAbsolute() != null)
+                    mainGrid_builder.AddLayout(new TextblockLayout("Score: " + participation.GetRecordedRatingAsAbsolute().Score, 16));
                 if (participation.RelativeEfficiencyMeasurement != null)
                 {
                     string message = "Efficiency: " + participation.RelativeEfficiencyMeasurement.RecomputedEfficiency.Mean;

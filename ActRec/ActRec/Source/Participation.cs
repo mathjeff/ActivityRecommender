@@ -175,8 +175,8 @@ namespace ActivityRecommendation
                 return dehydrated;
             }
         }
-        // returns an AbsoluteRating that contains as much information as possible
-        public AbsoluteRating GetAbsoluteRating()
+        // Returns an AbsoluteRating describing how the user rated this participation
+        public AbsoluteRating GetRecordedRatingAsAbsolute()
         {
             Rating fullRating = this.rating as RelativeRating;
             if (fullRating == null)
@@ -185,6 +185,17 @@ namespace ActivityRecommendation
             converted.AttemptToMatch(this);
             converted.Score = fullRating.GetScoreForDescriptor(this.ActivityDescriptor);
             return converted;
+        }
+
+        // Returns an AbsoluteRating describing our best guess about how good this participation was
+        public AbsoluteRating GetEstimatedRating()
+        {
+            AbsoluteRating estimated = this.Rating as AbsoluteRating;
+            if (estimated != null)
+                return estimated;
+
+            AbsoluteRating assigned = this.GetRecordedRatingAsAbsolute();
+            return assigned;
         }
 
         private Rating rating;
@@ -208,8 +219,8 @@ namespace ActivityRecommendation
     {
         public int Compare(Participation a, Participation b)
         {
-            AbsoluteRating ratingA = a.GetAbsoluteRating();
-            AbsoluteRating ratingB = b.GetAbsoluteRating();
+            AbsoluteRating ratingA = a.GetRecordedRatingAsAbsolute();
+            AbsoluteRating ratingB = b.GetRecordedRatingAsAbsolute();
             double scoreA;
             double scoreB;
             if (ratingA != null)

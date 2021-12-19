@@ -160,7 +160,7 @@ namespace ActivityRecommendation.TextSummary
             string timespan = TimeFormatter.summarizeTimespan(participation.StartDate, participation.EndDate);
             string activityName = participation.ActivityDescriptor.ActivityName;
             double participationScore;
-            AbsoluteRating rating = participation.GetAbsoluteRating();
+            AbsoluteRating rating = participation.GetRecordedRatingAsAbsolute();
             if (rating != null)
                 participationScore = rating.Score;
             else

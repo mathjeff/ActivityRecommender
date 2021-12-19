@@ -35,7 +35,7 @@ namespace ActivityRecommendation.View
             this.okClicked();
         }
         private void okClicked()
-        { 
+        {
             if (!this.durationLayout.IsDurationValid())
                 return;
             TimeSpan windowSize = this.durationLayout.GetDuration();

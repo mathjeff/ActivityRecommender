@@ -1059,7 +1059,7 @@ namespace ActivityRecommendation
                 List<Participation> participations = activity.getParticipationsSince(windowStart);
                 foreach (Participation participation in participations)
                 {
-                    AbsoluteRating rating = participation.GetAbsoluteRating();
+                    AbsoluteRating rating = participation.GetEstimatedRating();
                     if (rating != null)
                     {
                         double score = rating.Score;

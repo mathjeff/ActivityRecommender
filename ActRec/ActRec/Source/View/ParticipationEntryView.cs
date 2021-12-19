@@ -895,7 +895,7 @@ namespace ActivityRecommendation
         {
             foreach (Participation participation in this.activityDatabase.RootActivity.Participations)
             {
-                if (participation.GetAbsoluteRating() != null)
+                if (participation.GetRecordedRatingAsAbsolute() != null)
                     return true;
             }
             return false;

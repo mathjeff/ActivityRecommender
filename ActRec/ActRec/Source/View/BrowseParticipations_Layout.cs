@@ -208,7 +208,7 @@ namespace ActivityRecommendation.View
                 {
                     foreach (Participation participation in correctSuccess_participations)
                     {
-                        if (participation.GetAbsoluteRating() != null)
+                        if (participation.GetRecordedRatingAsAbsolute() != null)
                             hasProperty_participations.Add(participation);
                     }
                 }

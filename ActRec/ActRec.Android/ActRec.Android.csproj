@@ -38,6 +38,7 @@
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <AotAssemblies>false</AotAssemblies>
     <BundleAssemblies>false</BundleAssemblies>
+    <MandroidI18n />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

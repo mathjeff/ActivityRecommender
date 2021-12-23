@@ -54,14 +54,14 @@ namespace ActivityRecommendation
         {
             EngineLoader loader = new EngineLoader();
             loader.ReadText(this.internalFileIo.OpenFileForReading(this.personaFileName));
-            this.persona = loader.Persona;
+            this.userSettings = loader.Persona;
         }
 
         private VisualDefaults VisualDefaults
         {
             get
             {
-                string themeName = this.persona.LayoutDefaults_Name;
+                string themeName = this.userSettings.LayoutDefaults_Name;
                 List<VisualDefaults> all = this.AllLayoutDefaults;
                 foreach (VisualDefaults candidate in all)
                 {
@@ -258,7 +258,7 @@ namespace ActivityRecommendation
         {
             VisualDefaults defaults = this.VisualDefaults;
             this.parentView.BackgroundColor = defaults.ViewDefaults.ApplicationBackground;
-            TextblockLayout welcome = new TextblockLayout("I'm loading your data! Sincerely, " + this.persona.Name);
+            TextblockLayout welcome = new TextblockLayout("I'm loading your data! Sincerely, " + this.userSettings.PersonaName);
             welcome.AlignHorizontally(TextAlignment.Center);
             welcome.AlignVertically(TextAlignment.Center);
             TextblockLayout tip = new TextblockLayout(this.choose_usageTip());
@@ -390,10 +390,10 @@ namespace ActivityRecommendation
                 }
                 else
                 {
-                    if (this.persona.Name == "ActivityRecommender")
+                    if (this.userSettings.PersonaName == "ActivityRecommender")
                         this.welcomeMessage = "Welcome to ActivityRecommender version " + newExecution.version;
                     else
-                        this.welcomeMessage += "Hi! I'm now version " + newExecution.version + "! Sincerely, " + this.persona.Name + ".";
+                        this.welcomeMessage += "Hi! I'm now version " + newExecution.version + "! Sincerely, " + this.userSettings.PersonaName + ".";
                 }
                 if (!oldExecution.debuggerAttached || !newExecution.debuggerAttached)
                 {
@@ -427,7 +427,7 @@ namespace ActivityRecommendation
                 this.layoutStack,
                 this.ActivityDatabase);
 
-            this.participationEntryView = new ParticipationEntryView(this.engine.ActivityDatabase, this.layoutStack);
+            this.participationEntryView = new ParticipationEntryView(this.engine.ActivityDatabase, this.userSettings, this.layoutStack);
             this.participationEntryView.Engine = this.engine;
             this.participationEntryView.AddOkClickHandler(new EventHandler(this.SubmitParticipation));
             this.participationEntryView.AddSetenddateHandler(new EventHandler(this.MakeEndNow));
@@ -437,7 +437,7 @@ namespace ActivityRecommendation
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
             this.UpdateDefaultParticipationData();
 
-            this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine);
+            this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine, this.userSettings);
             this.suggestionsView.AddSuggestions(this.recentUserData.Suggestions);
             this.suggestionsView.RequestSuggestion += SuggestionsView_RequestSuggestion;
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
@@ -447,7 +447,7 @@ namespace ActivityRecommendation
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
-            this.statisticsMenu = new StatisticsMenu(this.engine, this.layoutStack, this.publicFileIo, this.persona);
+            this.statisticsMenu = new StatisticsMenu(this.engine, this.layoutStack, this.publicFileIo, this.userSettings);
             this.statisticsMenu.AddParticipationComment += StatisticsMenu_AddParticipationComment;
             this.statisticsMenu.VisitActivitiesScreen += VisualizationMenu_VisitActivitiesScreen;
             this.statisticsMenu.VisitParticipationsScreen += VisualizationMenu_VisitParticipationsScreen;
@@ -456,7 +456,7 @@ namespace ActivityRecommendation
             this.dataImportView.RequestImport += this.ImportData;
 
 
-            this.dataExportView = new DataExportView(this, this.persona, this.layoutStack);
+            this.dataExportView = new DataExportView(this, this.userSettings, this.layoutStack);
 
             LayoutChoice_Set importExportView = new MenuLayoutBuilder(this.layoutStack)
                 .AddLayout("Import", this.dataImportView)
@@ -488,14 +488,14 @@ namespace ActivityRecommendation
             debuggingBuilder.AddLayout("Recalculate Efficiency", recalculateEfficiency_layout);
             debuggingBuilder.AddLayout("View Demo", new DemoLayout(this.viewManager, this.ActivityDatabase));
 
-            PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.persona);
+            PersonaNameCustomizationView personaCustomizationView = new PersonaNameCustomizationView(this.userSettings);
             Choose_LayoutDefaults_Layout themeCustomizationView = new Choose_LayoutDefaults_Layout(this.AllLayoutDefaults);
 
             themeCustomizationView.Chose_VisualDefaults += ThemeCustomizationView_Chose_LayoutDefaults;
 
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro/Info", helpMenu);
-            CustomizeLayout customizeLayout = new CustomizeLayout(personaCustomizationView, themeCustomizationView, this.persona, this.layoutStack);
+            CustomizeLayout customizeLayout = new CustomizeLayout(personaCustomizationView, themeCustomizationView, this.userSettings, this.layoutStack);
             introMenu_builder.AddLayout(
                 new AppFeatureCount_ButtonName_Provider("Appearance", customizeLayout.GetFeatures()),
                 new StackEntry(customizeLayout, "Appearance", null)
@@ -662,7 +662,7 @@ namespace ActivityRecommendation
 
         private void ThemeCustomizationView_Chose_LayoutDefaults(VisualDefaults defaults)
         {
-            this.persona.LayoutDefaults_Name = defaults.PersistedName;
+            this.userSettings.LayoutDefaults_Name = defaults.PersistedName;
             this.parentView.BackgroundColor = defaults.ViewDefaults.ApplicationBackground;
             this.savePersona();
             this.viewManager.VisualDefaults = this.VisualDefaults;
@@ -903,7 +903,7 @@ namespace ActivityRecommendation
             throw new NotImplementedException();
 #endif
             this.engine = engine;
-            this.persona.NameChanged += Persona_NameChanged;
+            this.userSettings.Changed += SettingsChanged;
             this.protoActivities_database = loader.ProtoActivity_Database;
             this.latestParticipation = loader.LatestParticipation;
             this.recentUserData = loader.RecentUserData;
@@ -935,14 +935,14 @@ namespace ActivityRecommendation
         {
             this.startupFeedback = this.engine.ComputeBriefFeedback(DateTime.Now);
         }
-        private void Persona_NameChanged(string newName)
+        private void SettingsChanged()
         {
             this.savePersona();
         }
 
         private void savePersona()
         {
-            this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, this.textConverter.ConvertToString(this.persona));
+            this.internalFileIo.EraseFileAndWriteContent(this.personaFileName, this.textConverter.ConvertToString(this.userSettings));
         }
 
         public EngineTesterResults TestEngine()
@@ -1402,7 +1402,7 @@ namespace ActivityRecommendation
         string welcomeMessage = "";
         string startupFeedback = "";
         ProtoActivity_Database protoActivities_database;
-        Persona persona;
+        UserSettings userSettings;
         List<VisualDefaults> allLayoutDefaults;
         Random randomGenerator = new Random();
 

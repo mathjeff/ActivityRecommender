@@ -12,8 +12,8 @@ namespace ActivityRecommendation
     {
         public Engine()
         {
-            this.weightedRatingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
-            this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
+            this.weightedRatingSummarizer = new ExponentialRatingSummarizer(CommonPreferences.Instance.HalfLife);
+            this.efficiencySummarizer = new ExponentialRatingSummarizer(CommonPreferences.Instance.EfficiencyHalflife);
             this.efficiencyCorrelator = new EfficiencyCorrelator();
             this.activityDatabase = new ActivityDatabase(this.weightedRatingSummarizer, this.efficiencySummarizer);
             this.activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
@@ -869,7 +869,7 @@ namespace ActivityRecommendation
             // absWeight(x) = relWeight(x) / totalWeight
             // absWeight(x) = 2^(-x/halflife) / ((log(e)/log(2))*halflife)
             // absWeight(0) = log(2)/log(e)/halflife = log(2)/halflife
-            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.HalfLife.TotalDays;
+            double weightOfThisMoment = Math.Log(2) / CommonPreferences.Instance.HalfLife.TotalDays;
             if (baseValue.Mean > 0)
             {
                 Distribution combined = baseValue.Plus(chosenValue);
@@ -2275,7 +2275,7 @@ namespace ActivityRecommendation
             // absWeight(x) = relWeight(x) / totalWeight
             // absWeight(x) = 2^(-x/halflife) / ((log(e)/log(2))*halflife)
             // absWeight(0) = log(2)/log(e)/halflife = log(2)/halflife
-            double weightOfThisMoment = Math.Log(2) / UserPreferences.DefaultPreferences.EfficiencyHalflife.TotalHours;
+            double weightOfThisMoment = Math.Log(2) / CommonPreferences.Instance.EfficiencyHalflife.TotalHours;
             if (baseValue.Mean > 0)
             {
                 Distribution combined = baseValue.Plus(chosenValue);
@@ -3171,7 +3171,7 @@ namespace ActivityRecommendation
 
             string summary = longtermBonusText + remark;
 
-            return new ParticipationFeedback(chosenActivity, summary, happySummary, detailsProvider);
+            return new ParticipationFeedback(chosenActivity, new ParticipationFeedbackFormatter(remark, detailsProvider), happySummary, detailsProvider);
         }
 
 
@@ -3226,9 +3226,9 @@ namespace ActivityRecommendation
                 return this.efficiencyCorrelator;
             }
         }
-        private UserPreferences Get_UserPreferences()
+        private CommonPreferences Get_UserPreferences()
         {
-            return UserPreferences.DefaultPreferences;
+            return CommonPreferences.Instance;
         }
 
         public Random Randomness

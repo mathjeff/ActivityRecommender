@@ -13,13 +13,14 @@ namespace ActivityRecommendation.View
         public event AddParticipationComment_Handler AddParticipationComment;
         public delegate void AddParticipationComment_Handler(ParticipationComment comment);
 
-        public ParticipationView(Participation participation, ScoreSummarizer ratingSummarizer, LayoutStack layoutStack, Engine engine, bool showCalculatedValues = true)
+        public ParticipationView(Participation participation, ScoreSummarizer ratingSummarizer, LayoutStack layoutStack, Engine engine, UserSettings userSettings, bool showCalculatedValues = true)
         {
             this.participation = participation;
             this.engine = engine;
             this.ratingSummarizer = ratingSummarizer;
             this.layoutStack = layoutStack;
             this.showCalculatedValues = showCalculatedValues;
+            this.userSettings = userSettings;
             this.draw();
         }
 
@@ -86,7 +87,7 @@ namespace ActivityRecommendation.View
             if (feedback == null)
                 text = "Sorry, not enough data for feedback!";
             else
-                text = "Feedback: " + feedback.Summary;
+                text = "Feedback: " + feedback.Summary.Get(this.userSettings.FeedbackType);
             this.feedbackHolder.SubLayout = new TextblockLayout(text);
         }
         ContainerLayout feedbackHolder;
@@ -95,5 +96,6 @@ namespace ActivityRecommendation.View
         ScoreSummarizer ratingSummarizer;
         bool showCalculatedValues;
         LayoutStack layoutStack;
+        UserSettings userSettings;
     }
 }

@@ -7,7 +7,7 @@ namespace ActivityRecommendation.View
 {
     class CustomizeLayout : ContainerLayout
     {
-        public CustomizeLayout(PersonaNameCustomizationView nameLayout, Choose_LayoutDefaults_Layout themeLayout, Persona persona, LayoutStack layoutStack)
+        public CustomizeLayout(PersonaNameCustomizationView nameLayout, Choose_LayoutDefaults_Layout themeLayout, UserSettings persona, LayoutStack layoutStack)
         {
             this.nameLayout = new PersonaNameCustomizationView(persona);
             this.nameLayout = nameLayout;

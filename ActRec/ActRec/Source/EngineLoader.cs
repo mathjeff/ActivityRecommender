@@ -55,7 +55,7 @@ namespace ActivityRecommendation
         {
             this.LatestDate = when;
         }
-        public override void SetPersona(Persona persona)
+        public override void SetPersona(UserSettings persona)
         {
             this.Persona = persona;
         }
@@ -65,6 +65,6 @@ namespace ActivityRecommendation
         public Participation LatestParticipation;
         public RecentUserData RecentUserData = new RecentUserData();
         public DateTime LatestDate;
-        public Persona Persona = new Persona();
+        public UserSettings Persona = new UserSettings();
     }
 }

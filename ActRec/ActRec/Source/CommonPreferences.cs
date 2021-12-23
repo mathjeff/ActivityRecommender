@@ -6,17 +6,17 @@ using System.Text;
 // the UserPreferences stores preferences for users
 namespace ActivityRecommendation
 {
-    class UserPreferences
+    class CommonPreferences
     {
         // singleton
-        static UserPreferences defaultPreferences = null;
-        public static UserPreferences DefaultPreferences
+        static CommonPreferences instance = null;
+        public static CommonPreferences Instance
         {
             get
             {
-                if (defaultPreferences == null)
-                    defaultPreferences = new UserPreferences();
-                return new UserPreferences();
+                if (instance == null)
+                    instance = new CommonPreferences();
+                return instance;
             }
         }
 

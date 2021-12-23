@@ -85,7 +85,7 @@ namespace ActivityRecommendation
             string text = this.textConverter.ConvertToString(protoActivity);
             this.addText(text);
         }
-        public override void SetPersona(Persona persona)
+        public override void SetPersona(UserSettings persona)
         {
             string text = this.textConverter.ConvertToString(persona);
             this.addText(text);

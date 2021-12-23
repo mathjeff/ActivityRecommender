@@ -8,7 +8,7 @@ namespace ActivityRecommendation.TextSummary
     // a LifeSummarizer creates a text description of how the user's life has been going during a certain time
     class LifeSummarizer
     {
-        public LifeSummarizer(Engine engine, Persona persona, Random generator)
+        public LifeSummarizer(Engine engine, UserSettings persona, Random generator)
         {
             this.engine = engine;
             this.persona = persona;
@@ -46,7 +46,7 @@ namespace ActivityRecommendation.TextSummary
                 texts.Add(this.summaryWithConnector(item, previousItem));
                 previousItem = item;
             }
-            texts.Add("Sincerely, " + persona.Name);
+            texts.Add("Sincerely, " + persona.PersonaName);
             return string.Join("\n\n", texts);
         }
 
@@ -316,7 +316,7 @@ namespace ActivityRecommendation.TextSummary
         }
 
         private Engine engine;
-        private Persona persona;
+        private UserSettings persona;
         private Random generator;
     }
 

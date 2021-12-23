@@ -8,12 +8,12 @@ namespace ActivityRecommendation.View
 {
     class PersonaNameCustomizationView : ContainerLayout, OnBack_Listener
     {
-        public PersonaNameCustomizationView(Persona persona)
+        public PersonaNameCustomizationView(UserSettings persona)
         {
             this.persona = persona;
 
             this.personaName_box = new Editor();
-            this.personaName_box.Text = persona.Name;
+            this.personaName_box.Text = persona.PersonaName;
 
             TitledTextbox personaName_holder = new TitledTextbox("Hello! I'm your ActivityRecommender. My name is:", this.personaName_box);
             this.SubLayout = personaName_holder;
@@ -31,16 +31,16 @@ namespace ActivityRecommendation.View
 
         private void UpdatePersona()
         {
-            this.persona.Name = this.personaName_box.Text;
+            this.persona.PersonaName = this.personaName_box.Text;
         }
 
-        private Persona persona;
+        private UserSettings persona;
         private Editor personaName_box;
     }
 
     class PersonaNameCustomizationFeature : AppFeature
     {
-        public PersonaNameCustomizationFeature(Persona persona)
+        public PersonaNameCustomizationFeature(UserSettings persona)
         {
             this.persona = persona;
         }
@@ -50,19 +50,19 @@ namespace ActivityRecommendation.View
         }
         public bool GetHasBeenUsed()
         {
-            return this.persona.Name != "ActivityRecommender";
+            return this.persona.PersonaName != "ActivityRecommender";
         }
         public bool GetIsUsable()
         {
             return true;
         }
 
-        Persona persona;
+        UserSettings persona;
     }
 
     class ChangeTheme_Feature : AppFeature
     {
-        public ChangeTheme_Feature(Persona persona)
+        public ChangeTheme_Feature(UserSettings persona)
         {
             this.persona = persona;
         }
@@ -80,7 +80,7 @@ namespace ActivityRecommendation.View
             return true;
         }
 
-        Persona persona;
+        UserSettings persona;
     }
 
 

@@ -20,7 +20,7 @@ namespace ActivityRecommendation
             if (feedbackObject != null)
             {
                 // remove the number
-                string fullFeedback = feedbackObject.Summary;
+                string fullFeedback = feedbackObject.Summary.Get(ParticipationFeedbackType.LONGTERM_HAPPINESS);
                 string feedback = this.stripLeadingNumbers(fullFeedback);
 
                 // save into this.feedbacks

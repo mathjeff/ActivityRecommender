@@ -9,7 +9,7 @@ namespace ActivityRecommendation.View
 {
     class ParticipationSummarizerLayout : ContainerLayout
     {
-        public ParticipationSummarizerLayout(Engine engine, Persona persona, LayoutStack layoutStack)
+        public ParticipationSummarizerLayout(Engine engine, UserSettings persona, LayoutStack layoutStack)
         {
             this.lifeSummarizer = new LifeSummarizer(engine, persona, new Random());
             this.layoutStack = layoutStack;

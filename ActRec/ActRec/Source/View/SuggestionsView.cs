@@ -27,12 +27,13 @@ namespace ActivityRecommendation.View
         public event VisitActivitiesScreenHandler VisitActivitiesScreen;
         public delegate void VisitActivitiesScreenHandler();
 
-        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine) : base("Get Suggestions")
+        public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine, UserSettings userSettings) : base("Get Suggestions")
         {
             this.TitleLayout.AlignVertically(TextAlignment.Center);
             this.activityDatabase = activityDatabase;
             this.engine = engine;
             this.recommender = recommenderToInform;
+            this.userSettings = userSettings;
 
             this.layoutStack = layoutStack;
 
@@ -300,7 +301,7 @@ namespace ActivityRecommendation.View
 
         private LayoutChoice_Set makeLayout(ActivitiesSuggestion suggestion, bool doNowButton, Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion)
         {
-            SuggestionView suggestionView = new SuggestionView(suggestion, doNowButton, repeatingDeclinedSuggestion, this.layoutStack);
+            SuggestionView suggestionView = new SuggestionView(suggestion, doNowButton, repeatingDeclinedSuggestion, this.userSettings, this.layoutStack);
             suggestionView.Dismissed += SuggestionView_Dismissed;
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
             suggestionView.AcceptedSuggestion += SuggestionView_VisitParticipationScreen;
@@ -365,6 +366,7 @@ namespace ActivityRecommendation.View
         LayoutChoice_Set noActivities_explanationLayout;
         ActivityDatabase activityDatabase;
         ActivitiesSuggestion previousDeclinedSuggestion;
+        UserSettings userSettings;
     }
 
     class RequestSuggestion_Feature : AppFeature

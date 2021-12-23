@@ -747,9 +747,9 @@ namespace ActivityRecommendation
     {
         public EngineTester()
         {
-            this.ratingSummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.HalfLife);
+            this.ratingSummarizer = new ExponentialRatingSummarizer(CommonPreferences.Instance.HalfLife);
             this.ratingSummarizer.Description = "EngineTester Score Summarizer";
-            this.efficiencySummarizer = new ExponentialRatingSummarizer(UserPreferences.DefaultPreferences.EfficiencyHalflife);
+            this.efficiencySummarizer = new ExponentialRatingSummarizer(CommonPreferences.Instance.EfficiencyHalflife);
             this.efficiencySummarizer.Description = "EngineTester Efficiency Summarizer";
             this.executionStart = DateTime.Now;
         }

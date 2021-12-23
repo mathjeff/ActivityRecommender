@@ -17,12 +17,12 @@ namespace ActivityRecommendation
         public event VisitSuggestionsScreenHandler VisitSuggestionsScreen;
         public delegate void VisitSuggestionsScreenHandler();
 
-        public ParticipationEntryView(ActivityDatabase activityDatabase, LayoutStack layoutStack)
+        public ParticipationEntryView(ActivityDatabase activityDatabase, UserSettings userSettings, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
             activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.layoutStack = layoutStack;
-
+            this.userSettings = userSettings;
             BoundProperty_List rowHeights = new BoundProperty_List(6);
             rowHeights.BindIndices(0, 1);
             rowHeights.BindIndices(0, 2);
@@ -201,6 +201,13 @@ namespace ActivityRecommendation
             noActivities_help_builder.AddLayout(new ButtonLayout(activitiesButton));
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
+
+            userSettings.Changed += UserSettings_Changed;
+        }
+
+        private void UserSettings_Changed()
+        {
+            this.Invalidate_FeedbackBlock_Text();
         }
 
         private void RatingBox_RatingRatioChanged()
@@ -274,7 +281,7 @@ namespace ActivityRecommendation
         private void ResponseButton_Clicked(object sender, EventArgs e)
         {
             // The response button had feedback about the most recent participation
-            this.layoutStack.AddLayout(this.participationFeedback.GetDetails(this.layoutStack), "Feedback");
+            this.layoutStack.AddLayout(this.participationFeedback.GetDetails(this.layoutStack, this.userSettings), "Feedback");
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -654,7 +661,7 @@ namespace ActivityRecommendation
                 participationFeedback = this.computeFeedback(activity, startDate, endDate);
                 if (participationFeedback != null)
                 {
-                    this.participationFeedbackButtonLayout.setText(participationFeedback.Summary);
+                    this.participationFeedbackButtonLayout.setText(participationFeedback.getSummary(this.userSettings));
                     bool? happySummary = participationFeedback.happySummary;
                     if (happySummary != null)
                     {
@@ -847,6 +854,7 @@ namespace ActivityRecommendation
         ParticipationFeedback participationFeedback;
         string suggestedActivityName;
         bool wasEverCleared;
+        UserSettings userSettings;
     }
 
     class LongtermPrediction

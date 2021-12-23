@@ -27,10 +27,11 @@ namespace ActivityRecommendation
         public delegate void NewActivitityHandler();
 
 
-        public SuggestionView(ActivitiesSuggestion suggestion, bool isFirstSuggestion, Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion, LayoutStack layoutStack)
+        public SuggestionView(ActivitiesSuggestion suggestion, bool isFirstSuggestion, Dictionary<ActivitySuggestion, bool> repeatingDeclinedSuggestion, UserSettings userSettings, LayoutStack layoutStack)
         {
             this.suggestion = suggestion;
             this.layoutStack = layoutStack;
+            this.userSettings = userSettings;
 
             bool allWorseThanAverage = true;
             foreach (ActivitySuggestion child in suggestion.Children)
@@ -114,7 +115,7 @@ namespace ActivityRecommendation
                     activityOptionsGrid.PutLayout(buttonsBuilder.BuildAnyLayout(), i, 1);
                     if (child.ExpectedReaction != null)
                     {
-                        TextblockLayout reactionLayout = new TextblockLayout(child.ExpectedReaction, buttonFontSize * 0.9);
+                        TextblockLayout reactionLayout = new TextblockLayout(child.ExpectedReaction.Get(this.userSettings.FeedbackType), buttonFontSize * 0.9);
                         reactionLayout.AlignHorizontally(horizontalAlignment);
                         reactionLayout.AlignVertically(verticalAlignment);
                         activityOptionsGrid.PutLayout(reactionLayout, i, 2);
@@ -266,5 +267,6 @@ namespace ActivityRecommendation
         Dictionary<Button, ActivitySuggestion> doButtons;
         ActivitiesSuggestion suggestion;
         LayoutStack layoutStack;
+        UserSettings userSettings;
     }
 }

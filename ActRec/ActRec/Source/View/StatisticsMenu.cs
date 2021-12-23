@@ -18,12 +18,12 @@ namespace ActivityRecommendation.View
         public event AddParticipationComment_Handler AddParticipationComment;
         public delegate void AddParticipationComment_Handler(ParticipationComment comment);
 
-        public StatisticsMenu(Engine engine, LayoutStack layoutStack, PublicFileIo publicFileIo, Persona persona)
+        public StatisticsMenu(Engine engine, LayoutStack layoutStack, PublicFileIo publicFileIo, UserSettings userSettings)
         {
             this.engine = engine;
             this.layoutStack = layoutStack;
             this.publicFileIo = publicFileIo;
-            this.persona = persona;
+            this.userSettings = userSettings;
         }
 
         public override SpecificLayout GetBestLayout(LayoutQuery query)
@@ -58,12 +58,12 @@ namespace ActivityRecommendation.View
 
                     visualizationBuilder.AddLayout("Significant Activities", new Browse_RecentSignificantActivities_Layout(this.engine, this.engine.RatingSummarizer, this.layoutStack));
                     visualizationBuilder.AddLayout("Favorite Activities", new PreferenceSummaryLayout(this.engine, this.layoutStack, this.publicFileIo));
-                    visualizationBuilder.AddLayout("Life Story", new ParticipationSummarizerLayout(this.engine, this.persona, this.layoutStack));
+                    visualizationBuilder.AddLayout("Life Story", new ParticipationSummarizerLayout(this.engine, this.userSettings, this.layoutStack));
                     visualizationBuilder.AddLayout("Efficiency Growth", new EfficiencyTrendLayout(this.engine.EfficiencyCorrelator));
 
                     visualizationBuilder.AddLayout("Visualize one Activity", new ActivityVisualizationMenu(this.engine, layoutStack));
 
-                    BrowseParticipations_Layout browseLayout = new BrowseParticipations_Layout(this.ActivityDatabase, this.engine, this.engine.RatingSummarizer, this.layoutStack);
+                    BrowseParticipations_Layout browseLayout = new BrowseParticipations_Layout(this.ActivityDatabase, this.engine, this.engine.RatingSummarizer, this.userSettings, this.layoutStack);
                     browseLayout.AddParticipationComment += BrowseLayout_AddParticipationComment;
                     visualizationBuilder.AddLayout("Search Participations", browseLayout);
 
@@ -156,7 +156,7 @@ namespace ActivityRecommendation.View
         private LayoutChoice_Set noParticipations_layout;
         private LayoutChoice_Set noActivities_layout;
         private PublicFileIo publicFileIo;
-        private Persona persona;
+        private UserSettings userSettings;
     }
 
     public class AnalysisFeature : AppFeature

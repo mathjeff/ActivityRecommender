@@ -348,11 +348,12 @@ namespace ActivityRecommendation
 
             return this.ConvertToString(properties, this.ProtoActivity_Tag);
         }
-        public string ConvertToString(Persona persona)
+        public string ConvertToString(UserSettings persona)
         {
             Dictionary<string, string> properties = new Dictionary<string, string>();
-            properties[this.PersonaName_Tag] = persona.Name;
+            properties[this.PersonaName_Tag] = persona.PersonaName;
             properties[this.PersonaAppearance_Tag] = persona.LayoutDefaults_Name;
+            properties[this.PersonaFeedbackType_Tag] = this.ConvertToStringBody(persona.FeedbackType);
 
             return this.ConvertToString(properties, this.PersonaTag);
         }
@@ -605,7 +606,7 @@ namespace ActivityRecommendation
         }
         private void ProcessPersona(XmlNode nodeRepresentation)
         {
-            Persona persona = this.ReadPersona(nodeRepresentation);
+            UserSettings persona = this.ReadPersona(nodeRepresentation);
             if (this.listener != null)
                 this.listener.SetPersona(persona);
         }
@@ -1400,20 +1401,24 @@ namespace ActivityRecommendation
             return new ProtoActivity(text, lastInteracted, ratings);
         }
 
-        public Persona ReadPersona(XmlNode nodeRepresentation)
+        public UserSettings ReadPersona(XmlNode nodeRepresentation)
         {
-            Persona persona = new Persona();
+            UserSettings persona = new UserSettings();
             foreach (XmlNode currentChild in nodeRepresentation.ChildNodes)
             {
                 if (currentChild.Name == this.PersonaName_Tag)
                 {
-                    persona.Name = this.ReadText(currentChild);
+                    persona.PersonaName = this.ReadText(currentChild);
                     continue;
                 }
                 if (currentChild.Name == this.PersonaAppearance_Tag)
                 {
                     persona.LayoutDefaults_Name = this.ReadText(currentChild);
                     continue;
+                }
+                if (currentChild.Name == this.PersonaFeedbackType_Tag)
+                {
+                    persona.FeedbackType = this.ReadParticipationFeedbackType(this.ReadText(currentChild));
                 }
             }
             return persona;
@@ -1553,7 +1558,7 @@ namespace ActivityRecommendation
                 }
                 if (node.Name == this.PersonaTag)
                 {
-                    Persona persona = this.ReadPersona(node);
+                    UserSettings persona = this.ReadPersona(node);
                     personaText = this.ConvertToString(persona);
                     continue;
                 }
@@ -1702,6 +1707,18 @@ namespace ActivityRecommendation
 
             return this.ConvertToStringBody(properties);
         }
+
+        public ParticipationFeedbackType ReadParticipationFeedbackType(string text)
+        {
+            ParticipationFeedbackType? feedbackType = Enum.Parse(typeof(ParticipationFeedbackType), text) as ParticipationFeedbackType?;
+            return feedbackType.GetValueOrDefault(ParticipationFeedbackType.LONGTERM_HAPPINESS);
+        }
+
+        public string ConvertToStringBody(ParticipationFeedbackType feedbackType)
+        {
+            return feedbackType.ToString();
+        }
+
 
         private string XmlEscape(String input)
         {
@@ -2208,6 +2225,14 @@ namespace ActivityRecommendation
             get
             {
                 return "Theme";
+            }
+        }
+
+        private string PersonaFeedbackType_Tag
+        {
+            get
+            {
+                return "FeedbackType";
             }
         }
 

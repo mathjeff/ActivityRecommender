@@ -14,12 +14,13 @@ namespace ActivityRecommendation.View
         public event AddParticipationComment_Handler AddParticipationComment;
         public delegate void AddParticipationComment_Handler(ParticipationComment comment);
 
-        public BrowseParticipations_Layout(ActivityDatabase activityDatabase, Engine engine, ScoreSummarizer scoreSummarizer, LayoutStack layoutStack)
+        public BrowseParticipations_Layout(ActivityDatabase activityDatabase, Engine engine, ScoreSummarizer scoreSummarizer, UserSettings userSettings, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
             this.engine = engine;
             this.layoutStack = layoutStack;
             this.scoreSummarizer = scoreSummarizer;
+            this.userSettings = userSettings;
 
             TextblockLayout helpLayout = new TextblockLayout("Browse participations");
 
@@ -292,7 +293,7 @@ namespace ActivityRecommendation.View
         }
         private ListParticipations_Layout New_ListParticipationsLayout(List<Participation> participations)
         {
-            ListParticipations_Layout result = new ListParticipations_Layout(participations, this.ShowRatings, this.engine, this.scoreSummarizer, this.layoutStack, this.randomGenerator);
+            ListParticipations_Layout result = new ListParticipations_Layout(participations, this.ShowRatings, this.engine, this.scoreSummarizer, this.userSettings, this.layoutStack, this.randomGenerator);
             result.AddParticipationComment += Result_AddParticipationComment;
             return result;
 
@@ -379,7 +380,7 @@ namespace ActivityRecommendation.View
                 participations = participations.GetRange(0, numParticipationsToShow);
 
             TitledControl mainView = new TitledControl("" + participations.Count + " random participations (of " + availableCount + " matches) in " + this.Category.Name, 30);
-            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.engine, this.scoreSummarizer, this.layoutStack, this.randomGenerator));
+            mainView.SetContent(new ListParticipations_Layout(participations, this.ShowRatings, this.engine, this.scoreSummarizer, this.userSettings, this.layoutStack, this.randomGenerator));
             return mainView;
         }
 
@@ -439,5 +440,6 @@ namespace ActivityRecommendation.View
         private VisiPlacement.SingleSelect requireSuccessful_box;
         private VisiPlacement.SingleSelect sortBy_box;
         private DateEntryView sinceDate_box;
+        private UserSettings userSettings;
     }
 }

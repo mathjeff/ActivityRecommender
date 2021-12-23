@@ -15,7 +15,7 @@ namespace ActivityRecommendation
 {
     class DataExportView : TitledControl
     {
-        public DataExportView(ActivityRecommender activityRecommender, Persona persona, LayoutStack layoutStack)
+        public DataExportView(ActivityRecommender activityRecommender, UserSettings persona, LayoutStack layoutStack)
         {
             this.SetTitle("Export Your Data");
 
@@ -29,17 +29,17 @@ namespace ActivityRecommendation
             this.layoutStack = layoutStack;
 
             this.SetupView();
-            this.persona.NameChanged += Persona_NameChanged;
+            this.persona.Changed += PersonaChanged;
         }
 
-        private void Persona_NameChanged(string newName)
+        private void PersonaChanged()
         {
             this.SetupView();
         }
 
         private void SetupView()
         {
-            LayoutChoice_Set instructions = new TextblockLayout("This this txt file contains most of what you've provided to " + this.persona.Name + ", and so it may become large.");
+            LayoutChoice_Set instructions = new TextblockLayout("This this txt file contains most of what you've provided to " + this.persona.PersonaName + ", and so it may become large.");
             ButtonLayout buttonLayout = new ButtonLayout(this.exportButton, "Export");
             LayoutChoice_Set credits = new CreditsButtonBuilder(this.layoutStack)
                 .AddContribution(ActRecContributor.ANNI_ZHANG, new DateTime(2020, 04, 05), "Pointed out that exported data files could not be seen by users on iOS")
@@ -60,7 +60,7 @@ namespace ActivityRecommendation
 
         Button exportButton;
         ActivityRecommender activityRecommender;
-        Persona persona;
+        UserSettings persona;
         LayoutStack layoutStack;
     }
 }

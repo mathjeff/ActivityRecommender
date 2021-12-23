@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VisiPlacement;
 
 namespace ActivityRecommendation
 {
@@ -30,7 +31,7 @@ namespace ActivityRecommendation
         public double? PredictedScoreDividedByAverage { get; set; }
         public bool WorseThanRootActivity { get; set; }
         // what we expect the engine's reaction to be if the user does this
-        public string ExpectedReaction { get; set; }
+        public ValueConverter<ParticipationFeedbackType, string> ExpectedReaction { get; set; }
         public ActivitySkip Skip { get; set; } // Describes when the user skipped this suggestion, if at all
         public int NumActivitiesConsidered { get; set; }
         public bool Skippable = true;

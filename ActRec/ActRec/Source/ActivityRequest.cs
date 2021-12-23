@@ -46,6 +46,12 @@ namespace ActivityRecommendation
         // The number of suggestions that must be accepted divided by the number of suggestions that will be done.
         // In most cases, this is 1, but an experiment requires consenting to multiple activities and then doing only one.
         public int NumAcceptancesPerParticipation = 1;
+
+        // What type of feedback to compute, if any, while making this suggestion
+        // The reason this gets put into a suggestion is because we want to be able to say "If you do this, this is what we expect to say about it"
+        // The reason this gets put into an ActivityRequest is because it's based on approximately the same information as the suggestion, and
+        // doing both at once helps ensure they're consistent (for example, not affected by any timing differences)
+        public ParticipationFeedbackType FeedbackType = ParticipationFeedbackType.NONE;
     }
 
     public enum ActivityRequestOptimizationProperty

@@ -21,11 +21,11 @@ namespace ActivityRecommendation
             switch (formatType)
             {
                 case ParticipationFeedbackType.LONGTERM_HAPPINESS:
-                    return this.numberWithExclamationPoints((int)feedback.ExpectedFutureFun);
+                    return this.numberWithExclamationPoints(Math.Round(feedback.ExpectedFutureFun, 1));
                 case ParticipationFeedbackType.SHORTTERM_HAPPINESS:
                     return "" + feedback.PredictedValue + " ";
                 case ParticipationFeedbackType.LONGTERM_EFFICIENCY:
-                    return this.numberWithExclamationPoints((int)feedback.ExpectedEfficiency);
+                    return this.numberWithExclamationPoints(Math.Round(feedback.ExpectedEfficiency, 0));
                 case ParticipationFeedbackType.DURATION_VS_AVERAGE:
                     return "x" + Math.Round(feedback.ParticipationDurationDividedByAverage, 2) + " ";
             }
@@ -34,7 +34,7 @@ namespace ActivityRecommendation
         }
 
         // adds a sign and exclamation points based on the number, and returns the result
-        private string numberWithExclamationPoints(int value)
+        private string numberWithExclamationPoints(double value)
         {
             int numExclamationPoints = (int)Math.Min((Math.Abs(value) / 10), 10);
             string exclamationPoints = ":";

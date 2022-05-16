@@ -267,7 +267,7 @@ namespace ActivityRecommendation
             // It's possible that C could have more children in reality that the user hasn't considered it important enough to enter, and that
             // if we suggest C then that's more clear and more generalizable than if we suggest E.
             //
-            // However, if the user asks for a suggestion from E, then we consider E and F. The reason we consider E now is because D has multiple children that the user
+            // However, if the user asks for a suggestion from D, then we consider E and F. The reason we consider E now is because D has multiple children that the user
             // has considered it worthwhile to distinguish.
             //
             // The main reason we might have an inheritance hierarchy like this (a parent having exactly one child) is if activities are classified by multiple overlapping

@@ -122,6 +122,7 @@ namespace ActivityRecommendation
             this.setEnddateButton = new Button();
 
             this.okButton = new Button();
+            this.okButtonLayout = new ButtonLayout(okButton);
 
             LayoutChoice_Set helpWindow = (new HelpWindowBuilder()).AddMessage("Use this screen to record participations.")
                 .AddMessage("1. Type the name of the activity that you participated in, and press Enter if you want to take the autocomplete suggestion.")
@@ -159,7 +160,7 @@ namespace ActivityRecommendation
 
             GridLayout grid4 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(4), LayoutScore.Zero);
             grid4.AddLayout(new ButtonLayout(this.setStartdateButton, "Start = now", 16));
-            grid4.AddLayout(new ButtonLayout(this.okButton));
+            grid4.AddLayout(this.okButtonLayout);
             grid4.AddLayout(new HelpButtonLayout(helpWindow, this.layoutStack));
             grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now", 16));
             contents.AddLayout(grid4);
@@ -196,9 +197,8 @@ namespace ActivityRecommendation
                 "and add some activities first. Here is a convenient button for jumping directly to the Activities screen:"));
 
             Button activitiesButton = new Button();
-            activitiesButton.Text = "Activities";
             activitiesButton.Clicked += ActivitiesButton_Clicked;
-            noActivities_help_builder.AddLayout(new ButtonLayout(activitiesButton));
+            noActivities_help_builder.AddLayout(new ButtonLayout(activitiesButton, "Activities"));
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
 
@@ -427,13 +427,6 @@ namespace ActivityRecommendation
                 return activity.Name;
             }
         }
-        public string RatingText
-        {
-            set
-            {
-                //this.ratingBox.Text = value;
-            }
-        }
         public string CommentText
         {
             get
@@ -635,7 +628,7 @@ namespace ActivityRecommendation
                 text = "OK";
             else
                 text = this.todoCompletionStatusPicker.SelectedItem;
-            this.okButton.Text = text;
+            this.okButtonLayout.setText(text);
         }
 
         private bool EnteringToDo
@@ -836,6 +829,7 @@ namespace ActivityRecommendation
         Button setStartdateButton;
         Button setEnddateButton;
         Button okButton;
+        ButtonLayout okButtonLayout;
         ButtonLayout participationFeedbackButtonLayout;
         ContainerLayout promptHolder;
         TextblockLayout suggestionLayout;

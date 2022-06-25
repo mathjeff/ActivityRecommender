@@ -121,9 +121,8 @@ namespace ActivityRecommendation.View
             noActivities_help_builder.AddLayout(new TextblockLayout("Before you can ask for a suggestion, ActivityRecommender needs you to go back " +
                 "and add some activities first. Here is a convenient button for jumping directly to the Activities screen:"));
             Button visitActivities_button = new Button();
-            visitActivities_button.Text = "Activities";
             visitActivities_button.Clicked += VisitActivities_button_Clicked;
-            noActivities_help_builder.AddLayout(new ButtonLayout(visitActivities_button));
+            noActivities_help_builder.AddLayout(new ButtonLayout(visitActivities_button, "Activities"));
 
             this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
 

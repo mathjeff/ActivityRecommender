@@ -176,7 +176,7 @@ namespace ActivityRecommendation.View
             {
                 // Box has text; show X button
                 this.sideLayout.SubLayout = this.sideButtonLayout;
-                this.sideButton.Text = "X";
+                this.sideButtonLayout.setText("X");
             }
             else
             {
@@ -184,7 +184,7 @@ namespace ActivityRecommendation.View
                 if (this.createNewActivity)
                     this.sideLayout.SubLayout = null;
                 else
-                    this.sideButton.Text = "?";
+                    this.sideButtonLayout.setText("?");
             }
         }
 

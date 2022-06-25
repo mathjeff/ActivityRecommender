@@ -17,16 +17,14 @@ namespace ActivityRecommendation.View
 
             Button clearVersionButton = new Button();
             clearVersionButton.Clicked += ClearVersionButton_Clicked;
-            clearVersionButton.Text = "Clear Saved Version";
 
             Button resetVersionButton = new Button();
             resetVersionButton.Clicked += ResetVersionButton_Clicked;
-            resetVersionButton.Text = "Reset Saved Version to '1.0.0'";
 
             this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(instructions)
-                .AddLayout(new ButtonLayout(clearVersionButton))
-                .AddLayout(new ButtonLayout(resetVersionButton))
+                .AddLayout(new ButtonLayout(clearVersionButton, "Clear Saved Version"))
+                .AddLayout(new ButtonLayout(resetVersionButton, "Reset Saved Version to '1.0.0'"))
                 .Build();
         }
 

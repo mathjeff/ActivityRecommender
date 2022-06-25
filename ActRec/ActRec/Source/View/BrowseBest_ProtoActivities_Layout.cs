@@ -17,30 +17,24 @@ namespace ActivityRecommendation.View
             this.activityDatabase = activityDatabase;
 
             Button edit1Button = new Button();
-            edit1Button.Text = "Edit";
             edit1Button.Clicked += Edit1Button_Clicked;
 
             Button edit2Button = new Button();
-            edit2Button.Text = "Edit";
             edit2Button.Clicked += Edit2Button_Clicked;
 
             Button mark1Worse_button = new Button();
-            mark1Worse_button.Text = "Worse";
             mark1Worse_button.Clicked += Mark1Worse_button_Clicked;
 
             Button explainScore1Button = new Button();
-            explainScore1Button.Text = "?";
             explainScore1Button.Clicked += ExplainScore1Button_Clicked;
-            this.explainScore1Button = new ButtonLayout(explainScore1Button);
+            this.explainScore1Button = new ButtonLayout(explainScore1Button, "?");
 
             Button mark2Worse_button = new Button();
-            mark2Worse_button.Text = "Worse";
             mark2Worse_button.Clicked += Mark2Worse_button_Clicked;
 
             Button explainScore2Button = new Button();
-            explainScore2Button.Text = "?";
             explainScore2Button.Clicked += ExplainScore2Button_Clicked;
-            this.explainScore2Button = new ButtonLayout(explainScore2Button);
+            this.explainScore2Button = new ButtonLayout(explainScore2Button, "?");
 
             BoundProperty_List rowHeights = BoundProperty_List.Uniform(3);
             BoundProperty_List columnWidths = new BoundProperty_List(3);
@@ -79,8 +73,8 @@ namespace ActivityRecommendation.View
                 .Build(), 
                 layoutStack);
             grid.PutLayout(helpButton, 2, 0);
-            grid.PutLayout(new ButtonLayout(edit1Button), 0, 1);
-            grid.PutLayout(new ButtonLayout(edit2Button), 0, 2);
+            grid.PutLayout(new ButtonLayout(edit1Button, "Edit"), 0, 1);
+            grid.PutLayout(new ButtonLayout(edit2Button, "Edit"), 0, 2);
             this.activity1Holder = new ContainerLayout();
             grid.PutLayout(this.activity1Holder, 1, 1);
             this.activity2Holder = new ContainerLayout();
@@ -91,7 +85,7 @@ namespace ActivityRecommendation.View
             grid.PutLayout(
                 new Vertical_GridLayout_Builder()
                 .Uniform()
-                .AddLayout(new ButtonLayout(mark1Worse_button))
+                .AddLayout(new ButtonLayout(mark1Worse_button, "Worse"))
                 .AddLayout(this.score1Holder)
                 .BuildAnyLayout()
                 , 2, 1);
@@ -99,7 +93,7 @@ namespace ActivityRecommendation.View
             grid.PutLayout(
                 new Vertical_GridLayout_Builder()
                 .Uniform()
-                .AddLayout(new ButtonLayout(mark2Worse_button))
+                .AddLayout(new ButtonLayout(mark2Worse_button, "Worse"))
                 .AddLayout(this.score2Holder)
                 .BuildAnyLayout()
                 , 2, 2);

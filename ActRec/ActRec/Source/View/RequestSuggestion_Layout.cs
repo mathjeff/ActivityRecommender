@@ -143,7 +143,8 @@ namespace ActivityRecommendation.View
 
                 this.atLeastAsFunAs_button = new Button();
                 atLeastAsFunAs_button.Clicked += RequestAsFunAs_Button_Clicked;
-                configurationLayout.AddLayout(new TitledControl("As fun as:", new ButtonLayout(atLeastAsFunAs_button)));
+                this.atLeastAsFunAs_layout = new ButtonLayout(atLeastAsFunAs_button);
+                configurationLayout.AddLayout(new TitledControl("As fun as:", this.atLeastAsFunAs_layout));
 
                 if (vertical)
                 {
@@ -222,7 +223,7 @@ namespace ActivityRecommendation.View
             this.atLeastAsFunAs_activity = this.specify_AtLeastAsFunAs_Layout.Activity;
             if (this.atLeastAsFunAs_activity == null)
             {
-                this.atLeastAsFunAs_button.Text = "(Optional)";
+                this.atLeastAsFunAs_layout.setText("(Optional");
             }
             else
             {
@@ -232,7 +233,7 @@ namespace ActivityRecommendation.View
                 {
                     text += " (" + ratio + "x prev)";
                 }
-                this.atLeastAsFunAs_button.Text = text;
+                this.atLeastAsFunAs_layout.setText(text);
             }
         }
 
@@ -240,6 +241,7 @@ namespace ActivityRecommendation.View
         private Specify_AtLeastAsFunAs_Layout specify_AtLeastAsFunAs_Layout;
         private LayoutStack layoutStack;
         private Button atLeastAsFunAs_button;
+        private ButtonLayout atLeastAsFunAs_layout;
         private Activity atLeastAsFunAs_activity;
         private ActivityDatabase activityDatabase;
         private Engine engine;

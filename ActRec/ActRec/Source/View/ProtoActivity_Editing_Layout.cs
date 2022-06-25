@@ -31,16 +31,12 @@ namespace ActivityRecommendation.View
             gridBuilder.AddLayout(ScrollLayout.New(new TextboxLayout(this.textBox)));
 
             Button saveButton = new Button();
-            saveButton.Text = "Save";
             saveButton.Clicked += SaveButton_Clicked;
 
             Button promoteButton = new Button();
-            promoteButton.Text = "Promote to Activity";
             promoteButton.Clicked += PromoteButton_Clicked;
 
             Button splitButton = new Button();
-            splitButton.Text = "Split";
-            splitButton.Clicked += SplitButton_Clicked;
 
             HelpButtonLayout helpButtonLayout = new HelpButtonLayout(new HelpWindowBuilder()
                 .AddMessage("This screen allows you to edit " + titleText + ".")
@@ -57,9 +53,9 @@ namespace ActivityRecommendation.View
                 , layoutStack);
 
             LayoutChoice_Set buttonsLayout = new Horizontal_GridLayout_Builder()
-                .AddLayout(new ButtonLayout(saveButton))
-                .AddLayout(new ButtonLayout(promoteButton))
-                .AddLayout(new ButtonLayout(splitButton))
+                .AddLayout(new ButtonLayout(saveButton, "Save"))
+                .AddLayout(new ButtonLayout(promoteButton, "Promote to Activity"))
+                .AddLayout(new ButtonLayout(splitButton, "Split"))
                 .AddLayout(helpButtonLayout)
                 .BuildAnyLayout();
             gridBuilder.AddLayout(buttonsLayout);

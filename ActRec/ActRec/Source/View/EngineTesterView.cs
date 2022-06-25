@@ -20,12 +20,11 @@ namespace ActivityRecommendation
                 + "it made ActivityRecommender's predictions more accurate). Do you want to continue?");
 
             Button confirmButton = new Button();
-            confirmButton.Text = "Compute Overall Accuracy";
             confirmButton.Clicked += ConfirmButton_Clicked;
 
             LayoutChoice_Set gridLayout = new Vertical_GridLayout_Builder().Uniform()
                 .AddLayout(explanationLayout)
-                .AddLayout(new ButtonLayout(confirmButton))
+                .AddLayout(new ButtonLayout(confirmButton, "Compute Overall Accuracy"))
                 .Build();
             this.SetContent(gridLayout);
         }

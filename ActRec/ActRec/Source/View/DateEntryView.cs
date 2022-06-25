@@ -36,7 +36,7 @@ namespace ActivityRecommendation
             this.chooseDate_button.Clicked += ChooseDate_button_Clicked;
             this.title = title;
             LayoutChoice_Set titleLayout = new TextblockLayout(title).AlignHorizontally(TextAlignment.Center).AlignVertically(TextAlignment.Center);
-            LayoutChoice_Set contentLayout = ButtonLayout.WithoutBevel(this.chooseDate_button);
+            this.contentLayout = ButtonLayout.WithoutBevel(this.chooseDate_button);
             if (placeTitleAbove)
             {
                 this.SubLayout = new Vertical_GridLayout_Builder().Uniform()
@@ -201,19 +201,19 @@ namespace ActivityRecommendation
         {
             if (this.IsDateValid())
             {
-                this.chooseDate_button.Text = this.dateText;
+                this.contentLayout.setText(this.dateText);
                 this.appear_defaultValid();
             }
             else
             {
                 if ((this.dateText == null || this.dateText == "") && this.placeholder != null)
                 {
-                    this.chooseDate_button.Text = this.placeholder;
+                    this.contentLayout.setText(this.placeholder);
                     this.appear_defaultValid();
                 }
                 else
                 {
-                    this.chooseDate_button.Text = this.dateText;
+                    this.contentLayout.setText(this.dateText);
                     this.appearInvalid();
                 }
             }
@@ -233,6 +233,7 @@ namespace ActivityRecommendation
         private string placeholder = null;
         private string dateText = "";
         private string title;
+        private ButtonLayout contentLayout;
     }
 
     class FullscreenDateEntryView : ContainerLayout
@@ -322,10 +323,9 @@ namespace ActivityRecommendation
                 this.buttons.Add(null);
             }
             Button button = new Button();
-            button.Text = value.ToString();
             this.buttons[value] = button;
             button.Clicked += this.numberButton_click;
-            return new ButtonLayout(button);
+            return new ButtonLayout(button, value.ToString());
         }
 
 
@@ -377,9 +377,8 @@ namespace ActivityRecommendation
         private ButtonLayout makeBackspaceButton()
         {
             Button backspaceButton = new Button();
-            backspaceButton.Text = "<-";
             backspaceButton.Clicked += BackspaceButton_Clicked;
-            return new ButtonLayout(backspaceButton);
+            return new ButtonLayout(backspaceButton, "<-");
         }
         private void BackspaceButton_Clicked(object sender, EventArgs e)
         {

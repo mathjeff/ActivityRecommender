@@ -15,9 +15,8 @@ namespace ActivityRecommendation.View
 
             Button button = new Button();
             button.Clicked += Button_Clicked;
-            this.button = button;
 
-            ButtonLayout buttonLayout = ButtonLayout.WithoutBevel(button);
+            this.buttonLayout = ButtonLayout.WithoutBevel(button);
             this.SubLayout = buttonLayout;
 
             this.detailsLayout = new HelpDurationInput_DetailsLayout();
@@ -37,7 +36,7 @@ namespace ActivityRecommendation.View
 
         private void updateButtonText()
         {
-            this.button.Text = "Have help? " + this.detailsLayout.Summarize();
+            this.buttonLayout.setText("Have help? " + this.detailsLayout.Summarize());
         }
         public TimeSpan GetHelpDuration(TimeSpan duration)
         {
@@ -51,7 +50,7 @@ namespace ActivityRecommendation.View
 
         private HelpDurationInput_DetailsLayout detailsLayout;
         private LayoutStack layoutStack;
-        private Button button;
+        private ButtonLayout buttonLayout;
     }
 
     class HelpDurationInput_DetailsLayout : ContainerLayout

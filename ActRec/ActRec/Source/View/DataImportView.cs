@@ -123,7 +123,6 @@ namespace ActivityRecommendation
 
             Button button = new Button();
             string fileName = Path.GetFileName(fileData.Path);
-            button.Text = "Import " + fileName + " and overwrite ALL existing data.";
             button.Clicked += Button_Clicked;
 
             this.SetTitle("Confirm Import");

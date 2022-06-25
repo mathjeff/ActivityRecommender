@@ -19,9 +19,10 @@ namespace ActivityRecommendation.View
             this.queryBox.TextChanged += QueryText_Changed;
             this.okButton = new Button();
             this.okButton.Clicked += OkButton_Clicked;
+            this.okButtonLayout = new ButtonLayout(this.okButton);
 
             LayoutChoice_Set sublayout = new Vertical_GridLayout_Builder()
-                .AddLayout(new ButtonLayout(this.okButton))
+                .AddLayout(this.okButtonLayout)
                 .AddLayout(new TextboxLayout(this.queryBox))
                 .BuildAnyLayout();
             this.SubLayout = sublayout;
@@ -53,7 +54,7 @@ namespace ActivityRecommendation.View
             string summary = "";
             if (protoActivity != null)
                 summary = protoActivity.Summarize();
-            this.okButton.Text = summary;
+            this.okButtonLayout.setText(summary);
         }
 
         private string QueryText
@@ -76,6 +77,7 @@ namespace ActivityRecommendation.View
         private ActivityDatabase activityDatabase;
         private Editor queryBox;
         private Button okButton;
+        private ButtonLayout okButtonLayout;
     }
 
     class SearchProtoActivities_Feature : AppFeature

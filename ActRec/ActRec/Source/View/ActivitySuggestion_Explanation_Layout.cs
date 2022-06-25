@@ -27,10 +27,9 @@ namespace ActivityRecommendation.View
 
             Button explainQuality_button = new Button();
             explainQuality_button.Clicked += ExplainQuality_button_Clicked;
-            explainQuality_button.Text = "Suggestion quality: " + Math.Round(explanation.SuggestionValue, 3);
             this.suggestionQuality_container = new ContainerLayout();
             builder.AddLayout(this.suggestionQuality_container);
-            this.suggestionQuality_container.SubLayout = new ButtonLayout(explainQuality_button);
+            this.suggestionQuality_container.SubLayout = new ButtonLayout(explainQuality_button, "Suggestion quality: " + Math.Round(explanation.SuggestionValue, 3));
 
             this.SubLayout = ScrollLayout.New(builder.Build());
         }

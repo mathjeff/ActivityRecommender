@@ -47,8 +47,7 @@ namespace ActivityRecommendation.View
             {
                 Button showRatings_button = new Button();
                 showRatings_button.Clicked += ShowRatings_button_Clicked;
-                showRatings_button.Text = "Show Ratings";
-                ButtonLayout showRatings_layout = new ButtonLayout(showRatings_button);
+                ButtonLayout showRatings_layout = new ButtonLayout(showRatings_button, "Show Ratings");
                 gridBuilder.AddLayout(showRatings_layout);
             }
             this.SubLayout = ScrollLayout.New(gridBuilder.BuildAnyLayout());

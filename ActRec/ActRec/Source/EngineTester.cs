@@ -757,8 +757,25 @@ Means.MeanErr: 0.1438 (0.2704 * average), StdDevs.MeanErr: 0.1056 (0.1986 * aver
 Means.MeanErr: 5.1774 (3.0257 * average), StdDevs.MeanErr: 5.538 (3.2365 * average), efficiency
 Means.MeanErr: 3.4505 (24 days), StdDevs.MeanErr: 3.3312 (23 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:03:06.9515740
+
+updated results on 2022-09-02 after making the interpolator split more often
+Means.MeanErr: 0.0261 (19 days), StdDevs.MeanErr: 0.0224 (16 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0256 (19 days), StdDevs.MeanErr: 0.0246 (18 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1438 (0.2704 * average), StdDevs.MeanErr: 0.1056 (0.1986 * average), score
+0.9461,                                         equivalentWeightedProbability
+Means.MeanErr: 5.1774 (3.0257 * average), StdDevs.MeanErr: 5.538 (3.2365 * average), efficiency
+Means.MeanErr: 3.4404 (24 days), StdDevs.MeanErr: 3.3317 (23 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:03:20.9473140
 */
 
+// What's the relationship between accuracy and runtime?
+// If we assume the user is perfectly rational and doesn't mind much waiting for a suggestion, then
+// the user is probably simply wasting all of their time while they're waiting for a suggestion, and the cost of waiting for a suggestion is the time spent waiting for it.
+// The increase in accuracy of a suggestion probably needs to be enough to offset it
+// Suppose the user requests an average of 10 suggestions per day. This currently takes about 1 second per suggestion or about 10s/day.
+// Then a 100% increase in runtime would cost about 10s/day or about 60m/year.
+// This suggests that an increase in runtime of even 100% is negligible compared to a reduction in error rate close to 1day/year.
+// Also note that the times above are for the EngineTester rather than the time to get just one suggestion
 namespace ActivityRecommendation
 {
     class EngineTester : HistoryReplayer

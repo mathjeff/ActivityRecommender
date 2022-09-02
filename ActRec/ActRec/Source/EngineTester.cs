@@ -748,6 +748,15 @@ Means.MeanErr: 0.1414 (0.2662 * average), StdDevs.MeanErr: 0.1048 (0.1972 * aver
 Means.MeanErr: 5.2198 (3.0362 * average), StdDevs.MeanErr: 5.569 (3.2394 * average), efficiency
 Means.MeanErr: 3.678 (26 days), StdDevs.MeanErr: 3.5606 (25 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:03:00.0605745 // running in the debugger
+
+updated results on 2022-09-02 with new data
+Means.MeanErr: 0.027 (20 days), StdDevs.MeanErr: 0.023 (17 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0265 (19 days), StdDevs.MeanErr: 0.0257 (19 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1438 (0.2704 * average), StdDevs.MeanErr: 0.1056 (0.1986 * average), score
+0.9461,                                         equivalentWeightedProbability
+Means.MeanErr: 5.1774 (3.0257 * average), StdDevs.MeanErr: 5.538 (3.2365 * average), efficiency
+Means.MeanErr: 3.4505 (24 days), StdDevs.MeanErr: 3.3312 (23 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:03:06.9515740
 */
 
 namespace ActivityRecommendation

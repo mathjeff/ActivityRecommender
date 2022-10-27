@@ -72,7 +72,7 @@ namespace ActivityRecommendation
                 .AddLayout(new Horizontal_GridLayout_Builder().Uniform()
                     .AddLayout(new ButtonLayout(acceptSuggestion_button, "Yes"))
                     .AddLayout(new ButtonLayout(declineSuggestion_button, "No"))
-                    .AddLayout(new ButtonLayout(visitSuggestions_button, "More ideas"))
+                    .AddLayout(new ButtonLayout(visitSuggestions_button, "More"))
                     .BuildAnyLayout()
                 )
                 .BuildAnyLayout();
@@ -277,7 +277,7 @@ namespace ActivityRecommendation
                 {
                     this.DeclinedSuggestion(this.suggestion);
                 }
-                this.updateSuggestion();
+                this.Invalidate_FeedbackBlock_Text();
             }
         }
 
@@ -386,7 +386,7 @@ namespace ActivityRecommendation
             this.nameBox.Clear();
             this.CommentText = "";
             this.updateMetricSelectorVisibility();
-            this.Update_FeedbackBlock_Text();
+            this.Invalidate_FeedbackBlock_Text();
         }
         public Engine Engine
         {

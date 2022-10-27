@@ -17,6 +17,9 @@ namespace ActivityRecommendation
         public event VisitSuggestionsScreenHandler VisitSuggestionsScreen;
         public delegate void VisitSuggestionsScreenHandler();
 
+        public event GotSuggestionHandler GotSuggestion;
+        public delegate void GotSuggestionHandler(ActivitiesSuggestion suggestion);
+
         public ParticipationEntryView(ActivityDatabase activityDatabase, UserSettings userSettings, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
@@ -249,9 +252,9 @@ namespace ActivityRecommendation
         private void AcceptSuggestions_button_Clicked(object sender, EventArgs e)
         {
             // The response button suggested requesting another suggestion
-            if (this.suggestedActivityName != null)
+            if (this.suggestion != null)
             {
-                this.SetActivityName(this.suggestedActivityName);
+                this.SetActivityName(this.suggestion.ActivityDescriptor.ActivityName);
             }
         }
 
@@ -535,7 +538,7 @@ namespace ActivityRecommendation
                         return true;
                 }
             }
-            if (activity.ActivityName == this.suggestedActivityName)
+            if (this.suggestion != null && activity.CanMatch(this.suggestion.ActivityDescriptor))
             {
                 return true;
             }
@@ -694,10 +697,10 @@ namespace ActivityRecommendation
                         if (this.wasEverCleared)
                         {
                             this.updateSuggestion();
-                            if (this.suggestedActivityName != null)
+                            if (this.suggestion != null)
                             {
                                 this.promptHolder.SubLayout = this.suggestionsLayout;
-                                this.suggestionLayout.setText("How about " + this.suggestedActivityName + "?");
+                                this.suggestionLayout.setText("How about " + this.suggestion.ActivityDescriptor.ActivityName + "?");
                             }
                             else
                             {
@@ -764,19 +767,21 @@ namespace ActivityRecommendation
 
         private void updateSuggestion()
         {
-            ActivitySuggestion suggestion;
             string text = null;
             ActivitiesSuggestion choices = this.engine.MakeRecommendation();
+            if (this.GotSuggestion != null)
+            {
+                this.GotSuggestion(choices);
+            }
             if (choices != null)
             {
-                suggestion = choices.Children[0];
-                string name = suggestion.ActivityDescriptor.ActivityName;
+                this.suggestion = choices.Children[0];
+                string name = this.suggestion.ActivityDescriptor.ActivityName;
                 text = "How about " + name + "?";
-                this.suggestedActivityName = name;
             }
             else
             {
-                this.suggestedActivityName = null;
+                this.suggestion = null;
             }
             this.suggestionLayout.setText(text);
         }
@@ -846,7 +851,7 @@ namespace ActivityRecommendation
         ContainerLayout helpStatusHolder;
         ActivityDescriptor demanded_nextParticipationActivity;
         ParticipationFeedback participationFeedback;
-        string suggestedActivityName;
+        ActivitySuggestion suggestion;
         bool wasEverCleared;
         UserSettings userSettings;
     }

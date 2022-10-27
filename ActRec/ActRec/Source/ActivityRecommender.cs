@@ -435,6 +435,7 @@ namespace ActivityRecommendation
             this.participationEntryView.LatestParticipation = this.latestParticipation;
             this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
+            this.participationEntryView.GotSuggestion += ParticipationEntryView_GotSuggestion;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine, this.userSettings);
@@ -571,6 +572,11 @@ namespace ActivityRecommendation
             helpOrStart_menu = new Vertical_GridLayout_Builder().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
+        }
+
+        private void ParticipationEntryView_GotSuggestion(ActivitiesSuggestion suggestion)
+        {
+            this.SaveSuggestion(suggestion);
         }
 
         private void StatisticsMenu_AddParticipationComment(ParticipationComment comment)
@@ -1044,9 +1050,7 @@ namespace ActivityRecommendation
             if (suggestion != null)
             {
                 // we have to separately tell the engine about its suggestion because sometimes we don't want to record the suggestion (like when we ask the engine for a suggestion at the beginning to prepare it, for speed)
-                this.engine.ApplySuggestion(suggestion);
-
-                this.WriteSuggestion(suggestion);
+                this.SaveSuggestion(suggestion);
             }
 
             this.UndoHypotheticalSuggestions(hypotheticalParticipations);
@@ -1090,6 +1094,11 @@ namespace ActivityRecommendation
             {
                 this.engine.RemoveParticipation(participation);
             }
+        }
+        private void SaveSuggestion(ActivitiesSuggestion suggestion)
+        {
+            this.engine.ApplySuggestion(suggestion);
+            this.WriteSuggestion(suggestion);
         }
         private void WriteSuggestion(ActivitiesSuggestion suggestion)
         {

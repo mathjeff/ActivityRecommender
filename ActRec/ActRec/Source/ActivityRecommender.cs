@@ -436,6 +436,7 @@ namespace ActivityRecommendation
             this.participationEntryView.VisitActivitiesScreen += ParticipationEntryView_VisitActivitiesScreen;
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
             this.participationEntryView.GotSuggestion += ParticipationEntryView_GotSuggestion;
+            this.participationEntryView.DeclinedSuggestion += ParticipationEntryView_DeclinedSuggestion;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine, this.userSettings);
@@ -572,6 +573,11 @@ namespace ActivityRecommendation
             helpOrStart_menu = new Vertical_GridLayout_Builder().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
+        }
+
+        private void ParticipationEntryView_DeclinedSuggestion(ActivitiesSuggestion suggestion)
+        {
+            this.DeclineSuggestion(suggestion);
         }
 
         private void ParticipationEntryView_GotSuggestion(ActivitiesSuggestion suggestion)

@@ -20,6 +20,9 @@ namespace ActivityRecommendation
         public event GotSuggestionHandler GotSuggestion;
         public delegate void GotSuggestionHandler(ActivitiesSuggestion suggestion);
 
+        public event DeclinedSuggestionHandler DeclinedSuggestion;
+        public delegate void DeclinedSuggestionHandler(ActivitiesSuggestion suggestion);
+
         public ParticipationEntryView(ActivityDatabase activityDatabase, UserSettings userSettings, LayoutStack layoutStack)
         {
             this.activityDatabase = activityDatabase;
@@ -57,6 +60,9 @@ namespace ActivityRecommendation
             Button acceptSuggestion_button = new Button();
             acceptSuggestion_button.Clicked += AcceptSuggestions_button_Clicked;
 
+            Button declineSuggestion_button = new Button();
+            declineSuggestion_button.Clicked += DeclineSuggestion_button_Clicked;
+
             Button visitSuggestions_button = new Button();
             visitSuggestions_button.Clicked += VisitSuggestions_button_Clicked;
             this.suggestionLayout = new TextblockLayout();
@@ -65,6 +71,7 @@ namespace ActivityRecommendation
                 .AddLayout(suggestionLayout)
                 .AddLayout(new Horizontal_GridLayout_Builder().Uniform()
                     .AddLayout(new ButtonLayout(acceptSuggestion_button, "Yes"))
+                    .AddLayout(new ButtonLayout(declineSuggestion_button, "No"))
                     .AddLayout(new ButtonLayout(visitSuggestions_button, "More ideas"))
                     .BuildAnyLayout()
                 )
@@ -254,7 +261,23 @@ namespace ActivityRecommendation
             // The response button suggested requesting another suggestion
             if (this.suggestion != null)
             {
-                this.SetActivityName(this.suggestion.ActivityDescriptor.ActivityName);
+                this.SetActivityName(this.suggestion.Children[0].ActivityDescriptor.ActivityName);
+            }
+        }
+
+        private void DeclineSuggestion_button_Clicked(object sender, EventArgs e)
+        {
+            this.declineSuggestion();
+        }
+        private void declineSuggestion()
+        {
+            if (this.suggestion != null)
+            {
+                if (this.DeclinedSuggestion != null)
+                {
+                    this.DeclinedSuggestion(this.suggestion);
+                }
+                this.updateSuggestion();
             }
         }
 
@@ -538,7 +561,7 @@ namespace ActivityRecommendation
                         return true;
                 }
             }
-            if (this.suggestion != null && activity.CanMatch(this.suggestion.ActivityDescriptor))
+            if (this.suggestion != null && activity.CanMatch(this.suggestion.Children[0].ActivityDescriptor))
             {
                 return true;
             }
@@ -700,7 +723,7 @@ namespace ActivityRecommendation
                             if (this.suggestion != null)
                             {
                                 this.promptHolder.SubLayout = this.suggestionsLayout;
-                                this.suggestionLayout.setText("How about " + this.suggestion.ActivityDescriptor.ActivityName + "?");
+                                this.suggestionLayout.setText("How about " + this.suggestion.Children[0].ActivityDescriptor.ActivityName + "?");
                             }
                             else
                             {
@@ -775,8 +798,8 @@ namespace ActivityRecommendation
             }
             if (choices != null)
             {
-                this.suggestion = choices.Children[0];
-                string name = this.suggestion.ActivityDescriptor.ActivityName;
+                this.suggestion = choices;
+                string name = this.suggestion.Children[0].ActivityDescriptor.ActivityName;
                 text = "How about " + name + "?";
             }
             else
@@ -851,7 +874,7 @@ namespace ActivityRecommendation
         ContainerLayout helpStatusHolder;
         ActivityDescriptor demanded_nextParticipationActivity;
         ParticipationFeedback participationFeedback;
-        ActivitySuggestion suggestion;
+        ActivitiesSuggestion suggestion;
         bool wasEverCleared;
         UserSettings userSettings;
     }

@@ -3,6 +3,10 @@ set -e
 echo copying
 cd
 cd ActivityData
-fileName="$(ls ActivityData-*.txt | sort | tail -n 1 | head -c 56)"
+fileName="$1"
+if [ "$fileName" == "" ]; then
+  echo "Usage: $0 <filename>"
+  exit 1
+fi
 adb push "$fileName" /storage/emulated/0/ActivityRecommender
 echo copied "$fileName"

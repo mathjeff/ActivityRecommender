@@ -45,10 +45,7 @@ namespace ActivityRecommendation
 
             bool badSuggestion = (allWorseThanAverage && suggestion.Skippable);
 
-            if (badSuggestion)
-                fullBuilder.AddLayout(new TextblockLayout("Best ideas at " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
-            else
-                fullBuilder.AddLayout(new TextblockLayout("At " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
+            fullBuilder.AddLayout(new TextblockLayout("At " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
 
             List<LayoutChoice_Set> specificFont_contentChoices = new List<LayoutChoice_Set>(); // list of layouts we might use, each with a different font size
             this.explainButtons = new Dictionary<Button, ActivitySuggestion>();
@@ -98,11 +95,14 @@ namespace ActivityRecommendation
                     // make a doNow button if needed
                     if (isFirstSuggestion)
                     {
-                        Button doNowButton = new Button();
-                        doNowButton.Clicked += DoNowButton_Clicked;
-                        this.doButtons[doNowButton] = child;
-                        ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "OK", buttonFontSize);
-                        buttonsBuilder.AddLayout(doButtonLayout);
+                        if (!child.WorseThanRootActivity)
+                        {
+                            Button doNowButton = new Button();
+                            doNowButton.Clicked += DoNowButton_Clicked;
+                            this.doButtons[doNowButton] = child;
+                            ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "OK", buttonFontSize);
+                            buttonsBuilder.AddLayout(doButtonLayout);
+                        }
                     }
                     if (child.PredictedScoreDividedByAverage != null)
                     {
@@ -112,8 +112,12 @@ namespace ActivityRecommendation
                         ButtonLayout explainLayout = new ButtonLayout(explainButton, "?", buttonFontSize);
                         buttonsBuilder.AddLayout(explainLayout);
                     }
+                    if (child.WorseThanRootActivity)
+                    {
+                        buttonsBuilder.AddLayouts(make_otherActivities_layout(buttonFontSize));
+                    }
                     activityOptionsGrid.PutLayout(buttonsBuilder.BuildAnyLayout(), i, 1);
-                    if (child.ExpectedReaction != null)
+                    if (child.ExpectedReaction != null && !child.WorseThanRootActivity)
                     {
                         TextblockLayout reactionLayout = new TextblockLayout(child.ExpectedReaction.Get(this.userSettings.FeedbackType), buttonFontSize * 0.9);
                         reactionLayout.AlignHorizontally(horizontalAlignment);
@@ -123,22 +127,8 @@ namespace ActivityRecommendation
 
                 }
 
-                LayoutChoice_Set optionsAtThisFontSize;
-                if (badSuggestion)
-                {
-                    // If the suggestion is bad and we don't really want the user to do it, then we also show the user some convenient buttons for making more activities
-                    GridLayout wrapper = GridLayout.New(new BoundProperty_List(1), BoundProperty_List.WithRatios(new List<double>() { suggestion.Children.Count, 1 }), LayoutScore.Zero);
-                    wrapper.AddLayout(activityOptionsGrid); // activity suggestions
-                    wrapper.AddLayout(this.make_otherActivities_layout(mainFontSize)); // layout for making new activities
-                    optionsAtThisFontSize = wrapper;
-                }
-                else
-                {
-                    // If the suggestion isn't bad, then the options we give are just the activities being suggested
-                    optionsAtThisFontSize = activityOptionsGrid;
-                }
+                LayoutChoice_Set optionsAtThisFontSize = activityOptionsGrid;
                 specificFont_contentChoices.Add(optionsAtThisFontSize);
-
             }
 
             LayoutChoice_Set contentGrid = LayoutUnion.New(specificFont_contentChoices);
@@ -162,18 +152,17 @@ namespace ActivityRecommendation
             this.SubLayout = fullBuilder.BuildAnyLayout();
         }
 
-        private LayoutChoice_Set make_otherActivities_layout(double fontSize)
+        private List<LayoutChoice_Set> make_otherActivities_layout(double fontSize)
         {
             Button createNewActivity_button = new Button();
             createNewActivity_button.Clicked += CreateNewActivity_button_Clicked;
             Button brainstormNewActivities_button = new Button();
             brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
 
-            GridLayout_Builder builder = new Horizontal_GridLayout_Builder().Uniform();
-            builder.AddLayout(new ButtonLayout(brainstormNewActivities_button, "Brainstorm", fontSize));
-            builder.AddLayout(new ButtonLayout(createNewActivity_button, "New activity", fontSize));
-
-            return builder.BuildAnyLayout();
+            List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
+            layouts.Add(new ButtonLayout(brainstormNewActivities_button, "Brainstorm", fontSize));
+            layouts.Add(new ButtonLayout(createNewActivity_button, "New activity", fontSize));
+            return layouts;
         }
 
         private void BrainstormNewActivities_button_Clicked(object sender, EventArgs e)
@@ -206,24 +195,37 @@ namespace ActivityRecommendation
 
                 // Optional emphasis if we're repating ourselves and we think it's a good idea
                 if (repeatingDeclinedSuggestion && !suggestion.WorseThanRootActivity)
-                    text = "No, really: I recommend ";
+                {
+                    text = "No, really: I recommend " + suggestion.ActivityDescriptor.ActivityName;
+                }
                 else
-                    text = "";
-                // activity name
-                text += suggestion.ActivityDescriptor.ActivityName;
+                {
+                    if (suggestion.WorseThanRootActivity)
+                    {
 
-                // Start and end times
-                string timeFormat;
-                if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMinutes(1)) >= 0)
-                    timeFormat = shortTimeFormat;
-                else
-                    timeFormat = longTimeFormat;
-                string whenText;
-                if (suggestion.EndDate.HasValue)
-                    whenText = " (until " + suggestion.EndDate.Value.ToString(timeFormat) + ")";
-                else
-                    whenText = "";
-                text += " " + whenText + ".";
+                        text = "Remember " + suggestion.ActivityDescriptor.ActivityName + "? Don't do that!";
+                    }
+                    else
+                    {
+                        text = suggestion.ActivityDescriptor.ActivityName;
+                    }
+                }
+
+                if (!suggestion.WorseThanRootActivity)
+                {
+                    // Start and end times
+                    string timeFormat;
+                    if (suggestion.Duration.HasValue && suggestion.Duration.Value.CompareTo(TimeSpan.FromMinutes(1)) >= 0)
+                        timeFormat = shortTimeFormat;
+                    else
+                        timeFormat = longTimeFormat;
+                    string whenText;
+                    if (suggestion.EndDate.HasValue)
+                        whenText = " (until " + suggestion.EndDate.Value.ToString(timeFormat) + ").";
+                    else
+                        whenText = ".";
+                    text += whenText;
+                }
             }
             return text;
         }

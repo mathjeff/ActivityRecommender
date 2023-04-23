@@ -33,6 +33,8 @@ namespace ActivityRecommendation
             this.layoutStack = layoutStack;
             this.userSettings = userSettings;
 
+            LayoutChoice_Set cancelLayout = this.getCancelLayout(suggestion.Skippable);
+
             bool allWorseThanAverage = true;
             foreach (ActivitySuggestion child in suggestion.Children)
             {
@@ -40,12 +42,12 @@ namespace ActivityRecommendation
                     allWorseThanAverage = false;
             }
 
-            GridLayout_Builder fullBuilder = new Vertical_GridLayout_Builder();
+            //GridLayout_Builder fullBuilder = new Horizontal_GridLayout_Builder();
             string startTimeText = suggestion.Children[0].StartDate.ToString("HH:mm");
 
             bool badSuggestion = (allWorseThanAverage && suggestion.Skippable);
 
-            fullBuilder.AddLayout(new TextblockLayout("At " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
+            //fullBuilder.AddLayout(new TextblockLayout("At " + startTimeText + ":", 24).AlignHorizontally(TextAlignment.Center));
 
             List<LayoutChoice_Set> specificFont_contentChoices = new List<LayoutChoice_Set>(); // list of layouts we might use, each with a different font size
             this.explainButtons = new Dictionary<Button, ActivitySuggestion>();
@@ -62,35 +64,12 @@ namespace ActivityRecommendation
                     // set up the options for the text
                     string mainText = this.summarize(child, repeatingDeclinedSuggestion[child]);
                     TextblockLayout mainBlock = new TextblockLayout(mainText, mainFontSize);
-                    TextAlignment horizontalAlignment;
-                    TextAlignment verticalAlignment;
-                    if (i == 0)
-                    {
-                        horizontalAlignment = TextAlignment.Start;
-                        if (suggestion.Children.Count == 1)
-                            verticalAlignment = TextAlignment.Start;
-                        else
-                            verticalAlignment = TextAlignment.End;
-                    }
-                    else
-                    {
-                        if (i == suggestion.Children.Count - 1)
-                        {
-                            horizontalAlignment = TextAlignment.End;
-                            verticalAlignment = TextAlignment.Start;
-                        }
-                        else
-                        {
-                            horizontalAlignment = TextAlignment.Center;
-                            verticalAlignment = TextAlignment.Center;
-                        }
-                    }
-                    mainBlock.AlignHorizontally(horizontalAlignment);
-                    mainBlock.AlignVertically(verticalAlignment);
+                    mainBlock.AlignHorizontally(TextAlignment.Center);
+                    mainBlock.AlignVertically(TextAlignment.Center);
                     activityOptionsGrid.PutLayout(mainBlock, i, 0);
 
                     // set up the buttons
-                    GridLayout_Builder buttonsBuilder = new Horizontal_GridLayout_Builder().Uniform();
+                    GridLayout_Builder bottomButtons_builder = new Horizontal_GridLayout_Builder().Uniform();
                     double buttonFontSize = mainFontSize * 0.9;
                     // make a doNow button if needed
                     if (isFirstSuggestion)
@@ -101,8 +80,12 @@ namespace ActivityRecommendation
                             doNowButton.Clicked += DoNowButton_Clicked;
                             this.doButtons[doNowButton] = child;
                             ButtonLayout doButtonLayout = new ButtonLayout(doNowButton, "OK", buttonFontSize);
-                            buttonsBuilder.AddLayout(doButtonLayout);
+                            bottomButtons_builder.AddLayout(doButtonLayout);
                         }
+                    }
+                    if (child.WorseThanRootActivity)
+                    {
+                        bottomButtons_builder.AddLayouts(make_otherActivities_layout(buttonFontSize));
                     }
                     if (child.PredictedScoreDividedByAverage != null)
                     {
@@ -110,21 +93,17 @@ namespace ActivityRecommendation
                         explainButton.Clicked += explainButton_Clicked;
                         this.explainButtons[explainButton] = child;
                         ButtonLayout explainLayout = new ButtonLayout(explainButton, "?", buttonFontSize);
-                        buttonsBuilder.AddLayout(explainLayout);
+                        bottomButtons_builder.AddLayout(explainLayout);
                     }
-                    if (child.WorseThanRootActivity)
-                    {
-                        buttonsBuilder.AddLayouts(make_otherActivities_layout(buttonFontSize));
-                    }
-                    activityOptionsGrid.PutLayout(buttonsBuilder.BuildAnyLayout(), i, 1);
+                    bottomButtons_builder.AddLayout(cancelLayout);
                     if (child.ExpectedReaction != null && !child.WorseThanRootActivity)
                     {
                         TextblockLayout reactionLayout = new TextblockLayout(child.ExpectedReaction.Get(this.userSettings.FeedbackType), buttonFontSize * 0.9);
-                        reactionLayout.AlignHorizontally(horizontalAlignment);
-                        reactionLayout.AlignVertically(verticalAlignment);
-                        activityOptionsGrid.PutLayout(reactionLayout, i, 2);
+                        reactionLayout.AlignHorizontally(TextAlignment.Center);
+                        reactionLayout.AlignVertically(TextAlignment.Center);
+                        activityOptionsGrid.PutLayout(reactionLayout, i, 1);
                     }
-
+                    activityOptionsGrid.PutLayout(bottomButtons_builder.BuildAnyLayout(), i, 2);
                 }
 
                 LayoutChoice_Set optionsAtThisFontSize = activityOptionsGrid;
@@ -133,25 +112,23 @@ namespace ActivityRecommendation
 
             LayoutChoice_Set contentGrid = LayoutUnion.New(specificFont_contentChoices);
 
+            this.SubLayout = contentGrid;
+        }
+
+        private LayoutChoice_Set getCancelLayout(bool skippable)
+        {
             // Add cancel buttons to the bottom
             this.cancelButton = new Button();
             this.cancelButton.Clicked += cancelButton_Click;
             this.explainWhyYouCantSkipButton = new Button();
             this.explainWhyYouCantSkipButton.Clicked += ExplainWhyYouCantSkipButton_Clicked;
             ButtonLayout cancelLayout;
-            if (suggestion.Skippable)
+            if (skippable)
                 cancelLayout = new ButtonLayout(this.cancelButton, "X");
             else
                 cancelLayout = new ButtonLayout(this.explainWhyYouCantSkipButton, "!");
-
-            
-
-            fullBuilder.AddLayout(contentGrid)
-                .AddLayout(cancelLayout);
-
-            this.SubLayout = fullBuilder.BuildAnyLayout();
+            return cancelLayout;
         }
-
         private List<LayoutChoice_Set> make_otherActivities_layout(double fontSize)
         {
             Button createNewActivity_button = new Button();
@@ -160,7 +137,9 @@ namespace ActivityRecommendation
             brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
 
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
-            layouts.Add(new ButtonLayout(brainstormNewActivities_button, "Brainstorm", fontSize));
+
+            // space in "brain storm" to allow breaking specifcially at that location in the middle of the word
+            layouts.Add(new ButtonLayout(brainstormNewActivities_button, "Brain storm", fontSize));
             layouts.Add(new ButtonLayout(createNewActivity_button, "New activity", fontSize));
             return layouts;
         }
@@ -221,7 +200,7 @@ namespace ActivityRecommendation
                         timeFormat = longTimeFormat;
                     string whenText;
                     if (suggestion.EndDate.HasValue)
-                        whenText = " (until " + suggestion.EndDate.Value.ToString(timeFormat) + ").";
+                        whenText = " (" + suggestion.StartDate.ToString(timeFormat) + "-" + suggestion.EndDate.Value.ToString(timeFormat) + ").";
                     else
                         whenText = ".";
                     text += whenText;

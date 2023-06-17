@@ -85,6 +85,7 @@ namespace ActivityRecommendation
                 plotView.MinY = errors.MinAllowedValue;
             if (!double.IsInfinity(errors.MaxAllowedValue))
                 plotView.MaxY = errors.MaxAllowedValue;
+
             DateTime referenceDate = new DateTime(2000, 1, 1);
             foreach (PredictionError error in errors.All)
             {
@@ -92,6 +93,15 @@ namespace ActivityRecommendation
                 correctValues.Add(new Datapoint(x, error.ActualMean, 1));
                 predictedValues.Add(new Datapoint(x, error.Predicted.Mean, 1));
                 predictedPlusStdDev.Add(new Datapoint(x, error.Predicted.Mean + error.Predicted.StdDev, 1));
+            }
+            if (errors.All.Count > 0)
+            {
+                double minX = correctValues[0].Input;
+                double maxX = correctValues[correctValues.Count - 1].Input;
+                plotView.XAxisSubdivisions = TimeProgression.AbsoluteTime.GetNaturalSubdivisions(minX, maxX);
+                plotView.MinX = minX;
+                plotView.MaxX = maxX;
+
             }
             plotView.AddSeries(correctValues, false);
             plotView.AddSeries(predictedValues, false);

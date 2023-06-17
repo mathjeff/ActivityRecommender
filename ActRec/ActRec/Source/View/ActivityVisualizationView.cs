@@ -10,13 +10,12 @@ namespace ActivityRecommendation
 {
     class ActivityVisualizationView : TitledControl
     {
-        public ActivityVisualizationView(IProgression participationXAxis, Activity yAxisActivity, ScoreSummarizer overallRating_summarizer, ScoreSummarizer overallEfficiency_summarizer, LayoutStack layoutStack)
+        public ActivityVisualizationView(Activity yAxisActivity, ScoreSummarizer overallRating_summarizer, ScoreSummarizer overallEfficiency_summarizer, LayoutStack layoutStack)
         {
             this.layoutStack = layoutStack;
             this.overallRating_summarizer = overallRating_summarizer;
             this.overallEfficiency_summarizer = overallEfficiency_summarizer;
 
-            this.xAxisProgression = participationXAxis;
             this.yAxisActivity = yAxisActivity;
 
             // setup the title
@@ -251,7 +250,7 @@ namespace ActivityRecommendation
             newPlot.MinY = 0;
             newPlot.MaxY = 1;
 
-            if (this.xAxisProgression != null)
+            if (this.EnableXAxisSubdivisions)
                 this.configureXAxisSubdivisions(newPlot);
 
             newPlot.YAxisSubdivisions = new List<double> { 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1 };
@@ -371,7 +370,7 @@ namespace ActivityRecommendation
             double x1, x2, cumulativeParticipationSeconds, cumulativeEffectiveness, cumulativeSuggestionCount;
             x1 = 0;
 
-            if (this.xAxisProgression != null)
+            if (this.EnableXAxisSubdivisions)
                 this.configureXAxisSubdivisions(newPlot);
             if (newPlot.MinX.HasValue)
                 x1 = newPlot.MinX.Value;
@@ -570,15 +569,11 @@ namespace ActivityRecommendation
         }
         private void configureXAxisSubdivisions(PlotView plotView)
         {
-            AdaptiveInterpolation.FloatRange inputRange = this.xAxisProgression.EstimateOutputRange();
-            if (inputRange == null)
-            {
-                DateTime firstDate = this.queryStartDateDisplay.GetDate();
-                DateTime lastDate = this.queryEndDateDisplay.GetDate();
-                inputRange = new AdaptiveInterpolation.FloatRange(this.GetXCoordinate(firstDate), true, GetXCoordinate(lastDate), true);
-            }
+            DateTime firstDate = this.queryStartDateDisplay.GetDate();
+            DateTime lastDate = this.queryEndDateDisplay.GetDate();
+            AdaptiveInterpolation.FloatRange inputRange = new AdaptiveInterpolation.FloatRange(this.GetXCoordinate(firstDate), true, GetXCoordinate(lastDate), true);
 
-            plotView.XAxisSubdivisions = this.xAxisProgression.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
+            plotView.XAxisSubdivisions = TimeProgression.AbsoluteTime.GetNaturalSubdivisions(inputRange.LowCoordinate, inputRange.HighCoordinate);
             plotView.MinX = inputRange.LowCoordinate;
             plotView.MaxX = inputRange.HighCoordinate;
         }
@@ -612,16 +607,7 @@ namespace ActivityRecommendation
         {
             get
             {
-                /*
-                if (this.xAxisActivity != null)
-                    return this.xAxisActivity.Name;
-                else
-                    return "Time";
-                */
-                if (this.xAxisProgression != null)
-                    return this.xAxisProgression.Description;
-                else
-                    return "Time";
+                return "Time";
             }
         }
         public string YAxisLabel
@@ -636,26 +622,15 @@ namespace ActivityRecommendation
         {
             double x;
             DateTime startDate = this.queryStartDateDisplay.GetDate();
-            if (this.xAxisProgression == null)
-            {
-                DateTime endDate = this.queryEndDateDisplay.GetDate();
-                TimeSpan totalDuration = endDate.Subtract(startDate);
-                TimeSpan duration = when.Subtract(startDate);
-                x = duration.TotalSeconds / totalDuration.TotalSeconds;
-            }
+            ProgressionValue value = TimeProgression.AbsoluteTime.GetValueAt(when, true);
+            if (value != null)
+                x = value.Value.Mean;
             else
-            {
-                ProgressionValue value = this.xAxisProgression.GetValueAt(when, true);
-                if (value != null)
-                    x = value.Value.Mean;
-                else
-                    x = 0;
-            }
+                x = 0;
             return x;
         }
 
         Activity yAxisActivity;
-        IProgression xAxisProgression;
         TitledControl ratingsView;
         PlotView participationsContent;
         TitledControl participationsView;
@@ -685,5 +660,6 @@ namespace ActivityRecommendation
         private bool showTimeSpentTrend = true;
         private bool showNumSuggestions = true;
         private bool showEffectiveness = true;
+        private bool EnableXAxisSubdivisions = true;
     }
 }

@@ -32,7 +32,6 @@ namespace ActivityRecommendation
         {
             this.engine.EnsureRatingsAreAssociated();
 
-            IProgression xAxisProgression = this.XAxisProgression;
             ActivityDescriptor yAxisDescriptor = this.YAxisActivityDescriptor;
             Activity yAxisActivity = null;
             if (yAxisDescriptor != null)
@@ -42,16 +41,8 @@ namespace ActivityRecommendation
             if (yAxisActivity != null)
             {
                 yAxisActivity.ApplyPendingData();
-                ActivityVisualizationView visualizationView = new ActivityVisualizationView(xAxisProgression, yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
+                ActivityVisualizationView visualizationView = new ActivityVisualizationView(yAxisActivity, this.engine.RatingSummarizer, this.engine.EfficiencySummarizer, this.layoutStack);
                 this.layoutStack.AddLayout(visualizationView, "Graph");
-            }
-        }
-
-        public IProgression XAxisProgression
-        {
-            get
-            {
-                return TimeProgression.AbsoluteTime;
             }
         }
         public ActivityDescriptor YAxisActivityDescriptor

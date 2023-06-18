@@ -999,14 +999,17 @@ namespace ActivityRecommendation
 
         private PredictionErrors Compute_FutureEstimateIfSuggested_Errors()
         {
+            System.Diagnostics.Debug.WriteLine("computing future happiness estimate if suggested errors");
             return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer, 0, 1);
         }
         private PredictionErrors Compute_FutureEstimateIfParticipated_Errors()
         {
+            System.Diagnostics.Debug.WriteLine("computing future happiness estimate if participated errors");
             return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer, 0, 1);
         }
         private PredictionErrors Compute_FutureEfficiencyIfParticipated_Errors()
         {
+            System.Diagnostics.Debug.WriteLine("computing future efficiency estimate if participated errors");
             return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer, 0, double.PositiveInfinity);
         }
 
@@ -1022,6 +1025,8 @@ namespace ActivityRecommendation
             }
             DateTime lastDateToInclude = maxObservedDate.Subtract(TimeSpan.FromDays(7));
 
+            double prevError = 0;
+            DateTime previousDate = new DateTime();
             foreach (Prediction prediction in predictions.Keys)
             {
                 if (prediction.ApplicableDate.CompareTo(lastDateToInclude) > 0)
@@ -1035,6 +1040,12 @@ namespace ActivityRecommendation
                 if (summary.Item.Weight > 0)
                 {
                     double error = Math.Abs(prediction.Distribution.Mean - summary.Item.Mean);
+                    if ((error > prevError * 2 || error * 2 < prevError) && (prevError + error) > 0.005)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Large change in prediction error from " + previousDate + " to " + prediction.ApplicableDate + ": error changed from " + prevError + " to " + error + ". Current prediction = " + prediction.Distribution + ", true future " + summary.Item);
+                    }
+                    prevError = error;
+                    previousDate = prediction.ApplicableDate;
                     /*if (error > 0.4)
                     {
                         System.Diagnostics.Debug.WriteLine("Surprisingly large error: predicted " + prediction.Distribution + ", true future " + summary.Item + " at " + prediction.ApplicableDate);

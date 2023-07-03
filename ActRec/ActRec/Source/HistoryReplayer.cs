@@ -91,8 +91,6 @@ namespace ActivityRecommendation
         }
         public RelativeRating AddRating(RelativeRating newRating)
         {
-            this.ProcessRating(newRating.FirstRating);
-            this.ProcessRating(newRating.SecondRating);
             return this.ProcessRating(newRating);
         }
         public void AddSuggestion(ActivitiesSuggestion suggestion)

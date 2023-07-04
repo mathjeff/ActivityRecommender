@@ -819,6 +819,7 @@ namespace ActivityRecommendation
         public Prediction Get_OverallHappiness_ParticipationEstimate(Activity activity, ActivityRequest request)
         {
             DateTime when = request.Date;
+
             // The activity might use its estimated rating to predict the overall future value, so we must update the rating now
             this.EstimateRating(activity, request.Date);
 
@@ -833,7 +834,7 @@ namespace ActivityRecommendation
             shortTerm_prediction.Distribution = shortTerm_prediction.Distribution.CopyAndReweightTo(shortWeight);
             predictions.Add(shortTerm_prediction);
 
-            double mediumWeight = activity.NumParticipations;
+            double mediumWeight = activity.NumParticipations + 1;
             Distribution ratingDistribution = this.Interpolate_LongtermValue_If_Participated(activity, when);
             Distribution mediumTerm_distribution = ratingDistribution.CopyAndReweightTo(mediumWeight);
             predictions.Add(new Prediction(activity, mediumTerm_distribution, when, new InterpolatorSuggestion_Justification(activity, mediumTerm_distribution, null)));

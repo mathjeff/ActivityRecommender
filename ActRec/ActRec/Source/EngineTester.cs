@@ -1000,21 +1000,28 @@ namespace ActivityRecommendation
         private PredictionErrors Compute_FutureEstimateIfSuggested_Errors()
         {
             System.Diagnostics.Debug.WriteLine("computing future happiness estimate if suggested errors");
-            return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer, 0, 1);
+            return this.Compute_FuturePredictions_Error(this.valueIfSuggested_predictions, this.ratingSummarizer, 0, 1, "Happiness if suggested");
         }
         private PredictionErrors Compute_FutureEstimateIfParticipated_Errors()
         {
             System.Diagnostics.Debug.WriteLine("computing future happiness estimate if participated errors");
-            return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer, 0, 1);
+            return this.Compute_FuturePredictions_Error(this.valueIfParticipated_predictions, this.ratingSummarizer, 0, 1, "Happiness if participated");
         }
         private PredictionErrors Compute_FutureEfficiencyIfParticipated_Errors()
         {
             System.Diagnostics.Debug.WriteLine("computing future efficiency estimate if participated errors");
-            return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer, 0, double.PositiveInfinity);
+            return this.Compute_FuturePredictions_Error(this.efficiencyIfParticipated_predictions, this.efficiencySummarizer, 0, double.PositiveInfinity, "Efficiency if participated");
         }
 
-        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ExponentialRatingSummarizer ratingSummarizer, double minAllowedValue, double maxAllowedValue)
+        private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ExponentialRatingSummarizer ratingSummarizer, double minAllowedValue, double maxAllowedValue, string predictionType)
         {
+            bool debugType = false;
+            if (predictionType == "Happiness if participated")
+            {
+                debugType = true;
+            }
+
+
             PredictionErrors result = new LongtermPredictionErrors(ratingSummarizer.HalfLife, minAllowedValue, maxAllowedValue);
 
             DateTime maxObservedDate = new DateTime();
@@ -1026,9 +1033,22 @@ namespace ActivityRecommendation
             DateTime lastDateToInclude = maxObservedDate.Subtract(TimeSpan.FromDays(7));
 
             double prevError = 0;
+            double prevTrueValue = 0;
+            Distribution prevPrediction = new Distribution();
             DateTime previousDate = new DateTime();
+            ScoreSummary oldSummary;
             foreach (Prediction prediction in predictions.Keys)
             {
+                DateTime interestingDateStart = new DateTime(2020, 2, 15);
+                DateTime interestingDateEnd = interestingDateStart.AddDays(1);
+                DateTime when = prediction.ApplicableDate;
+                bool debugDate = false;
+                if (when.CompareTo(interestingDateStart) > 0 && when.CompareTo(interestingDateEnd) < 0)
+                {
+                    debugDate = true;
+                }
+                bool debug = debugType && debugDate;
+
                 if (prediction.ApplicableDate.CompareTo(lastDateToInclude) > 0)
                 {
                     // When estimating the error of the predictions about the future of the past,
@@ -1039,18 +1059,25 @@ namespace ActivityRecommendation
                 summary.Update(ratingSummarizer);
                 if (summary.Item.Weight > 0)
                 {
+                    double trueValue = summary.Item.Mean;
                     double error = Math.Abs(prediction.Distribution.Mean - summary.Item.Mean);
                     if ((error > prevError * 2 || error * 2 < prevError) && (prevError + error) > 0.005)
                     {
-                        System.Diagnostics.Debug.WriteLine("Large change in prediction error from " + previousDate + " to " + prediction.ApplicableDate + ": error changed from " + prevError + " to " + error + ". Current prediction = " + prediction.Distribution + ", true future " + summary.Item);
+                        if (debug)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Large change in predicted " + predictionType + " from " + previousDate + " to " + prediction.ApplicableDate + ": error changed from " + prevError + " to " + error + ". Prev prediction = " + prevPrediction + ". Current prediction = " + prediction.Distribution + ". Prev true future value = " + prevTrueValue + " current true future value = " + trueValue);
+                        }
                     }
+                    prevPrediction = prediction.Distribution;
                     prevError = error;
                     previousDate = prediction.ApplicableDate;
+                    prevTrueValue = trueValue;
                     /*if (error > 0.4)
                     {
                         System.Diagnostics.Debug.WriteLine("Surprisingly large error: predicted " + prediction.Distribution + ", true future " + summary.Item + " at " + prediction.ApplicableDate);
                     }*/
                     result.Add(prediction.ApplicableDate, summary.Item.Mean, prediction.Distribution);
+                    oldSummary = summary;
                 }
             }
             return result;

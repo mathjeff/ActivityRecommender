@@ -10,7 +10,6 @@ using System.Reflection;
 using System.IO;
 using Java.Lang;
 using VisiPlacement;
-using Android.Support.V4.App;
 using Android;
 using Plugin.Permissions;
 using ActivityRecommendation;

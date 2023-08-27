@@ -498,11 +498,15 @@ namespace ActivityRecommendation
             MenuLayoutBuilder introMenu_builder = new MenuLayoutBuilder(this.layoutStack);
             introMenu_builder.AddLayout("Intro/Info", helpMenu);
             CustomizeLayout customizeLayout = new CustomizeLayout(personaCustomizationView, themeCustomizationView, this.userSettings, this.layoutStack);
+            IEnumerable<AppFeature> allFeatures = new List<AppFeature>();
             introMenu_builder.AddLayout(
                 new AppFeatureCount_ButtonName_Provider("Appearance", customizeLayout.GetFeatures()),
                 new StackEntry(customizeLayout, "Appearance", null)
             );
-            introMenu_builder.AddLayout(new AppFeatureCount_ButtonName_Provider("Start!", usageMenu.GetFeatures()), new StackEntry(usageMenu, "Home", null));
+            allFeatures = allFeatures.Concat(customizeLayout.GetFeatures());
+            StackEntry homeScreenEntry = new StackEntry(usageMenu, "Home", null);
+            introMenu_builder.AddLayout(new AppFeatureCount_ButtonName_Provider("Start!", usageMenu.GetFeatures()), homeScreenEntry);
+            allFeatures = allFeatures.Concat(usageMenu.GetFeatures());
 
             introMenu_builder.AddLayout("Feedback + Credits",
                 (new HelpWindowBuilder()
@@ -557,8 +561,10 @@ namespace ActivityRecommendation
                 this.welcomeMessage = "";
             }
 
+            bool welcomeScreenHasSpecialMessage = true;
             if (startLayouts.Count == 0)
             {
+                welcomeScreenHasSpecialMessage = false;
                 if (this.startupFeedback != "")
                 {
                     TextblockLayout feedback = new TextblockLayout(this.startupFeedback);
@@ -573,6 +579,22 @@ namespace ActivityRecommendation
             helpOrStart_menu = new Vertical_GridLayout_Builder().AddLayouts(startLayouts).BuildAnyLayout();
 
             this.layoutStack.AddLayout(helpOrStart_menu, "Welcome", 0);
+            if (!welcomeScreenHasSpecialMessage)
+            {
+                // The welcome screen also displays unused features, so if there are any unused features we still show the welcome screen
+                bool areAnyFeaturesUnused = false;
+                foreach (AppFeature appFeature in allFeatures)
+                {
+                    if (!appFeature.GetHasBeenUsed())
+                    {
+                        areAnyFeaturesUnused = true;
+                        break;
+                    }
+                }
+                // If there's nothing new on the welcome screen, most of the time the user will want to jump to the home screen
+                if (!areAnyFeaturesUnused)
+                    this.layoutStack.AddLayout(homeScreenEntry);
+            }
         }
 
         private void ParticipationEntryView_DeclinedSuggestion(ActivitiesSuggestion suggestion)

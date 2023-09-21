@@ -160,14 +160,17 @@ namespace ActivityRecommendation.View
                 oldText = "";
             string newText = this.nameBox.Text;
 
-            if (newText != this.nameText)
-                this.userEnteredText(oldText, newText);
+            // Check whether this text is allowed to remain
+            // If we're rejecting this text, we don't need to do anything else
+            // If we're autocompleting this text, we don't need to do anything else here - we'll get another update later with the new value
+            if (this.allowNewText(oldText, newText))
+            {
+                this.updateSideButton();
+                this.UpdateFeedback();
 
-            this.updateSideButton();
-            this.UpdateFeedback();
-
-            if (this.NameTextChanged != null)
-                this.NameTextChanged.Invoke();
+                if (this.NameTextChanged != null)
+                    this.NameTextChanged.Invoke();
+            }
         }
 
         private void updateSideButton()
@@ -188,14 +191,21 @@ namespace ActivityRecommendation.View
             }
         }
 
-        private void userEnteredText(string oldText, string newText)
+        private bool stringContains(String s, String substring)
+        {
+            return s != null && s.Contains(substring);
+        }
+        // This function gets called when something changes the text of this box
+        // This function returns true if that text is kept as-is
+        // This function returns false if that text is either autocompleted or rejected
+        private bool allowNewText(string oldText, string newText)
         {
             // System.Diagnostics.Debug.WriteLine("User entered text. Old text = '" + oldText + "', new text = '" + newText + "'");
             List<String> markers = new List<string> { "\n", "\t" , "\r"};
             bool addedMarker = false;
             foreach (String marker in markers)
             {
-                if (newText.Contains(marker) && !oldText.Contains(marker))
+                if (stringContains(newText, marker) && !stringContains(oldText, marker))
                 {
                     addedMarker = true;
                     break;
@@ -207,17 +217,20 @@ namespace ActivityRecommendation.View
                 {
                     // reject illegal characters
                     this.Set_NameText(oldText);
+                    return false;
                 }
                 else
                 {
                     // automatically fill the suggestion text into the box
                     this.Set_NameText(this.suggestedActivityName);
                     this.nameBox.Unfocus();
+                    return false;
                 }
             }
             else
             {
                 this.nameText = newText;
+                return true;
             }
         }
         public string NameText

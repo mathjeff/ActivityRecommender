@@ -24,8 +24,8 @@ namespace ActivityRecommendation.View
         public event VisitParticipationScreenHandler AcceptedSuggestion;
         public delegate void VisitParticipationScreenHandler(ActivitySuggestion suggestion);
 
-        public event VisitActivitiesScreenHandler VisitActivitiesScreen;
-        public delegate void VisitActivitiesScreenHandler();
+        public event VisitProtoactivitiesScreenHandler VisitProtoactivitiesScreen;
+        public delegate void VisitProtoactivitiesScreenHandler();
 
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine, UserSettings userSettings) : base("Get Suggestions")
         {
@@ -83,75 +83,7 @@ namespace ActivityRecommendation.View
             this.experimentButton.Clicked += ExperimentButton_Clicked;
             this.bottomLayout = new Horizontal_GridLayout_Builder().Uniform().AddLayout(this.startExperiment_layout).AddLayout(this.helpButton_layout).Build();
 
-            Vertical_GridLayout_Builder noActivities_help_builder = new Vertical_GridLayout_Builder();
-            noActivities_help_builder.AddLayout(new TextblockLayout("This screen is where you will be able to ask for suggestions of what to do."));
-            noActivities_help_builder.AddLayout(
-                new HelpButtonLayout("Not a calendar: no interruptions, no reminders. Exciting!",
-                    new HelpWindowBuilder()
-                        .AddMessage("ActivityRecommender doesn't offer reminders at prescheduled times because that's boring. " +
-                        "If you're looking for a simple scheduling algorithm, you may be interested in a calendar. ActivityRecommender is more like " +
-                        "a friend, full of cool, interesting, somewhat randomized ideas based on information about you.")
-                        .Build()
-                ,
-                    layoutStack
-                )
-            );
-            noActivities_help_builder.AddLayout(
-                new HelpButtonLayout("Suggestions get better over time",
-                    new HelpWindowBuilder()
-                        .AddMessage("The more data you enter into ActivityRecommender, the better its suggestions will be.")
-                        .AddMessage("When you haven't entered much data, ActivityRecommender primarily suggests activities that resemble other " +
-                        "activities that you like. For example, if you've mentioned that Soccer and Jogging are relevant to you and that " +
-                        "both of them are exercise, and if you tend to like Soccer, then ActivityRecommender may also recomend Jogging to you.")
-                        .AddMessage("After you've entered a little bit of data, ActivityRecommender tends to suggest activities that you like. " +
-                        "If you tend to enjoy playing Soccer, then ActivityRecommender will recommend that!")
-                        .AddMessage("After you've entered more data, ActivityRecommender will be able to look for trends in how happy you are after "+
-                        "having done various activities, and incorporate that too. For example, if you like to Eat Ice Cream, but eating ice cream" +
-                        "late at night tends to make it hard to sleep, then maybe ActivityRecommender won't suggest it late at night even if you " +
-                        "like it.")
-                        .AddMessage("After you've entered a lot of data, ActivityRecommender will even be able to look for trends in how happy you are " +
-                        "after suggesting various activities. If you like walking but you don't have any ideas of where to walk, then maybe " +
-                        "ActivityRecommender will notice that suggesting Walking never works. However, if you like buying things at the store, then " +
-                        "perhaps ActivityRecommender will suggest that instead, if that causes you to walk to the store to buy something.")
-                        .Build()
-                ,
-                    layoutStack
-                )
-            );
-            noActivities_help_builder.AddLayout(new TextblockLayout("Before you can ask for a suggestion, ActivityRecommender needs you to go back " +
-                "and add some activities first. Here is a convenient button for jumping directly to the Activities screen:"));
-            Button visitActivities_button = new Button();
-            visitActivities_button.Clicked += VisitActivities_button_Clicked;
-            noActivities_help_builder.AddLayout(new ButtonLayout(visitActivities_button, "Activities"));
-
-            this.noActivities_explanationLayout = noActivities_help_builder.BuildAnyLayout();
-
             this.UpdateSuggestions();
-        }
-
-        private void VisitActivities_button_Clicked(object sender, EventArgs e)
-        {
-            this.VisitActivitiesScreen.Invoke();
-        }
-
-        public override SpecificLayout GetBestLayout(LayoutQuery query)
-        {
-            // show/hide the noActivities_explanationLayout as needed
-            bool shouldShowActivityCreationHelp = !this.activityDatabase.ContainsCustomActivity();
-            if (shouldShowActivityCreationHelp)
-            {
-                this.SetContent(this.noActivities_explanationLayout);
-            }
-            else
-            {
-                bool doesShowActivityCreationHelp = (this.GetContent() == this.noActivities_explanationLayout);
-                if (doesShowActivityCreationHelp)
-                {
-                    this.UpdateLayout_From_Suggestions();
-                }
-            }
-            // call parent
-            return base.GetBestLayout(query);
         }
 
         private void RequestSuggestion_layout_RequestSuggestion(ActivityRequest activityRequest)
@@ -304,7 +236,7 @@ namespace ActivityRecommendation.View
             suggestionView.Dismissed += SuggestionView_Dismissed;
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
             suggestionView.AcceptedSuggestion += SuggestionView_VisitParticipationScreen;
-            suggestionView.VisitActivitiesScreen += SuggestionView_VisitActivitiesScreen;
+            suggestionView.VisitProtoactivitiesScreen += SuggestionView_VisitProtoactivitiesScreen;
             suggestionView.Request_MakeNewActivity += SuggestionView_Request_MakeNewActivity;
             return new LayoutCache(suggestionView);
         }
@@ -315,9 +247,9 @@ namespace ActivityRecommendation.View
             this.layoutStack.AddLayout(creationLayout, "New Activity");
         }
 
-        private void SuggestionView_VisitActivitiesScreen()
+        private void SuggestionView_VisitProtoactivitiesScreen()
         {
-            this.VisitActivitiesScreen.Invoke();
+            this.VisitProtoactivitiesScreen.Invoke();
         }
 
         private void SuggestionView_VisitParticipationScreen(ActivitySuggestion suggestion)

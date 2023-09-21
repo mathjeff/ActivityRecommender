@@ -413,7 +413,7 @@ namespace ActivityRecommendation
             this.viewManager = new ViewManager(null, this.mainLayout, this.VisualDefaults);
 
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
-            ProtoActivities_Layout protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack, this.publicFileIo, this.textConverter);
+            this.protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack, this.publicFileIo, this.textConverter);
 
             ActivitySearchView searchView = new ActivitySearchView(this.ActivityDatabase, this.protoActivities_database, this.layoutStack, true);
             searchView.RequestDeletion += SearchView_RequestStartDeletion;
@@ -445,7 +445,7 @@ namespace ActivityRecommendation
             this.suggestionsView.ExperimentRequested += SuggestionsView_ExperimentRequested;
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
             this.suggestionsView.AcceptedSuggestion += SuggestionsView_AcceptedSuggestion;
-            this.suggestionsView.VisitActivitiesScreen += SuggestionsView_VisitActivitiesScreen;
+            this.suggestionsView.VisitProtoactivitiesScreen += SuggestionsView_VisitProtoactivitiesScreen;
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
@@ -708,9 +708,10 @@ namespace ActivityRecommendation
             this.layoutStack.AddLayout(this.activitiesMenuLayout, "Organize Activities");
         }
 
-        private void SuggestionsView_VisitActivitiesScreen()
+        private void SuggestionsView_VisitProtoactivitiesScreen()
         {
-            this.ParticipationEntryView_VisitActivitiesScreen();
+            this.layoutStack.GoBack();
+            this.layoutStack.AddLayout(this.protoActivitiesLayout, "Protoactivities: Brainstorm");
         }
 
         private void SuggestionsView_AcceptedSuggestion(ActivitySuggestion suggestion)
@@ -732,7 +733,7 @@ namespace ActivityRecommendation
 
         private void VisualizationMenu_VisitActivitiesScreen()
         {
-            this.SuggestionsView_VisitActivitiesScreen();
+            this.ParticipationEntryView_VisitActivitiesScreen();
         }
 
         private void VisualizationMenu_VisitParticipationsScreen()
@@ -1415,6 +1416,7 @@ namespace ActivityRecommendation
         LayoutChoice_Set mainLayout;
 
         ActivitiesMenuLayout activitiesMenuLayout;
+        ProtoActivities_Layout protoActivitiesLayout;
         ParticipationEntryView participationEntryView;
         SuggestionsView suggestionsView;
         DataExportView dataExportView;

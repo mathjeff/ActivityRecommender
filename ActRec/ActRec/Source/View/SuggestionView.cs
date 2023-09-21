@@ -20,8 +20,8 @@ namespace ActivityRecommendation
         public event VisitParticipationScreenHandler AcceptedSuggestion;
         public delegate void VisitParticipationScreenHandler(ActivitySuggestion suggestion);
 
-        public event VisitActivitiesScreenHandler VisitActivitiesScreen;
-        public delegate void VisitActivitiesScreenHandler();
+        public event VisitProtoactivitiesScreenHandler VisitProtoactivitiesScreen;
+        public delegate void VisitProtoactivitiesScreenHandler();
 
         public event NewActivitityHandler Request_MakeNewActivity;
         public delegate void NewActivitityHandler();
@@ -146,7 +146,7 @@ namespace ActivityRecommendation
 
         private void BrainstormNewActivities_button_Clicked(object sender, EventArgs e)
         {
-            this.VisitActivitiesScreen.Invoke();
+            this.VisitProtoactivitiesScreen.Invoke();
         }
 
         private void CreateNewActivity_button_Clicked(object sender, EventArgs e)

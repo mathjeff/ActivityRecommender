@@ -27,6 +27,9 @@ namespace ActivityRecommendation.View
         public event VisitProtoactivitiesScreenHandler VisitProtoactivitiesScreen;
         public delegate void VisitProtoactivitiesScreenHandler();
 
+        public event Visit_AnalyzeActivitiesScreen_Handler VisitAnalyzeActivitiesScreen;
+        public delegate void Visit_AnalyzeActivitiesScreen_Handler();
+
         public SuggestionsView(ActivityRecommender recommenderToInform, LayoutStack layoutStack, ActivityDatabase activityDatabase, Engine engine, UserSettings userSettings) : base("Get Suggestions")
         {
             this.TitleLayout.AlignVertically(TextAlignment.Center);
@@ -237,14 +240,13 @@ namespace ActivityRecommendation.View
             suggestionView.JustifySuggestion += SuggestionView_JustifySuggestion;
             suggestionView.AcceptedSuggestion += SuggestionView_VisitParticipationScreen;
             suggestionView.VisitProtoactivitiesScreen += SuggestionView_VisitProtoactivitiesScreen;
-            suggestionView.Request_MakeNewActivity += SuggestionView_Request_MakeNewActivity;
+            suggestionView.Request_AnalyzeActivities += SuggestionView_Visit_AnalyzeScreen;
             return new LayoutCache(suggestionView);
         }
 
-        private void SuggestionView_Request_MakeNewActivity()
+        private void SuggestionView_Visit_AnalyzeScreen()
         {
-            ActivityCreationLayout creationLayout = new ActivityCreationLayout(this.activityDatabase, this.layoutStack);
-            this.layoutStack.AddLayout(creationLayout, "New Activity");
+            this.VisitAnalyzeActivitiesScreen.Invoke();
         }
 
         private void SuggestionView_VisitProtoactivitiesScreen()

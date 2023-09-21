@@ -23,7 +23,7 @@ namespace ActivityRecommendation
         public event VisitProtoactivitiesScreenHandler VisitProtoactivitiesScreen;
         public delegate void VisitProtoactivitiesScreenHandler();
 
-        public event NewActivitityHandler Request_MakeNewActivity;
+        public event NewActivitityHandler Request_AnalyzeActivities;
         public delegate void NewActivitityHandler();
 
 
@@ -92,7 +92,7 @@ namespace ActivityRecommendation
                         Button explainButton = new Button();
                         explainButton.Clicked += explainButton_Clicked;
                         this.explainButtons[explainButton] = child;
-                        ButtonLayout explainLayout = new ButtonLayout(explainButton, "?", buttonFontSize);
+                        ButtonLayout explainLayout = new ButtonLayout(explainButton, "Explain", buttonFontSize);
                         bottomButtons_builder.AddLayout(explainLayout);
                     }
                     bottomButtons_builder.AddLayout(cancelLayout);
@@ -131,16 +131,16 @@ namespace ActivityRecommendation
         }
         private List<LayoutChoice_Set> make_otherActivities_layout(double fontSize)
         {
-            Button createNewActivity_button = new Button();
-            createNewActivity_button.Clicked += CreateNewActivity_button_Clicked;
+            Button requestAnalyze_button = new Button();
+            requestAnalyze_button.Clicked += RequestAnalyze_button_Clicked;
             Button brainstormNewActivities_button = new Button();
             brainstormNewActivities_button.Clicked += BrainstormNewActivities_button_Clicked;
 
             List<LayoutChoice_Set> layouts = new List<LayoutChoice_Set>();
 
-            // space in "brain storm" to allow breaking specifcially at that location in the middle of the word
+            // space in "brain storm" to allow breaking specifically at that location in the middle of the word
             layouts.Add(new ButtonLayout(brainstormNewActivities_button, "Brain storm", fontSize));
-            layouts.Add(new ButtonLayout(createNewActivity_button, "New activity", fontSize));
+            layouts.Add(new ButtonLayout(requestAnalyze_button, "Analyze", fontSize));
             return layouts;
         }
 
@@ -149,9 +149,9 @@ namespace ActivityRecommendation
             this.VisitProtoactivitiesScreen.Invoke();
         }
 
-        private void CreateNewActivity_button_Clicked(object sender, EventArgs e)
+        private void RequestAnalyze_button_Clicked(object sender, EventArgs e)
         {
-            this.Request_MakeNewActivity.Invoke();
+            this.Request_AnalyzeActivities.Invoke();
         }
 
         private string summarize(ActivitySuggestion suggestion, bool repeatingDeclinedSuggestion)

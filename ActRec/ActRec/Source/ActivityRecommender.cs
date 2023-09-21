@@ -446,6 +446,7 @@ namespace ActivityRecommendation
             this.suggestionsView.JustifySuggestion += SuggestionsView_JustifySuggestion;
             this.suggestionsView.AcceptedSuggestion += SuggestionsView_AcceptedSuggestion;
             this.suggestionsView.VisitProtoactivitiesScreen += SuggestionsView_VisitProtoactivitiesScreen;
+            this.suggestionsView.VisitAnalyzeActivitiesScreen += SuggestionsView_VisitAnalyzeActivitiesScreen;
             this.suggestionsView.LatestParticipation = this.latestParticipation;
             this.updateExperimentParticipationDemands();
 
@@ -683,7 +684,7 @@ namespace ActivityRecommendation
             this.ImportData("modified data", new StringReader(serialized));
         }
 
-        private void ParticipationEntryView_VisitStatisticsScreen()
+        private void SuggestionsView_VisitAnalyzeActivitiesScreen()
         {
             this.layoutStack.GoBack();
             this.layoutStack.AddLayout(this.statisticsMenu, "Analyze");

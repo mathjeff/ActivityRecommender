@@ -723,7 +723,17 @@ namespace ActivityRecommendation
                             if (this.suggestion != null)
                             {
                                 this.promptHolder.SubLayout = this.suggestionsLayout;
-                                this.suggestionLayout.setText("How about " + this.suggestion.Children[0].ActivityDescriptor.ActivityName + "?");
+                                ActivitySuggestion suggestion = this.suggestion.Children[0];
+                                String suggestionText;
+                                if (suggestion.WorseThanRootActivity)
+                                {
+                                    suggestionText = "Try something new!";
+                                }
+                                else
+                                {
+                                    suggestionText = "How about " + suggestion.ActivityDescriptor.ActivityName + "?";
+                                }
+                                this.suggestionLayout.setText(suggestionText);
                             }
                             else
                             {

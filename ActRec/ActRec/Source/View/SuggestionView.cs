@@ -181,8 +181,7 @@ namespace ActivityRecommendation
                 {
                     if (suggestion.WorseThanRootActivity)
                     {
-
-                        text = "Remember " + suggestion.ActivityDescriptor.ActivityName + "? Don't do that!";
+                        text = "Try something new! It would probably be better than " + suggestion.ActivityDescriptor.ActivityName;
                     }
                     else
                     {

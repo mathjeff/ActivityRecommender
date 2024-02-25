@@ -437,6 +437,7 @@ namespace ActivityRecommendation
             this.participationEntryView.VisitSuggestionsScreen += ParticipationEntryView_VisitSuggestionsScreen;
             this.participationEntryView.GotSuggestion += ParticipationEntryView_GotSuggestion;
             this.participationEntryView.DeclinedSuggestion += ParticipationEntryView_DeclinedSuggestion;
+            this.participationEntryView.VisitProtoactivitiesScreen += ParticipationEntryView_VisitProtoactivitiesScreen;
             this.UpdateDefaultParticipationData();
 
             this.suggestionsView = new SuggestionsView(this, this.layoutStack, this.ActivityDatabase, this.engine, this.userSettings);
@@ -596,6 +597,11 @@ namespace ActivityRecommendation
                 if (!areAnyFeaturesUnused)
                     this.layoutStack.AddLayout(homeScreenEntry);
             }
+        }
+
+        private void ParticipationEntryView_VisitProtoactivitiesScreen()
+        {
+            this.SuggestionsView_VisitProtoactivitiesScreen();
         }
 
         private void ParticipationEntryView_DeclinedSuggestion(ActivitiesSuggestion suggestion)

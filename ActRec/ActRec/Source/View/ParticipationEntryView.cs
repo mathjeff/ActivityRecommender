@@ -17,6 +17,9 @@ namespace ActivityRecommendation
         public event VisitSuggestionsScreenHandler VisitSuggestionsScreen;
         public delegate void VisitSuggestionsScreenHandler();
 
+        public event VisitProtoactivitiesScreenHandler VisitProtoactivitiesScreen;
+        public delegate void VisitProtoactivitiesScreenHandler();
+
         public event GotSuggestionHandler GotSuggestion;
         public delegate void GotSuggestionHandler(ActivitiesSuggestion suggestion);
 
@@ -59,6 +62,7 @@ namespace ActivityRecommendation
 
             Button acceptSuggestion_button = new Button();
             acceptSuggestion_button.Clicked += AcceptSuggestions_button_Clicked;
+            this.acceptSuggestion_buttonLayout = new ButtonLayout(acceptSuggestion_button); // We set the text later
 
             Button declineSuggestion_button = new Button();
             declineSuggestion_button.Clicked += DeclineSuggestion_button_Clicked;
@@ -70,7 +74,7 @@ namespace ActivityRecommendation
             this.suggestionsLayout = new Vertical_GridLayout_Builder()
                 .AddLayout(suggestionLayout)
                 .AddLayout(new Horizontal_GridLayout_Builder().Uniform()
-                    .AddLayout(new ButtonLayout(acceptSuggestion_button, "Yes"))
+                    .AddLayout(this.acceptSuggestion_buttonLayout)
                     .AddLayout(new ButtonLayout(declineSuggestion_button, "No"))
                     .AddLayout(new ButtonLayout(visitSuggestions_button, "More"))
                     .BuildAnyLayout()
@@ -261,7 +265,11 @@ namespace ActivityRecommendation
             // The response button suggested requesting another suggestion
             if (this.suggestion != null)
             {
-                this.SetActivityName(this.suggestion.Children[0].ActivityDescriptor.ActivityName);
+                ActivitySuggestion suggestion = this.suggestion.Children[0];
+                if (suggestion.WorseThanRootActivity)
+                    this.VisitProtoactivitiesScreen.Invoke();
+                else
+                    this.SetActivityName(suggestion.ActivityDescriptor.ActivityName);
             }
         }
 
@@ -809,6 +817,15 @@ namespace ActivityRecommendation
             if (choices != null)
             {
                 this.suggestion = choices;
+                ActivitySuggestion firstSuggestion = choices.Children[0];
+                if (firstSuggestion.WorseThanRootActivity)
+                {
+                    this.acceptSuggestion_buttonLayout.setText("Ideas");
+                }
+                else
+                {
+                    this.acceptSuggestion_buttonLayout.setText("Yes");
+                }
                 string name = this.suggestion.Children[0].ActivityDescriptor.ActivityName;
                 text = "How about " + name + "?";
             }
@@ -825,6 +842,8 @@ namespace ActivityRecommendation
                 return "Complete!";
             }
         }
+
+
         private string TaskIncomplete_Text
         {
             get
@@ -869,6 +888,7 @@ namespace ActivityRecommendation
         Button okButton;
         ButtonLayout okButtonLayout;
         ButtonLayout participationFeedbackButtonLayout;
+        ButtonLayout acceptSuggestion_buttonLayout;
         ContainerLayout promptHolder;
         TextblockLayout suggestionLayout;
         LayoutChoice_Set suggestionsLayout;

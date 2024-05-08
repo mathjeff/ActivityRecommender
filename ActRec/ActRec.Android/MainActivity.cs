@@ -11,7 +11,6 @@ using System.IO;
 using Java.Lang;
 using VisiPlacement;
 using Android;
-using Plugin.Permissions;
 using ActivityRecommendation;
 
 namespace ActRec.Droid
@@ -42,7 +41,21 @@ namespace ActRec.Droid
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
         {
-            PermissionsImplementation.Current.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            bool storagePermissionsUnneccessary = Xamarin.Essentials.DeviceInfo.Version.Major >= 13;
+            if (storagePermissionsUnneccessary)
+            {
+                // Tell Xamarin that these permissions are unneeded by saying that they were granted
+                for (int i = 0; i < permissions.Length; i++)
+                {
+                    string permission = permissions[i];
+                    if (permission.Equals("android.permission.WRITE_EXTERNAL_STORAGE") || permission.Equals("android.permission.READ_EXTERNAL_STORAGE"))
+                    {
+                        grantResults[i] = Permission.Granted;
+                    }
+                }
+            }
+
+            Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }

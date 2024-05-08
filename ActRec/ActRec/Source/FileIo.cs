@@ -1,5 +1,4 @@
 ﻿using PCLStorage;
-using Plugin.Permissions.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -153,7 +152,7 @@ namespace ActivityRecommendation
         public async Task<OpenedFile> PromptUserForFile()
         {
             await this.requestPermission();
-            ;
+
             FileResult fileData = await FilePicker.PickAsync();
             if (fileData == null)
                 return null;
@@ -174,15 +173,9 @@ namespace ActivityRecommendation
 
         private async Task requestPermission()
         {
-            Permission[] permissions = new Permission[] { Permission.Storage };
-            Dictionary<Permission, Plugin.Permissions.Abstractions.PermissionStatus> status = await Plugin.Permissions.CrossPermissions.Current.RequestPermissionsAsync(permissions);
-
-            // print statuses for debugging
-            System.Diagnostics.Debug.WriteLine("Got status for " + status.Count + " statuses ");
-            foreach (Permission permission in status.Keys)
-            {
-                System.Diagnostics.Debug.WriteLine("Permissions[" + permission + "] = " + status[permission]);
-            }
+            Task<PermissionStatus> statusTask = Permissions.RequestAsync<Permissions.StorageRead>();
+            PermissionStatus status = await statusTask;
+            System.Diagnostics.Debug.WriteLine("Status of Permissions.StorageRead = " + status);
         }
     }
 

@@ -44,18 +44,21 @@ namespace ActivityRecommendation
             if (newRating.Source != null)
             {
                 Participation participation = newRating.Source.ConvertedAsParticipation;
-                RelativeRating rawRating = participation.Rating as RelativeRating;
-                if (rawRating.BetterRating.Date == null && rawRating.WorseRating.Date != null)
+                RelativeRating rawRating = participation.CompressedRating as RelativeRating;
+                if (rawRating != null)
                 {
-                    // This one is BetterRating
-                    thisRating = newRating.BetterRating;
-                    otherRating = newRating.WorseRating;
-                }
-                else
-                {
-                    // This one is WorseRating
-                    thisRating = newRating.WorseRating;
-                    otherRating = newRating.BetterRating;
+                    if (rawRating.BetterRating.Date == null && rawRating.WorseRating.Date != null)
+                    {
+                        // This one is BetterRating
+                        thisRating = newRating.BetterRating;
+                        otherRating = newRating.WorseRating;
+                    }
+                    else
+                    {
+                        // This one is WorseRating
+                        thisRating = newRating.WorseRating;
+                        otherRating = newRating.BetterRating;
+                    }
                 }
             }
 
@@ -67,6 +70,15 @@ namespace ActivityRecommendation
                 newRating.RawScoreScale = scale;
             }
 
+            double scoreRatio = newRating.RawScoreScale.Value;
+            // If the first participation listed in the rating starts later than the second (this is unusual and probably a mistake, but not impossible), then we swap their order above
+            // When we swap their order we also have to invert the score ratio
+            /*if ((thisRating.Score > otherRating.Score) == (scoreRatio < 1))
+            {
+                if (scoreRatio != 0)
+                    scoreRatio = 1 / scoreRatio;
+            }*/
+
             Participation otherParticipation = null;
             if (otherRating.Source != null)
                 otherParticipation = otherRating.Source.ConvertedAsParticipation;
@@ -75,7 +87,7 @@ namespace ActivityRecommendation
                 thisParticipation = thisRating.Source.ConvertedAsParticipation;
             if (otherParticipation != null && thisParticipation != null)
             {
-                RelativeRating modifiedRating = this.engine.MakeRelativeRating(thisParticipation.ActivityDescriptor, thisParticipation.StartDate, newRating.RawScoreScale.Value, otherParticipation);
+                RelativeRating modifiedRating = this.engine.MakeRelativeRating(thisParticipation.ActivityDescriptor, thisParticipation.StartDate, scoreRatio, otherParticipation);
                 if (modifiedRating.BetterRating.ActivityDescriptor != null)
                 {
                     if (!modifiedRating.BetterRating.ActivityDescriptor.CanMatch(newRating.BetterRating.ActivityDescriptor))

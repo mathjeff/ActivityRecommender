@@ -116,7 +116,10 @@ namespace ActivityRecommendation
             {
                 Rating rating = value;
                 if (rating != null)
+                {
                     rating.AttemptToMatch(this);
+                    rating.Source = RatingSource.FromParticipation(this);
+                }
                 this.rating = rating;
             }
         }

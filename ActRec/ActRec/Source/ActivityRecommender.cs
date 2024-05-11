@@ -675,7 +675,7 @@ namespace ActivityRecommendation
 
         private void RenormalizeEfficiencyButton_Clicked(string backupContent)
         {
-            HistoryWriter rewriter = new RatingRenormalizer(false, true);
+            HistoryWriter rewriter = new RatingRenormalizer(true, true);
             this.runHistoryRewriter(backupContent, rewriter);
         }
 

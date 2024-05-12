@@ -813,8 +813,24 @@ Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * avera
 Means.MeanErr: 3.3105 (23 days), StdDevs.MeanErr: 3.1749 (22 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:03:37.1769310
 
+updated results on 2024-05-11 with new data
+Means.MeanErr: 0.0261 (19 days), StdDevs.MeanErr: 0.0201 (15 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0254 (19 days), StdDevs.MeanErr: 0.0227 (17 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1464 (0.2738 * average), StdDevs.MeanErr: 0.1066 (0.1994 * average), score
+0.95,                                         equivalentWeightedProbability
+Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * average), efficiency
+Means.MeanErr: 3.3105 (23 days), StdDevs.MeanErr: 3.1749 (22 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:04:18.0585639
 
-*/
+updated results on 2024-05-11 with new interpolator
+Means.MeanErr: 0.0292 (21 days), StdDevs.MeanErr: 0.0208 (15 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0247 (18 days), StdDevs.MeanErr: 0.0225 (16 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1464 (0.2738 * average), StdDevs.MeanErr: 0.1066 (0.1994 * average), score
+0.95,                                         equivalentWeightedProbability
+Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * average), efficiency
+Means.MeanErr: 3.3601 (24 days), StdDevs.MeanErr: 3.2527 (23 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:04:19.7893761
+ */
 
 // What's the relationship between accuracy and runtime?
 // If we assume the user is perfectly rational and doesn't mind much waiting for a suggestion, then
@@ -948,6 +964,11 @@ namespace ActivityRecommendation
                 ScoreSummary ratingSummary = new ScoreSummary(when);
                 this.valueIfSuggested_predictions[predictionForSuggestion] = ratingSummary;
 
+                /*bool debugDate = when.CompareTo(new DateTime(2021, 01, 01)) > 0;
+                if (debugDate)
+                {
+                    Console.WriteLine("hi");
+                }*/
                 Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, request);
                 this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
 
@@ -1059,14 +1080,13 @@ namespace ActivityRecommendation
             ScoreSummary oldSummary;
             foreach (Prediction prediction in predictions.Keys)
             {
-                DateTime interestingDateStart = new DateTime(2020, 2, 15);
-                DateTime interestingDateEnd = interestingDateStart.AddDays(1);
+                DateTime interestingDateStart = new DateTime(2020, 1, 1);
                 DateTime when = prediction.ApplicableDate;
                 bool debugDate = false;
-                if (when.CompareTo(interestingDateStart) > 0 && when.CompareTo(interestingDateEnd) < 0)
+                /*if (when.CompareTo(interestingDateStart) > 0)
                 {
                     debugDate = true;
-                }
+                }*/
                 bool debug = debugType && debugDate;
 
                 if (prediction.ApplicableDate.CompareTo(lastDateToInclude) > 0)

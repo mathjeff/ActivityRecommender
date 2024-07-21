@@ -103,9 +103,10 @@ namespace ActivityRecommendation
                 plotView.MaxX = maxX;
 
             }
-            plotView.AddSeries(correctValues, false);
-            plotView.AddSeries(predictedValues, false);
-            plotView.AddSeries(predictedPlusStdDev, false);
+            // draw predicted values first (which have lots of noise and take up lots of visual space) so the correct values draw over them (and are visible too)
+            plotView.AddSeries(predictedValues, false, true, 2);
+            plotView.AddSeries(predictedPlusStdDev, false, true, 4);
+            plotView.AddSeries(correctValues, false, true, 0);
 
             ImageLayout imageLayout = new ImageLayout(plotView, LayoutScore.Get_UsedSpace_LayoutScore(1));
             TextblockLayout legend = new TextblockLayout("Prediction errors over time. Green: actual value. Blue: predicted value. White: prediction mean + stddev.");

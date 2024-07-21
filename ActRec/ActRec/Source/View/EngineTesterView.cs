@@ -85,6 +85,18 @@ namespace ActivityRecommendation
                 plotView.MinY = errors.MinAllowedValue;
             if (!double.IsInfinity(errors.MaxAllowedValue))
                 plotView.MaxY = errors.MaxAllowedValue;
+            if (plotView.MinY != null && plotView.MaxY != null)
+            {
+                List<double> subdivisions = new List<double>();
+                for (int i = 0; i < 10; i++)
+                {
+                    double maxWeight = (double)i / (double)10;
+                    double minWeight = (1 - maxWeight);
+                    double division = plotView.MinY.Value * minWeight + plotView.MaxY.Value * maxWeight;
+                    subdivisions.Add(division);
+                }
+                plotView.YAxisSubdivisions = subdivisions;
+            }
 
             DateTime referenceDate = new DateTime(2000, 1, 1);
             foreach (PredictionError error in errors.All)

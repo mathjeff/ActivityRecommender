@@ -111,7 +111,7 @@ namespace ActivityRecommendation
             this.unappliedParticipations.Clear();
             this.unappliedSkips.Clear();
             this.unappliedSuggestions.Clear();
-            this.Update_RatingSummaries((ratingIndex + participationIndex + skipIndex) * 4);
+            this.Update_RatingSummaries(ratingIndex + participationIndex + skipIndex);
         }
 
 
@@ -1201,13 +1201,13 @@ namespace ActivityRecommendation
             }
         }
         // tells each activity to spend a little bit of time updating its knowledge of the ratings that came after one of its participations
-        public void Update_RatingSummaries(int numRatingsToUpdate)
+        public void Update_RatingSummaries(int numGroups)
         {
-            if (numRatingsToUpdate > 0)
+            if (numGroups > 0)
             {
-                this.longTerm_skipValue_interpolator.UpdateMany(numRatingsToUpdate);
-                this.longTerm_participationValue_interpolator.UpdateMany(numRatingsToUpdate);
-                this.longTerm_efficiency_interpolator.UpdateMany(numRatingsToUpdate);
+                this.longTerm_skipValue_interpolator.UpdateMany(numGroups);
+                this.longTerm_participationValue_interpolator.UpdateMany(numGroups);
+                this.longTerm_efficiency_interpolator.UpdateMany(numGroups);
             }
         }
         // gets called whenever any outside source provides a rating

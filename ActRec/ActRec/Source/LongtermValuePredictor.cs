@@ -36,10 +36,11 @@ namespace ActivityRecommendation
         {
             return summary.Item.Weight > 0;
         }
-        public void UpdateMany(int numUpdates)
+        public void UpdateMany(int numGroups)
         {
             if (this.ratingSummariesToUpdate.Count < 1)
                 return; // nothing to update
+            int numUpdates = numGroups * Math.Max(this.waves.Count, 1);
 
             // If we have enough time to update all points, then just do that
             int count = this.ratingSummariesToUpdate.Count;

@@ -1066,7 +1066,7 @@ namespace ActivityRecommendation
         private PredictionErrors Compute_FuturePredictions_Error(Dictionary<Prediction, ScoreSummary> predictions, ExponentialRatingSummarizer ratingSummarizer, double minAllowedValue, double maxAllowedValue, string predictionType)
         {
             bool debugType = false;
-            if (predictionType == "Happiness if participated")
+            if (predictionType == "Happiness if suggested")
             {
                 debugType = true;
             }
@@ -1092,12 +1092,16 @@ namespace ActivityRecommendation
                 DateTime interestingDateStart = new DateTime(2020, 1, 1);
                 DateTime when = prediction.ApplicableDate;
                 bool debugDate = false;
-                /*if (when.CompareTo(interestingDateStart) > 0)
+                if (when.CompareTo(interestingDateStart) > 0)
                 {
                     debugDate = true;
-                }*/
+                }
                 bool debug = debugType && debugDate;
 
+                /*if (debug)
+                {
+                    System.Diagnostics.Debug.WriteLine("Making a prediction; debug = true");
+                }*/
                 if (prediction.ApplicableDate.CompareTo(lastDateToInclude) > 0)
                 {
                     // When estimating the error of the predictions about the future of the past,

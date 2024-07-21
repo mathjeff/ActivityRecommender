@@ -7,7 +7,7 @@ using AdaptiveInterpolation;
 // A ScoreSummary describes the (exponentially-weighted) average value of some progression after a certain point in time
 namespace ActivityRecommendation
 {
-    class ScoreSummary : LazyDimension_Datapoint<Distribution>
+    class ScoreSummary : ILazyDatapoint<Distribution>
     {
         // If useNonzeroWeightEvenIfEarlierThanFirstSummarizerDatapoint is false, then this summary won't update if `when` is before the RatingSummarizer's first datapoint
         // The reason someone might want this would be if they want to make a bunch of ScoreSummary objects and don't want lots of repeats all saying the same thing

@@ -1309,8 +1309,8 @@ namespace ActivityRecommendation
             {
                 coordinates[i] = this.ratingTrainingProgressions[i].EstimateOutputRange();
             }
-            this.shortTerm_ratingInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
-            this.shortTerm_EfficiencyInterpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.shortTerm_ratingInterpolator = new AdaptiveInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
+            this.shortTerm_EfficiencyInterpolator = new AdaptiveInterpolator<Distribution>(new HyperBox<Distribution>(coordinates), new DistributionAdder());
         }
         // initialize the PredictionLinks that estimate the probability that the user will do this Doable
         private void SetupParticipationProbabilityPredictors()
@@ -1348,7 +1348,7 @@ namespace ActivityRecommendation
             {
                 coordinates[i] = progressions[i].EstimateOutputRange();
             }
-            this.participationInterpolator = new AdaptiveLinearInterpolator<WillingnessSummary>(new HyperBox<WillingnessSummary>(coordinates), this);
+            this.participationInterpolator = new AdaptiveInterpolator<WillingnessSummary>(new HyperBox<WillingnessSummary>(coordinates), this);
         }
         private Distribution QueryParticipationProbabilityInterpolator(double[] coordinates)
         {
@@ -1374,8 +1374,8 @@ namespace ActivityRecommendation
 
         //private List<IPredictionLink> ratingPredictors;
         List<IProgression> ratingTrainingProgressions;
-        AdaptiveLinearInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Activity
-        AdaptiveLinearInterpolator<Distribution> shortTerm_EfficiencyInterpolator;
+        AdaptiveInterpolator<Distribution> shortTerm_ratingInterpolator;  // this interpolator is used to estimate how happy the user feels after having done this Activity
+        AdaptiveInterpolator<Distribution> shortTerm_EfficiencyInterpolator;
         private List<IPredictionLink> extraRatingPredictionLinks;
 
 
@@ -1388,7 +1388,7 @@ namespace ActivityRecommendation
 
         private List<IProgression> participationTrainingProgressions;
         private List<IProgression> participationTestingProgressions;
-        AdaptiveLinearInterpolator<WillingnessSummary> participationInterpolator;
+        AdaptiveInterpolator<WillingnessSummary> participationInterpolator;
         private List<IPredictionLink> extraParticipationPredictionLinks;
 
         private ConsiderationProgression considerationProgression;

@@ -830,6 +830,15 @@ Means.MeanErr: 0.1464 (0.2738 * average), StdDevs.MeanErr: 0.1066 (0.1994 * aver
 Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * average), efficiency
 Means.MeanErr: 3.3601 (24 days), StdDevs.MeanErr: 3.2527 (23 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:04:19.7893761
+
+Updated results on 2024-07-21 with new data
+Means.MeanErr: 0.0268 (20 days), StdDevs.MeanErr: 0.0197 (14 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0223 (16 days), StdDevs.MeanErr: 0.0222 (16 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1463 (0.2737 * average), StdDevs.MeanErr: 0.1065 (0.1992 * average), score
+0.9497,                                         equivalentWeightedProbability
+Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * average), efficiency
+Means.MeanErr: 3.3601 (24 days), StdDevs.MeanErr: 3.2527 (23 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:04:29.6649242
  */
 
 // What's the relationship between accuracy and runtime?

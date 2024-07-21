@@ -27,7 +27,7 @@ namespace ActivityRecommendation.View
 
                 // put data into the interpolator
                 FloatRange inputRange = new FloatRange(0, true, windowSize.TotalSeconds, true);
-                AdaptiveLinearInterpolator<Distribution> interpolator = new AdaptiveLinearInterpolator<Distribution>(new HyperBox<Distribution>(new FloatRange[] { inputRange }), new DistributionAdder());
+                AdaptiveInterpolator<Distribution> interpolator = new AdaptiveInterpolator<Distribution>(new HyperBox<Distribution>(new FloatRange[] { inputRange }), new DistributionAdder());
                 foreach (Datapoint datapoint in datapoints)
                 {
                     interpolator.AddDatapoint(new AdaptiveInterpolation.Datapoint<Distribution>(datapoint.Input, Distribution.MakeDistribution(datapoint.Output, 0, datapoint.Weight)));

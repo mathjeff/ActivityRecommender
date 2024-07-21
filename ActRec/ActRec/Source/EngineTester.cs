@@ -839,6 +839,15 @@ Means.MeanErr: 0.1463 (0.2737 * average), StdDevs.MeanErr: 0.1065 (0.1992 * aver
 Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * average), efficiency
 Means.MeanErr: 3.3601 (24 days), StdDevs.MeanErr: 3.2527 (23 days), longtermEfficiencyIfParticipated
 EngineTester completed in 00:04:29.6649242
+
+Updated results on 2024-07-21 after adjusting the rate at which we update the ScoreSummary objects (this affects test results more than real-world results where we recalculate on startup)
+Means.MeanErr: 0.0253 (18 days), StdDevs.MeanErr: 0.0197 (14 days), longtermHappinessIfSuggested
+Means.MeanErr: 0.0248 (18 days), StdDevs.MeanErr: 0.0221 (16 days), longtermHappinessIfParticipated
+Means.MeanErr: 0.1463 (0.2737 * average), StdDevs.MeanErr: 0.1065 (0.1992 * average), score
+0.9497,                                         equivalentWeightedProbability
+Means.MeanErr: 5.1468 (3.0329 * average), StdDevs.MeanErr: 5.505 (3.2439 * average), efficiency
+Means.MeanErr: 3.3511 (23 days), StdDevs.MeanErr: 3.2253 (23 days), longtermEfficiencyIfParticipated
+EngineTester completed in 00:06:22.1679341
  */
 
 // What's the relationship between accuracy and runtime?
@@ -973,11 +982,11 @@ namespace ActivityRecommendation
                 ScoreSummary ratingSummary = new ScoreSummary(when);
                 this.valueIfSuggested_predictions[predictionForSuggestion] = ratingSummary;
 
-                /*bool debugDate = when.CompareTo(new DateTime(2021, 01, 01)) > 0;
+                bool debugDate = when.CompareTo(new DateTime(2022, 01, 01)) > 0 && when.CompareTo(new DateTime(2022, 06, 01)) < 0;
                 if (debugDate)
                 {
                     Console.WriteLine("hi");
-                }*/
+                }
                 Prediction predictionIfParticipated = this.engine.Get_OverallHappiness_ParticipationEstimate(activity, request);
                 this.valueIfParticipated_predictions[predictionIfParticipated] = ratingSummary;
 
@@ -1092,10 +1101,10 @@ namespace ActivityRecommendation
                 DateTime interestingDateStart = new DateTime(2020, 1, 1);
                 DateTime when = prediction.ApplicableDate;
                 bool debugDate = false;
-                if (when.CompareTo(interestingDateStart) > 0)
+                /*if (when.CompareTo(interestingDateStart) > 0)
                 {
                     debugDate = true;
-                }
+                }*/
                 bool debug = debugType && debugDate;
 
                 /*if (debug)

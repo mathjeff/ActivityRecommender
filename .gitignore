@@ -16,3 +16,4 @@ packages
 AppPackages
 BundleArtifacts
 *.pfx
+*.swp

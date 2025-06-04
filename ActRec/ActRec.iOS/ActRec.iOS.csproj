@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseMaui>true</UseMaui>
     <ProvisioningType>manual</ProvisioningType>
+    <CodesignKey>Apple Distribution: Jeffry Gaston (T4V99M34DZ)</CodesignKey>
   </PropertyGroup>
   <!-- <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
     <CodesignProvision>iOS Team Provisioning Profile: *</CodesignProvision>
@@ -19,11 +20,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <CodesignProvision>ActivityRecommender-2025-06-04</CodesignProvision>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-    <CodesignKey>Apple Distribution: Jeffry Gaston (T4V99M34DZ)</CodesignKey>
+    <CodesignKey>Apple Distribution: Jeffry Gaston (R4Z44WB24C)</CodesignKey>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ad-Hoc|iPhone' ">
     <CodesignProvision>ActivityRecommender-2025-06-04</CodesignProvision>
-    <CodesignKey>Apple Distribution: Jeffry Gaston (T4V99M34DZ)</CodesignKey>
+    <CodesignKey>Apple Distribution: Jeffry Gaston (R4Z44WB24C)</CodesignKey>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|iPhone' ">

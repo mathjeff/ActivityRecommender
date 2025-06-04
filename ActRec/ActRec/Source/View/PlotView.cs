@@ -1,9 +1,12 @@
 ﻿using SkiaSharp;
-using SkiaSharp.Views.Forms;
 using System;
 using System.Collections.Generic;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
+using Microsoft.Maui.Graphics;
+using SkiaSharp.Views.Maui.Controls;
+using SkiaSharp.Views.Maui;
 
 // The PlotControl shows a visual representation of some (x,y) points
 namespace ActivityRecommendation
@@ -36,7 +39,7 @@ namespace ActivityRecommendation
             this.canvas.PaintSurface += Canvas_PaintSurface;
             this.Content = this.canvas;
 
-            this.canvas.BackgroundColor = Color.Black;
+            this.canvas.BackgroundColor = Colors.Black;
             this.canvas.InvalidateSurface();
         }
 

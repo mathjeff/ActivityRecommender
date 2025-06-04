@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui;
 
 namespace ActivityRecommendation.View
 {
@@ -131,12 +133,12 @@ namespace ActivityRecommendation.View
 
         private void appearInvalid()
         {
-            this.textBox.BackgroundColor = Color.Red;
+            this.textBox.BackgroundColor = Colors.Red;
         }
 
         private void appearValid()
         {
-            this.textBox.BackgroundColor = Color.White;
+            this.textBox.BackgroundColor = Colors.White;
         }
 
         private string Text
@@ -185,12 +187,12 @@ namespace ActivityRecommendation.View
 
         private void appearInvalid()
         {
-            this.textBox.BackgroundColor = Color.Red;
+            this.textBox.BackgroundColor = Colors.Red;
         }
 
         private void appearValid()
         {
-            this.textBox.BackgroundColor = Color.White;
+            this.textBox.BackgroundColor = Colors.White;
         }
 
         private string Text

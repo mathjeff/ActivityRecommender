@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls;
+using System;
 using VisiPlacement;
-using Xamarin.Forms;
 
 namespace ActivityRecommendation.View
 {
@@ -21,9 +22,17 @@ namespace ActivityRecommendation.View
             visitUrl();
         }
 
-        public void visitUrl()
+        public async void visitUrl()
         {
-            Device.OpenUri(new Uri(this.url));
+            try
+            {
+                Uri uri = new Uri(this.url);
+                await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+            }
+            catch (Exception ex)
+            {
+                // An unexpected error occurred. No browser may be installed on the device.
+            }
         }
         private string url;
     }

@@ -5,7 +5,8 @@ using System.Text;
 
 using System.Windows;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
 
 namespace ActivityRecommendation
 {

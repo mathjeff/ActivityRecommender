@@ -1,6 +1,7 @@
 ﻿using ActivityRecommendation.View;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
 
 // This file serves two pruposes:
 // #1. It generates the features overview screen in the application, primarily for the purpose of getting users excited

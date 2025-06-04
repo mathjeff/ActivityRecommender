@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 // A RequestSuggestion_Layout shows a user interface for the user to request a suggestion.
 // It doesn't also show the suggestions themselves; that's done in a SuggestionsView or a SuggestionView

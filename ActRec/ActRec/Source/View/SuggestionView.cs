@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
 
 // a SuggestionView displays one suggested Activity and some details of the suggestion
 namespace ActivityRecommendation

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 // a ProtoActivity_Splitting_Layout allows splitting a protoactivity
 namespace ActivityRecommendation.View

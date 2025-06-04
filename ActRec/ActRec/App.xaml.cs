@@ -1,35 +1,26 @@
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using VisiPlacement;
-using Xamarin.Forms;
 
 namespace ActRec
 {
     public partial class App : Application
     {
-        public App(AppParams appParams)
+        public static AppParams AppParams { get; set; }
+        public App()
         {
             InitializeComponent();
-
-            MainPage = new MainPage(appParams);
+            Console.WriteLine("App.xaml.cs constructor");
         }
-
-        protected override void OnStart()
+        protected override Window CreateWindow(IActivationState? activationState)
         {
-            // Handle when your app starts
-        }
-
-        protected override void OnSleep()
-        {
-            // Handle when your app sleeps
-        }
-
-        protected override void OnResume()
-        {
-            // Handle when your app resumes
+            Console.WriteLine("App.xaml.cs CreateWindow");
+            return new Window(new MainPage(AppParams));
         }
     }
 

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
 
 namespace ActivityRecommendation.View
 {

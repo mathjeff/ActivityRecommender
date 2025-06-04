@@ -7,7 +7,9 @@ using System.Windows;
 using VisiPlacement;
 
 using System.Windows.Input;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
+using Microsoft.Maui.Graphics;
 
 namespace ActivityRecommendation
 {
@@ -24,7 +26,7 @@ namespace ActivityRecommendation
             this.scaleBox.Keyboard = Keyboard.Numeric;
             this.scaleBox.TextChanged += this.ScaleBlock_TextChanged;
             this.scaleBoxLayout = new TextboxLayout(this.scaleBox);
-            ContainerLayout scaleBoxHolder = new ContainerLayout(null, this.scaleBoxLayout, false);
+            ContainerLayout scaleBoxHolder = new ContainerLayout(null, this.scaleBoxLayout, true);
             // The fact that the rating is relative to the previous participation is really important, so we put this text into its own text block.
             // Additionally, the timesBlock might be able to fit into the same line as the text box into which the user types the rating ratio.
             // Also, if there's enough space then we spell out the exact meaning more clearly
@@ -100,7 +102,7 @@ namespace ActivityRecommendation
         // alters the appearance to indicate that the given date is not valid
         void AppearInvalid()
         {
-            this.scaleBoxLayout.SetBackgroundColor(Color.Red);
+            this.scaleBoxLayout.SetBackgroundColor(Colors.Red);
         }
 
         public Participation LatestParticipation

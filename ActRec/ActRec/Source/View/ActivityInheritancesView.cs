@@ -2,7 +2,8 @@
 using System;
 using System.Collections.Generic;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
 
 namespace ActivityRecommendation.View
 {
@@ -47,7 +48,7 @@ namespace ActivityRecommendation.View
                 }
             }
             this.SetTitle(title);
-            this.TitleLayout.AlignHorizontally(Xamarin.Forms.TextAlignment.Start);
+            this.TitleLayout.AlignHorizontally(TextAlignment.Start);
 
 
             Vertical_GridLayout_Builder gridBuilder = new Vertical_GridLayout_Builder();

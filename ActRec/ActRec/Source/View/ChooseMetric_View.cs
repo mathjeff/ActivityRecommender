@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 // a ChooseMetric_View lets the user choose a Metric assigned to a certain Activity.
 // The caller can also demand that the Metric must be a specific one, if the Activity has it

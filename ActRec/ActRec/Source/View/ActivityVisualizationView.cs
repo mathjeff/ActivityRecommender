@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui;
 
 // The ActivityVisualizationView shows a visual representation of the Participations and Ratings for an Activity
 namespace ActivityRecommendation

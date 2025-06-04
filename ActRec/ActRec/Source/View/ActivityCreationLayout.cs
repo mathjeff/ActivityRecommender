@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui;
 
 namespace ActivityRecommendation
 {
@@ -195,7 +197,7 @@ namespace ActivityRecommendation
         private void showError(string text)
         {
             this.feedbackLayout.setText(text);
-            this.feedbackLayout.setTextColor(Color.Red);
+            this.feedbackLayout.setTextColor(Colors.Red);
         }
 
         private void showMessage(string text)

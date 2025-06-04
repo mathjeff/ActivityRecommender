@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui;
 
 // the DateEntryView class allows the user to select a date
 namespace ActivityRecommendation
@@ -126,7 +128,7 @@ namespace ActivityRecommendation
 
         public void appearInvalid()
         {
-            this.chooseDate_button.BackgroundColor = Color.Red;
+            this.chooseDate_button.BackgroundColor = Colors.Red;
         }
         public void appear_defaultValid()
         {
@@ -134,7 +136,7 @@ namespace ActivityRecommendation
         }
         public void appearConcerned()
         {
-            this.chooseDate_button.BackgroundColor = Color.Yellow;
+            this.chooseDate_button.BackgroundColor = Colors.Yellow;
         }
 
         public bool IsDateValid()
@@ -417,7 +419,7 @@ namespace ActivityRecommendation
             if (this.isDateValid())
                 this.dateLayout.setBackgroundColor(Color.FromRgba(0, 0, 0, 0));
             else
-                this.dateLayout.setBackgroundColor(Color.Red);
+                this.dateLayout.setBackgroundColor(Colors.Red);
         }
 
         private bool isDateValid()
@@ -602,13 +604,13 @@ namespace ActivityRecommendation
         // alters the appearance to indicate that the given date is not valid
         public void appearValid()
         {
-            this.dateBox.BackgroundColor = Color.LightGray;
+            this.dateBox.BackgroundColor = Colors.LightGray;
         }
 
         // alters the appearance to indicate that the given date is not valid
         public void appearInvalid()
         {
-            this.dateBox.BackgroundColor = Color.Red;
+            this.dateBox.BackgroundColor = Colors.Red;
         }
         private string addFillerCharacters(string text)
         {

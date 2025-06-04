@@ -4,7 +4,8 @@ using ActivityRecommendation.View;
 using System;
 using System.Collections.Generic;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 
 // the ParticipationEntryView provides a place for the user to describe what they've done recently
 namespace ActivityRecommendation
@@ -620,9 +621,9 @@ namespace ActivityRecommendation
                 SingleSelect singleSelect;
                 if (!(metric is ProblemMetric))
                 {
-                    SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Color.Green);
-                    SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Color.Yellow);
-                    SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Color.White);
+                    SingleSelect_Choice complete = new SingleSelect_Choice(this.TaskCompleted_Text, Colors.Green);
+                    SingleSelect_Choice incomplete = new SingleSelect_Choice(this.TaskIncomplete_Text, Colors.Yellow);
+                    SingleSelect_Choice obsolete = new SingleSelect_Choice(this.TaskObsolete_Text, Colors.White);
                     if (this.EnteringToDo)
                         singleSelect = new SingleSelect(null, new List<SingleSelect_Choice>() { complete, incomplete, obsolete });
                     else
@@ -630,8 +631,8 @@ namespace ActivityRecommendation
                 }
                 else
                 {
-                    SingleSelect_Choice complete = new SingleSelect_Choice(this.ProblemComplete_Text, Color.LightBlue);
-                    SingleSelect_Choice incomplete = new SingleSelect_Choice(this.ProblemIncomplete_Text, Color.Orange);
+                    SingleSelect_Choice complete = new SingleSelect_Choice(this.ProblemComplete_Text, Colors.LightBlue);
+                    SingleSelect_Choice incomplete = new SingleSelect_Choice(this.ProblemIncomplete_Text, Colors.Orange);
                     singleSelect = new SingleSelect(null, new List<SingleSelect_Choice>() { complete, incomplete });
                 }
                 this.todoCompletionStatusPicker = singleSelect;
@@ -694,11 +695,11 @@ namespace ActivityRecommendation
                     {
                         if (happySummary.Value == true)
                         {
-                            this.participationFeedbackButtonLayout.setTextColor(Color.Green);
+                            this.participationFeedbackButtonLayout.setTextColor(Colors.Green);
                         }
                         else
                         {
-                            this.participationFeedbackButtonLayout.setTextColor(Color.Red);
+                            this.participationFeedbackButtonLayout.setTextColor(Colors.Red);
                         }
                     }
                     else

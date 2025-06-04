@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using VisiPlacement;
 using ActivityRecommendation.View;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 using System.IO;
 using ActivityRecommendation.Effectiveness;
 using System.Threading.Tasks;
 using System.Reflection;
 using StatLists;
-using Xamarin.Essentials;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui;
 
 // the ActivityRecommender class is the main class that connects the user-interface to the Engine
 namespace ActivityRecommendation
@@ -89,9 +90,9 @@ namespace ActivityRecommendation
             {
                 return new VisualDefaults_Builder()
                     .DisplayName("Castle")
-                    .UneditableText_Color(Color.LightGray)
-                    .UneditableText_Background(Color.Black)
-                    .ApplicationBackground(Color.Black)
+                    .UneditableText_Color(Colors.LightGray)
+                    .UneditableText_Background(Colors.Black)
+                    .ApplicationBackground(Colors.Black)
                     .Build();
             }
 
@@ -101,9 +102,9 @@ namespace ActivityRecommendation
             List<VisualDefaults> all = new List<VisualDefaults>();
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Dracula")
-                .UneditableText_Color(Color.DarkRed)
-                .UneditableText_Background(Color.Black)
-                .ApplicationBackground(Color.Gray)
+                .UneditableText_Color(Colors.DarkRed)
+                .UneditableText_Background(Colors.Black)
+                .ApplicationBackground(Colors.Gray)
                 .ButtonInnerBevelColor(Color.FromRgb(180, 169, 169))
                 .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .ButtonBackgroundSecondaryColor(Color.FromRgb(25, 25, 25))
@@ -142,9 +143,9 @@ namespace ActivityRecommendation
                 .Build());
             all.Add(new VisualDefaults_Builder()
                 .DisplayName("Programming")
-                .UneditableText_Color(Color.Green)
-                .UneditableText_Background(Color.Black)
-                .ApplicationBackground(Color.Black)
+                .UneditableText_Color(Colors.Green)
+                .UneditableText_Background(Colors.Black)
+                .ApplicationBackground(Colors.Black)
                 .FontName("MinimalFont5x7.ttf#MinimalFont5x7")
                 .FontSizeMultiplier(1.5)
                 .Build());
@@ -183,7 +184,7 @@ namespace ActivityRecommendation
                 .DisplayName("Ice Cream")
                 .UneditableText_Color(Color.FromRgb(253, 241, 56))
                 .UneditableText_Background(Color.FromRgb(29, 114, 171))
-                .ApplicationBackground(Color.Gray)
+                .ApplicationBackground(Colors.Gray)
                 .ButtonInnerBevelColor(Color.FromRgb(172, 68, 72))
                 .ButtonOuterBevelColor(Color.FromRgb(218, 4, 16))
                 .FontName("Qdbettercomicsans.ttf#QDBetterComicSans")
@@ -234,7 +235,7 @@ namespace ActivityRecommendation
                 .DisplayName("Forest")
                 .UneditableText_Color(Color.FromRgb(240, 245, 95))
                 .UneditableText_Background(Color.FromRgb(10, 30, 3))
-                .ApplicationBackground(Color.Black)
+                .ApplicationBackground(Colors.Black)
                 .ButtonInnerBevelColor(Color.FromRgb(160, 160, 160))
                 .ButtonOuterBevelColor(Color.FromRgb(200, 200, 200))
                 .ButtonBackgroundSecondaryColor(Color.FromRgb(21, 60, 8))
@@ -410,7 +411,8 @@ namespace ActivityRecommendation
         private void SetupDrawing()
         {
             this.mainLayout = ContainerLayout.SameSize_Scroller(new ScrollView(), this.layoutStack);
-            this.viewManager = new ViewManager(null, this.mainLayout, this.VisualDefaults);
+
+            this.viewManager = new ViewManager(null, this.layoutStack, this.VisualDefaults);
 
             ActivityImportLayout activityImportLayout = new ActivityImportLayout(this.ActivityDatabase, this.layoutStack);
             this.protoActivitiesLayout = new ProtoActivities_Layout(this.protoActivities_database, this.ActivityDatabase, this.layoutStack, this.publicFileIo, this.textConverter);

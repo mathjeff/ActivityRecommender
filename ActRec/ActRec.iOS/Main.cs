@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using Foundation;
@@ -15,10 +16,12 @@ namespace ActRec.iOS
         {
             // if you want to use a different Application Delegate class from "AppDelegate"
             // you can specify it here.
-            Xamarin.Forms.Forms.SetFlags("Brush_Experimental");
+            //Xamarin.Forms.Forms.SetFlags("Brush_Experimental");
             iOSTextMeasurer.Initialize();
             iOSButtonClicker.Initialize();
-            UIApplication.Main(args, null, "AppDelegate");
+            System.Diagnostics.Debug.WriteLine("Main debug writeline");
+            Console.WriteLine("Main console writeline");
+            UIApplication.Main(args, null, typeof(AppDelegate));
         }
     }
 }

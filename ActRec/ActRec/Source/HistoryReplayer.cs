@@ -19,6 +19,7 @@ namespace ActivityRecommendation
         public void ReadText(TextReader text)
         {
             this.textConverter.ProcessText(text);
+            text.Close();
         }
 
         public void AddInheritance(Inheritance newInheritance)

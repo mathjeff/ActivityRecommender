@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 using ActivityRecommendation;
 
 namespace ActRec
@@ -14,7 +14,11 @@ namespace ActRec
             InitializeComponent();
 
             ContentView view = new ContentView();
+            Label label = new Label();
+            label.Text = "ActivityRecommender is starting!";
+            view.Content = label;
             this.Content = view;
+            Console.WriteLine("MainPage.xaml.cs MainPage()");
 
             this.activityRecommender = new ActivityRecommender(view, appParams.Version, appParams.LogReader);
         }

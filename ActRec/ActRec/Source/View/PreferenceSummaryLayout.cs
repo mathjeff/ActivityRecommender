@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 namespace ActivityRecommendation.View
 {

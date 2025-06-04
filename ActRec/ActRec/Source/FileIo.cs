@@ -1,9 +1,11 @@
-﻿using PCLStorage;
+﻿using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.ApplicationModel.DataTransfer;
+using Microsoft.Maui.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Xamarin.Essentials;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ActivityRecommendation
 {
@@ -11,83 +13,38 @@ namespace ActivityRecommendation
     class InternalFileIo
     {
         #region Public Member Functions
-        public Boolean FileExists(string fileName)
-        {
-            IFile file = this.GetFile(fileName, false);
-            return (file != null);
-        }
-        public Stream OpenFile(string fileName, PCLStorage.FileAccess fileAccess)
-        {
-            IFile file = this.GetFile(fileName, true);
-            if (file == null)
-            {
-                return null;
-            }
-            Stream stream;
-            try
-            {
-                Task<Stream> streamTask = Task.Run(async () => await file.OpenAsync(fileAccess));
-                stream = streamTask.Result;
-            }
-            catch (Exception e)
-            {
-                string message = "exception " + e;
-                System.Diagnostics.Debug.WriteLine(message);
-                return null;
-            }
-            return stream;
-        }
-        private IFile GetFile(string fileName, bool createIfMissing)
-        {
-            IFileSystem fs = PCLStorage.FileSystem.Current;
-            IFile file = null;
-            // TODO: instead of ConfigureAwait here, should we make everything function async?
-            Task<ExistenceCheckResult> existenceTask = Task.Run(async () => await fs.LocalStorage.CheckExistsAsync(fileName));
-            ExistenceCheckResult result = existenceTask.Result;
-            if (result == ExistenceCheckResult.FileExists)
-            {
-                Task<IFile> contentTask = Task.Run(async () => await fs.LocalStorage.GetFileAsync(fileName));
-                file = contentTask.Result;
-            }
-            else
-            {
-                if (createIfMissing)
-                {
-                    Task<IFile> creationTask = Task.Run(async () => await fs.LocalStorage.CreateFileAsync(fileName, CreationCollisionOption.FailIfExists));
-                    file = creationTask.Result;
-                }
-
-            }
-
-            return file;
-        }
         public void AppendText(string text, string fileName)
         {
-            Stream file = this.OpenFile(fileName, PCLStorage.FileAccess.ReadAndWrite);
-            file.Seek(0, SeekOrigin.End);
-
-            StreamWriter writer = new StreamWriter(file);
+            System.Diagnostics.Debug.WriteLine("AppendText to " + fileName);
+            StreamWriter writer = new StreamWriter(fileName, true);
             writer.Write(text);
             writer.Dispose();
-            file.Dispose();
         }
         public StreamWriter EraseFileAndOpenForWriting(string fileName)
         {
-            IFile file = this.GetFile(fileName, false);
-            if (file != null)
-            {
-                Task deletion = file.DeleteAsync();
-                deletion.Wait();
-            }
-            return new StreamWriter(this.OpenFile(fileName, PCLStorage.FileAccess.ReadAndWrite));
+            System.Diagnostics.Debug.WriteLine("EraseFileAndOpenForWriting to " + fileName);
+            return new StreamWriter(fileName, false);
         }
         public StreamReader OpenFileForReading(string fileName)
         {
-            return new StreamReader(this.OpenFile(fileName, PCLStorage.FileAccess.Read));
+            System.Diagnostics.Debug.WriteLine("OpenFileForReading checking existence of " + fileName);
+            if (!File.Exists(fileName))
+            {
+                System.Diagnostics.Debug.WriteLine("OpenFileForReading creating " + fileName);
+                FileStream stream = File.Create(fileName);
+                System.Diagnostics.Debug.WriteLine("OpenFileForReading returning new stream for " + fileName);
+                return new StreamReader(stream);
+            }
+            System.Diagnostics.Debug.WriteLine("OpenFileForReading reading existing " + fileName);
+            StreamReader result = new StreamReader(fileName);
+            System.Diagnostics.Debug.WriteLine("OpenFileForReading read " + fileName);
+            return result;
         }
+
 
         public void EraseFileAndWriteContent(string fileName, TextReader content)
         {
+            System.Diagnostics.Debug.WriteLine("EraseFileAndWriteContent to " + fileName);
             this.EraseFileAndWriteContent(fileName, content.ReadToEnd());
             content.Close();
             content.Dispose();
@@ -95,6 +52,7 @@ namespace ActivityRecommendation
 
         public void EraseFileAndWriteContent(string fileName, string content)
         {
+            System.Diagnostics.Debug.WriteLine("EraseFileAndWriteContent " + fileName);
             StreamWriter writer = this.EraseFileAndOpenForWriting(fileName);
             writer.Write(content);
             writer.Dispose();
@@ -126,10 +84,10 @@ namespace ActivityRecommendation
         // gives a file to the user to save
         public async Task<FileShareResult> Share(string fileName, string content)
         {
-            var file = Path.Combine(Xamarin.Essentials.FileSystem.CacheDirectory, fileName);
+            var file = Path.Combine(Microsoft.Maui.Storage.FileSystem.CacheDirectory, fileName);
             File.WriteAllText(file, content);
 
-            await Xamarin.Essentials.Share.RequestAsync(new ShareFileRequest
+            await Microsoft.Maui.ApplicationModel.DataTransfer.Share.Default.RequestAsync(new ShareFileRequest
             {
                 Title = fileName,
                 File = new ShareFile(file)

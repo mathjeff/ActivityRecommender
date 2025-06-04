@@ -1,5 +1,5 @@
 ﻿using Xamarin.Forms.Platform.Android;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 
 [assembly: ResolutionGroupName("VisiPlacement")]

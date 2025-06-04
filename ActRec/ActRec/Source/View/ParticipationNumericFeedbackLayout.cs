@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui;
 
 namespace ActivityRecommendation.View
 {
@@ -108,7 +110,7 @@ namespace ActivityRecommendation.View
                     else
                         redirectionText = "How about adding a new activity? " + noIdeasText; // Not happy now or later
                 }
-                redirectionColor = Color.Green;
+                redirectionColor = Colors.Green;
             }
             else
             {
@@ -116,19 +118,19 @@ namespace ActivityRecommendation.View
                 if (feedback.Suggested)
                 {
                     redirectionText = "I thought of a better idea: " + betterActivity.Name + ", better by +" + improvementText + " days fun. Sorry for not mentioning this earlier!";
-                    redirectionColor = Color.Yellow;
+                    redirectionColor = Colors.Yellow;
                 }
                 else
                 {
                     if (feedback.ExpectedFutureFun >= 0)
                     {
                         redirectionText = "I suggest that " + betterActivity.Name + " would be even better: +" + improvementText + " days fun.";
-                        redirectionColor = Color.Yellow;
+                        redirectionColor = Colors.Yellow;
                     }
                     else
                     {
                         redirectionText = "I suggest that " + betterActivity.Name + " would improve your future happiness by " + improvementText + " days.";
-                        redirectionColor = Color.Red;
+                        redirectionColor = Colors.Red;
                     }
                 }
             }
@@ -192,18 +194,18 @@ namespace ActivityRecommendation.View
                 if (value >= cutoffB)
                 {
                     if (value == cutoffA)
-                        return Color.White;
+                        return Colors.White;
                     else
-                        return Color.Green;
+                        return Colors.Green;
                 }
                 else
                 {
-                    return Color.Yellow;
+                    return Colors.Yellow;
                 }
             }
             else
             {
-                return Color.Red;
+                return Colors.Red;
             }
         }
 

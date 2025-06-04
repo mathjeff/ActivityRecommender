@@ -1,7 +1,7 @@
 ﻿using ActivityRecommendation.View;
 using System;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 // The user is able to view statistics of their data
 // This menu is used to allow the user to open that view

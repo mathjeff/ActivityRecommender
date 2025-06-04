@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Foundation;
+using Microsoft.Maui.Controls;
+using SkiaSharp.Views.Maui.Controls.Hosting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using Foundation;
 using UIKit;
+using VisiPlacement;
 
 namespace ActRec.iOS
 {
@@ -11,22 +13,23 @@ namespace ActRec.iOS
     // User Interface of the application, as well as listening (and optionally responding) to 
     // application events from iOS.
     [Register("AppDelegate")]
-    public partial class AppDelegate : global::Xamarin.Forms.Platform.iOS.FormsApplicationDelegate
+    public partial class AppDelegate : MauiUIApplicationDelegate
     {
-        //
-        // This method is invoked when the application has loaded and is ready to run. In this 
-        // method you should instantiate the window, load the UI into it and then make the window
-        // visible.
-        //
-        // You have 17 seconds to return from this method, or iOS will terminate your application.
-        //
-        public override bool FinishedLaunching(UIApplication app, NSDictionary options)
+        protected override MauiApp CreateMauiApp()
         {
-            global::Xamarin.Forms.Forms.Init();
             string version = NSBundle.MainBundle.InfoDictionary["CFBundleVersion"].ToString();
-            LoadApplication(new App(new AppParams(version, null)));
+            App.AppParams = new AppParams(version, null);
 
-            return base.FinishedLaunching(app, options);
+            MauiAppBuilder builder = MauiApp.CreateBuilder();
+            builder.UseMauiApp<App>();
+            builder.UseSkiaSharp();
+            builder.ConfigureEffects(effects =>
+            {
+                effects.Add<RoutingEffect, ActRec.iOS.ButtonEffect>();
+            });
+
+            EffectFactory.Instance.RegisterEffect("ActRec.ButtonEffect", new ConstructorProvider<ButtonEffect, Effect>());
+            return builder.Build();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Timers;
 using VisiPlacement;
-using Xamarin.Forms;
+using Microsoft.Maui.Controls;
 
 // A DemoLayout lets the user see a demo of how to use ActivityRecommender
 namespace ActivityRecommendation.View
@@ -66,6 +66,8 @@ namespace ActivityRecommendation.View
             WorkflowNode node = null;
             try
             {
+                if (stepNumber >= this.steps.Count)
+                    return;
                 node = this.steps[stepNumber];
                 node.Process();
                 if (this.viewManager.NeedsRelayout)
@@ -82,6 +84,11 @@ namespace ActivityRecommendation.View
             {
                 System.Diagnostics.Debug.WriteLine("DemoLayout error processing node " + node + ": " + ex);
                 this.viewManager.LayoutCompleted -= ViewManager_LayoutCompleted;
+                if (this.timer != null)
+                {
+                    this.timer.Stop();
+                    this.timer = null;
+                }
             }
         }
 
@@ -101,8 +108,9 @@ namespace ActivityRecommendation.View
                 timer.Stop();
             }
             timer = new Timer();
+            this.timer = timer;
             timer.AutoReset = false;
-            timer.Interval = 1000;
+            timer.Interval = 4000;
             timer.Elapsed += Timer_Elapsed;
             timer.Start();
         }

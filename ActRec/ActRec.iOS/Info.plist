@@ -28,11 +28,6 @@
     <string>com.mathjeff.ActRec</string>
     <key>CFBundleVersion</key>
     <string>1.2.11</string>
-    <key>UILaunchScreen</key>
-    <dict>
-      <key>UIColorName</key>
-      <string>black</string>
-    </dict>
     <key>CFBundleName</key>
     <string>ActRec</string>
     <key>XSAppIconAssets</key>

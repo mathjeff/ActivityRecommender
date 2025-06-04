@@ -129,4 +129,7 @@
   <ItemGroup>
     <BundleResource Include="Resources\button_background.png" />
   </ItemGroup>
+  <ItemGroup>
+    <MauiSplashScreen Include="Resources\Splash\splash.jpg" />
+  </ItemGroup>
 </Project>

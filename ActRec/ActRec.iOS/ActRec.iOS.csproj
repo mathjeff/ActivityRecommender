@@ -8,31 +8,29 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseMaui>true</UseMaui>
     <ProvisioningType>manual</ProvisioningType>
-    <CodesignKey>Apple Distribution: Jeffry Gaston (T4V99M34DZ)</CodesignKey>
   </PropertyGroup>
-  <!-- <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
     <CodesignProvision>iOS Team Provisioning Profile: *</CodesignProvision>
     <MtouchDebug>true</MtouchDebug>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <CodesignProvision>ActivityRecommender-2025-06-04</CodesignProvision>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
-    <CodesignKey>Apple Distribution: Jeffry Gaston (R4Z44WB24C)</CodesignKey>
+    <CodesignKey>Apple Distribution: Jeffry Gaston (T4V99M34DZ)</CodesignKey>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Ad-Hoc|iPhone' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Ad-Hoc' ">
     <CodesignProvision>ActivityRecommender-2025-06-04</CodesignProvision>
-    <CodesignKey>Apple Distribution: Jeffry Gaston (R4Z44WB24C)</CodesignKey>
+    <CodesignKey>Apple Distribution: Jeffry Gaston (T4V99M34DZ)</CodesignKey>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|iPhone' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'AppStore' ">
     <CodesignProvision>Automatic:AppStore</CodesignProvision>
     <CodesignKey>iPhone Distribution</CodesignKey>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
-  -->
   <ItemGroup>
     <BundleResource Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
       <Link>Resources\BlackChancery.ttf</Link>

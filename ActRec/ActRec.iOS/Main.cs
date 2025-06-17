@@ -21,7 +21,15 @@ namespace ActRec.iOS
             iOSButtonClicker.Initialize();
             System.Diagnostics.Debug.WriteLine("Main debug writeline");
             Console.WriteLine("Main console writeline");
-            UIApplication.Main(args, null, typeof(AppDelegate));
+            try
+            {
+                UIApplication.Main(args, null, typeof(AppDelegate));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to launch ActivityRecommender " + e);
+                throw new Exception("Failed to launch ActivityRecommender", e);
+            }
         }
     }
 }

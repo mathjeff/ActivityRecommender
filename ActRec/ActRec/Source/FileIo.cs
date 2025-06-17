@@ -13,39 +13,47 @@ namespace ActivityRecommendation
     class InternalFileIo
     {
         #region Public Member Functions
+        private string pathForFilename(string fileName)
+        {
+            return Path.Combine(FileSystem.AppDataDirectory, fileName);
+        }
         public void AppendText(string text, string fileName)
         {
-            System.Diagnostics.Debug.WriteLine("AppendText to " + fileName);
-            StreamWriter writer = new StreamWriter(fileName, true);
+            String path = pathForFilename(fileName);
+            System.Diagnostics.Debug.WriteLine("AppendText to " + path);
+            StreamWriter writer = new StreamWriter(path, true);
             writer.Write(text);
             writer.Dispose();
         }
         public StreamWriter EraseFileAndOpenForWriting(string fileName)
         {
-            System.Diagnostics.Debug.WriteLine("EraseFileAndOpenForWriting to " + fileName);
-            return new StreamWriter(fileName, false);
+            String path = pathForFilename(fileName);
+            System.Diagnostics.Debug.WriteLine("EraseFileAndOpenForWriting to " + path);
+            return new StreamWriter(path, false);
         }
         public StreamReader OpenFileForReading(string fileName)
         {
-            System.Diagnostics.Debug.WriteLine("OpenFileForReading checking existence of " + fileName);
-            if (!File.Exists(fileName))
+            String path = pathForFilename(fileName);
+            System.Diagnostics.Debug.WriteLine("OpenFileForReading checking existence of " + path);
+            if (!File.Exists(path))
             {
-                System.Diagnostics.Debug.WriteLine("OpenFileForReading creating " + fileName);
-                FileStream stream = File.Create(fileName);
-                System.Diagnostics.Debug.WriteLine("OpenFileForReading returning new stream for " + fileName);
+                System.Diagnostics.Debug.WriteLine("OpenFileForReading creating " + path);
+                FileStream stream = File.Create(path);
+                System.Diagnostics.Debug.WriteLine("OpenFileForReading returning new stream for " + path);
                 return new StreamReader(stream);
             }
-            System.Diagnostics.Debug.WriteLine("OpenFileForReading reading existing " + fileName);
-            StreamReader result = new StreamReader(fileName);
-            System.Diagnostics.Debug.WriteLine("OpenFileForReading read " + fileName);
+            System.Diagnostics.Debug.WriteLine("OpenFileForReading reading existing " + path);
+            StreamReader result = new StreamReader(path);
+            System.Diagnostics.Debug.WriteLine("OpenFileForReading read " + path);
             return result;
         }
 
 
         public void EraseFileAndWriteContent(string fileName, TextReader content)
         {
-            System.Diagnostics.Debug.WriteLine("EraseFileAndWriteContent to " + fileName);
-            this.EraseFileAndWriteContent(fileName, content.ReadToEnd());
+            String path = pathForFilename(fileName);
+            System.Diagnostics.Debug.WriteLine("EraseFileAndWriteContent to " + path);
+            this.EraseFileAndWriteContent(path, content.ReadToEnd());
             content.Close();
             content.Dispose();
         }

@@ -2272,8 +2272,6 @@ namespace ActivityRecommendation
         private HistoryReplayer listener;
         private Participation latestParticipationRead;
         private ActivitySkip pendingSkip;
-        private InternalFileIo internalFileIo = new InternalFileIo();
-        private PublicFileIo publicFileIo = new PublicFileIo();
         private ActivityDatabase activityDatabase;
 
         #endregion

@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>net9.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
-    <Nullable>enable</Nullable>
     <UseMaui>true</UseMaui>
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
   </PropertyGroup>

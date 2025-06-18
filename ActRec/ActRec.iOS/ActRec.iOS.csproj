@@ -4,7 +4,6 @@
     <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <RootNamespace>ActRec.iOS</RootNamespace>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseMaui>true</UseMaui>
     <ProvisioningType>manual</ProvisioningType>

@@ -9,6 +9,9 @@
     <ProvisioningType>manual</ProvisioningType>
     <DebugSymbols>true</DebugSymbols>
     <NoSymbolStrip>true</NoSymbolStrip>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <MTouchLink>Full</MTouchLink>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
     <CodesignProvision>iOS Team Provisioning Profile: *</CodesignProvision>

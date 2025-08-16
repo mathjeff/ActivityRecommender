@@ -19,6 +19,9 @@ namespace ActRec.Droid
     {
         protected override void OnAttached()
         {
+            Android.Views.View view = this.Control;
+            view.SetPadding(0, 0, 0, 0);
+            view.SetBackgroundColor(new Android.Graphics.Color(0, 0, 0, 0));
             //System.Diagnostics.Debug.WriteLine("Attaching " + this + " to element " + this.Element + " and control " + this.Control);
         }
         protected override void OnDetached()

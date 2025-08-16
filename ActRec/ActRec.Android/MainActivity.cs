@@ -10,7 +10,7 @@ using VisiPlacement;
 
 namespace ActRec.Droid
 {
-    [Activity(Label = "ActRec", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+    [Activity(Label = "ActRec", Icon = "@mipmap/icon", Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
     public class MainActivity : MauiAppCompatActivity
     {
         protected override void OnCreate(Bundle bundle)

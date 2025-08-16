@@ -6,6 +6,10 @@
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.80" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <AndroidAsset Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">
       <Link>Assets\BlackChancery.ttf</Link>
     </AndroidAsset>

@@ -10,7 +10,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Microsoft.Maui.Controls;
-using Xamarin.Forms.Platform.Android;
+using Microsoft.Maui.Controls.Platform;
 
 [assembly: ExportEffect(typeof(ActRec.Droid.ButtonEffect), "ButtonEffect")]
 namespace ActRec.Droid

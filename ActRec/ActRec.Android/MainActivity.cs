@@ -26,8 +26,10 @@ namespace ActRec.Droid
 
             //PublicFileIo.setBasedir(Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "ActivityRecommender"));
 
-            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            AppParams parameters = new AppParams(version, new LogcatReader());
+            //string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            //AppParams parameters = new AppParams(version, new LogcatReader());
+
+            //App.AppParams = parameters;
 
             //LoadApplication(new App(parameters));
 

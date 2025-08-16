@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net9.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
+    <RootNamespace>ActRec.Droid</RootNamespace>
     <UseMaui>true</UseMaui>
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
   </PropertyGroup>

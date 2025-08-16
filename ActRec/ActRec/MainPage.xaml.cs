@@ -18,7 +18,8 @@ namespace ActRec
             label.Text = "ActivityRecommender is starting!";
             view.Content = label;
             this.Content = view;
-            Console.WriteLine("MainPage.xaml.cs MainPage()");
+
+            Console.WriteLine("MainPage.xaml.cs MainPage(appParams = " + appParams + ")");
 
             this.activityRecommender = new ActivityRecommender(view, appParams.Version, appParams.LogReader);
         }

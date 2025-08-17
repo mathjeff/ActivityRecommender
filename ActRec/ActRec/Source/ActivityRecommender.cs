@@ -317,8 +317,10 @@ namespace ActivityRecommendation
 
             this.SetupEngine();
 
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender creating TextConverter");
             this.textConverter = new TextConverter(null, this.ActivityDatabase);
 
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender setting up drawing");
             this.SetupDrawing();
             DateTime end = DateTime.Now;
             System.Diagnostics.Debug.WriteLine("ActivityRecommender.Initialize completed in " + (end - start));
@@ -326,6 +328,7 @@ namespace ActivityRecommendation
 
         private void attachParentView()
         {
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender attaching parent view");
             this.viewManager.SetParent(this.parentView);
         }
 
@@ -970,9 +973,11 @@ namespace ActivityRecommendation
             this.protoActivities_database.TextChanged += ProtoActivities_database_TextChanged;
             this.protoActivities_database.RatingsChanged += ProtoActivities_database_RatingsChanged;
 
-
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender updating engine");
             engine.FullUpdate();
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender computing startup feedback");
             this.computeStartupFeedback();
+            System.Diagnostics.Debug.WriteLine("ActivityRecommender updated engine");
         }
 
         private void computeStartupFeedback()

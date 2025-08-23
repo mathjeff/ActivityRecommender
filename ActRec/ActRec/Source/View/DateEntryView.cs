@@ -248,7 +248,12 @@ namespace ActivityRecommendation
             this.nowLayout = new TextblockLayout("");
 
             dateLayout.ScoreIfEmpty = true;
-            GridLayout mainGrid = GridLayout.New(new BoundProperty_List(4), new BoundProperty_List(1), LayoutScore.Zero);
+            BoundProperty_List rowHeights = BoundProperty_List.Uniform(4);
+            rowHeights.SetPropertyScale(0, 1);
+            rowHeights.SetPropertyScale(1, 1);
+            rowHeights.SetPropertyScale(2, 1);
+            rowHeights.SetPropertyScale(3, 4);
+            GridLayout mainGrid = GridLayout.New(rowHeights, new BoundProperty_List(1), LayoutScore.Zero);
             mainGrid.AddLayout(nowLayout);
             mainGrid.AddLayout(new TextblockLayout("Enter " + title + ":"));
             mainGrid.AddLayout(dateLayout);

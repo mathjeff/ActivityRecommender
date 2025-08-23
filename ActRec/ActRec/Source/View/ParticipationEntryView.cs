@@ -33,19 +33,29 @@ namespace ActivityRecommendation
             activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.layoutStack = layoutStack;
             this.userSettings = userSettings;
-            BoundProperty_List rowHeights = new BoundProperty_List(4);
-            rowHeights.BindIndices(0, 1);
-            rowHeights.BindIndices(0, 2);
-            rowHeights.BindIndices(0, 3);
-            rowHeights.SetPropertyScale(0, 5); // activity name and feedback
-            rowHeights.SetPropertyScale(1, 5); // rating, comments, and metrics
-            rowHeights.SetPropertyScale(2, 2.3); // start and end times
-            rowHeights.SetPropertyScale(3, 2); // buttons
+            // rowHeights.SetPropertyScale(0, 5); // activity name and feedback
+            // rowHeights.SetPropertyScale(1, 5); // rating, comments, and metrics
+            // rowHeights.SetPropertyScale(2, 2.3); // start and end times
+            // rowHeights.SetPropertyScale(3, 2); // buttons
+
+            BoundProperty_List topHeights = BoundProperty_List.Uniform(2);
+            BoundProperty_List bottomHeights = BoundProperty_List.Uniform(2);
+            bottomHeights.SetPropertyScale(0, 2.3);
+            bottomHeights.SetPropertyScale(1, 2);
+            GridLayout topGrid = GridLayout.New(topHeights, new BoundProperty_List(1), LayoutScore.Zero);
+            GridLayout bottomGrid = GridLayout.New(bottomHeights, new BoundProperty_List(1), LayoutScore.Zero);
+
+            BoundProperty_List overallHeights = BoundProperty_List.Uniform(2);
+            overallHeights.SetPropertyScale(0, 10);
+            overallHeights.SetPropertyScale(1, 4.3);
+            GridLayout contents = GridLayout.New(overallHeights, new BoundProperty_List(1), LayoutScore.Zero);
+            contents.AddLayout(topGrid);
+            contents.AddLayout(bottomGrid);
 
             // activity name and feedback
             Vertical_GridLayout_Builder nameAndFeedback_builder = new Vertical_GridLayout_Builder();
 
-            GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
+            //GridLayout contents = GridLayout.New(rowHeights, BoundProperty_List.Uniform(1), LayoutScore.Zero);
 
             this.nameBox = new ActivityNameEntryBox("What Have You Been Doing?", activityDatabase, layoutStack);
             this.nameBox.AutoAcceptAutocomplete = false;
@@ -59,7 +69,7 @@ namespace ActivityRecommendation
             Button responseButton = new Button();
             responseButton.Clicked += ResponseButton_Clicked;
             this.participationFeedbackButtonLayout = new ButtonLayout(responseButton);
-            contents.AddLayout(nameAndFeedback_builder.BuildAnyLayout());
+            topGrid.AddLayout(nameAndFeedback_builder.BuildAnyLayout());
 
             Button acceptSuggestion_button = new Button();
             acceptSuggestion_button.Clicked += AcceptSuggestions_button_Clicked;
@@ -122,7 +132,7 @@ namespace ActivityRecommendation
                 );
             this.helpStatusPicker = new HelpDurationInput_Layout(this.layoutStack);
             detailsBuilder.AddLayout(metricStatusLayout);
-            contents.AddLayout(detailsBuilder.BuildAnyLayout());
+            topGrid.AddLayout(detailsBuilder.BuildAnyLayout());
 
             GridLayout grid3 = GridLayout.New(BoundProperty_List.Uniform(1), BoundProperty_List.Uniform(2), LayoutScore.Zero);
 
@@ -132,7 +142,7 @@ namespace ActivityRecommendation
             this.endDateBox = new DateEntryView("End Time", this.layoutStack);
             this.endDateBox.Add_TextChanged_Handler(new EventHandler<TextChangedEventArgs>(this.DateText_Changed));
             grid3.AddLayout(this.endDateBox);
-            contents.AddLayout(grid3);
+            bottomGrid.AddLayout(grid3);
             this.setStartdateButton = new Button();
             this.setEnddateButton = new Button();
 
@@ -178,7 +188,7 @@ namespace ActivityRecommendation
             grid4.AddLayout(this.okButtonLayout);
             grid4.AddLayout(new HelpButtonLayout(helpWindow, this.layoutStack));
             grid4.AddLayout(new ButtonLayout(this.setEnddateButton, "End = now", 16));
-            contents.AddLayout(grid4);
+            bottomGrid.AddLayout(grid4);
 
             this.mainLayout = LayoutCache.For(contents);
 

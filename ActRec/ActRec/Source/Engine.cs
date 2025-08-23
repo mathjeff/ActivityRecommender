@@ -483,10 +483,11 @@ namespace ActivityRecommendation
             // If there was a pair of activities that could do strictly better than two of the best activity, then we must actually choose the second-best
             // If there was no such pair, then we just want to choose the best activity because no others could help
             // Remember that the reason the activity with second-highest rating might be a better choice is that it might have a higher variance
-            return this.SuggestMultipleActivityOptions(new List<Activity>() { bestActivity }, request, consideredCandidates.Count, true);
+            return this.SuggestMultipleActivityOptions(new List<Activity>() { bestActivity }, request, consideredCandidates.Count);
         }
-        private ActivitiesSuggestion SuggestMultipleActivityOptions(List<Activity> bestActivities, ActivityRequest request, int numActivitiesConsidered, bool tryComputeExpectedFeedback)
+        private ActivitiesSuggestion SuggestMultipleActivityOptions(List<Activity> bestActivities, ActivityRequest request, int numActivitiesConsidered)
         {
+            bool tryComputeExpectedFeedback = request.TryComputeExpectedFeedback;
             List<ActivitySuggestion> children = new List<ActivitySuggestion>();
             foreach (Activity activity in bestActivities)
             {
@@ -2305,6 +2306,11 @@ namespace ActivityRecommendation
             }
             // the last thing we did was suggest this activity
             return true;
+        }
+        private string nowString()
+        {
+            DateTime when = DateTime.Now;
+            return "" + when.Second + "s " + when.Millisecond + "ms";
         }
         public ParticipationFeedback computeStandardParticipationFeedback(Activity chosenActivity, DateTime startDate, DateTime endDate, bool alreadyHappened = true)
         {

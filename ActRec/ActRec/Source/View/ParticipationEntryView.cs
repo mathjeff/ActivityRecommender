@@ -820,7 +820,9 @@ namespace ActivityRecommendation
         private void updateSuggestion()
         {
             string text = null;
-            ActivitiesSuggestion choices = this.engine.MakeRecommendation();
+            ActivityRequest request = new ActivityRequest();
+            request.TryComputeExpectedFeedback = false;
+            ActivitiesSuggestion choices = this.engine.MakeRecommendation(request);
             if (this.GotSuggestion != null)
             {
                 this.GotSuggestion(choices);

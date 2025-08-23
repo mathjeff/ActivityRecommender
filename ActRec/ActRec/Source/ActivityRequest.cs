@@ -38,6 +38,7 @@ namespace ActivityRecommendation
         public List<Activity> LeafActivitiesToConsider { get; set; }
         public ActivityDescriptor ActivityToBeat { get; set; }
         public DateTime Date { get; set; }
+        public bool TryComputeExpectedFeedback = true;
         public Rating RawRawing { get; set; }
         public Rating UserPredictedRating { get; set; }
         public TimeSpan? RequestedProcessingTime { get; set; }

@@ -25,7 +25,7 @@ namespace ActRec.Droid
             });
 
             EffectFactory.Instance.RegisterEffect("ActRec.ButtonEffect", new ConstructorProvider<ButtonEffect, Effect>());
-
+            EffectFactory.Instance.RegisterEffect("VisiPlacement.TextItemEffect", new ConstructorProvider<TextItemEffect, Effect>());
 
             return builder.Build();
         }

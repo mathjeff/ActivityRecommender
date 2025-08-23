@@ -33,7 +33,7 @@ namespace ActivityRecommendation
             activityDatabase.ActivityAdded += ActivityDatabase_ActivityAdded;
             this.layoutStack = layoutStack;
             this.userSettings = userSettings;
-            BoundProperty_List rowHeights = new BoundProperty_List(6);
+            BoundProperty_List rowHeights = new BoundProperty_List(4);
             rowHeights.BindIndices(0, 1);
             rowHeights.BindIndices(0, 2);
             rowHeights.BindIndices(0, 3);

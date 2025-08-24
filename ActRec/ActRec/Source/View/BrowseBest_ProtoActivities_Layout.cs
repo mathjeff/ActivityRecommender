@@ -216,7 +216,8 @@ namespace ActivityRecommendation.View
         {
             TextblockLayout option1 = new TextblockLayout(protoActivity.Text, true, 16);
             TextblockLayout option2 = new TextblockLayout(protoActivity.Text, 30);
-            return new LayoutUnion(option1, option2);
+            LayoutChoice_Set union = new LayoutUnion(option1, option2);
+            return ScrollLayout.New(union);
         }
 
         private string describeScore(ProtoActivity_EstimatedInterest interest)

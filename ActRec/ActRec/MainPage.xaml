@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
              x:Class="ActRec.MainPage"
+             SafeAreaEdges="All"
              ios:Page.UseSafeArea="True">
-
 
     <StackLayout>
         <!-- Place new controls here -->

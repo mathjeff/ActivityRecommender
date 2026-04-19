@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="24" android:versionName="1.2.16" package="com.mathjeff.ActRec"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="25" android:versionName="1.2.17" package="com.mathjeff.ActRec"
 
 	xmlns:tools="http://schemas.android.com/tools"
 	>

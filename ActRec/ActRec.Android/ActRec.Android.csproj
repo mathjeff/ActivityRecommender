@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0-android</TargetFramework>
+    <TargetFramework>net10.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>ActRec.Droid</RootNamespace>
     <UseMaui>true</UseMaui>
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.6" />
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="..\..\deps\Fonts\Resources\BlackChancery.ttf">

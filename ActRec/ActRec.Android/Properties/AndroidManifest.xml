@@ -6,7 +6,7 @@
 
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="35" />
+	<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36" />
 	<application android:label="ActRec.Android">
 
 		<!-- Disabling Emoji2, which seems to be slow and crashing, and isn't needed -->

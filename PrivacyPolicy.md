@@ -17,7 +17,7 @@ Data Storage Duration
   * ActivityRecommender does not automatically delete data intentionally
     * If you would like your data to be deleted, you may delete it from the appropriate location described above
   * Occasionally the process of installing a new version of the app might delete data
-    * This may be more common to when installing a development version of the app
+    * This may be more common when installing a development version of the app
     * You may wish to export a backup of your data before installing a new version of the app
 
 ActivityRecommender doesn't even use the internet unless you ask it to
